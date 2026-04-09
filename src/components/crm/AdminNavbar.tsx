@@ -1,7 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { LogOut, ExternalLink } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function AdminNavbar() {
