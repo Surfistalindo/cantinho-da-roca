@@ -1,7 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { LogOut, ExternalLink } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function AdminNavbar() {
@@ -23,8 +23,14 @@ export default function AdminNavbar() {
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <span className="text-xs text-muted-foreground hidden sm:inline">{user?.email}</span>
+        <Button variant="ghost" size="sm" asChild className="h-8 px-2">
+          <Link to="/">
+            <ExternalLink className="w-4 h-4 mr-1.5" />
+            <span className="hidden sm:inline text-xs">Ver Site</span>
+          </Link>
+        </Button>
         <Button variant="ghost" size="sm" onClick={handleSignOut} className="h-8 px-2">
           <LogOut className="w-4 h-4 mr-1.5" />
           <span className="hidden sm:inline text-xs">Sair</span>
