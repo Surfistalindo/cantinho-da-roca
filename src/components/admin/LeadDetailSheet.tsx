@@ -26,9 +26,9 @@ interface Lead {
 
 interface Interaction {
   id: string;
-  type: string;
-  content: string;
-  created_at: string;
+  contact_type: string;
+  description: string;
+  interaction_date: string;
 }
 
 interface Props {
@@ -58,9 +58,9 @@ export default function LeadDetailSheet({ lead, open, onOpenChange }: Props) {
     if (!lead) return;
     const { data } = await supabase
       .from('interactions')
-      .select('id, type, content, created_at')
+      .select('id, contact_type, description, interaction_date')
       .eq('lead_id', lead.id)
-      .order('created_at', { ascending: false });
+      .order('interaction_date', { ascending: false });
     setInteractions((data as Interaction[]) ?? []);
   };
 
@@ -69,9 +69,9 @@ export default function LeadDetailSheet({ lead, open, onOpenChange }: Props) {
     setSending(true);
     const { error } = await supabase.from('interactions').insert({
       lead_id: lead.id,
-      user_id: user.id,
-      type: newType,
-      content: newContent.trim(),
+      created_by: user.id,
+      contact_type: newType,
+      description: newContent.trim(),
     });
     setSending(false);
     if (error) {
@@ -85,8 +85,8 @@ export default function LeadDetailSheet({ lead, open, onOpenChange }: Props) {
 
   if (!lead) return null;
 
-  const typeIcon = (type: string) => {
-    const t = interactionTypes.find((i) => i.value === type);
+  const typeIcon = (ct: string) => {
+    const t = interactionTypes.find((i) => i.value === ct);
     return t ? <t.icon className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />;
   };
 
@@ -170,13 +170,13 @@ export default function LeadDetailSheet({ lead, open, onOpenChange }: Props) {
             {interactions.map((n) => (
               <div key={n.id} className="bg-muted rounded-lg p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  {typeIcon(n.type)}
-                  <span className="text-xs font-medium capitalize">{n.type}</span>
+                  {typeIcon(n.contact_type)}
+                  <span className="text-xs font-medium capitalize">{n.contact_type}</span>
                   <span className="text-xs text-muted-foreground ml-auto">
-                    {format(new Date(n.created_at), "dd/MM/yy HH:mm", { locale: ptBR })}
+                    {format(new Date(n.interaction_date), "dd/MM/yy HH:mm", { locale: ptBR })}
                   </span>
                 </div>
-                <p className="text-sm">{n.content}</p>
+                <p className="text-sm">{n.description}</p>
               </div>
             ))}
           </div>
