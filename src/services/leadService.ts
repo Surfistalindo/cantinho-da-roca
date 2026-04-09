@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface LeadFilters {
   status?: string;
-  origem?: string;
+  origin?: string;
   search?: string;
 }
 
@@ -11,7 +11,7 @@ export const leadService = {
     let query = supabase.from('leads').select('*').order('created_at', { ascending: false });
 
     if (filters?.status) query = query.eq('status', filters.status);
-    if (filters?.origem) query = query.eq('origem', filters.origem);
+    if (filters?.origin) query = query.eq('origin', filters.origin);
     if (filters?.search) {
       query = query.or(`name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%`);
     }
@@ -27,7 +27,7 @@ export const leadService = {
     return data;
   },
 
-  async create(lead: { name: string; phone: string; email?: string; origem?: string; interesse?: string; utm_source?: string | null; utm_medium?: string | null; utm_campaign?: string | null }) {
+  async create(lead: { name: string; phone: string; origin?: string; product_interest?: string }) {
     const { data, error } = await supabase.from('leads').insert(lead).select().single();
     if (error) throw error;
     return data;
@@ -38,7 +38,7 @@ export const leadService = {
     if (error) throw error;
   },
 
-  async update(id: string, updates: { name?: string; phone?: string; email?: string; origem?: string; interesse?: string; status?: string }) {
+  async update(id: string, updates: { name?: string; phone?: string; origin?: string; product_interest?: string; status?: string; notes?: string; last_contact_at?: string; next_contact_at?: string }) {
     const { error } = await supabase.from('leads').update(updates).eq('id', id);
     if (error) throw error;
   },

@@ -15,14 +15,13 @@ interface Lead {
   id: string;
   name: string;
   phone: string | null;
-  email: string | null;
-  origem: string | null;
-  interesse: string | null;
+  origin: string | null;
+  product_interest: string | null;
   status: string;
   created_at: string;
-  utm_source: string | null;
-  utm_medium: string | null;
-  utm_campaign: string | null;
+  last_contact_at: string | null;
+  next_contact_at: string | null;
+  notes: string | null;
 }
 
 interface Interaction {
@@ -94,14 +93,13 @@ export default function LeadDetailSheet({ lead, open, onOpenChange }: Props) {
   const info = [
     { label: 'Nome', value: lead.name },
     { label: 'Telefone', value: lead.phone },
-    { label: 'E-mail', value: lead.email },
-    { label: 'Origem', value: lead.origem },
-    { label: 'Interesse', value: lead.interesse },
+    { label: 'Origem', value: lead.origin },
+    { label: 'Interesse', value: lead.product_interest },
     { label: 'Status', value: <LeadStatusBadge status={lead.status} /> },
     { label: 'Criado em', value: format(new Date(lead.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) },
-    { label: 'UTM Source', value: lead.utm_source },
-    { label: 'UTM Medium', value: lead.utm_medium },
-    { label: 'UTM Campaign', value: lead.utm_campaign },
+    { label: 'Último contato', value: lead.last_contact_at ? format(new Date(lead.last_contact_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : null },
+    { label: 'Próximo contato', value: lead.next_contact_at ? format(new Date(lead.next_contact_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : null },
+    { label: 'Observações', value: lead.notes },
   ];
 
   return (
