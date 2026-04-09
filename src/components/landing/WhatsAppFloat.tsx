@@ -1,6 +1,6 @@
 import { MessageCircle } from 'lucide-react';
+import { APP_CONFIG } from '@/config/app';
 
-const WHATSAPP_NUMBER = '5571999999999';
 const message = encodeURIComponent('Olá, vim pelo site Cantinho da Roça e gostaria de mais informações.');
 
 export default function WhatsAppFloat() {
