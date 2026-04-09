@@ -6,7 +6,7 @@ const message = encodeURIComponent('Olá, vim pelo site Cantinho da Roça e gost
 export default function WhatsAppFloat() {
   return (
     <a
-      href={`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`}
+      href={`https://wa.me/${APP_CONFIG.whatsappNumber}?text=${message}`}
       target="_blank"
       rel="noopener noreferrer"
       className="fixed bottom-6 right-6 z-50 flex items-center justify-center h-14 w-14 rounded-full bg-secondary text-secondary-foreground shadow-lg hover:scale-110 transition-transform"
