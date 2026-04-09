@@ -1,21 +1,87 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Users, BarChart3, MessageSquare } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
+import LeadFilters from '@/components/admin/LeadFilters';
+import LeadStatusSelect from '@/components/admin/LeadStatusSelect';
+import LeadDetailSheet from '@/components/admin/LeadDetailSheet';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+interface Lead {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  origem: string | null;
+  interesse: string | null;
+  status: string;
+  created_at: string;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+}
 
 export default function AdminDashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [originFilter, setOriginFilter] = useState('all');
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const fetchLeads = useCallback(async () => {
+    const { data } = await supabase
+      .from('leads')
+      .select('*')
+      .order('created_at', { ascending: false });
+    setLeads((data as Lead[]) ?? []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchLeads(); }, [fetchLeads]);
+
+  const filtered = useMemo(() => {
+    return leads.filter((l) => {
+      if (statusFilter !== 'all' && l.status !== statusFilter) return false;
+      if (originFilter !== 'all' && l.origem !== originFilter) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        if (!l.name.toLowerCase().includes(q) && !(l.phone ?? '').includes(q)) return false;
+      }
+      return true;
+    });
+  }, [leads, statusFilter, originFilter, search]);
+
+  const stats = useMemo(() => ({
+    total: leads.length,
+    negotiating: leads.filter((l) => l.status === 'negotiating').length,
+    sold: leads.filter((l) => l.status === 'sold').length,
+  }), [leads]);
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/admin/login');
   };
 
+  const openDetail = (lead: Lead) => {
+    setSelectedLead(lead);
+    setSheetOpen(true);
+  };
+
   const cards = [
-    { icon: Users, label: 'Leads', value: '—', description: 'Total de leads capturados' },
-    { icon: BarChart3, label: 'Conversões', value: '—', description: 'Taxa de conversão' },
-    { icon: MessageSquare, label: 'Interações', value: '—', description: 'Contatos realizados' },
+    { icon: Users, label: 'Leads', value: String(stats.total), description: 'Total de leads capturados' },
+    { icon: BarChart3, label: 'Negociando', value: String(stats.negotiating), description: 'Em negociação ativa' },
+    { icon: MessageSquare, label: 'Vendidos', value: String(stats.sold), description: 'Convertidos em vendas' },
   ];
 
   return (
@@ -31,7 +97,7 @@ export default function AdminDashboard() {
         </Button>
       </header>
 
-      <main className="section-container py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <h2 className="text-2xl font-bold mb-6">Painel</h2>
         <div className="grid sm:grid-cols-3 gap-6 mb-8">
           {cards.map((c) => (
@@ -47,13 +113,61 @@ export default function AdminDashboard() {
             </div>
           ))}
         </div>
+
         <div className="bg-card rounded-lg p-6 shadow-sm">
-          <h3 className="font-semibold mb-4">Leads recentes</h3>
-          <p className="text-muted-foreground text-sm">
-            A listagem de leads será implementada na próxima etapa.
-          </p>
+          <h3 className="font-semibold mb-4">Leads</h3>
+          <LeadFilters
+            search={search}
+            onSearchChange={setSearch}
+            statusFilter={statusFilter}
+            onStatusChange={setStatusFilter}
+            originFilter={originFilter}
+            onOriginChange={setOriginFilter}
+          />
+          {loading ? (
+            <p className="text-muted-foreground text-sm py-8 text-center">Carregando...</p>
+          ) : filtered.length === 0 ? (
+            <p className="text-muted-foreground text-sm py-8 text-center">Nenhum lead encontrado.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Telefone</TableHead>
+                    <TableHead>Origem</TableHead>
+                    <TableHead>Interesse</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Data</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((lead) => (
+                    <TableRow
+                      key={lead.id}
+                      className="cursor-pointer"
+                      onClick={() => openDetail(lead)}
+                    >
+                      <TableCell className="font-medium">{lead.name}</TableCell>
+                      <TableCell>{lead.phone ?? '—'}</TableCell>
+                      <TableCell>{lead.origem ?? '—'}</TableCell>
+                      <TableCell>{lead.interesse ?? '—'}</TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <LeadStatusSelect leadId={lead.id} currentStatus={lead.status} onUpdated={fetchLeads} />
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-xs">
+                        {format(new Date(lead.created_at), 'dd/MM/yy', { locale: ptBR })}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </div>
       </main>
+
+      <LeadDetailSheet lead={selectedLead} open={sheetOpen} onOpenChange={setSheetOpen} />
     </div>
   );
 }
