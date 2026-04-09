@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Eye, MessageCircle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { isLeadStale } from '@/services/followUpService';
 
 interface Lead {
   id: string;
@@ -33,6 +34,7 @@ export default function LeadsPage() {
   const [originFilter, setOriginFilter] = useState('all');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [followUpFilter, setFollowUpFilter] = useState(false);
 
   const fetchLeads = useCallback(async () => {
     const { data } = await supabase
@@ -49,13 +51,14 @@ export default function LeadsPage() {
     return leads.filter((l) => {
       if (statusFilter !== 'all' && l.status !== statusFilter) return false;
       if (originFilter !== 'all' && l.origin !== originFilter) return false;
+      if (followUpFilter && !isLeadStale(l)) return false;
       if (search) {
         const q = search.toLowerCase();
         if (!l.name.toLowerCase().includes(q) && !(l.phone ?? '').includes(q)) return false;
       }
       return true;
     });
-  }, [leads, statusFilter, originFilter, search]);
+  }, [leads, statusFilter, originFilter, search, followUpFilter]);
 
   const openDetail = (lead: Lead) => {
     setSelectedLead(lead);
@@ -92,6 +95,8 @@ export default function LeadsPage() {
           onStatusChange={setStatusFilter}
           originFilter={originFilter}
           onOriginChange={setOriginFilter}
+          followUpFilter={followUpFilter}
+          onFollowUpChange={setFollowUpFilter}
         />
 
         {loading ? (
