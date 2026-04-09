@@ -1,29 +1,44 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function LeadFormSection() {
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [origem, setOrigem] = useState('');
+  const [interesse, setInteresse] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email) return;
+    if (!name.trim() || !phone.trim()) return;
 
     setLoading(true);
     try {
-      const { error } = await supabase.from('leads').insert({ name, email, phone: phone || null });
+      const { error } = await supabase.from('leads').insert({
+        name: name.trim(),
+        email: '',
+        phone: phone.trim(),
+        origem: origem || null,
+        interesse: interesse.trim() || null,
+      });
       if (error) throw error;
 
       toast({ title: 'Cadastro realizado!', description: 'Em breve entraremos em contato.' });
       setName('');
-      setEmail('');
       setPhone('');
+      setOrigem('');
+      setInteresse('');
     } catch {
       toast({ title: 'Erro ao cadastrar', description: 'Tente novamente mais tarde.', variant: 'destructive' });
     } finally {
@@ -35,7 +50,7 @@ export default function LeadFormSection() {
     <section id="lead-form" className="py-20">
       <div className="section-container">
         <div className="max-w-lg mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-3 font-heading">
             Fique por dentro das novidades
           </h2>
           <p className="text-muted-foreground text-center mb-8">
@@ -49,20 +64,30 @@ export default function LeadFormSection() {
               required
             />
             <Input
-              type="email"
-              placeholder="Seu e-mail"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <Input
               type="tel"
-              placeholder="WhatsApp (opcional)"
+              placeholder="Seu telefone / WhatsApp"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              required
+            />
+            <Select value={origem} onValueChange={setOrigem}>
+              <SelectTrigger>
+                <SelectValue placeholder="Como nos conheceu?" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                <SelectItem value="instagram">Instagram</SelectItem>
+                <SelectItem value="indicacao">Indicação</SelectItem>
+                <SelectItem value="outro">Outro</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="O que você procura? (opcional)"
+              value={interesse}
+              onChange={(e) => setInteresse(e.target.value)}
             />
             <Button type="submit" className="w-full" size="lg" disabled={loading}>
-              {loading ? 'Enviando...' : 'Cadastrar'}
+              {loading ? 'Enviando...' : 'Quero receber novidades'}
             </Button>
           </form>
         </div>
