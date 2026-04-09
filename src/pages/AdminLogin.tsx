@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -52,6 +53,14 @@ export default function AdminLogin() {
             {loading ? 'Entrando...' : 'Entrar'}
           </Button>
         </form>
+        <div className="text-center mt-4">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/">
+              <ArrowLeft className="w-4 h-4 mr-1.5" />
+              Voltar para o site
+            </Link>
+          </Button>
+        </div>
       </div>
     </div>
   );
