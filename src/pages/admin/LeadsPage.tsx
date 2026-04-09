@@ -16,14 +16,13 @@ interface Lead {
   id: string;
   name: string;
   phone: string | null;
-  email: string | null;
-  origem: string | null;
-  interesse: string | null;
+  origin: string | null;
+  product_interest: string | null;
   status: string;
   created_at: string;
-  utm_source: string | null;
-  utm_medium: string | null;
-  utm_campaign: string | null;
+  last_contact_at: string | null;
+  next_contact_at: string | null;
+  notes: string | null;
 }
 
 export default function LeadsPage() {
@@ -49,7 +48,7 @@ export default function LeadsPage() {
   const filtered = useMemo(() => {
     return leads.filter((l) => {
       if (statusFilter !== 'all' && l.status !== statusFilter) return false;
-      if (originFilter !== 'all' && l.origem !== originFilter) return false;
+      if (originFilter !== 'all' && l.origin !== originFilter) return false;
       if (search) {
         const q = search.toLowerCase();
         if (!l.name.toLowerCase().includes(q) && !(l.phone ?? '').includes(q)) return false;
@@ -110,8 +109,8 @@ export default function LeadsPage() {
                   <TableRow key={lead.id} className="group">
                     <TableCell className="font-medium">{lead.name}</TableCell>
                     <TableCell className="text-sm">{lead.phone ?? '—'}</TableCell>
-                    <TableCell className="hidden md:table-cell text-sm">{lead.origem ?? '—'}</TableCell>
-                    <TableCell className="hidden lg:table-cell text-sm">{lead.interesse ?? '—'}</TableCell>
+                    <TableCell className="hidden md:table-cell text-sm">{lead.origin ?? '—'}</TableCell>
+                    <TableCell className="hidden lg:table-cell text-sm">{lead.product_interest ?? '—'}</TableCell>
                     <TableCell>
                       <LeadStatusSelect leadId={lead.id} currentStatus={lead.status} onUpdated={fetchLeads} />
                     </TableCell>

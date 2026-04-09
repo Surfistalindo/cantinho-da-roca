@@ -26,26 +26,12 @@ function isValidPhone(value: string): boolean {
   return digits.length === 10 || digits.length === 11;
 }
 
-function getUtmParams(): { utm_source: string | null; utm_medium: string | null; utm_campaign: string | null } {
-  const params = new URLSearchParams(window.location.search);
-  return {
-    utm_source: params.get('utm_source') || null,
-    utm_medium: params.get('utm_medium') || null,
-    utm_campaign: params.get('utm_campaign') || null,
-  };
-}
-
 export default function LeadFormSection() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [origem, setOrigem] = useState('');
-  const [interesse, setInteresse] = useState('');
+  const [origin, setOrigin] = useState('');
+  const [productInterest, setProductInterest] = useState('');
   const [loading, setLoading] = useState(false);
-  const [utmParams, setUtmParams] = useState<ReturnType<typeof getUtmParams>>({ utm_source: null, utm_medium: null, utm_campaign: null });
-
-  useEffect(() => {
-    setUtmParams(getUtmParams());
-  }, []);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhone(formatPhone(e.target.value));
@@ -63,25 +49,20 @@ export default function LeadFormSection() {
     setLoading(true);
     try {
       const cleanPhone = phone.replace(/\D/g, '');
-      const finalOrigem = origem || (utmParams.utm_source ? `utm:${utmParams.utm_source}` : 'direto');
 
       const { error } = await supabase.from('leads').insert({
         name: name.trim(),
-        email: '',
         phone: cleanPhone,
-        origem: finalOrigem,
-        interesse: interesse.trim() || null,
-        utm_source: utmParams.utm_source,
-        utm_medium: utmParams.utm_medium,
-        utm_campaign: utmParams.utm_campaign,
+        origin: origin || 'direto',
+        product_interest: productInterest.trim() || null,
       });
       if (error) throw error;
 
       toast.success('Cadastro realizado!', { description: 'Em breve entraremos em contato.' });
       setName('');
       setPhone('');
-      setOrigem('');
-      setInteresse('');
+      setOrigin('');
+      setProductInterest('');
     } catch {
       toast.error('Erro ao cadastrar', { description: 'Tente novamente mais tarde.' });
     } finally {
@@ -115,7 +96,7 @@ export default function LeadFormSection() {
               onChange={handlePhoneChange}
               required
             />
-            <Select value={origem} onValueChange={setOrigem}>
+            <Select value={origin} onValueChange={setOrigin}>
               <SelectTrigger>
                 <SelectValue placeholder="Como nos conheceu?" />
               </SelectTrigger>
@@ -128,8 +109,8 @@ export default function LeadFormSection() {
             </Select>
             <Input
               placeholder="O que você procura? (opcional)"
-              value={interesse}
-              onChange={(e) => setInteresse(e.target.value)}
+              value={productInterest}
+              onChange={(e) => setProductInterest(e.target.value)}
             />
             <Button type="submit" className="w-full" size="lg" disabled={loading}>
               {loading ? 'Enviando...' : 'Quero receber novidades'}
