@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Eye, MessageCircle, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { isLeadStale } from '@/services/followUpService';
 
 interface Lead {
   id: string;

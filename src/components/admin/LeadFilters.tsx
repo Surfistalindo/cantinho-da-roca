@@ -1,7 +1,9 @@
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { APP_CONFIG } from '@/config/app';
-import { Search } from 'lucide-react';
+import { Search, AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Props {
   search: string;
@@ -10,9 +12,11 @@ interface Props {
   onStatusChange: (v: string) => void;
   originFilter: string;
   onOriginChange: (v: string) => void;
+  followUpFilter?: boolean;
+  onFollowUpChange?: (v: boolean) => void;
 }
 
-export default function LeadFilters({ search, onSearchChange, statusFilter, onStatusChange, originFilter, onOriginChange }: Props) {
+export default function LeadFilters({ search, onSearchChange, statusFilter, onStatusChange, originFilter, onOriginChange, followUpFilter, onFollowUpChange }: Props) {
   return (
     <div className="flex flex-wrap gap-3 mb-6">
       <div className="relative flex-1 min-w-[200px]">
@@ -46,6 +50,16 @@ export default function LeadFilters({ search, onSearchChange, statusFilter, onSt
           ))}
         </SelectContent>
       </Select>
+      {onFollowUpChange && (
+        <Button
+          variant={followUpFilter ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => onFollowUpChange(!followUpFilter)}
+          className={cn('gap-1.5', followUpFilter && 'bg-orange-500 hover:bg-orange-600')}
+        >
+          <AlertTriangle className="h-3.5 w-3.5" /> Follow-up
+        </Button>
+      )}
     </div>
   );
 }
