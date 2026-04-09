@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { APP_CONFIG } from '@/config/app';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
@@ -10,7 +9,8 @@ import LeadStatusSelect from '@/components/admin/LeadStatusSelect';
 import LeadDetailSheet from '@/components/admin/LeadDetailSheet';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Eye, MessageCircle } from 'lucide-react';
+import { Eye, MessageCircle, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Lead {
   id: string;
@@ -69,6 +69,14 @@ export default function LeadsPage() {
     window.open(`https://wa.me/${num}?text=Olá! Aqui é da equipe Cantinho da Roça.`, '_blank');
   };
 
+  const deleteLead = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const { error } = await supabase.from('leads').delete().eq('id', id);
+    if (error) { toast.error('Erro ao excluir'); return; }
+    toast.success('Lead excluído');
+    fetchLeads();
+  };
+
   return (
     <div className="max-w-7xl mx-auto space-y-4">
       <div className="flex items-center justify-between">
@@ -101,7 +109,7 @@ export default function LeadsPage() {
                   <TableHead className="hidden lg:table-cell">Interesse</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="hidden sm:table-cell">Data</TableHead>
-                  <TableHead className="w-[80px]">Ações</TableHead>
+                  <TableHead className="w-[110px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -127,6 +135,9 @@ export default function LeadsPage() {
                             <MessageCircle className="h-3.5 w-3.5" />
                           </Button>
                         )}
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100" onClick={(e) => deleteLead(e, lead.id)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -137,7 +148,7 @@ export default function LeadsPage() {
         )}
       </div>
 
-      <LeadDetailSheet lead={selectedLead} open={sheetOpen} onOpenChange={setSheetOpen} />
+      <LeadDetailSheet lead={selectedLead} open={sheetOpen} onOpenChange={setSheetOpen} onUpdated={fetchLeads} />
     </div>
   );
 }
