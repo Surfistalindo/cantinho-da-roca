@@ -38,7 +38,7 @@ export const leadService = {
     if (error) throw error;
   },
 
-  async update(id: string, updates: Record<string, unknown>) {
+  async update(id: string, updates: { name?: string; phone?: string; email?: string; origem?: string; interesse?: string; status?: string }) {
     const { error } = await supabase.from('leads').update(updates).eq('id', id);
     if (error) throw error;
   },

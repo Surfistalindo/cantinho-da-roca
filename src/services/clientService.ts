@@ -19,7 +19,7 @@ export const clientService = {
     return data;
   },
 
-  async update(id: string, updates: Record<string, unknown>) {
+  async update(id: string, updates: { name?: string; phone?: string }) {
     const { error } = await supabase.from('clients').update(updates).eq('id', id);
     if (error) throw error;
   },
