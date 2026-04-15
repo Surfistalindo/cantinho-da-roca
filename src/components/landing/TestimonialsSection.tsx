@@ -1,5 +1,6 @@
 import { Star, Quote } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { Warp } from '@paper-design/shaders-react';
 
 const testimonials = [
   {
@@ -26,8 +27,19 @@ export default function TestimonialsSection() {
   const { ref, isVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.1 });
 
   return (
-    <section id="depoimentos" className="py-24" style={{ background: '#eef5ee' }}>
-      <div className="section-container">
+    <section id="depoimentos" className="py-24 relative overflow-hidden" style={{ background: '#eef5ee' }}>
+      {/* Warp shader background */}
+      <div className="absolute inset-0 z-0 opacity-10">
+        <Warp
+          speed={0.2}
+          scale={0.5}
+          color1="#b7e4c7"
+          color2="#d8f3dc"
+          color3="#eef5ee"
+        />
+      </div>
+
+      <div className="section-container relative z-10">
         <div
           style={{
             opacity: isVisible ? 1 : 0,
@@ -46,7 +58,7 @@ export default function TestimonialsSection() {
             Mais de <strong className="text-foreground">500 clientes</strong> já cuidam da saúde com a gente.
           </p>
         </div>
-        <div ref={ref} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div ref={ref} className="grid grid-cols-1 md:grid-cols-3 gap-6" style={{ perspective: '1200px' }}>
           {testimonials.map((t, i) => (
             <div
               key={t.name}

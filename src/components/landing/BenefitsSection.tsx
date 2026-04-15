@@ -1,6 +1,7 @@
 import { Heart, ShieldCheck, Sparkles, Truck, Clock, ThumbsUp } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useRef, useState, useCallback } from 'react';
+import { Warp } from '@paper-design/shaders-react';
 
 const benefits = [
   {
@@ -78,7 +79,7 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
         opacity: isVisible ? 1 : 0,
         transform: isVisible
           ? `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateZ(0px)`
-          : `rotateY(90deg) translateZ(80px)`,
+          : `rotateX(15deg) translateY(60px) scale(0.9)`,
         transition: isHovered
           ? `opacity 0.6s ease ${index * 0.1}s, transform 0.15s ease`
           : `opacity 0.6s ease ${index * 0.1}s, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.1}s`,
@@ -145,8 +146,19 @@ export default function BenefitsSection() {
   const { ref, isVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.08 });
 
   return (
-    <section id="beneficios" className="py-24" style={{ background: '#f7f5f0' }}>
-      <div className="section-container">
+    <section id="beneficios" className="py-24 relative overflow-hidden" style={{ background: '#f7f5f0' }}>
+      {/* Warp shader background */}
+      <div className="absolute inset-0 z-0 opacity-15">
+        <Warp
+          speed={0.3}
+          scale={0.6}
+          color1="#95d5b2"
+          color2="#b7e4c7"
+          color3="#d8f3dc"
+        />
+      </div>
+
+      <div className="section-container relative z-10">
         <div
           style={{
             opacity: isVisible ? 1 : 0,
@@ -164,7 +176,7 @@ export default function BenefitsSection() {
             Simplicidade, qualidade e resultado. É isso que a gente entrega.
           </p>
         </div>
-        <div ref={ref} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div ref={ref} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" style={{ perspective: '1200px' }}>
           {benefits.map((b, i) => (
             <BenefitCard key={b.title} b={b} index={i} isVisible={isVisible} />
           ))}
