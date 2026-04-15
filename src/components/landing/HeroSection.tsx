@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { MessageCircle, ArrowRight } from 'lucide-react';
+import { MessageCircle, ArrowRight, Leaf } from 'lucide-react';
 import { APP_CONFIG } from '@/config/app';
 import logo from '@/assets/logo-cantim.png';
 
