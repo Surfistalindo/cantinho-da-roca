@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import frutasDesidratadas from "@/assets/frutas-desidratadas.png";
 import {
   Pizza04Icon,
   CommandFreeIcons,
