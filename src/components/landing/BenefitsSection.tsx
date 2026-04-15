@@ -109,7 +109,7 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
       }}
     >
       <div className="absolute inset-0 z-0" style={{ opacity: isHovered ? 0.35 : 0.2 }}>
-        <Warp speed={0.2} scale={0.5} colors={b.shaderColors} />
+        <Warp speed={0.2} scale={0.5} {...b.shaderConfig} />
       </div>
       <div
         className="absolute inset-0 z-[1] transition-opacity duration-500"
