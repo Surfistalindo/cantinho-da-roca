@@ -65,7 +65,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
         <img
           src={logoImg}
           alt=""
-          className="w-[250px] sm:w-[350px] md:w-[500px] lg:w-[650px] opacity-[0.1]"
+          className="w-[400px] sm:w-[550px] md:w-[750px] lg:w-[950px] xl:w-[1100px] opacity-[0.1]"
           aria-hidden="true"
           loading="lazy"
         />
