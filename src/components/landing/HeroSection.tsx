@@ -56,7 +56,8 @@ const HeroSection: React.FC = () => {
       `}</style>
 
       <section
-        className="relative w-full min-h-screen overflow-hidden flex items-center justify-center"
+        id="inicio"
+        className="relative w-full min-h-screen overflow-hidden flex items-center justify-center pt-16"
         style={{ background: 'linear-gradient(160deg, #f7f5f0 0%, #eef5ee 40%, #f0f7f0 100%)' }}
       >
         {/* Subtle dot pattern */}

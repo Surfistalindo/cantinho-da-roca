@@ -26,7 +26,7 @@ function isValidPhone(value: string): boolean {
   return digits.length === 10 || digits.length === 11;
 }
 
-const RATE_LIMIT_MS = 30_000; // 30 seconds between submissions
+const RATE_LIMIT_MS = 30_000;
 
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Vim pelo site e quero saber mais sobre os produtos naturais 🌿')}`;
 
@@ -46,7 +46,6 @@ export default function LeadFormSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
     const trimmedName = name.trim();
     if (trimmedName.length < 2) {
       toast.error('Nome muito curto', { description: 'Informe pelo menos 2 caracteres.' });
@@ -57,7 +56,6 @@ export default function LeadFormSection() {
       return;
     }
 
-    // Rate limiting
     const now = Date.now();
     if (now - lastSubmitRef.current < RATE_LIMIT_MS) {
       toast.error('Aguarde um momento', { description: 'Você já enviou um cadastro recentemente.' });
@@ -68,7 +66,6 @@ export default function LeadFormSection() {
     try {
       const cleanPhone = phone.replace(/\D/g, '');
 
-      // Check for duplicate phone
       const { data: existing } = await supabase
         .from('leads')
         .select('id')
@@ -114,19 +111,30 @@ export default function LeadFormSection() {
   };
 
   return (
-    <section id="lead-form" className="py-20">
-      <div className="section-container">
+    <section id="contato" className="py-24 relative" style={{ background: '#f7f5f0' }}>
+      {/* Subtle dot pattern */}
+      <div
+        className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(circle, hsl(125 47% 33%) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
+        }}
+      />
+      <div className="section-container relative">
         <div className="max-w-lg mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-3">
+          <p className="text-primary text-sm font-semibold tracking-widest uppercase text-center mb-3">
+            Contato
+          </p>
+          <h2 className="text-3xl sm:text-5xl font-serif text-center mb-3 text-foreground">
             Fale com a gente agora
           </h2>
-          <p className="text-muted-foreground text-center mb-8">
+          <p className="text-muted-foreground text-center mb-10 text-lg">
             Tire dúvidas, peça recomendações ou faça seu pedido. Estamos aqui pra te ajudar! 💚
           </p>
 
           <div className="text-center mb-8">
             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-              <Button variant="whatsapp" size="lg" className="gap-2 w-full sm:w-auto">
+              <Button variant="whatsapp" size="lg" className="gap-2 w-full sm:w-auto shadow-lg shadow-green-600/20">
                 <MessageCircle className="h-5 w-5" />
                 Chamar no WhatsApp
               </Button>
@@ -138,54 +146,60 @@ export default function LeadFormSection() {
               <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-3 text-muted-foreground">ou deixe seus dados</span>
+              <span className="bg-[#f7f5f0] px-3 text-muted-foreground">ou deixe seus dados</span>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <Input
-              placeholder="Seu nome"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              minLength={2}
-              maxLength={100}
-            />
-            <Input
-              type="tel"
-              placeholder="(00) 00000-0000"
-              value={phone}
-              onChange={handlePhoneChange}
-              required
-            />
-            <Select value={origin} onValueChange={setOrigin}>
-              <SelectTrigger>
-                <SelectValue placeholder="Como nos conheceu?" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                <SelectItem value="instagram">Instagram</SelectItem>
-                <SelectItem value="indicacao">Indicação</SelectItem>
-                <SelectItem value="outro">Outro</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input
-              placeholder="O que você procura? (opcional)"
-              value={productInterest}
-              onChange={(e) => setProductInterest(e.target.value)}
-              maxLength={200}
-            />
-            <Textarea
-              placeholder="Alguma mensagem ou observação? (opcional)"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              maxLength={500}
-              rows={3}
-            />
-            <Button type="submit" className="w-full" size="lg" disabled={loading}>
-              {loading ? 'Enviando...' : 'Quero receber novidades'}
-            </Button>
-          </form>
+          <div className="bg-card rounded-2xl p-6 sm:p-8 shadow-xl border border-border/30">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input
+                placeholder="Seu nome"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                minLength={2}
+                maxLength={100}
+                className="bg-background/50"
+              />
+              <Input
+                type="tel"
+                placeholder="(00) 00000-0000"
+                value={phone}
+                onChange={handlePhoneChange}
+                required
+                className="bg-background/50"
+              />
+              <Select value={origin} onValueChange={setOrigin}>
+                <SelectTrigger className="bg-background/50">
+                  <SelectValue placeholder="Como nos conheceu?" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  <SelectItem value="instagram">Instagram</SelectItem>
+                  <SelectItem value="indicacao">Indicação</SelectItem>
+                  <SelectItem value="outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder="O que você procura? (opcional)"
+                value={productInterest}
+                onChange={(e) => setProductInterest(e.target.value)}
+                maxLength={200}
+                className="bg-background/50"
+              />
+              <Textarea
+                placeholder="Alguma mensagem ou observação? (opcional)"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                maxLength={500}
+                rows={3}
+                className="bg-background/50"
+              />
+              <Button type="submit" className="w-full" size="lg" disabled={loading}>
+                {loading ? 'Enviando...' : 'Quero receber novidades'}
+              </Button>
+            </form>
+          </div>
         </div>
       </div>
     </section>

@@ -2,11 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
 
 @layer base {
   :root {
-    --background: 120 40% 97%;
+    --background: 40 33% 96%;
     --foreground: 0 0% 20%;
 
     --card: 0 0% 100%;
@@ -21,17 +21,17 @@
     --secondary: 123 38% 57%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 96%;
+    --muted: 40 20% 94%;
     --muted-foreground: 0 0% 45%;
 
-    --accent: 120 52% 91%;
+    --accent: 120 30% 93%;
     --accent-foreground: 0 0% 20%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
+    --border: 40 15% 88%;
+    --input: 40 15% 88%;
     --ring: 125 47% 33%;
 
     --radius: 0.75rem;
@@ -39,7 +39,7 @@
     --highlight: 45 96% 56%;
     --highlight-foreground: 0 0% 15%;
 
-    --surface-warm: 120 40% 95%;
+    --surface-warm: 40 33% 95%;
     --success: 125 47% 33%;
     --success-foreground: 0 0% 100%;
 
@@ -52,8 +52,8 @@
     --sidebar-border: 125 15% 22%;
     --sidebar-ring: 123 38% 57%;
 
-    --font-heading: 'Poppins', sans-serif;
-    --font-body: 'Inter', sans-serif;
+    --font-heading: 'DM Serif Display', serif;
+    --font-body: 'DM Sans', sans-serif;
   }
 
   .dark {
