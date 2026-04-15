@@ -1,214 +1,217 @@
-import React from 'react';
-import { MessageCircle, ChevronDown, ArrowRight } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { MessageCircle, ArrowRight } from 'lucide-react';
 import { APP_CONFIG } from '@/config/app';
 import logo from '@/assets/logo-cantim.png';
 
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Quero saber mais sobre os produtos do Cantim da Roça 🌿')}`;
 
-export default function HeroSection() {
-  const [menuOpen, setMenuOpen] = React.useState(false);
-  const [productsOpen, setProductsOpen] = React.useState(false);
-  const menuRef = React.useRef<HTMLDivElement | null>(null);
+const HeroSection: React.FC = () => {
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const layersRef = useRef<HTMLDivElement[]>([]);
 
-  React.useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setMenuOpen(false);
-    }
-    function onClickOutside(e: MouseEvent) {
-      if (!menuRef.current) return;
-      if (menuRef.current.contains(e.target as Node)) return;
-      setMenuOpen(false);
-    }
-    if (menuOpen) {
-      document.addEventListener('keydown', onKey);
-      document.addEventListener('click', onClickOutside);
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.removeEventListener('click', onClickOutside);
-      document.body.style.overflow = '';
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = (window.innerWidth / 2 - e.pageX) / 25;
+      const y = (window.innerHeight / 2 - e.pageY) / 25;
+
+      canvas.style.transform = `rotateX(${55 + y / 2}deg) rotateZ(${-25 + x / 2}deg)`;
+
+      layersRef.current.forEach((layer, index) => {
+        if (!layer) return;
+        const depth = (index + 1) * 15;
+        const moveX = x * (index + 1) * 0.2;
+        const moveY = y * (index + 1) * 0.2;
+        layer.style.transform = `translateZ(${depth}px) translate(${moveX}px, ${moveY}px)`;
+      });
     };
-  }, [menuOpen]);
+
+    canvas.style.opacity = '0';
+    canvas.style.transform = 'rotateX(90deg) rotateZ(0deg) scale(0.8)';
+
+    const timeout = setTimeout(() => {
+      canvas.style.transition = 'all 2.5s cubic-bezier(0.16, 1, 0.3, 1)';
+      canvas.style.opacity = '1';
+      canvas.style.transform = 'rotateX(55deg) rotateZ(-25deg) scale(1)';
+    }, 300);
+
+    window.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      clearTimeout(timeout);
+    };
+  }, []);
 
   const scrollToProducts = () => {
     document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
-    <section className="relative min-h-screen bg-[#0a0a08] overflow-hidden">
-      {/* Grid background pattern */}
-      <div
-        className="absolute inset-0 opacity-20"
-        style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px',
-        }}
-      />
-      {/* Radial glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(34,102,51,0.15)_0%,_transparent_70%)]" />
+    <>
+      <style>{`
+        @keyframes flow {
+          0%, 100% { transform: scaleY(0); transform-origin: top; }
+          50% { transform: scaleY(1); transform-origin: top; }
+          51% { transform: scaleY(1); transform-origin: bottom; }
+        }
+      `}</style>
 
-      {/* Navbar */}
-      <nav className="relative z-20 w-full border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-16">
-            <a href="/" className="flex-shrink-0">
-              <img src={logo} alt="Cantim da Roça" className="h-10 sm:h-12 brightness-0 invert" />
-            </a>
+      <section
+        className="relative w-full min-h-screen overflow-hidden flex items-center justify-center"
+        style={{ background: 'radial-gradient(ellipse at 50% 50%, #1a1a18 0%, #0a0a08 100%)' }}
+      >
+        {/* SVG Filter for Grain */}
+        <svg className="hidden">
+          <filter id="grain">
+            <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+            <feColorMatrix type="saturate" values="0" />
+          </filter>
+        </svg>
 
-            {/* Desktop nav */}
-            <div className="hidden md:flex items-center gap-1">
-              <a href="#" className="px-4 py-2 text-sm font-medium text-white/70 hover:text-white rounded-lg hover:bg-white/5 transition">
-                Início
-              </a>
-              <div className="relative">
-                <button
-                  onClick={() => setProductsOpen(!productsOpen)}
-                  className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-white/70 hover:text-white rounded-lg hover:bg-white/5 transition"
-                >
-                  Produtos
-                  <ChevronDown className={`h-4 w-4 transition-transform ${productsOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {productsOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-48 bg-[#1a1a18] rounded-xl shadow-lg border border-white/10 py-2 z-50">
-                    <a href="#produtos" onClick={() => setProductsOpen(false)} className="block px-4 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white transition">
-                      Chás Naturais
-                    </a>
-                    <a href="#produtos" onClick={() => setProductsOpen(false)} className="block px-4 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white transition">
-                      Temperos
-                    </a>
-                    <a href="#produtos" onClick={() => setProductsOpen(false)} className="block px-4 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white transition">
-                      Suplementos
-                    </a>
-                    <a href="#produtos" onClick={() => setProductsOpen(false)} className="block px-4 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white transition">
-                      Grãos e Cereais
-                    </a>
-                  </div>
-                )}
-              </div>
-              <a href="#depoimentos" className="px-4 py-2 text-sm font-medium text-white/70 hover:text-white rounded-lg hover:bg-white/5 transition">
-                Depoimentos
-              </a>
-              <a href="#contato" className="px-4 py-2 text-sm font-medium text-white/70 hover:text-white rounded-lg hover:bg-white/5 transition">
-                Contato
-              </a>
-            </div>
+        {/* Grain overlay */}
+        <div
+          className="fixed inset-0 pointer-events-none z-[100]"
+          style={{ filter: 'url(#grain)', opacity: 0.04, mixBlendMode: 'overlay' }}
+        />
 
-            {/* Desktop CTA */}
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden md:inline-flex items-center gap-2 bg-white hover:bg-white/90 text-[#0a0a08] px-5 py-2.5 rounded-lg text-sm font-medium transition"
+        {/* UI Overlay */}
+        <div className="absolute inset-0 z-20 pointer-events-none">
+          {/* Top bar */}
+          <div className="flex justify-between items-start p-6 sm:p-10">
+            <p
+              className="text-white/80 text-xs sm:text-sm tracking-[0.3em] uppercase pointer-events-auto"
+              style={{ fontFamily: "'SF Mono', 'Fira Code', 'Courier New', monospace" }}
             >
-              <MessageCircle className="h-4 w-4" />
-              Fale Conosco
-            </a>
+              CANTIM_DA_ROÇA
+            </p>
 
-            {/* Mobile hamburger */}
-            <button
-              onClick={() => setMenuOpen(true)}
-              className="md:hidden text-white p-2 rounded-lg hover:bg-white/10 transition"
-              aria-label="Abrir menu"
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="4" y1="8" x2="20" y2="8" />
-                <line x1="4" y1="14" x2="20" y2="14" />
-                <line x1="4" y1="20" x2="20" y2="20" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile menu */}
-        {menuOpen && (
-          <div className="fixed inset-0 z-50 bg-[#0a0a08] md:hidden">
-            <div ref={menuRef} className="flex flex-col h-full">
-              <div className="flex items-center justify-between px-4 h-16 border-b border-white/10">
-                <img src={logo} alt="Cantim da Roça" className="h-10 brightness-0 invert" />
-                <button
-                  onClick={() => setMenuOpen(false)}
-                  className="text-white p-2 rounded-lg hover:bg-white/10 transition"
-                  aria-label="Fechar menu"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                    <line x1="6" y1="18" x2="18" y2="6" />
-                  </svg>
-                </button>
-              </div>
-              <div className="flex flex-col p-4 gap-1">
-                <a href="#" onClick={() => setMenuOpen(false)} className="px-4 py-3 text-base font-medium text-white rounded-lg hover:bg-white/5 transition">
-                  Início
-                </a>
-                <a href="#produtos" onClick={() => setMenuOpen(false)} className="px-4 py-3 text-base font-medium text-white rounded-lg hover:bg-white/5 transition">
-                  Produtos
-                </a>
-                <a href="#depoimentos" onClick={() => setMenuOpen(false)} className="px-4 py-3 text-base font-medium text-white rounded-lg hover:bg-white/5 transition">
-                  Depoimentos
-                </a>
-                <a href="#contato" onClick={() => setMenuOpen(false)} className="px-4 py-3 text-base font-medium text-white rounded-lg hover:bg-white/5 transition">
-                  Contato
-                </a>
-              </div>
-              <div className="mt-auto p-4">
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white w-full py-3 rounded-lg text-base font-semibold transition shadow-lg"
-                >
-                  <MessageCircle className="h-5 w-5" />
-                  Falar no WhatsApp
-                </a>
-              </div>
+            <div className="text-right" style={{ fontFamily: "'SF Mono', 'Fira Code', 'Courier New', monospace" }}>
+              <p className="text-[#22c55e] text-[10px] sm:text-xs tracking-wider">PROD. NATURAIS</p>
+              <p className="text-[#22c55e] text-[10px] sm:text-xs tracking-wider">& SUPLEMENTOS</p>
             </div>
           </div>
-        )}
-      </nav>
 
-      {/* Announcement pill */}
-      <div className="relative z-10 flex justify-center pt-12 sm:pt-16 pb-6">
-        <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 rounded-full px-5 py-2 backdrop-blur-sm">
-          <span className="text-sm text-white/70">Produtos 100% naturais com entrega para todo Brasil</span>
-          <a href="#produtos" className="text-sm text-amber-400 hover:text-amber-300 font-medium flex items-center gap-1">
-            Ver mais
-            <ArrowRight className="h-3.5 w-3.5" />
-          </a>
-        </div>
-      </div>
+          {/* Title overlay */}
+          <div className="absolute left-6 sm:left-10 top-1/2 -translate-y-1/2">
+            <h1
+              className="text-5xl sm:text-7xl lg:text-8xl font-bold text-white leading-[0.9] tracking-tight"
+              style={{ textShadow: '0 4px 30px rgba(0,0,0,0.5)' }}
+            >
+              CANTIM
+              <br />
+              DA ROÇA
+            </h1>
+          </div>
 
-      {/* Hero content */}
-      <div className="relative z-10 flex items-center justify-center px-4 sm:px-6 pb-20 sm:pb-28">
-        <div className="max-w-4xl text-center">
-          <h1 className="text-5xl sm:text-6xl lg:text-8xl font-bold text-white leading-[1.05] tracking-tight mb-8">
-            Saúde e bem-estar com produtos{' '}
-            <span className="italic">naturais</span>
-          </h1>
+          {/* Bottom bar */}
+          <div className="absolute bottom-6 sm:bottom-10 left-6 sm:left-10 right-6 sm:right-10 flex justify-between items-end">
+            <div style={{ fontFamily: "'SF Mono', 'Fira Code', 'Courier New', monospace" }}>
+              <p className="text-white/40 text-[10px] sm:text-xs tracking-wider uppercase">
+                [ SAÚDE NATURAL ]
+              </p>
+              <p className="text-white/40 text-[10px] sm:text-xs tracking-wider uppercase mt-1">
+                CHÁS, TEMPEROS & SUPLEMENTOS
+              </p>
+            </div>
 
-          <p className="text-base sm:text-lg text-white/50 mb-12 leading-relaxed max-w-xl mx-auto">
-            Chás, temperos e suplementos naturais selecionados pra cuidar da sua saúde. Atendimento próximo, personalizado e com carinho. 💚
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-              <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white hover:bg-white/90 text-[#0a0a08] px-8 py-3.5 rounded-full text-base font-semibold transition">
-                <MessageCircle className="h-5 w-5" />
-                Falar no WhatsApp
+            <div className="flex gap-3 pointer-events-auto">
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                <button className="bg-white text-[#0a0a08] px-5 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold tracking-wider uppercase hover:bg-white/90 transition-all flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  WHATSAPP
+                </button>
+              </a>
+              <button
+                onClick={scrollToProducts}
+                className="border border-white/20 text-white px-5 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm font-medium tracking-wider uppercase hover:bg-white/5 transition-all flex items-center gap-2"
+              >
+                PRODUTOS
+                <ArrowRight className="h-4 w-4" />
               </button>
-            </a>
-            <button
-              onClick={scrollToProducts}
-              className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 hover:bg-white/5 text-white px-8 py-3.5 rounded-full text-base font-medium transition"
-            >
-              Conhecer produtos
-              <ArrowRight className="h-4 w-4" />
-            </button>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+
+        {/* 3D Canvas */}
+        <div className="relative" style={{ perspective: '1200px', perspectiveOrigin: '50% 50%' }}>
+          <div
+            ref={canvasRef}
+            className="relative"
+            style={{
+              transformStyle: 'preserve-3d',
+              transform: 'rotateX(55deg) rotateZ(-25deg)',
+              width: 'clamp(320px, 55vw, 700px)',
+              height: 'clamp(220px, 40vw, 500px)',
+            }}
+          >
+            {/* Layer 0: Base shadow */}
+            <div
+              className="absolute inset-0 bg-black/40 blur-2xl"
+              style={{ transform: 'translateZ(-10px) scale(1.1)' }}
+            />
+
+            {/* Layer 1: Logo image */}
+            <div
+              ref={(el) => (layersRef.current[0] = el!)}
+              className="absolute inset-0 overflow-hidden"
+              style={{ transform: 'translateZ(15px)', backfaceVisibility: 'hidden' }}
+            >
+              <img
+                src={logo}
+                alt="Cantim da Roça"
+                className="w-full h-full object-contain bg-white/95 p-8 sm:p-12"
+              />
+              {/* Vignette */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: 'linear-gradient(135deg, transparent 30%, rgba(0,0,0,0.3) 100%)',
+                }}
+              />
+            </div>
+
+            {/* Layer 2: Scan line effect */}
+            <div
+              ref={(el) => (layersRef.current[1] = el!)}
+              className="absolute inset-0 pointer-events-none"
+              style={{ transform: 'translateZ(30px)' }}
+            >
+              <div
+                className="w-full h-full"
+                style={{
+                  background: 'repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(255,255,255,0.02) 3px, rgba(255,255,255,0.02) 4px)',
+                }}
+              />
+            </div>
+
+            {/* Layer 3: Animated accent line */}
+            <div
+              ref={(el) => (layersRef.current[2] = el!)}
+              className="absolute left-0 top-0 w-[2px] h-full pointer-events-none"
+              style={{ transform: 'translateZ(45px)' }}
+            >
+              <div
+                className="w-full h-full bg-[#22c55e]"
+                style={{ animation: 'flow 4s ease-in-out infinite' }}
+              />
+            </div>
+
+            {/* Border frame */}
+            <div
+              className="absolute inset-0 border border-white/10 pointer-events-none"
+              style={{ transform: 'translateZ(50px)' }}
+            />
+          </div>
+        </div>
+
+        {/* Bottom gradient fade */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0a0a08] to-transparent z-10" />
+      </section>
+    </>
   );
-}
+};
+
+export default HeroSection;
