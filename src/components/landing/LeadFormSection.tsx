@@ -11,10 +11,9 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 import { APP_CONFIG } from '@/config/app';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import logo from '@/assets/logo-cantim.png';
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 11);
