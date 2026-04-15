@@ -1,4 +1,4 @@
-import { Heart, ShieldCheck, Sparkles, Truck, Clock, ThumbsUp } from 'lucide-react';
+import { Heart, ShieldCheck, Sparkles, Truck } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useRef, useState, useCallback } from 'react';
 import { Warp } from '@paper-design/shaders-react';
@@ -8,43 +8,25 @@ const benefits = [
     icon: Heart,
     title: 'Cuide da sua saúde',
     description: 'Produtos naturais que ajudam no emagrecimento, digestão e disposição no dia a dia.',
-    gradient: 'linear-gradient(135deg, hsl(145, 60%, 88%), hsl(160, 70%, 82%))',
-    hoverGradient: 'linear-gradient(135deg, hsl(145, 65%, 20%), hsl(160, 75%, 42%))',
+    shaderColors: ['#95d5b2', '#b7e4c7', '#d8f3dc'] as [string, string, string],
   },
   {
     icon: ShieldCheck,
     title: 'Qualidade garantida',
     description: 'Selecionamos cada produto com cuidado. Sem química, sem conservantes artificiais.',
-    gradient: 'linear-gradient(135deg, hsl(40, 80%, 90%), hsl(45, 96%, 85%))',
-    hoverGradient: 'linear-gradient(135deg, hsl(40, 80%, 30%), hsl(45, 96%, 56%))',
+    shaderColors: ['#e9c46a', '#f4e8c1', '#fefae0'] as [string, string, string],
   },
   {
     icon: Sparkles,
     title: 'Resultados reais',
     description: 'Nossos clientes relatam mais energia, menos inchaço e melhora no bem-estar geral.',
-    gradient: 'linear-gradient(135deg, hsl(125, 50%, 88%), hsl(140, 65%, 83%))',
-    hoverGradient: 'linear-gradient(135deg, hsl(125, 50%, 22%), hsl(140, 65%, 50%))',
+    shaderColors: ['#40916c', '#52b788', '#95d5b2'] as [string, string, string],
   },
   {
     icon: Truck,
     title: 'Entrega rápida',
     description: 'Enviamos para todo o Brasil com agilidade e cuidado. Seu pedido chega fresquinho.',
-    gradient: 'linear-gradient(135deg, hsl(10, 60%, 90%), hsl(25, 80%, 85%))',
-    hoverGradient: 'linear-gradient(135deg, hsl(10, 60%, 30%), hsl(25, 80%, 55%))',
-  },
-  {
-    icon: Clock,
-    title: 'Atendimento ágil',
-    description: 'Respondemos rápido pelo WhatsApp. Tire dúvidas e faça pedidos a qualquer hora.',
-    gradient: 'linear-gradient(135deg, hsl(200, 50%, 88%), hsl(180, 60%, 83%))',
-    hoverGradient: 'linear-gradient(135deg, hsl(200, 50%, 25%), hsl(180, 60%, 50%))',
-  },
-  {
-    icon: ThumbsUp,
-    title: 'Satisfação total',
-    description: 'Mais de 500 clientes satisfeitos. Se não gostar, a gente resolve pra você.',
-    gradient: 'linear-gradient(135deg, hsl(280, 40%, 90%), hsl(300, 50%, 85%))',
-    hoverGradient: 'linear-gradient(135deg, hsl(280, 40%, 25%), hsl(300, 50%, 50%))',
+    shaderColors: ['#d4a373', '#e9c46a', '#f4e8c1'] as [string, string, string],
   },
 ];
 
@@ -89,27 +71,27 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
           : '0 2px 10px -3px rgba(0,0,0,0.08)',
       }}
     >
-      {/* CSS gradient background */}
-      <div
-        className="absolute inset-0 transition-all duration-700"
-        style={{
-          background: isHovered ? b.hoverGradient : b.gradient,
-          opacity: isHovered ? 0.6 : 0.4,
-        }}
-      />
+      {/* Warp shader background per card */}
+      <div className="absolute inset-0 z-0" style={{ opacity: isHovered ? 0.35 : 0.2 }}>
+        <Warp
+          speed={0.2}
+          scale={0.5}
+          colors={b.shaderColors}
+        />
+      </div>
 
-      {/* Gradient overlay for readability */}
+      {/* Overlay for readability */}
       <div
-        className="absolute inset-0 transition-opacity duration-500"
+        className="absolute inset-0 z-[1] transition-opacity duration-500"
         style={{
           background: isHovered
-            ? 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.15) 100%)'
-            : 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.45) 100%)',
+            ? 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 100%)'
+            : 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.5) 100%)',
         }}
       />
 
       {/* Content */}
-      <div className="relative p-7 sm:p-8 h-full flex flex-col" style={{ transform: 'translateZ(30px)' }}>
+      <div className="relative z-[2] p-7 sm:p-8 h-full flex flex-col" style={{ transform: 'translateZ(30px)' }}>
         <div
           className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-5 transition-all duration-500"
           style={{
@@ -123,7 +105,6 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
         <h3 className="text-lg sm:text-xl font-serif mb-2 text-foreground">{b.title}</h3>
         <p className="text-muted-foreground text-sm leading-relaxed flex-1">{b.description}</p>
 
-        {/* Hover arrow indicator */}
         <div
           className="mt-4 flex items-center gap-2 text-primary text-sm font-medium"
           style={{
@@ -147,15 +128,6 @@ export default function BenefitsSection() {
 
   return (
     <section id="beneficios" className="py-24 relative overflow-hidden" style={{ background: '#f7f5f0' }}>
-      {/* Warp shader background */}
-      <div className="absolute inset-0 z-0 opacity-15">
-        <Warp
-          speed={0.3}
-          scale={0.6}
-          colors={['#95d5b2', '#b7e4c7', '#d8f3dc']}
-        />
-      </div>
-
       <div className="section-container relative z-10">
         <div
           style={{
@@ -174,7 +146,7 @@ export default function BenefitsSection() {
             Simplicidade, qualidade e resultado. É isso que a gente entrega.
           </p>
         </div>
-        <div ref={ref} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5" style={{ perspective: '1200px' }}>
+        <div ref={ref} className="grid sm:grid-cols-2 gap-5" style={{ perspective: '1200px' }}>
           {benefits.map((b, i) => (
             <BenefitCard key={b.title} b={b} index={i} isVisible={isVisible} />
           ))}
