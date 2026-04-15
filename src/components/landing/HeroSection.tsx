@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { MessageCircle } from 'lucide-react';
 import { APP_CONFIG } from '@/config/app';
+import logo from '@/assets/logo-cantim.png';
 
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Quero saber mais sobre os produtos do Cantim da Roça 🌿')}`;
 
@@ -16,9 +17,7 @@ export default function HeroSection() {
 
       <div className="section-container relative z-10 py-20">
         <div className="max-w-2xl">
-          <span className="inline-block px-4 py-1.5 mb-6 text-sm font-medium tracking-wide uppercase bg-white/15 text-white rounded-full backdrop-blur-sm">
-            🌿 100% Natural
-          </span>
+          <img src={logo} alt="Cantim da Roça" className="h-24 sm:h-28 mb-6 drop-shadow-lg" />
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
             Saúde e bem-estar com produtos{' '}
             <span className="text-highlight">100% naturais</span>
