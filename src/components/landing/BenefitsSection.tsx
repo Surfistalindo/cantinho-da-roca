@@ -1,6 +1,5 @@
 import { Heart, ShieldCheck, Sparkles, Truck } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
-import { useRef, useState, useCallback } from 'react';
 import { Warp } from '@paper-design/shaders-react';
 import LeafSVG from './LeafSVG';
 
@@ -68,78 +67,30 @@ const benefits = [
 ];
 
 function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: number; isVisible: boolean }) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-  const [isHovered, setIsHovered] = useState(false);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const card = cardRef.current;
-    if (!card) return;
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    setTilt({ x: y * -10, y: x * 10 });
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    setTilt({ x: 0, y: 0 });
-    setIsHovered(false);
-  }, []);
-
   return (
     <div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={handleMouseLeave}
-      className="group relative rounded-2xl overflow-hidden border border-border/30 cursor-pointer"
+      className="group relative rounded-2xl overflow-hidden border border-border/30 bg-card transition-all duration-500 hover:shadow-xl hover:-translate-y-1"
       style={{
-        perspective: '800px',
         opacity: isVisible ? 1 : 0,
-        transform: isVisible
-          ? `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateZ(0px)`
-          : `rotateX(15deg) translateY(60px) scale(0.9)`,
-        transition: isHovered
-          ? `opacity 0.6s ease ${index * 0.1}s, transform 0.15s ease`
-          : `opacity 0.6s ease ${index * 0.1}s, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.1}s`,
-        transformStyle: 'preserve-3d',
-        boxShadow: isHovered
-          ? '0 25px 60px -15px rgba(0,0,0,0.2), 0 0 0 1px rgba(34,102,51,0.1)'
-          : '0 2px 10px -3px rgba(0,0,0,0.08)',
+        transform: isVisible ? 'translateY(0)' : 'translateY(40px)',
+        transition: `opacity 0.6s ease ${index * 0.12}s, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.12}s, box-shadow 0.4s ease`,
       }}
     >
-      <div className="absolute inset-0 z-0" style={{ opacity: isHovered ? 0.35 : 0.2 }}>
+      {/* Shader stripe at top */}
+      <div className="relative h-32 w-full overflow-hidden">
         <Warp speed={0.2} scale={0.5} {...b.shaderConfig} />
       </div>
-      <div
-        className="absolute inset-0 z-[1] transition-opacity duration-500"
-        style={{
-          background: isHovered
-            ? 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 100%)'
-            : 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.5) 100%)',
-        }}
-      />
-      <div className="relative z-[2] p-7 sm:p-8 h-full flex flex-col" style={{ transform: 'translateZ(30px)' }}>
-        <div
-          className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-5 transition-all duration-500"
-          style={{
-            background: isHovered ? 'hsl(125, 47%, 33%)' : 'rgba(34, 102, 51, 0.1)',
-            color: isHovered ? '#fff' : 'hsl(125, 47%, 33%)',
-            transform: isHovered ? 'scale(1.1) translateZ(10px)' : 'scale(1)',
-          }}
-        >
+
+      {/* Card content */}
+      <div className="relative p-7 sm:p-8">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-5 bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500">
           <b.icon className="w-6 h-6" />
         </div>
+
         <h3 className="text-lg sm:text-xl font-serif mb-2 text-foreground">{b.title}</h3>
-        <p className="text-muted-foreground text-sm leading-relaxed flex-1">{b.description}</p>
-        <div
-          className="mt-4 flex items-center gap-2 text-primary text-sm font-medium"
-          style={{
-            opacity: isHovered ? 1 : 0,
-            transform: isHovered ? 'translateX(0)' : 'translateX(-10px)',
-            transition: 'all 0.3s ease',
-          }}
-        >
+        <p className="text-muted-foreground text-sm leading-relaxed">{b.description}</p>
+
+        <div className="mt-4 flex items-center gap-2 text-primary text-sm font-medium opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
           Saiba mais
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="transition-transform group-hover:translate-x-1">
             <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -155,7 +106,6 @@ export default function BenefitsSection() {
 
   return (
     <section id="beneficios" className="py-24 relative overflow-hidden" style={{ background: '#f7f5f0' }}>
-      {/* Scattered decorative leaves */}
       <div className="absolute top-8 right-10 pointer-events-none animate-leaf-float opacity-20 z-[1]" style={{ animationDelay: '1s' }}>
         <LeafSVG size={22} id="ben1" style={{ transform: 'rotate(-30deg)' }} />
       </div>
@@ -181,7 +131,7 @@ export default function BenefitsSection() {
             Simplicidade, qualidade e resultado. É isso que a gente entrega.
           </p>
         </div>
-        <div ref={ref} className="grid sm:grid-cols-2 gap-5" style={{ perspective: '1200px' }}>
+        <div ref={ref} className="grid sm:grid-cols-2 gap-5">
           {benefits.map((b, i) => (
             <BenefitCard key={b.title} b={b} index={i} isVisible={isVisible} />
           ))}
