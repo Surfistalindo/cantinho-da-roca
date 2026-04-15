@@ -11,7 +11,9 @@ import { toast } from 'sonner';
 import LeadStatusBadge from './LeadStatusBadge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Send, MessageCircle, Phone, FileText, Pencil, Trash2, UserCheck, Save, X } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPaperPlane, faCommentDots, faPhone, faFileLines, faPenToSquare, faTrashCan, faUserCheck, faFloppyDisk, faXmark } from '@fortawesome/free-solid-svg-icons';
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { clientService } from '@/services/clientService';
 
 interface Lead {
@@ -41,10 +43,10 @@ interface Props {
   onUpdated?: () => void;
 }
 
-const interactionTypes = [
-  { value: 'mensagem', label: 'Mensagem', icon: MessageCircle },
-  { value: 'ligação', label: 'Ligação', icon: Phone },
-  { value: 'observação', label: 'Observação', icon: FileText },
+const interactionTypes: { value: string; label: string; icon: IconDefinition }[] = [
+  { value: 'mensagem', label: 'Mensagem', icon: faCommentDots },
+  { value: 'ligação', label: 'Ligação', icon: faPhone },
+  { value: 'observação', label: 'Observação', icon: faFileLines },
 ];
 
 export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }: Props) {
@@ -89,7 +91,6 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
     setNewContent('');
     toast.success('Interação registrada');
     fetchInteractions();
-    // Update last_contact_at
     await supabase.from('leads').update({ last_contact_at: new Date().toISOString() }).eq('id', lead.id);
   };
 
@@ -148,7 +149,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
 
   const typeIcon = (ct: string) => {
     const t = interactionTypes.find((i) => i.value === ct);
-    return t ? <t.icon className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />;
+    return <FontAwesomeIcon icon={t ? t.icon : faFileLines} className="h-3.5 w-3.5" />;
   };
 
   return (
@@ -161,20 +162,18 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
             </SheetTitle>
           </SheetHeader>
 
-          {/* Action buttons */}
           <div className="flex gap-2 mt-4">
             <Button variant="outline" size="sm" onClick={startEditing} disabled={editing}>
-              <Pencil className="h-3.5 w-3.5 mr-1.5" /> Editar
+              <FontAwesomeIcon icon={faPenToSquare} className="h-3.5 w-3.5 mr-1.5" /> Editar
             </Button>
             <Button variant="outline" size="sm" onClick={() => setConvertDialogOpen(true)} className="text-primary">
-              <UserCheck className="h-3.5 w-3.5 mr-1.5" /> Converter em Cliente
+              <FontAwesomeIcon icon={faUserCheck} className="h-3.5 w-3.5 mr-1.5" /> Converter em Cliente
             </Button>
             <Button variant="outline" size="sm" onClick={() => setDeleteDialogOpen(true)} className="text-destructive ml-auto">
-              <Trash2 className="h-3.5 w-3.5" />
+              <FontAwesomeIcon icon={faTrashCan} className="h-3.5 w-3.5" />
             </Button>
           </div>
 
-          {/* Edit mode */}
           {editing ? (
             <div className="mt-4 space-y-3">
               <Input placeholder="Nome" value={editData.name} onChange={(e) => setEditData({ ...editData, name: e.target.value })} />
@@ -183,8 +182,8 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
               <Input placeholder="Interesse" value={editData.product_interest} onChange={(e) => setEditData({ ...editData, product_interest: e.target.value })} />
               <Textarea placeholder="Observações" value={editData.notes} onChange={(e) => setEditData({ ...editData, notes: e.target.value })} />
               <div className="flex gap-2">
-                <Button size="sm" onClick={saveEdit}><Save className="h-3.5 w-3.5 mr-1.5" /> Salvar</Button>
-                <Button size="sm" variant="ghost" onClick={() => setEditing(false)}><X className="h-3.5 w-3.5 mr-1.5" /> Cancelar</Button>
+                <Button size="sm" onClick={saveEdit}><FontAwesomeIcon icon={faFloppyDisk} className="h-3.5 w-3.5 mr-1.5" /> Salvar</Button>
+                <Button size="sm" variant="ghost" onClick={() => setEditing(false)}><FontAwesomeIcon icon={faXmark} className="h-3.5 w-3.5 mr-1.5" /> Cancelar</Button>
               </div>
             </div>
           ) : (
@@ -216,11 +215,10 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
               const num = clean.startsWith('55') ? clean : `55${clean}`;
               window.open(`https://wa.me/${num}`, '_blank');
             }}>
-              <MessageCircle className="h-4 w-4 mr-2 text-green-600" /> Contato via WhatsApp
+              <FontAwesomeIcon icon={faCommentDots} className="h-4 w-4 mr-2 text-green-600" /> Contato via WhatsApp
             </Button>
           )}
 
-          {/* Interactions */}
           <div className="mt-8">
             <h4 className="font-semibold mb-3">Histórico de Interações</h4>
             <div className="space-y-2 mb-4">
@@ -235,7 +233,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
               <div className="flex gap-2">
                 <Textarea placeholder="Registrar interação..." value={newContent} onChange={(e) => setNewContent(e.target.value)} className="min-h-[60px]" />
                 <Button size="icon" onClick={addInteraction} disabled={sending || !newContent.trim()}>
-                  <Send className="h-4 w-4" />
+                  <FontAwesomeIcon icon={faPaperPlane} className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -260,7 +258,6 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
         </SheetContent>
       </Sheet>
 
-      {/* Delete confirmation */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -274,7 +271,6 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
         </DialogContent>
       </Dialog>
 
-      {/* Convert confirmation */}
       <Dialog open={convertDialogOpen} onOpenChange={setConvertDialogOpen}>
         <DialogContent>
           <DialogHeader>

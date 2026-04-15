@@ -1,5 +1,6 @@
 import React from 'react';
-import { MessageCircle, ArrowDownRight } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCommentDots, faArrowTurnDown } from '@fortawesome/free-solid-svg-icons';
 import { APP_CONFIG } from '@/config/app';
 import heroImg from '@/assets/hero-products.jpg';
 import logoImg from '@/assets/logo-cantim.png';
@@ -80,7 +81,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
 
           {/* Title with orbiting leaves + parallax */}
           <div className="relative flex items-center justify-center py-4 sm:py-6">
-            {/* Orbit ring — wider ellipse */}
+            {/* Orbit ring */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
               {orbitLeaves.map((leaf) => (
                 <div
@@ -176,7 +177,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
         <div className="flex flex-col sm:flex-row justify-center gap-3 pt-6">
           <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
             <Button variant="whatsapp" size="lg" className="uppercase gap-2 w-full sm:w-auto">
-              <MessageCircle className="h-5 w-5" />
+              <FontAwesomeIcon icon={faCommentDots} className="h-5 w-5" />
               Falar no WhatsApp
             </Button>
           </a>
@@ -195,7 +196,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
           <div className="mt-4 md:mt-0">
             <div className="flex items-center gap-2 md:justify-end">
               <span className="text-base sm:text-lg font-medium tracking-wider text-foreground">NOSSOS PRODUTOS</span>
-              <ArrowDownRight className="size-5 sm:size-6" />
+              <FontAwesomeIcon icon={faArrowTurnDown} className="size-5 sm:size-6" />
             </div>
             <div className="mt-3 md:text-right">
               <h2

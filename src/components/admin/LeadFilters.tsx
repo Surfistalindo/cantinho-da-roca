@@ -2,7 +2,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { APP_CONFIG } from '@/config/app';
-import { Search, AlertTriangle } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMagnifyingGlass, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -20,7 +21,7 @@ export default function LeadFilters({ search, onSearchChange, statusFilter, onSt
   return (
     <div className="flex flex-wrap gap-3 mb-6">
       <div className="relative flex-1 min-w-[200px]">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Buscar por nome ou telefone..."
           value={search}
@@ -57,7 +58,7 @@ export default function LeadFilters({ search, onSearchChange, statusFilter, onSt
           onClick={() => onFollowUpChange(!followUpFilter)}
           className={cn('gap-1.5', followUpFilter && 'bg-orange-500 hover:bg-orange-600')}
         >
-          <AlertTriangle className="h-3.5 w-3.5" /> Follow-up
+          <FontAwesomeIcon icon={faTriangleExclamation} className="h-3.5 w-3.5" /> Follow-up
         </Button>
       )}
     </div>

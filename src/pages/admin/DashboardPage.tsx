@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Users, BarChart3, MessageSquare, PhoneOff, UserCheck } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUserGroup, faChartColumn, faComments, faPhoneSlash, faUserCheck } from '@fortawesome/free-solid-svg-icons';
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function DashboardPage() {
@@ -27,12 +29,12 @@ export default function DashboardPage() {
     noResponse: leads.filter((l) => l.status === 'no_response').length,
   }), [leads]);
 
-  const cards = [
-    { icon: Users, label: 'Total de Leads', value: stats.total, description: 'Leads capturados', accent: 'text-primary bg-primary/10' },
-    { icon: BarChart3, label: 'Negociando', value: stats.negotiating, description: 'Em negociação ativa', accent: 'text-yellow-700 bg-yellow-100' },
-    { icon: MessageSquare, label: 'Vendidos', value: stats.sold, description: 'Convertidos em vendas', accent: 'text-green-700 bg-green-100' },
-    { icon: PhoneOff, label: 'Sem Resposta', value: stats.noResponse, description: 'Aguardando contato', accent: 'text-muted-foreground bg-muted' },
-    { icon: UserCheck, label: 'Clientes', value: customerCount, description: 'Clientes cadastrados', accent: 'text-primary bg-primary/10' },
+  const cards: { icon: IconDefinition; label: string; value: number; description: string; accent: string }[] = [
+    { icon: faUserGroup, label: 'Total de Leads', value: stats.total, description: 'Leads capturados', accent: 'text-primary bg-primary/10' },
+    { icon: faChartColumn, label: 'Negociando', value: stats.negotiating, description: 'Em negociação ativa', accent: 'text-yellow-700 bg-yellow-100' },
+    { icon: faComments, label: 'Vendidos', value: stats.sold, description: 'Convertidos em vendas', accent: 'text-green-700 bg-green-100' },
+    { icon: faPhoneSlash, label: 'Sem Resposta', value: stats.noResponse, description: 'Aguardando contato', accent: 'text-muted-foreground bg-muted' },
+    { icon: faUserCheck, label: 'Clientes', value: customerCount, description: 'Clientes cadastrados', accent: 'text-primary bg-primary/10' },
   ];
 
   if (loading) {
@@ -48,7 +50,7 @@ export default function DashboardPage() {
           <div key={c.label} className="bg-card rounded-xl border border-border p-5 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3 mb-3">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${c.accent}`}>
-                <c.icon className="w-5 h-5" />
+                <FontAwesomeIcon icon={c.icon} className="w-5 h-5" />
               </div>
               <span className="text-sm font-medium text-muted-foreground">{c.label}</span>
             </div>
