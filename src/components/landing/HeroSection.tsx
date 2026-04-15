@@ -1,7 +1,8 @@
 import React from 'react';
-import { MessageCircle, ArrowDown } from 'lucide-react';
+import { MessageCircle, ArrowDownRight } from 'lucide-react';
 import { APP_CONFIG } from '@/config/app';
 import heroImg from '@/assets/hero-products.jpg';
+import { Button } from '@/components/ui/button';
 
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Quero saber mais sobre os produtos do Cantim da Roça 🌿')}`;
 
@@ -15,56 +16,136 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
   };
 
   return (
-    <section
-      id="inicio"
-      className="relative w-full min-h-screen flex items-center"
-      style={{ background: 'linear-gradient(160deg, #f7f5f0 0%, #eef5ee 40%, #f0f7f0 100%)' }}
-    >
-      <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 py-24 sm:py-32 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-        {/* Text */}
-        <div className="flex flex-col gap-6 sm:gap-8 z-10">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-foreground leading-tight">
-            Mais disposição, menos inchaço e{' '}
-            <span className="text-primary">bem-estar no dia a dia</span>
-          </h1>
-
-          <p className="text-base sm:text-lg text-foreground/70 max-w-lg leading-relaxed">
-            Produtos naturais com orientação direta pelo WhatsApp, sem complicação.
+    <section id="inicio" className="relative min-h-screen overflow-hidden py-20">
+      <div className="relative z-20 mx-auto max-w-7xl px-6">
+        {/* Top section with big title */}
+        <div className="relative">
+          <p className="absolute -top-4 left-20 text-sm font-medium tracking-wider text-muted-foreground">
+            100% Natural
           </p>
 
-          <div className="flex flex-wrap gap-3 pt-2">
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-              <button className="bg-[#25D366] text-white px-6 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base font-semibold hover:bg-[#20bd5a] transition-colors flex items-center gap-2.5 rounded-lg shadow-md">
-                <MessageCircle className="h-5 w-5" />
-                Falar no WhatsApp
-              </button>
-            </a>
-            <button
-              onClick={scrollToProducts}
-              className="border border-foreground/20 text-foreground px-6 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base font-medium hover:bg-foreground/5 transition-colors flex items-center gap-2 rounded-lg"
-            >
-              Ver produtos
-              <ArrowDown className="h-4 w-4" />
-            </button>
+          <h1
+            className="text-primary relative z-20 text-center text-7xl font-bold tracking-[-7px] md:text-9xl md:tracking-[-14px] xl:text-[10rem] xl:tracking-[-1rem]"
+            style={{ fontFamily: "'Oswald', sans-serif" }}
+          >
+            PRODUTOS NATURAIS
+          </h1>
+
+          <p
+            className="absolute right-24 -bottom-12 hidden text-4xl font-thin tracking-[6px] xl:block text-foreground/60"
+            style={{ fontFamily: "'Satisfy', cursive" }}
+          >
+            Cantım da Roça
+          </p>
+          <p
+            className="absolute -bottom-12 left-24 text-4xl font-thin tracking-[6px] xl:hidden text-foreground/60"
+            style={{ fontFamily: "'Satisfy', cursive" }}
+          >
+            Cantım da Roça
+          </p>
+        </div>
+
+        {/* Middle section with image and services */}
+        <div className="relative grid">
+          <div className="flex justify-center gap-6 space-y-8 pt-20">
+            {/* Services list */}
+            <div className="bg-secondary/10 flex h-fit w-full max-w-xl items-end gap-6 space-y-2 p-10 text-xl font-bold md:text-2xl lg:text-3xl rounded-lg">
+              <div className="text-xl font-semibold text-foreground">
+                <div>/ CHÁS E ERVAS</div>
+                <div>/ SUPLEMENTOS NATURAIS</div>
+                <div>/ BEM-ESTAR</div>
+              </div>
+
+              {/* Image - Desktop */}
+              <div className="bg-secondary/10 absolute -top-10 left-1/2 hidden w-fit overflow-hidden md:flex rounded-lg">
+                <img
+                  alt="Produtos naturais - chás, suplementos e ervas"
+                  className="h-[400px] w-full object-cover"
+                  src={heroImg}
+                />
+                <div className="rotate-180 p-2 text-left text-xs font-medium tracking-widest [writing-mode:vertical-rl] text-muted-foreground">
+                  SAÚDE E BEM-ESTAR
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Image - Mobile */}
+          <div className="bg-secondary/10 -top-10 left-1/2 flex w-full overflow-hidden md:hidden md:w-fit rounded-lg">
+            <img
+              alt="Produtos naturais - chás, suplementos e ervas"
+              className="h-[400px] w-full object-cover"
+              src={heroImg}
+            />
+            <div className="rotate-180 p-2 text-left text-xs font-medium tracking-widest [writing-mode:vertical-rl] text-muted-foreground">
+              SAÚDE E BEM-ESTAR
+            </div>
           </div>
         </div>
 
-        {/* Image */}
-        <div className="relative">
-          <div className="rounded-2xl overflow-hidden shadow-xl">
-            <img
-              src={heroImg}
-              alt="Produtos naturais - chás, suplementos e ervas sobre mesa de madeira"
-              width={1920}
-              height={1080}
-              className="w-full h-auto object-cover"
-            />
+        {/* Description */}
+        <div className="mt-10 md:mt-40">
+          <p className="mx-auto max-w-2xl text-center font-sans text-sm font-medium tracking-wide md:text-base text-foreground/80">
+            Mais disposição, menos inchaço e bem-estar no dia a dia.
+            <br />
+            Produtos naturais com orientação direta pelo WhatsApp,
+            <br />
+            sem complicação.
+          </p>
+        </div>
+
+        {/* CTA */}
+        <div className="flex justify-center gap-3 pt-6">
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+            <Button variant="whatsapp" size="lg" className="uppercase gap-2">
+              <MessageCircle className="h-5 w-5" />
+              Falar no WhatsApp
+            </Button>
+          </a>
+          <Button variant="outline" size="lg" className="uppercase" onClick={scrollToProducts}>
+            Ver produtos
+          </Button>
+        </div>
+
+        {/* Bottom section */}
+        <div className="mt-20 items-end justify-between md:flex">
+          <div className="relative">
+            <div className="mb-8 flex flex-col gap-2 md:mb-0">
+              <span className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
+                + de 500 clientes satisfeitos
+              </span>
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center gap-2 md:justify-end">
+              <span className="text-lg font-medium tracking-wider text-foreground">NOSSOS PRODUTOS</span>
+              <ArrowDownRight className="size-6" />
+            </div>
+            <div className="mt-3 md:text-right">
+              <h2
+                className="text-5xl tracking-[-4px] uppercase text-foreground"
+                style={{ fontFamily: "'Oswald', sans-serif" }}
+              >
+                Saúde sem Limites
+              </h2>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#f7f5f0] to-transparent" />
+      {/* Grid background - Light */}
+      <div
+        className="absolute inset-0 z-0 block dark:hidden"
+        style={{
+          backgroundImage:
+            'linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px), linear-gradient(hsl(var(--border)) 1px, transparent 1px)',
+          backgroundSize: '20px 20px',
+          maskImage:
+            'repeating-linear-gradient(to right, black 0px, black 3px, transparent 3px, transparent 8px), repeating-linear-gradient(black 0px, black 3px, transparent 3px, transparent 8px), radial-gradient(70% 60% at 50% 0%, rgb(0,0,0) 60%, transparent 100%)',
+          maskComposite: 'intersect',
+          WebkitMaskComposite: 'source-in',
+        }}
+      />
     </section>
   );
 };
