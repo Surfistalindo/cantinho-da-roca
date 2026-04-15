@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { Warp } from '@paper-design/shaders-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -72,9 +73,13 @@ const benefits = [
 ];
 
 function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: number; isVisible: boolean }) {
+  const [hovered, setHovered] = useState(false);
+
   return (
     <div
       className={`group relative rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-xl hover:-translate-y-1 min-h-[220px] sm:min-h-[280px]`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'translateY(0)' : 'translateY(40px)',
@@ -84,9 +89,15 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
       {/* CSS gradient fallback */}
       <div className={`absolute inset-0 z-0 bg-gradient-to-br ${b.fallbackGradient}`} />
 
-      {/* Shader layer on top of fallback */}
+      {/* Shader layer — speed increases on hover */}
       <div className="absolute inset-0 z-[1]" style={{ width: '100%', height: '100%' }}>
-        <Warp speed={0.15} scale={0.4} {...b.shaderConfig} style={{ width: '100%', height: '100%', display: 'block' }} />
+        <Warp
+          speed={hovered ? 0.8 : 0.15}
+          scale={hovered ? 0.6 : 0.4}
+          {...b.shaderConfig}
+          distortion={hovered ? (b.shaderConfig.distortion ?? 0.18) * 2.5 : b.shaderConfig.distortion}
+          style={{ width: '100%', height: '100%', display: 'block' }}
+        />
       </div>
 
       {/* Dark overlay for text readability */}
