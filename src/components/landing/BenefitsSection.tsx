@@ -1,13 +1,16 @@
-import { Heart, ShieldCheck, Sparkles, Truck } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { Warp } from '@paper-design/shaders-react';
 import LeafSVG from './LeafSVG';
 
 const benefits = [
   {
-    icon: Heart,
     title: 'Cuide da sua saúde',
     description: 'Produtos naturais que ajudam no emagrecimento, digestão e disposição no dia a dia.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+      </svg>
+    ),
     shaderConfig: {
       proportion: 0.35,
       softness: 0.9,
@@ -20,9 +23,14 @@ const benefits = [
     },
   },
   {
-    icon: ShieldCheck,
     title: 'Qualidade garantida',
     description: 'Selecionamos cada produto com cuidado. Sem química, sem conservantes artificiais.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="m9 12 2 2 4-4"/>
+      </svg>
+    ),
     shaderConfig: {
       proportion: 0.45,
       softness: 1.1,
@@ -35,9 +43,14 @@ const benefits = [
     },
   },
   {
-    icon: Sparkles,
     title: 'Resultados reais',
     description: 'Nossos clientes relatam mais energia, menos inchaço e melhora no bem-estar geral.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+        <path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/>
+      </svg>
+    ),
     shaderConfig: {
       proportion: 0.3,
       softness: 0.8,
@@ -50,9 +63,15 @@ const benefits = [
     },
   },
   {
-    icon: Truck,
     title: 'Entrega rápida',
     description: 'Enviamos para todo o Brasil com agilidade e cuidado. Seu pedido chega fresquinho.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>
+        <path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/>
+        <circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>
+      </svg>
+    ),
     shaderConfig: {
       proportion: 0.42,
       softness: 1.0,
@@ -77,14 +96,14 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
       }}
     >
       {/* Shader stripe at top */}
-      <div className="relative h-32 w-full overflow-hidden">
+      <div className="relative h-32 w-full overflow-hidden rounded-t-2xl">
         <Warp speed={0.2} scale={0.5} {...b.shaderConfig} />
       </div>
 
       {/* Card content */}
       <div className="relative p-7 sm:p-8">
         <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-5 bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500">
-          <b.icon className="w-6 h-6" />
+          {b.icon}
         </div>
 
         <h3 className="text-lg sm:text-xl font-serif mb-2 text-foreground">{b.title}</h3>
