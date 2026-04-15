@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { LogOut, ExternalLink } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import logo from '@/assets/logo-cantim.png';
 
 export default function AdminNavbar() {
   const { user, signOut } = useAuth();
@@ -17,8 +18,9 @@ export default function AdminNavbar() {
     <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4 shrink-0">
       <div className="flex items-center gap-3">
         <SidebarTrigger className="text-muted-foreground" />
+        <img src={logo} alt="Cantim da Roça" className="h-8" />
         <div>
-          <h1 className="text-sm font-bold font-heading leading-tight">Cantinho da Roça</h1>
+          <h1 className="text-sm font-bold font-heading leading-tight">Cantim da Roça</h1>
           <p className="text-[11px] text-muted-foreground leading-tight">CRM</p>
         </div>
       </div>
