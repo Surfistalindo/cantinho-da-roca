@@ -16,9 +16,7 @@ const HeroSection: React.FC = () => {
     const handleMouseMove = (e: MouseEvent) => {
       const x = (window.innerWidth / 2 - e.pageX) / 25;
       const y = (window.innerHeight / 2 - e.pageY) / 25;
-
       canvas.style.transform = `rotateX(${55 + y / 2}deg) rotateZ(${-25 + x / 2}deg)`;
-
       layersRef.current.forEach((layer, index) => {
         if (!layer) return;
         const depth = (index + 1) * 15;
@@ -30,7 +28,6 @@ const HeroSection: React.FC = () => {
 
     canvas.style.opacity = '0';
     canvas.style.transform = 'rotateX(90deg) rotateZ(0deg) scale(0.8)';
-
     const timeout = setTimeout(() => {
       canvas.style.transition = 'all 2.5s cubic-bezier(0.16, 1, 0.3, 1)';
       canvas.style.opacity = '1';
@@ -38,7 +35,6 @@ const HeroSection: React.FC = () => {
     }, 300);
 
     window.addEventListener('mousemove', handleMouseMove);
-
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       clearTimeout(timeout);
@@ -61,20 +57,15 @@ const HeroSection: React.FC = () => {
 
       <section
         className="relative w-full min-h-screen overflow-hidden flex items-center justify-center"
-        style={{ background: 'radial-gradient(ellipse at 50% 50%, #1a1a18 0%, #0a0a08 100%)' }}
+        style={{ background: 'linear-gradient(160deg, #f7f5f0 0%, #eef5ee 40%, #f0f7f0 100%)' }}
       >
-        {/* SVG Filter for Grain */}
-        <svg className="hidden">
-          <filter id="grain">
-            <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
-            <feColorMatrix type="saturate" values="0" />
-          </filter>
-        </svg>
-
-        {/* Grain overlay */}
+        {/* Subtle dot pattern */}
         <div
-          className="fixed inset-0 pointer-events-none z-[100]"
-          style={{ filter: 'url(#grain)', opacity: 0.04, mixBlendMode: 'overlay' }}
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage: 'radial-gradient(circle, hsl(125 47% 33%) 1px, transparent 1px)',
+            backgroundSize: '30px 30px',
+          }}
         />
 
         {/* UI Overlay */}
@@ -82,51 +73,50 @@ const HeroSection: React.FC = () => {
           {/* Top bar */}
           <div className="flex justify-between items-start p-6 sm:p-10">
             <p
-              className="text-white/80 text-xs sm:text-sm tracking-[0.3em] uppercase pointer-events-auto"
+              className="text-foreground/60 text-xs sm:text-sm tracking-[0.3em] uppercase pointer-events-auto font-medium"
               style={{ fontFamily: "'SF Mono', 'Fira Code', 'Courier New', monospace" }}
             >
               CANTIM_DA_ROÇA
             </p>
-
             <div className="text-right" style={{ fontFamily: "'SF Mono', 'Fira Code', 'Courier New', monospace" }}>
-              <p className="text-[#22c55e] text-[10px] sm:text-xs tracking-wider">PROD. NATURAIS</p>
-              <p className="text-[#22c55e] text-[10px] sm:text-xs tracking-wider">& SUPLEMENTOS</p>
+              <p className="text-primary/70 text-[10px] sm:text-xs tracking-wider">PROD. NATURAIS</p>
+              <p className="text-primary/70 text-[10px] sm:text-xs tracking-wider">& SUPLEMENTOS</p>
             </div>
           </div>
 
-          {/* Title overlay */}
+          {/* Title */}
           <div className="absolute left-6 sm:left-10 top-1/2 -translate-y-1/2">
-            <h1
-              className="text-5xl sm:text-7xl lg:text-8xl font-bold text-white leading-[0.9] tracking-tight"
-              style={{ textShadow: '0 4px 30px rgba(0,0,0,0.5)' }}
-            >
+            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-bold text-foreground leading-[0.9] tracking-tight">
               CANTIM
               <br />
-              DA ROÇA
+              <span className="text-primary">DA ROÇA</span>
             </h1>
+            <p className="text-muted-foreground text-sm sm:text-base mt-4 max-w-xs leading-relaxed">
+              Chás, temperos e suplementos naturais pra cuidar da sua saúde 💚
+            </p>
           </div>
 
           {/* Bottom bar */}
           <div className="absolute bottom-6 sm:bottom-10 left-6 sm:left-10 right-6 sm:right-10 flex justify-between items-end">
             <div style={{ fontFamily: "'SF Mono', 'Fira Code', 'Courier New', monospace" }}>
-              <p className="text-white/40 text-[10px] sm:text-xs tracking-wider uppercase">
+              <p className="text-foreground/30 text-[10px] sm:text-xs tracking-wider uppercase">
                 [ SAÚDE NATURAL ]
               </p>
-              <p className="text-white/40 text-[10px] sm:text-xs tracking-wider uppercase mt-1">
-                CHÁS, TEMPEROS & SUPLEMENTOS
+              <p className="text-foreground/30 text-[10px] sm:text-xs tracking-wider uppercase mt-1">
+                ATENDIMENTO PERSONALIZADO
               </p>
             </div>
 
             <div className="flex gap-3 pointer-events-auto">
               <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-                <button className="bg-white text-[#0a0a08] px-5 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold tracking-wider uppercase hover:bg-white/90 transition-all flex items-center gap-2">
+                <button className="bg-primary text-primary-foreground px-5 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold tracking-wider uppercase hover:bg-primary/90 transition-all flex items-center gap-2 rounded-md shadow-lg shadow-primary/20">
                   <MessageCircle className="h-4 w-4" />
                   WHATSAPP
                 </button>
               </a>
               <button
                 onClick={scrollToProducts}
-                className="border border-white/20 text-white px-5 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm font-medium tracking-wider uppercase hover:bg-white/5 transition-all flex items-center gap-2"
+                className="border border-foreground/20 text-foreground px-5 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm font-medium tracking-wider uppercase hover:bg-foreground/5 transition-all flex items-center gap-2 rounded-md"
               >
                 PRODUTOS
                 <ArrowRight className="h-4 w-4" />
@@ -147,68 +137,63 @@ const HeroSection: React.FC = () => {
               height: 'clamp(220px, 40vw, 500px)',
             }}
           >
-            {/* Layer 0: Base shadow */}
+            {/* Shadow */}
             <div
-              className="absolute inset-0 bg-black/40 blur-2xl"
-              style={{ transform: 'translateZ(-10px) scale(1.1)' }}
+              className="absolute inset-0 blur-2xl"
+              style={{ transform: 'translateZ(-10px) scale(1.1)', background: 'rgba(34,102,51,0.1)' }}
             />
 
-            {/* Layer 1: Logo image */}
+            {/* Logo image */}
             <div
               ref={(el) => (layersRef.current[0] = el!)}
-              className="absolute inset-0 overflow-hidden"
+              className="absolute inset-0 overflow-hidden rounded-lg"
               style={{ transform: 'translateZ(15px)', backfaceVisibility: 'hidden' }}
             >
-              <img
-                src={logo}
-                alt="Cantim da Roça"
-                className="w-full h-full object-contain bg-white/95 p-8 sm:p-12"
-              />
-              {/* Vignette */}
+              <div className="w-full h-full bg-white flex items-center justify-center p-8 sm:p-12">
+                <img src={logo} alt="Cantim da Roça" className="w-full h-full object-contain" />
+              </div>
               <div
                 className="absolute inset-0"
-                style={{
-                  background: 'linear-gradient(135deg, transparent 30%, rgba(0,0,0,0.3) 100%)',
-                }}
+                style={{ background: 'linear-gradient(135deg, transparent 40%, rgba(34,102,51,0.08) 100%)' }}
               />
             </div>
 
-            {/* Layer 2: Scan line effect */}
+            {/* Scan lines */}
             <div
               ref={(el) => (layersRef.current[1] = el!)}
-              className="absolute inset-0 pointer-events-none"
+              className="absolute inset-0 pointer-events-none rounded-lg"
               style={{ transform: 'translateZ(30px)' }}
             >
               <div
                 className="w-full h-full"
                 style={{
-                  background: 'repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(255,255,255,0.02) 3px, rgba(255,255,255,0.02) 4px)',
+                  background: 'repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(34,102,51,0.03) 3px, rgba(34,102,51,0.03) 4px)',
                 }}
               />
             </div>
 
-            {/* Layer 3: Animated accent line */}
+            {/* Accent line */}
             <div
               ref={(el) => (layersRef.current[2] = el!)}
               className="absolute left-0 top-0 w-[2px] h-full pointer-events-none"
               style={{ transform: 'translateZ(45px)' }}
             >
               <div
-                className="w-full h-full bg-[#22c55e]"
+                className="w-full h-full bg-primary"
                 style={{ animation: 'flow 4s ease-in-out infinite' }}
               />
             </div>
 
-            {/* Border frame */}
+            {/* Border */}
             <div
-              className="absolute inset-0 border border-white/10 pointer-events-none"
+              className="absolute inset-0 border border-primary/15 rounded-lg pointer-events-none"
               style={{ transform: 'translateZ(50px)' }}
             />
           </div>
         </div>
 
-        {/* Bottom gradient fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0a0a08] to-transparent z-10" />
+        {/* Bottom fade */}
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#f7f5f0] to-transparent z-10" />
       </section>
     </>
   );
