@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { APP_CONFIG } from '@/config/app';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useRef, useState, useCallback } from 'react';
-import { Warp } from '@paper-design/shaders-react';
 
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Oi! Quero saber mais sobre os produtos naturais 🌿')}`;
 
@@ -13,51 +12,24 @@ const products = [
     title: 'Chás Naturais',
     description: 'Chás funcionais para emagrecer, desinflamar, relaxar e melhorar a digestão. Tudo 100% natural.',
     badge: 'Mais vendido',
+    gradient: 'linear-gradient(135deg, hsl(145, 65%, 85%), hsl(160, 75%, 78%))',
+    hoverGradient: 'linear-gradient(135deg, hsl(145, 65%, 20%), hsl(170, 55%, 52%))',
   },
   {
     icon: Flame,
     title: 'Temperos & Especiarias',
     description: 'Temperos frescos e selecionados pra dar sabor e saúde às suas refeições do dia a dia.',
     badge: '100% Natural',
+    gradient: 'linear-gradient(135deg, hsl(15, 70%, 88%), hsl(30, 85%, 82%))',
+    hoverGradient: 'linear-gradient(135deg, hsl(15, 70%, 28%), hsl(40, 80%, 58%))',
   },
   {
     icon: Cookie,
     title: 'Produtos Artesanais',
     description: 'Farinhas, grãos, mel e outros itens naturais produzidos com cuidado e sem aditivos.',
     badge: 'Artesanal',
-  },
-];
-
-const productShaderConfigs = [
-  {
-    proportion: 0.3,
-    softness: 0.9,
-    distortion: 0.15,
-    swirl: 0.6,
-    swirlIterations: 10,
-    shape: 'edge' as const,
-    shapeScale: 0.07,
-    colors: ['hsl(145, 65%, 20%)', 'hsl(160, 75%, 42%)', 'hsl(130, 60%, 30%)', 'hsl(170, 55%, 52%)'],
-  },
-  {
-    proportion: 0.38,
-    softness: 1.1,
-    distortion: 0.2,
-    swirl: 0.8,
-    swirlIterations: 12,
-    shape: 'stripes' as const,
-    shapeScale: 0.09,
-    colors: ['hsl(15, 70%, 28%)', 'hsl(30, 85%, 52%)', 'hsl(20, 75%, 38%)', 'hsl(40, 80%, 58%)'],
-  },
-  {
-    proportion: 0.35,
-    softness: 1.0,
-    distortion: 0.18,
-    swirl: 0.7,
-    swirlIterations: 11,
-    shape: 'checks' as const,
-    shapeScale: 0.08,
-    colors: ['hsl(35, 70%, 25%)', 'hsl(45, 90%, 55%)', 'hsl(40, 65%, 35%)', 'hsl(50, 80%, 60%)'],
+    gradient: 'linear-gradient(135deg, hsl(35, 70%, 88%), hsl(45, 90%, 82%))',
+    hoverGradient: 'linear-gradient(135deg, hsl(35, 70%, 25%), hsl(50, 80%, 60%))',
   },
 ];
 
@@ -74,8 +46,6 @@ function ProductCard({ p, index, isVisible }: { p: typeof products[0]; index: nu
     card.style.setProperty('--mouse-x', `${x * 100}%`);
     card.style.setProperty('--mouse-y', `${y * 100}%`);
   }, []);
-
-  const config = productShaderConfigs[index % productShaderConfigs.length];
 
   return (
     <div
@@ -95,17 +65,14 @@ function ProductCard({ p, index, isVisible }: { p: typeof products[0]; index: nu
           : '0 4px 6px -1px rgba(0,0,0,0.05)',
       }}
     >
-      {/* Shader background */}
+      {/* CSS gradient background */}
       <div
-        className="absolute inset-0 transition-opacity duration-700"
-        style={{ opacity: isHovered ? 0.7 : 0.45 }}
-      >
-        <Warp
-          speed={isHovered ? 0.5 : 0.3}
-          {...config}
-          style={{ width: '100%', height: '100%' }}
-        />
-      </div>
+        className="absolute inset-0 transition-all duration-700"
+        style={{
+          background: isHovered ? p.hoverGradient : p.gradient,
+          opacity: isHovered ? 0.6 : 0.4,
+        }}
+      />
 
       {/* Overlay */}
       <div

@@ -1,101 +1,49 @@
 import { Heart, ShieldCheck, Sparkles, Truck, Clock, ThumbsUp } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useRef, useState, useCallback } from 'react';
-import { Warp } from '@paper-design/shaders-react';
 
 const benefits = [
   {
     icon: Heart,
     title: 'Cuide da sua saúde',
     description: 'Produtos naturais que ajudam no emagrecimento, digestão e disposição no dia a dia.',
+    gradient: 'linear-gradient(135deg, hsl(145, 60%, 88%), hsl(160, 70%, 82%))',
+    hoverGradient: 'linear-gradient(135deg, hsl(145, 65%, 20%), hsl(160, 75%, 42%))',
   },
   {
     icon: ShieldCheck,
     title: 'Qualidade garantida',
     description: 'Selecionamos cada produto com cuidado. Sem química, sem conservantes artificiais.',
+    gradient: 'linear-gradient(135deg, hsl(40, 80%, 90%), hsl(45, 96%, 85%))',
+    hoverGradient: 'linear-gradient(135deg, hsl(40, 80%, 30%), hsl(45, 96%, 56%))',
   },
   {
     icon: Sparkles,
     title: 'Resultados reais',
     description: 'Nossos clientes relatam mais energia, menos inchaço e melhora no bem-estar geral.',
+    gradient: 'linear-gradient(135deg, hsl(125, 50%, 88%), hsl(140, 65%, 83%))',
+    hoverGradient: 'linear-gradient(135deg, hsl(125, 50%, 22%), hsl(140, 65%, 50%))',
   },
   {
     icon: Truck,
     title: 'Entrega rápida',
     description: 'Enviamos para todo o Brasil com agilidade e cuidado. Seu pedido chega fresquinho.',
+    gradient: 'linear-gradient(135deg, hsl(10, 60%, 90%), hsl(25, 80%, 85%))',
+    hoverGradient: 'linear-gradient(135deg, hsl(10, 60%, 30%), hsl(25, 80%, 55%))',
   },
   {
     icon: Clock,
     title: 'Atendimento ágil',
     description: 'Respondemos rápido pelo WhatsApp. Tire dúvidas e faça pedidos a qualquer hora.',
+    gradient: 'linear-gradient(135deg, hsl(200, 50%, 88%), hsl(180, 60%, 83%))',
+    hoverGradient: 'linear-gradient(135deg, hsl(200, 50%, 25%), hsl(180, 60%, 50%))',
   },
   {
     icon: ThumbsUp,
     title: 'Satisfação total',
     description: 'Mais de 500 clientes satisfeitos. Se não gostar, a gente resolve pra você.',
-  },
-];
-
-const shaderConfigs = [
-  {
-    proportion: 0.35,
-    softness: 1.0,
-    distortion: 0.2,
-    swirl: 0.7,
-    swirlIterations: 10,
-    shape: 'edge' as const,
-    shapeScale: 0.06,
-    colors: ['hsl(145, 60%, 18%)', 'hsl(160, 70%, 45%)', 'hsl(130, 55%, 35%)', 'hsl(170, 50%, 55%)'],
-  },
-  {
-    proportion: 0.4,
-    softness: 1.3,
-    distortion: 0.25,
-    swirl: 0.85,
-    swirlIterations: 14,
-    shape: 'stripes' as const,
-    shapeScale: 0.1,
-    colors: ['hsl(40, 80%, 30%)', 'hsl(45, 96%, 56%)', 'hsl(30, 70%, 45%)', 'hsl(55, 85%, 65%)'],
-  },
-  {
-    proportion: 0.3,
-    softness: 0.9,
-    distortion: 0.18,
-    swirl: 0.65,
-    swirlIterations: 9,
-    shape: 'checks' as const,
-    shapeScale: 0.07,
-    colors: ['hsl(125, 50%, 22%)', 'hsl(140, 65%, 50%)', 'hsl(110, 45%, 35%)', 'hsl(150, 55%, 60%)'],
-  },
-  {
-    proportion: 0.38,
-    softness: 1.1,
-    distortion: 0.22,
-    swirl: 0.9,
-    swirlIterations: 12,
-    shape: 'edge' as const,
-    shapeScale: 0.09,
-    colors: ['hsl(10, 60%, 30%)', 'hsl(25, 80%, 55%)', 'hsl(15, 65%, 40%)', 'hsl(35, 75%, 60%)'],
-  },
-  {
-    proportion: 0.32,
-    softness: 0.85,
-    distortion: 0.16,
-    swirl: 0.75,
-    swirlIterations: 11,
-    shape: 'stripes' as const,
-    shapeScale: 0.08,
-    colors: ['hsl(200, 50%, 25%)', 'hsl(180, 60%, 50%)', 'hsl(190, 45%, 35%)', 'hsl(170, 55%, 55%)'],
-  },
-  {
-    proportion: 0.42,
-    softness: 1.2,
-    distortion: 0.2,
-    swirl: 0.8,
-    swirlIterations: 13,
-    shape: 'checks' as const,
-    shapeScale: 0.11,
-    colors: ['hsl(280, 40%, 25%)', 'hsl(300, 50%, 50%)', 'hsl(260, 45%, 35%)', 'hsl(320, 40%, 55%)'],
+    gradient: 'linear-gradient(135deg, hsl(280, 40%, 90%), hsl(300, 50%, 85%))',
+    hoverGradient: 'linear-gradient(135deg, hsl(280, 40%, 25%), hsl(300, 50%, 50%))',
   },
 ];
 
@@ -117,8 +65,6 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
     setTilt({ x: 0, y: 0 });
     setIsHovered(false);
   }, []);
-
-  const config = shaderConfigs[index % shaderConfigs.length];
 
   return (
     <div
@@ -142,17 +88,14 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
           : '0 2px 10px -3px rgba(0,0,0,0.08)',
       }}
     >
-      {/* Shader background — fills entire card */}
+      {/* CSS gradient background */}
       <div
-        className="absolute inset-0 transition-opacity duration-700"
-        style={{ opacity: isHovered ? 0.75 : 0.5 }}
-      >
-        <Warp
-          speed={isHovered ? 0.6 : 0.35}
-          {...config}
-          style={{ width: '100%', height: '100%' }}
-        />
-      </div>
+        className="absolute inset-0 transition-all duration-700"
+        style={{
+          background: isHovered ? b.hoverGradient : b.gradient,
+          opacity: isHovered ? 0.6 : 0.4,
+        }}
+      />
 
       {/* Gradient overlay for readability */}
       <div
@@ -169,9 +112,7 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
         <div
           className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-5 transition-all duration-500"
           style={{
-            background: isHovered
-              ? 'hsl(125, 47%, 33%)'
-              : 'rgba(34, 102, 51, 0.1)',
+            background: isHovered ? 'hsl(125, 47%, 33%)' : 'rgba(34, 102, 51, 0.1)',
             color: isHovered ? '#fff' : 'hsl(125, 47%, 33%)',
             transform: isHovered ? 'scale(1.1) translateZ(10px)' : 'scale(1)',
           }}
@@ -180,7 +121,7 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
         </div>
         <h3 className="text-lg sm:text-xl font-serif mb-2 text-foreground">{b.title}</h3>
         <p className="text-muted-foreground text-sm leading-relaxed flex-1">{b.description}</p>
-        
+
         {/* Hover arrow indicator */}
         <div
           className="mt-4 flex items-center gap-2 text-primary text-sm font-medium"
