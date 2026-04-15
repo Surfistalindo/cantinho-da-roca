@@ -61,7 +61,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
       ))}
 
       {/* Logo watermark background */}
-      <div className="absolute inset-y-0 left-0 z-[1] flex items-center pointer-events-none pl-2 sm:pl-4 md:pl-12">
+      <div className="absolute inset-y-0 left-0 z-[1] flex items-center pointer-events-none -ml-16 sm:-ml-20 md:-ml-10 lg:-ml-6">
         <img
           src={logoImg}
           alt=""
