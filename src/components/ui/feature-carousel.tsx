@@ -41,7 +41,7 @@ const FEATURES = [
     id: "suplementos",
     label: "Suplementos Naturais",
     icon: CheckmarkCircle01Icon,
-    image: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=1200",
+    image: "https://images.unsplash.com/photo-1550572017-edd951aa8f72?q=80&w=1200",
     description: "Suplementos para mais disposição e bem-estar no dia a dia.",
   },
   {
