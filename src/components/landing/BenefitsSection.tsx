@@ -11,6 +11,7 @@ const benefits = [
         <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
       </svg>
     ),
+    fallbackGradient: 'from-green-800 via-green-700 to-emerald-600',
     shaderConfig: {
       proportion: 0.35,
       softness: 0.9,
@@ -19,7 +20,7 @@ const benefits = [
       swirlIterations: 10,
       shape: 'checks' as const,
       shapeScale: 0.1,
-      colors: ['hsl(120, 100%, 25%)', 'hsl(140, 100%, 60%)', 'hsl(100, 90%, 30%)', 'hsl(130, 100%, 70%)'],
+      colors: ['hsl(120, 40%, 20%)', 'hsl(140, 50%, 35%)', 'hsl(100, 35%, 25%)', 'hsl(130, 45%, 40%)'],
     },
   },
   {
@@ -31,6 +32,7 @@ const benefits = [
         <path d="m9 12 2 2 4-4"/>
       </svg>
     ),
+    fallbackGradient: 'from-amber-900 via-amber-800 to-yellow-700',
     shaderConfig: {
       proportion: 0.45,
       softness: 1.1,
@@ -39,7 +41,7 @@ const benefits = [
       swirlIterations: 15,
       shape: 'stripes' as const,
       shapeScale: 0.09,
-      colors: ['hsl(30, 100%, 35%)', 'hsl(50, 100%, 65%)', 'hsl(40, 90%, 40%)', 'hsl(45, 100%, 75%)'],
+      colors: ['hsl(30, 60%, 25%)', 'hsl(40, 70%, 40%)', 'hsl(35, 55%, 30%)', 'hsl(45, 65%, 45%)'],
     },
   },
   {
@@ -51,6 +53,7 @@ const benefits = [
         <path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/>
       </svg>
     ),
+    fallbackGradient: 'from-emerald-900 via-emerald-800 to-green-700',
     shaderConfig: {
       proportion: 0.3,
       softness: 0.8,
@@ -59,7 +62,7 @@ const benefits = [
       swirlIterations: 8,
       shape: 'checks' as const,
       shapeScale: 0.08,
-      colors: ['hsl(150, 60%, 25%)', 'hsl(140, 70%, 50%)', 'hsl(160, 50%, 30%)', 'hsl(145, 80%, 60%)'],
+      colors: ['hsl(150, 40%, 20%)', 'hsl(140, 50%, 30%)', 'hsl(160, 35%, 25%)', 'hsl(145, 45%, 35%)'],
     },
   },
   {
@@ -72,6 +75,7 @@ const benefits = [
         <circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>
       </svg>
     ),
+    fallbackGradient: 'from-stone-800 via-stone-700 to-amber-800',
     shaderConfig: {
       proportion: 0.42,
       softness: 1.0,
@@ -80,7 +84,7 @@ const benefits = [
       swirlIterations: 9,
       shape: 'edge' as const,
       shapeScale: 0.13,
-      colors: ['hsl(25, 70%, 35%)', 'hsl(40, 80%, 55%)', 'hsl(35, 60%, 40%)', 'hsl(30, 90%, 65%)'],
+      colors: ['hsl(25, 50%, 25%)', 'hsl(35, 60%, 35%)', 'hsl(30, 45%, 30%)', 'hsl(20, 55%, 40%)'],
     },
   },
 ];
@@ -88,28 +92,34 @@ const benefits = [
 function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: number; isVisible: boolean }) {
   return (
     <div
-      className="group relative rounded-2xl overflow-hidden border border-border/30 bg-card transition-all duration-500 hover:shadow-xl hover:-translate-y-1"
+      className={`group relative rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-xl hover:-translate-y-1 min-h-[220px] sm:min-h-[280px]`}
       style={{
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'translateY(0)' : 'translateY(40px)',
         transition: `opacity 0.6s ease ${index * 0.12}s, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.12}s, box-shadow 0.4s ease`,
       }}
     >
-      {/* Shader stripe at top */}
-      <div className="relative h-32 w-full overflow-hidden rounded-t-2xl">
-        <Warp speed={0.2} scale={0.5} {...b.shaderConfig} />
+      {/* CSS gradient fallback */}
+      <div className={`absolute inset-0 z-0 bg-gradient-to-br ${b.fallbackGradient}`} />
+
+      {/* Shader layer on top of fallback */}
+      <div className="absolute inset-0 z-[1]" style={{ width: '100%', height: '100%' }}>
+        <Warp speed={0.15} scale={0.4} {...b.shaderConfig} style={{ width: '100%', height: '100%', display: 'block' }} />
       </div>
 
-      {/* Card content */}
-      <div className="relative p-7 sm:p-8">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-5 bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500">
+      {/* Dark overlay for text readability */}
+      <div className="absolute inset-0 z-[2] bg-black/30 group-hover:bg-black/40 transition-colors duration-500" />
+
+      {/* Content */}
+      <div className="relative z-[3] flex flex-col justify-end h-full p-6 sm:p-8">
+        <div className="inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl mb-4 bg-white/15 text-white backdrop-blur-sm group-hover:bg-white/25 transition-all duration-500">
           {b.icon}
         </div>
 
-        <h3 className="text-lg sm:text-xl font-serif mb-2 text-foreground">{b.title}</h3>
-        <p className="text-muted-foreground text-sm leading-relaxed">{b.description}</p>
+        <h3 className="text-lg sm:text-xl font-serif mb-1.5 text-white">{b.title}</h3>
+        <p className="text-white/80 text-sm leading-relaxed">{b.description}</p>
 
-        <div className="mt-4 flex items-center gap-2 text-primary text-sm font-medium opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+        <div className="mt-3 flex items-center gap-2 text-white/70 text-sm font-medium opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
           Saiba mais
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="transition-transform group-hover:translate-x-1">
             <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -124,7 +134,7 @@ export default function BenefitsSection() {
   const { ref, isVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.08 });
 
   return (
-    <section id="beneficios" className="py-24 relative overflow-hidden" style={{ background: '#f7f5f0' }}>
+    <section id="beneficios" className="py-16 sm:py-24 relative overflow-hidden" style={{ background: '#f7f5f0' }}>
       <div className="absolute top-8 right-10 pointer-events-none animate-leaf-float opacity-20 z-[1]" style={{ animationDelay: '1s' }}>
         <LeafSVG size={22} id="ben1" style={{ transform: 'rotate(-30deg)' }} />
       </div>
@@ -143,14 +153,14 @@ export default function BenefitsSection() {
           <p className="text-primary text-sm font-semibold tracking-widest uppercase text-center mb-3">
             Por que nos escolher
           </p>
-          <h2 className="text-3xl sm:text-5xl font-serif text-center mb-4 text-foreground">
+          <h2 className="text-2xl sm:text-5xl font-serif text-center mb-4 text-foreground">
             Por que escolher o Cantim da Roça?
           </h2>
-          <p className="text-muted-foreground text-center mb-16 max-w-xl mx-auto text-lg">
+          <p className="text-muted-foreground text-center mb-10 sm:mb-16 max-w-xl mx-auto text-base sm:text-lg">
             Simplicidade, qualidade e resultado. É isso que a gente entrega.
           </p>
         </div>
-        <div ref={ref} className="grid sm:grid-cols-2 gap-5">
+        <div ref={ref} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
           {benefits.map((b, i) => (
             <BenefitCard key={b.title} b={b} index={i} isVisible={isVisible} />
           ))}
