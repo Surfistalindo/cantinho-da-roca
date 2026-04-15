@@ -98,10 +98,10 @@ function ProductCard({ p, index, isVisible }: { p: typeof products[0]; index: nu
       {/* Shader background */}
       <div
         className="absolute inset-0 transition-opacity duration-700"
-        style={{ opacity: isHovered ? 0.55 : 0.15 }}
+        style={{ opacity: isHovered ? 0.7 : 0.45 }}
       >
         <Warp
-          speed={isHovered ? 0.5 : 0.15}
+          speed={isHovered ? 0.5 : 0.3}
           {...config}
           style={{ width: '100%', height: '100%' }}
         />
@@ -112,8 +112,8 @@ function ProductCard({ p, index, isVisible }: { p: typeof products[0]; index: nu
         className="absolute inset-0 transition-opacity duration-500"
         style={{
           background: isHovered
-            ? 'linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.35) 100%)'
-            : 'linear-gradient(180deg, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.8) 100%)',
+            ? 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.2) 100%)'
+            : 'linear-gradient(180deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.5) 100%)',
         }}
       />
 
