@@ -113,10 +113,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
               transformOrigin: 'left center',
             }}
           >
-            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-bold text-foreground leading-[0.9] tracking-tight">
-              CANTIM
+            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-serif text-foreground leading-[1.1] tracking-normal">
+              <span className="inline-flex items-center gap-2 sm:gap-3">
+                <Leaf className="h-8 w-8 sm:h-12 sm:w-12 lg:h-14 lg:w-14 text-primary -rotate-45" />
+                Cantim
+              </span>
               <br />
-              <span className="text-primary">DA ROÇA</span>
+              <span className="text-primary">da Roça</span>
             </h1>
           </div>
 
