@@ -1,5 +1,6 @@
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { Warp } from '@paper-design/shaders-react';
+import { Heart, ShieldCheck, Sparkles, Truck } from 'lucide-react';
 import LeafSVG from './LeafSVG';
 
 const benefits = [
