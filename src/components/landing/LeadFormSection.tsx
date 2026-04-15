@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -25,6 +26,8 @@ function isValidPhone(value: string): boolean {
   return digits.length === 10 || digits.length === 11;
 }
 
+const RATE_LIMIT_MS = 30_000; // 30 seconds between submissions
+
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Vim pelo site e quero saber mais sobre os produtos naturais 🌿')}`;
 
 export default function LeadFormSection() {
@@ -32,7 +35,9 @@ export default function LeadFormSection() {
   const [phone, setPhone] = useState('');
   const [origin, setOrigin] = useState('');
   const [productInterest, setProductInterest] = useState('');
+  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const lastSubmitRef = useRef<number>(0);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhone(formatPhone(e.target.value));
@@ -40,29 +45,67 @@ export default function LeadFormSection() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !phone.trim()) return;
 
+    // Validation
+    const trimmedName = name.trim();
+    if (trimmedName.length < 2) {
+      toast.error('Nome muito curto', { description: 'Informe pelo menos 2 caracteres.' });
+      return;
+    }
     if (!isValidPhone(phone)) {
       toast.error('Telefone inválido', { description: 'Informe um número com DDD válido.' });
+      return;
+    }
+
+    // Rate limiting
+    const now = Date.now();
+    if (now - lastSubmitRef.current < RATE_LIMIT_MS) {
+      toast.error('Aguarde um momento', { description: 'Você já enviou um cadastro recentemente.' });
       return;
     }
 
     setLoading(true);
     try {
       const cleanPhone = phone.replace(/\D/g, '');
+
+      // Check for duplicate phone
+      const { data: existing } = await supabase
+        .from('leads')
+        .select('id')
+        .eq('phone', cleanPhone)
+        .limit(1);
+
+      if (existing && existing.length > 0) {
+        toast.info('Você já está cadastrado! 😊', { description: 'Em breve entraremos em contato.' });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.from('leads').insert({
-        name: name.trim(),
+        name: trimmedName,
         phone: cleanPhone,
         origin: origin || 'direto',
         product_interest: productInterest.trim() || null,
+        notes: message.trim() || null,
       });
       if (error) throw error;
 
-      toast.success('Cadastro realizado! 🎉', { description: 'Em breve entraremos em contato.' });
+      lastSubmitRef.current = now;
+
+      toast.success('Cadastro realizado! 🎉', {
+        description: 'Quer falar agora no WhatsApp?',
+        action: {
+          label: 'Abrir WhatsApp',
+          onClick: () => window.open(whatsappUrl, '_blank'),
+        },
+        duration: 8000,
+      });
+
       setName('');
       setPhone('');
       setOrigin('');
       setProductInterest('');
+      setMessage('');
     } catch {
       toast.error('Erro ao cadastrar', { description: 'Tente novamente mais tarde.' });
     } finally {
@@ -105,6 +148,8 @@ export default function LeadFormSection() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+              minLength={2}
+              maxLength={100}
             />
             <Input
               type="tel"
@@ -128,6 +173,14 @@ export default function LeadFormSection() {
               placeholder="O que você procura? (opcional)"
               value={productInterest}
               onChange={(e) => setProductInterest(e.target.value)}
+              maxLength={200}
+            />
+            <Textarea
+              placeholder="Alguma mensagem ou observação? (opcional)"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              maxLength={500}
+              rows={3}
             />
             <Button type="submit" className="w-full" size="lg" disabled={loading}>
               {loading ? 'Enviando...' : 'Quero receber novidades'}
