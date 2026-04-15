@@ -1,11 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, MessageCircle, ArrowRight } from 'lucide-react';
+import { Instagram, MessageCircle, ArrowRight, MapPin } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import logo from '@/assets/logo-cantim.png';
 import { APP_CONFIG } from '@/config/app';
 
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Vim pelo site 🌿')}`;
+
+const instagramUrl = 'https://instagram.com/cantimdarocaa';
 
 const sections = [
   {
@@ -23,14 +25,13 @@ const sections = [
       { label: 'Sobre nós', href: '#beneficios' },
       { label: 'Depoimentos', href: '#depoimentos' },
       { label: 'Contato', href: '#contato' },
-      { label: 'Blog', href: '#' },
     ],
   },
   {
     title: 'Conecte-se',
     links: [
       { label: 'WhatsApp', href: whatsappUrl, external: true },
-      { label: 'Instagram', href: '#', external: true },
+      { label: 'Instagram', href: instagramUrl, external: true },
     ],
   },
 ];
@@ -79,14 +80,35 @@ export default function Footer() {
               Produtos naturais selecionados com cuidado pra quem quer viver com mais saúde, energia e bem-estar. 🌿
             </p>
 
-            {/* Email-style input */}
+            {/* Addresses */}
+            <div className="space-y-4 mb-8">
+              <div className="flex gap-2.5">
+                <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <div className="text-white/40 text-xs leading-relaxed">
+                  <p className="text-white/60 font-semibold text-sm mb-0.5">Unidade 1</p>
+                  Centro, Rua B, 22, Loja 10.<br />
+                  Lot. Encanto das Árvores
+                </div>
+              </div>
+              <div className="flex gap-2.5">
+                <MapPin className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <div className="text-white/40 text-xs leading-relaxed">
+                  <p className="text-white/60 font-semibold text-sm mb-0.5">Unidade 2</p>
+                  CIA 2, Av Via Universitária, 347.<br />
+                  Shopping Vivaz Center - Loja 03
+                </div>
+              </div>
+              <p className="text-white/40 text-xs ml-6">Simões Filho / BA</p>
+            </div>
+
+            {/* WhatsApp CTA */}
             <div className="flex items-center gap-0 max-w-xs">
               <div className="flex-1 relative">
                 <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
                 <input
                   type="text"
-                  placeholder="Seu WhatsApp"
-                  className="w-full bg-white/[0.06] border border-white/10 rounded-l-lg py-2.5 pl-10 pr-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/25 transition-colors"
+                  placeholder="Fale conosco no WhatsApp"
+                  className="w-full bg-white/[0.06] border border-white/10 rounded-l-lg py-2.5 pl-10 pr-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/25 transition-colors cursor-pointer"
                   readOnly
                   onClick={() => window.open(whatsappUrl, '_blank')}
                 />
@@ -161,7 +183,9 @@ export default function Footer() {
                 <MessageCircle className="h-4 w-4" />
               </a>
               <a
-                href="#"
+                href={instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-white/25 hover:text-primary transition-colors"
               >
                 <Instagram className="h-4 w-4" />

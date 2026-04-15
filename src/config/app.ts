@@ -5,7 +5,7 @@
 
 export const APP_CONFIG = {
   /** Número do WhatsApp para contato (com código do país) */
-  whatsappNumber: '5571999999999',
+  whatsappNumber: '5571991026884',
 
   /** Credenciais padrão do administrador
    *  Use estas credenciais no primeiro acesso.
