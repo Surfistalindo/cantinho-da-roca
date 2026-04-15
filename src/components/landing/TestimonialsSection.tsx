@@ -1,7 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faQuoteLeft } from '@fortawesome/free-solid-svg-icons';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
-import { useMouseTilt } from '@/hooks/useMouseTilt';
 import { Warp } from '@paper-design/shaders-react';
 import LeafSVG from './LeafSVG';
 
@@ -25,70 +24,6 @@ const testimonials = [
     text: 'Atendimento maravilhoso, sempre me orientam direitinho. Já emagreci 4kg em um mês com os produtos. Super recomendo!',
   },
 ];
-
-function TestimonialCard({ t, index, isVisible }: { t: typeof testimonials[0]; index: number; isVisible: boolean }) {
-  const { ref, tilt, onMouseMove, onMouseLeave } = useMouseTilt(8);
-
-  return (
-    <div
-      ref={ref}
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
-      className="relative rounded-2xl p-8 bg-card border border-border/30 group"
-      style={{
-        perspective: '600px',
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible
-          ? 'translateY(0) rotateX(0deg)'
-          : 'translateY(60px) rotateX(-15deg)',
-        transition: `all 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.15}s`,
-        transformOrigin: 'bottom center',
-      }}
-    >
-      <div
-        className="relative w-full h-full"
-        style={{
-          transform: `rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg)`,
-          transition: tilt.rotateX === 0 ? 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)' : 'transform 0.1s linear',
-          willChange: 'transform',
-        }}
-      >
-        {/* Light reflection */}
-        <div
-          className="absolute -inset-8 rounded-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          style={{
-            background: `radial-gradient(circle at ${tilt.lightX}% ${tilt.lightY}%, rgba(255,255,255,0.08) 0%, transparent 50%)`,
-          }}
-        />
-
-        <FontAwesomeIcon icon={faQuoteLeft} className="absolute top-0 right-0 text-3xl text-primary/10 group-hover:text-primary/20 transition-colors duration-300" />
-        <div className="flex gap-1 mb-5">
-          {[...Array(5)].map((_, j) => (
-            <FontAwesomeIcon
-              key={j}
-              icon={faStar}
-              className="h-4 w-4 text-highlight"
-              style={{
-                opacity: isVisible ? 1 : 0,
-                transform: isVisible ? 'scale(1)' : 'scale(0)',
-                transition: `all 0.3s ease ${index * 0.15 + j * 0.05 + 0.3}s`,
-              }}
-            />
-          ))}
-        </div>
-        <p className="text-foreground/90 leading-relaxed mb-6 text-[15px]">
-          "{t.text}"
-        </p>
-        <div className="flex items-center gap-3 pt-5 border-t border-border/30">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${t.color}`}>
-            {t.initials}
-          </div>
-          <p className="font-semibold text-foreground">{t.name}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function TestimonialsSection() {
   const { ref, isVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.1 });
@@ -124,7 +59,43 @@ export default function TestimonialsSection() {
         </div>
         <div ref={ref} className="grid grid-cols-1 md:grid-cols-3 gap-6" style={{ perspective: '1200px' }}>
           {testimonials.map((t, i) => (
-            <TestimonialCard key={t.name} t={t} index={i} isVisible={isVisible} />
+            <div
+              key={t.name}
+              className="relative rounded-2xl p-8 bg-card border border-border/30 hover:shadow-lg transition-shadow duration-300 group"
+              style={{
+                opacity: isVisible ? 1 : 0,
+                transform: isVisible
+                  ? 'translateY(0) rotateX(0deg)'
+                  : 'translateY(60px) rotateX(-15deg)',
+                transition: `all 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${i * 0.15}s`,
+                transformOrigin: 'bottom center',
+              }}
+            >
+              <FontAwesomeIcon icon={faQuoteLeft} className="absolute top-6 right-6 text-3xl text-primary/10 group-hover:text-primary/20 transition-colors duration-300" />
+              <div className="flex gap-1 mb-5">
+                {[...Array(5)].map((_, j) => (
+                  <FontAwesomeIcon
+                    key={j}
+                    icon={faStar}
+                    className="h-4 w-4 text-highlight"
+                    style={{
+                      opacity: isVisible ? 1 : 0,
+                      transform: isVisible ? 'scale(1)' : 'scale(0)',
+                      transition: `all 0.3s ease ${i * 0.15 + j * 0.05 + 0.3}s`,
+                    }}
+                  />
+                ))}
+              </div>
+              <p className="text-foreground/90 leading-relaxed mb-6 text-[15px]">
+                "{t.text}"
+              </p>
+              <div className="flex items-center gap-3 pt-5 border-t border-border/30">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${t.color}`}>
+                  {t.initials}
+                </div>
+                <p className="font-semibold text-foreground">{t.name}</p>
+              </div>
+            </div>
           ))}
         </div>
       </div>

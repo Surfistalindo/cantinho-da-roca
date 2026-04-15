@@ -9,15 +9,14 @@ import WhatsAppFloat from '@/components/landing/WhatsAppFloat';
 import { useScrollProgress } from '@/hooks/useScrollAnimation';
 
 export default function Index() {
-  // Sets --scroll-y CSS custom property on <html> — zero re-renders
-  useScrollProgress();
+  const scrollY = useScrollProgress();
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar scrollY={0} />
+      <Navbar scrollY={scrollY} />
       <WhatsAppFloat />
       <main className="flex-1">
-        <HeroSection />
+        <HeroSection scrollY={scrollY} />
         <BenefitsSection />
         <ProductsSection />
         <TestimonialsSection />

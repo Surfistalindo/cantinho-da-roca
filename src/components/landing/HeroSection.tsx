@@ -11,7 +11,7 @@ import LeafSVG from './LeafSVG';
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Quero saber mais sobre os produtos do Cantim da Roça 🌿')}`;
 
 interface HeroSectionProps {
-  scrollY?: number;
+  scrollY: number;
 }
 
 const orbitLeaves = Array.from({ length: 8 }, (_, i) => ({
@@ -29,7 +29,7 @@ const scatteredLeaves = [
   { top: '80%', right: '12%', size: 22, speed: 0.08, delay: '0.5s', rotate: -50, id: 'hs6' },
 ];
 
-const HeroSection: React.FC<HeroSectionProps> = () => {
+const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
   const scrollToProducts = () => {
     document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -41,7 +41,7 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
         <Warp speed={0.3} scale={0.8} colors={['#2d6a4f', '#40916c', '#95d5b2']} />
       </div>
 
-      {/* Scattered floating leaves with CSS-var parallax */}
+      {/* Scattered floating leaves with parallax */}
       {scatteredLeaves.map((leaf) => (
         <div
           key={leaf.id}
@@ -50,7 +50,7 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
             top: leaf.top,
             left: leaf.left,
             right: (leaf as any).right,
-            transform: `translateY(calc(var(--scroll-y, 0) * ${leaf.speed}px)) rotate(${leaf.rotate}deg)`,
+            transform: `translateY(${scrollY * leaf.speed}px) rotate(${leaf.rotate}deg)`,
             animationDelay: leaf.delay,
             animationDuration: `${6 + Math.random() * 4}s`,
             opacity: 0.2,
@@ -69,10 +69,6 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
           className="w-[250px] sm:w-[350px] md:w-[500px] lg:w-[650px] opacity-[0.1]"
           aria-hidden="true"
           loading="lazy"
-          style={{
-            transform: `translateY(calc(var(--scroll-y, 0) * -0.1px)) scale(calc(1 + var(--scroll-y, 0) * 0.0002))`,
-            willChange: 'transform',
-          }}
         />
       </div>
 
@@ -85,12 +81,16 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
 
           {/* Title with orbiting leaves + parallax */}
           <div className="relative flex items-center justify-center py-4 sm:py-6">
+            {/* Orbit ring */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
               {orbitLeaves.map((leaf) => (
                 <div
                   key={leaf.id}
                   className="absolute animate-leaf-orbit"
-                  style={{ animationDelay: `${leaf.delay}s`, willChange: 'transform' }}
+                  style={{
+                    animationDelay: `${leaf.delay}s`,
+                    willChange: 'transform',
+                  }}
                 >
                   <LeafSVG size={leaf.size} id={`orbit${leaf.id}`} />
                 </div>
@@ -101,7 +101,7 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
               className="hero-title-shimmer relative z-20 text-center text-4xl sm:text-6xl font-bold tracking-[-1px] sm:tracking-[-2px] md:text-8xl md:tracking-[-6px] xl:text-9xl xl:tracking-[-8px]"
               style={{
                 fontFamily: "'Satisfy', cursive",
-                transform: `translateY(calc(var(--scroll-y, 0) * 0.4px))`,
+                transform: `translateY(${scrollY * 0.4}px)`,
                 willChange: 'transform',
               }}
             >
@@ -113,7 +113,7 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
             className="mt-3 sm:mt-4 text-center text-xs sm:text-base md:text-lg font-medium tracking-[2px] sm:tracking-[4px] uppercase text-foreground/50"
             style={{
               fontFamily: "'DM Sans', sans-serif",
-              transform: `translateY(calc(var(--scroll-y, 0) * 0.2px))`,
+              transform: `translateY(${scrollY * 0.2}px)`,
               willChange: 'transform',
             }}
           >
@@ -133,18 +133,13 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
                 <div>/ BEM-ESTAR</div>
               </div>
 
-              {/* Image - Desktop with parallax + scale via CSS vars */}
+              {/* Image - Desktop */}
               <div className="bg-secondary/10 absolute -top-10 left-1/2 hidden w-fit overflow-hidden md:flex rounded-lg">
                 <img
                   alt="Produtos naturais - chás, suplementos e ervas"
                   className="h-[400px] w-full object-cover"
                   src={heroImg}
                   loading="lazy"
-                  style={{
-                    transform: `translateY(calc(var(--scroll-y, 0) * 0.15px)) scale(calc(1 + var(--scroll-y, 0) * 0.0003))`,
-                    willChange: 'transform',
-                    transition: 'transform 0.1s linear',
-                  }}
                 />
                 <div className="rotate-180 p-2 text-left text-xs font-medium tracking-widest [writing-mode:vertical-rl] text-muted-foreground">
                   SAÚDE E BEM-ESTAR
@@ -160,10 +155,6 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
               className="h-[280px] sm:h-[400px] w-full object-cover"
               src={heroImg}
               loading="lazy"
-              style={{
-                transform: `scale(calc(1 + var(--scroll-y, 0) * 0.0003))`,
-                willChange: 'transform',
-              }}
             />
             <div className="rotate-180 p-2 text-left text-xs font-medium tracking-widest [writing-mode:vertical-rl] text-muted-foreground">
               SAÚDE E BEM-ESTAR
@@ -173,13 +164,7 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
 
         {/* Description */}
         <div className="mt-10 sm:mt-14 md:mt-20">
-          <p
-            className="mx-auto max-w-2xl text-center font-sans text-xs sm:text-sm font-medium tracking-wide md:text-base text-foreground/80"
-            style={{
-              transform: `translateY(calc(var(--scroll-y, 0) * 0.08px))`,
-              willChange: 'transform',
-            }}
-          >
+          <p className="mx-auto max-w-2xl text-center font-sans text-xs sm:text-sm font-medium tracking-wide md:text-base text-foreground/80">
             Mais disposição, menos inchaço e bem-estar no dia a dia.
             <br className="hidden sm:block" />
             {' '}Produtos naturais com orientação direta pelo WhatsApp,
