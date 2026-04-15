@@ -1,6 +1,7 @@
 import { Heart, ShieldCheck, Sparkles } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useRef, useState, useCallback } from 'react';
+import { Warp } from '@paper-design/shaders-react';
 
 const benefits = [
   {
@@ -23,6 +24,39 @@ const benefits = [
   },
 ];
 
+const shaderConfigs = [
+  {
+    proportion: 0.3,
+    softness: 0.8,
+    distortion: 0.15,
+    swirl: 0.6,
+    swirlIterations: 8,
+    shape: 'checks' as const,
+    shapeScale: 0.08,
+    colors: ['hsl(125, 47%, 25%)', 'hsl(140, 60%, 55%)', 'hsl(100, 40%, 30%)', 'hsl(130, 50%, 65%)'],
+  },
+  {
+    proportion: 0.4,
+    softness: 1.2,
+    distortion: 0.2,
+    swirl: 0.9,
+    swirlIterations: 12,
+    shape: 'stripes' as const,
+    shapeScale: 0.12,
+    colors: ['hsl(120, 50%, 20%)', 'hsl(45, 96%, 56%)', 'hsl(35, 80%, 40%)', 'hsl(50, 90%, 65%)'],
+  },
+  {
+    proportion: 0.35,
+    softness: 0.9,
+    distortion: 0.18,
+    swirl: 0.7,
+    swirlIterations: 10,
+    shape: 'checks' as const,
+    shapeScale: 0.1,
+    colors: ['hsl(125, 47%, 33%)', 'hsl(123, 38%, 57%)', 'hsl(140, 50%, 40%)', 'hsl(100, 45%, 60%)'],
+  },
+];
+
 function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: number; isVisible: boolean }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
@@ -40,12 +74,14 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
     setTilt({ x: 0, y: 0 });
   }, []);
 
+  const config = shaderConfigs[index % shaderConfigs.length];
+
   return (
     <div
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className={`group relative rounded-2xl p-8 sm:p-10 border border-border/40 bg-card/80 backdrop-blur-sm hover:shadow-xl transition-shadow duration-300 ${b.span}`}
+      className={`group relative rounded-2xl overflow-hidden border border-border/40 hover:shadow-xl transition-shadow duration-300 ${b.span}`}
       style={{
         perspective: '800px',
         opacity: isVisible ? 1 : 0,
@@ -56,8 +92,17 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
         transformStyle: 'preserve-3d',
       }}
     >
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-      <div className="relative" style={{ transform: 'translateZ(20px)' }}>
+      {/* Shader background */}
+      <div className="absolute inset-0 opacity-30 group-hover:opacity-50 transition-opacity duration-500">
+        <Warp
+          speed={0.3}
+          {...config}
+          style={{ width: '100%', height: '100%' }}
+        />
+      </div>
+
+      {/* Card content */}
+      <div className="relative p-8 sm:p-10 bg-card/70 backdrop-blur-sm h-full" style={{ transform: 'translateZ(20px)' }}>
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary/10 text-primary mb-6 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
           <b.icon className="w-7 h-7" />
         </div>
