@@ -1,7 +1,7 @@
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { Warp } from '@paper-design/shaders-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHeartPulse, faCertificate, faWandMagicSparkles, faTruckFast } from '@fortawesome/free-solid-svg-icons';
+import { faHeartPulse, faCertificate, faSeedling, faTruckFast } from '@fortawesome/free-solid-svg-icons';
 import LeafSVG from './LeafSVG';
 
 const benefits = [
@@ -40,7 +40,7 @@ const benefits = [
   {
     title: 'Resultados reais',
     description: 'Nossos clientes relatam mais energia, menos inchaço e melhora no bem-estar geral.',
-    icon: faWandMagicSparkles,
+    icon: faSeedling,
     fallbackGradient: 'from-emerald-900 via-emerald-800 to-green-700',
     shaderConfig: {
       proportion: 0.3,
