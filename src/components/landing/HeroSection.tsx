@@ -38,60 +38,62 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-screen bg-gradient-to-b from-[#f0f7f0] to-white overflow-hidden">
-      {/* Background pattern */}
-      <div className="absolute inset-0 opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMyIgZmlsbD0iIzIyNjYzMyIvPjwvc3ZnPg==')]" />
+    <section className="relative min-h-screen bg-[#0a0a08] overflow-hidden">
+      {/* Grid background pattern */}
+      <div
+        className="absolute inset-0 opacity-20"
+        style={{
+          backgroundImage: `linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)`,
+          backgroundSize: '60px 60px',
+        }}
+      />
+      {/* Radial glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(34,102,51,0.15)_0%,_transparent_70%)]" />
 
       {/* Navbar */}
-      <nav className="relative z-20 w-full border-b border-primary/10">
+      <nav className="relative z-20 w-full border-b border-white/10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
             <a href="/" className="flex-shrink-0">
-              <img src={logo} alt="Cantim da Roça" className="h-10 sm:h-12" />
+              <img src={logo} alt="Cantim da Roça" className="h-10 sm:h-12 brightness-0 invert" />
             </a>
 
-            {/* Desktop nav links */}
+            {/* Desktop nav */}
             <div className="hidden md:flex items-center gap-1">
-              <a href="#" className="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground rounded-lg hover:bg-primary/5 transition">
+              <a href="#" className="px-4 py-2 text-sm font-medium text-white/70 hover:text-white rounded-lg hover:bg-white/5 transition">
                 Início
               </a>
-
-              {/* Products dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setProductsOpen(!productsOpen)}
-                  className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground rounded-lg hover:bg-primary/5 transition"
+                  className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-white/70 hover:text-white rounded-lg hover:bg-white/5 transition"
                 >
                   Produtos
                   <ChevronDown className={`h-4 w-4 transition-transform ${productsOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {productsOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-border py-2 z-50">
-                    <a href="#produtos" onClick={() => setProductsOpen(false)} className="block px-4 py-2 text-sm text-foreground/80 hover:bg-primary/5 hover:text-foreground transition">
+                  <div className="absolute top-full left-0 mt-1 w-48 bg-[#1a1a18] rounded-xl shadow-lg border border-white/10 py-2 z-50">
+                    <a href="#produtos" onClick={() => setProductsOpen(false)} className="block px-4 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white transition">
                       Chás Naturais
                     </a>
-                    <a href="#produtos" onClick={() => setProductsOpen(false)} className="block px-4 py-2 text-sm text-foreground/80 hover:bg-primary/5 hover:text-foreground transition">
+                    <a href="#produtos" onClick={() => setProductsOpen(false)} className="block px-4 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white transition">
                       Temperos
                     </a>
-                    <a href="#produtos" onClick={() => setProductsOpen(false)} className="block px-4 py-2 text-sm text-foreground/80 hover:bg-primary/5 hover:text-foreground transition">
+                    <a href="#produtos" onClick={() => setProductsOpen(false)} className="block px-4 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white transition">
                       Suplementos
                     </a>
-                    <a href="#produtos" onClick={() => setProductsOpen(false)} className="block px-4 py-2 text-sm text-foreground/80 hover:bg-primary/5 hover:text-foreground transition">
+                    <a href="#produtos" onClick={() => setProductsOpen(false)} className="block px-4 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white transition">
                       Grãos e Cereais
                     </a>
                   </div>
                 )}
               </div>
-
-              <a href="#depoimentos" className="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground rounded-lg hover:bg-primary/5 transition">
+              <a href="#depoimentos" className="px-4 py-2 text-sm font-medium text-white/70 hover:text-white rounded-lg hover:bg-white/5 transition">
                 Depoimentos
               </a>
-              <a href="#contato" className="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground rounded-lg hover:bg-primary/5 transition">
+              <a href="#contato" className="px-4 py-2 text-sm font-medium text-white/70 hover:text-white rounded-lg hover:bg-white/5 transition">
                 Contato
               </a>
-
-              {/* Close button (hidden on desktop, visible in mobile) */}
             </div>
 
             {/* Desktop CTA */}
@@ -99,7 +101,7 @@ export default function HeroSection() {
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden md:inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-2.5 rounded-lg text-sm font-medium transition"
+              className="hidden md:inline-flex items-center gap-2 bg-white hover:bg-white/90 text-[#0a0a08] px-5 py-2.5 rounded-lg text-sm font-medium transition"
             >
               <MessageCircle className="h-4 w-4" />
               Fale Conosco
@@ -108,7 +110,7 @@ export default function HeroSection() {
             {/* Mobile hamburger */}
             <button
               onClick={() => setMenuOpen(true)}
-              className="md:hidden text-foreground p-2 rounded-lg hover:bg-primary/5 transition"
+              className="md:hidden text-white p-2 rounded-lg hover:bg-white/10 transition"
               aria-label="Abrir menu"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -120,15 +122,15 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* Mobile menu overlay */}
+        {/* Mobile menu */}
         {menuOpen && (
-          <div className="fixed inset-0 z-50 bg-white md:hidden">
+          <div className="fixed inset-0 z-50 bg-[#0a0a08] md:hidden">
             <div ref={menuRef} className="flex flex-col h-full">
-              <div className="flex items-center justify-between px-4 h-16 border-b border-border">
-                <img src={logo} alt="Cantim da Roça" className="h-10" />
+              <div className="flex items-center justify-between px-4 h-16 border-b border-white/10">
+                <img src={logo} alt="Cantim da Roça" className="h-10 brightness-0 invert" />
                 <button
                   onClick={() => setMenuOpen(false)}
-                  className="text-foreground p-2 rounded-lg hover:bg-primary/5 transition"
+                  className="text-white p-2 rounded-lg hover:bg-white/10 transition"
                   aria-label="Fechar menu"
                 >
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -138,16 +140,16 @@ export default function HeroSection() {
                 </button>
               </div>
               <div className="flex flex-col p-4 gap-1">
-                <a href="#" onClick={() => setMenuOpen(false)} className="px-4 py-3 text-base font-medium text-foreground rounded-lg hover:bg-primary/5 transition">
+                <a href="#" onClick={() => setMenuOpen(false)} className="px-4 py-3 text-base font-medium text-white rounded-lg hover:bg-white/5 transition">
                   Início
                 </a>
-                <a href="#produtos" onClick={() => setMenuOpen(false)} className="px-4 py-3 text-base font-medium text-foreground rounded-lg hover:bg-primary/5 transition">
+                <a href="#produtos" onClick={() => setMenuOpen(false)} className="px-4 py-3 text-base font-medium text-white rounded-lg hover:bg-white/5 transition">
                   Produtos
                 </a>
-                <a href="#depoimentos" onClick={() => setMenuOpen(false)} className="px-4 py-3 text-base font-medium text-foreground rounded-lg hover:bg-primary/5 transition">
+                <a href="#depoimentos" onClick={() => setMenuOpen(false)} className="px-4 py-3 text-base font-medium text-white rounded-lg hover:bg-white/5 transition">
                   Depoimentos
                 </a>
-                <a href="#contato" onClick={() => setMenuOpen(false)} className="px-4 py-3 text-base font-medium text-foreground rounded-lg hover:bg-primary/5 transition">
+                <a href="#contato" onClick={() => setMenuOpen(false)} className="px-4 py-3 text-base font-medium text-white rounded-lg hover:bg-white/5 transition">
                   Contato
                 </a>
               </div>
@@ -167,40 +169,39 @@ export default function HeroSection() {
         )}
       </nav>
 
-      {/* Announcement bar */}
-      <div className="relative z-10 flex justify-center py-4 sm:py-6">
-        <div className="inline-flex items-center gap-2 bg-primary/5 border border-primary/15 rounded-full px-4 py-1.5">
-          <span className="text-xs font-medium text-primary bg-primary/10 rounded-full px-2 py-0.5">Novo</span>
-          <span className="text-xs sm:text-sm text-foreground/70">Produtos naturais com entrega para todo Brasil</span>
-          <a href="#produtos" className="text-xs sm:text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1">
+      {/* Announcement pill */}
+      <div className="relative z-10 flex justify-center pt-12 sm:pt-16 pb-6">
+        <div className="inline-flex items-center gap-3 bg-white/5 border border-white/10 rounded-full px-5 py-2 backdrop-blur-sm">
+          <span className="text-sm text-white/70">Produtos 100% naturais com entrega para todo Brasil</span>
+          <a href="#produtos" className="text-sm text-amber-400 hover:text-amber-300 font-medium flex items-center gap-1">
             Ver mais
-            <ArrowRight className="h-3 w-3" />
+            <ArrowRight className="h-3.5 w-3.5" />
           </a>
         </div>
       </div>
 
       {/* Hero content */}
-      <div className="relative z-10 flex-1 flex items-center justify-center px-4 sm:px-6 pb-16 sm:pb-24">
-        <div className="max-w-3xl text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold text-foreground leading-[1.1] tracking-tight mb-6">
+      <div className="relative z-10 flex items-center justify-center px-4 sm:px-6 pb-20 sm:pb-28">
+        <div className="max-w-4xl text-center">
+          <h1 className="text-5xl sm:text-6xl lg:text-8xl font-bold text-white leading-[1.05] tracking-tight mb-8">
             Saúde e bem-estar com produtos{' '}
-            <span className="text-primary">naturais</span>
+            <span className="italic">naturais</span>
           </h1>
 
-          <p className="text-base sm:text-lg text-muted-foreground mb-10 leading-relaxed max-w-xl mx-auto">
+          <p className="text-base sm:text-lg text-white/50 mb-12 leading-relaxed max-w-xl mx-auto">
             Chás, temperos e suplementos naturais selecionados pra cuidar da sua saúde. Atendimento próximo, personalizado e com carinho. 💚
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-              <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3.5 rounded-lg text-base font-semibold transition shadow-lg shadow-primary/20">
+              <button className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white hover:bg-white/90 text-[#0a0a08] px-8 py-3.5 rounded-full text-base font-semibold transition">
                 <MessageCircle className="h-5 w-5" />
                 Falar no WhatsApp
               </button>
             </a>
             <button
               onClick={scrollToProducts}
-              className="inline-flex items-center justify-center gap-2 border border-border hover:bg-primary/5 text-foreground px-8 py-3.5 rounded-lg text-base font-medium transition"
+              className="inline-flex items-center justify-center gap-2 border border-white/20 hover:border-white/40 hover:bg-white/5 text-white px-8 py-3.5 rounded-full text-base font-medium transition"
             >
               Conhecer produtos
               <ArrowRight className="h-4 w-4" />
