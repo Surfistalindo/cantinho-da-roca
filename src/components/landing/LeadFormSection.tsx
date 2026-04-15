@@ -11,10 +11,9 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 import { APP_CONFIG } from '@/config/app';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import logo from '@/assets/logo-cantim.png';
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 11);
@@ -141,13 +140,31 @@ export default function LeadFormSection() {
             Fale com a gente agora
           </h2>
           <p className="text-muted-foreground text-center mb-10 text-lg">
-            Tire dúvidas, peça recomendações ou faça seu pedido. Estamos aqui pra te ajudar! 💚
+            Tire dúvidas, peça recomendações ou faça seu pedido. Estamos aqui pra te ajudar! <img src={logo} alt="" className="inline h-5 w-5 align-text-bottom" />
           </p>
 
           <div className="text-center mb-8">
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-              <Button variant="whatsapp" size="lg" className="gap-2 w-full sm:w-auto shadow-lg shadow-green-600/20">
-                <FontAwesomeIcon icon={faCommentDots} className="h-5 w-5" />
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative inline-block group perspective-[800px]"
+            >
+              <span className="absolute -inset-[2px] rounded-xl overflow-hidden z-0">
+                <span
+                  className="absolute inset-[-100%] animate-[spin_3s_linear_infinite]"
+                  style={{
+                    background: 'conic-gradient(from 0deg, transparent 0%, transparent 60%, rgba(255,255,255,0.9) 75%, transparent 90%, transparent 100%)',
+                  }}
+                />
+              </span>
+              <span className="absolute inset-[1px] rounded-[10px] bg-[#25D366] z-[1]" />
+              <Button
+                variant="whatsapp"
+                size="lg"
+                className="relative z-[2] gap-2 w-full sm:w-auto shadow-lg shadow-green-600/30 transition-transform duration-300 group-hover:scale-[1.03] group-hover:[transform:rotateX(-2deg)_rotateY(2deg)] bg-transparent border-none"
+              >
+                <img src={logo} alt="" className="h-5 w-5 brightness-0 invert" />
                 Chamar no WhatsApp
               </Button>
             </a>
