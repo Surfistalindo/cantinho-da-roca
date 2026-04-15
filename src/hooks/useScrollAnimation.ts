@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface ScrollAnimationOptions {
   threshold?: number;
@@ -37,33 +37,30 @@ export function useScrollAnimation<T extends HTMLElement>(
 }
 
 /**
- * Optimized scroll progress — updates a ref (no re-renders) 
- * and only triggers setState when value crosses thresholds needed by consumers.
- * For continuous parallax, uses RAF-throttled updates with a dead zone to skip tiny changes.
+ * Sets --scroll-y CSS custom property on documentElement via RAF.
+ * Components read it with calc(var(--scroll-y) * Xpx) — zero React re-renders.
  */
 export function useScrollProgress() {
-  const [scrollY, setScrollY] = useState(0);
-  const lastValue = useRef(0);
-
   useEffect(() => {
     let ticking = false;
     const onScroll = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
-          const current = window.scrollY;
-          // Only update state if scroll changed by more than 2px (reduces re-renders)
-          if (Math.abs(current - lastValue.current) > 2) {
-            lastValue.current = current;
-            setScrollY(current);
-          }
+          document.documentElement.style.setProperty(
+            '--scroll-y',
+            String(window.scrollY)
+          );
           ticking = false;
         });
         ticking = true;
       }
     };
+    // Set initial value
+    document.documentElement.style.setProperty('--scroll-y', String(window.scrollY));
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  return scrollY;
+  // Return 0 for backward compat — consumers should migrate to CSS vars
+  return 0;
 }

@@ -17,7 +17,7 @@ export default function ProductsSection({ scrollY = 0 }: ProductsSectionProps) {
   const { ref, isVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.1 });
 
   return (
-    <section id="produtos" className="py-24 bg-card relative overflow-hidden">
+    <section id="produtos" className="py-16 sm:py-20 bg-card relative overflow-hidden">
       <div className="absolute inset-0 z-0 opacity-10">
         <Warp speed={0.3} scale={0.7} colors={['#d4a373', '#e9c46a', '#f4e8c1']} />
       </div>
@@ -29,11 +29,11 @@ export default function ProductsSection({ scrollY = 0 }: ProductsSectionProps) {
         <LeafSVG size={16} id="prod2" style={{ transform: 'rotate(-25deg)' }} />
       </div>
 
-      {/* Decorative parallax logo */}
+      {/* Decorative parallax logo via CSS var */}
       <div
         className="absolute -right-20 top-1/3 pointer-events-none opacity-[0.04] z-[1]"
         style={{
-          transform: `translateY(${scrollY * -0.15}px) rotate(15deg)`,
+          transform: `translateY(calc(var(--scroll-y, 0) * -0.15px)) rotate(15deg)`,
           willChange: 'transform',
         }}
       >
@@ -42,11 +42,11 @@ export default function ProductsSection({ scrollY = 0 }: ProductsSectionProps) {
 
       <div className="relative z-10" ref={ref}>
         <div
-          className="text-center mb-12"
+          className="text-center mb-8"
           style={{
             opacity: isVisible ? 1 : 0,
             transform: isVisible
-              ? `translateY(${scrollY * 0.03}px)`
+              ? `translateY(calc(var(--scroll-y, 0) * 0.03px))`
               : 'translateY(30px)',
             transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
@@ -54,7 +54,7 @@ export default function ProductsSection({ scrollY = 0 }: ProductsSectionProps) {
           <p className="text-primary text-sm font-semibold tracking-widest uppercase mb-3">
             Nossos produtos
           </p>
-          <h2 className="text-3xl sm:text-5xl font-serif text-foreground mb-4">
+          <h2 className="text-3xl sm:text-5xl font-serif text-foreground mb-3">
             Conheça nossos produtos
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto text-lg">
@@ -62,18 +62,20 @@ export default function ProductsSection({ scrollY = 0 }: ProductsSectionProps) {
           </p>
         </div>
 
+        {/* Carousel with clip-path reveal on scroll */}
         <div
+          className="transition-[clip-path] duration-1000 ease-out"
           style={{
+            clipPath: isVisible ? 'inset(0 0 0 0)' : 'inset(100% 0 0 0)',
             opacity: isVisible ? 1 : 0,
-            transform: isVisible ? 'translateY(0)' : 'translateY(40px)',
-            transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s',
+            transition: 'clip-path 1s cubic-bezier(0.16, 1, 0.3, 1) 0.15s, opacity 0.6s ease 0.15s',
           }}
         >
           <FeatureCarousel />
         </div>
 
         <div
-          className="text-center mt-14"
+          className="text-center mt-10"
           style={{
             opacity: isVisible ? 1 : 0,
             transform: isVisible ? 'translateY(0)' : 'translateY(20px)',

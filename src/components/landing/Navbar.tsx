@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBarsStaggered, faXmark } from '@fortawesome/free-solid-svg-icons';
 import logo from '@/assets/logo-cantim.png';
@@ -12,11 +12,27 @@ const links = [
 ];
 
 interface NavbarProps {
-  scrollY: number;
+  scrollY?: number;
 }
 
-export default function Navbar({ scrollY }: NavbarProps) {
+export default function Navbar({ scrollY: _scrollY }: NavbarProps) {
   const [open, setOpen] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrollY(window.scrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const showNavbar = scrollY > 150;
   const navbarOpacity = Math.min(1, Math.max(0, (scrollY - 100) / 100));
