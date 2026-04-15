@@ -183,7 +183,9 @@ export default function Footer() {
                 <MessageCircle className="h-4 w-4" />
               </a>
               <a
-                href="#"
+                href={instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-white/25 hover:text-primary transition-colors"
               >
                 <Instagram className="h-4 w-4" />
