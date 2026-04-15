@@ -1,11 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, MessageCircle, ArrowRight } from 'lucide-react';
+import { Instagram, MessageCircle, ArrowRight, MapPin } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import logo from '@/assets/logo-cantim.png';
 import { APP_CONFIG } from '@/config/app';
 
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Vim pelo site 🌿')}`;
+
+const instagramUrl = 'https://instagram.com/cantimdarocaa';
 
 const sections = [
   {
@@ -23,14 +25,13 @@ const sections = [
       { label: 'Sobre nós', href: '#beneficios' },
       { label: 'Depoimentos', href: '#depoimentos' },
       { label: 'Contato', href: '#contato' },
-      { label: 'Blog', href: '#' },
     ],
   },
   {
     title: 'Conecte-se',
     links: [
       { label: 'WhatsApp', href: whatsappUrl, external: true },
-      { label: 'Instagram', href: '#', external: true },
+      { label: 'Instagram', href: instagramUrl, external: true },
     ],
   },
 ];
