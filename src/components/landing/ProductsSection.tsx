@@ -63,8 +63,28 @@ export default function ProductsSection() {
             transition: 'all 0.6s ease 0.6s',
           }}
         >
-          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-            <Button variant="whatsapp" size="lg" className="gap-2 shadow-lg shadow-green-600/20 animate-pulse hover:animate-none">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="relative inline-block group perspective-[800px]"
+          >
+            {/* Rotating border glow */}
+            <span className="absolute -inset-[2px] rounded-xl overflow-hidden z-0">
+              <span
+                className="absolute inset-[-100%] animate-[spin_3s_linear_infinite]"
+                style={{
+                  background: 'conic-gradient(from 0deg, transparent 0%, transparent 60%, rgba(255,255,255,0.9) 75%, transparent 90%, transparent 100%)',
+                }}
+              />
+            </span>
+            {/* Inner bg to mask center */}
+            <span className="absolute inset-[1px] rounded-[10px] bg-[#25D366] z-[1]" />
+            <Button
+              variant="whatsapp"
+              size="lg"
+              className="relative z-[2] gap-2 shadow-lg shadow-green-600/30 transition-transform duration-300 group-hover:scale-[1.03] group-hover:[transform:rotateX(-2deg)_rotateY(2deg)] bg-transparent border-none"
+            >
               <FontAwesomeIcon icon={faCommentDots} className="h-5 w-5" />
               Falar no WhatsApp sobre produtos
             </Button>
