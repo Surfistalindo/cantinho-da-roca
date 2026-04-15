@@ -1,52 +1,55 @@
 
 
-## Plano: Navbar com animação de scroll + Logo morphing + Animações 3D por toda a landing
+## Plan: Optimize Performance and Mobile Responsiveness
 
-### Conceito UX
-A navbar começa **invisível**. Conforme o usuário rola, ela desliza de cima com `translateY` e aparece gradualmente. A logo do hero **"sobe" e encolhe** para se posicionar na navbar, criando uma transição fluida e cinematográfica. Todas as seções ganham animações de entrada ao entrar no viewport.
+### Problem Analysis
 
-### O que será feito
+The main performance bottleneck is the **Warp WebGL shader** from `@paper-design/shaders-react`. There are **9 active WebGL shader instances** (6 in BenefitsSection + 3 in ProductsSection), each running continuous GPU-heavy animations. This is the primary cause of lag.
 
-**1. Navbar com reveal on scroll + logo morphing**
-- Navbar começa com `opacity: 0` e `translateY(-100%)`, totalmente escondida
-- Ao rolar ~150px, a navbar anima para dentro com transição suave
-- A logo do hero usa `position: fixed` com interpolação de `top`, `left`, `scale` baseada no `scrollY` — começa grande no centro do hero e migra para o canto da navbar enquanto encolhe
-- Implementado com `useEffect` + `requestAnimationFrame` para performance
+Secondary issues: leaf orbit animation needs `will-change` for GPU compositing, and several sections have layout issues on mobile.
 
-**2. Hook `useScrollAnimation` reutilizável**
-- Criar `src/hooks/useScrollAnimation.ts` com Intersection Observer
-- Detecta quando elementos entram no viewport e aplica classes CSS de animação
-- Suporta threshold, delay e direção configuráveis
+---
 
-**3. Animações 3D nas seções (CSS puro, sem lib extra)**
-- **BenefitsSection**: Cards entram com `rotateY` + `translateZ`, virando de lado para frente como cartas 3D. Hover com `perspective` e `rotateX/Y` sutil seguindo o mouse
-- **ProductsSection**: Cards entram escalonados com `translateZ` + `scale`, efeito de profundidade. Hover com elevação 3D (`translateZ` + sombra dinâmica)
-- **TestimonialsSection**: Cards deslizam de baixo com `rotateX` (inclinação para trás) e corrigem para flat. Parallax leve no scroll
-- **LeadFormSection**: Formulário entra com `scale3d` de pequeno para grande, como emergindo da tela
-- **Footer**: Fade-in simples ao entrar no viewport
+### Changes
 
-**4. Keyframes e animações no Tailwind**
-- Adicionar novos keyframes em `tailwind.config.ts`: `slide-down`, `card-flip`, `emerge-3d`, `float`
-- Manter as animações existentes intactas
+#### 1. Remove Warp Shaders from BenefitsSection and ProductsSection
+- Replace the heavy WebGL `<Warp>` backgrounds with lightweight **CSS gradient backgrounds** that match the current color schemes
+- Remove the `@paper-design/shaders-react` import from both files
+- Keep the 3D tilt hover effect on cards (CSS-only, not heavy)
 
-### Arquivos
+#### 2. Optimize Leaf Orbit Animation
+- Add `will-change: transform` to promote leaves to GPU layers
+- Reduce from 6 to 4 leaves for less paint work
+- Keep the 30s duration (already slow enough)
 
-| Arquivo | Ação |
-|---------|------|
-| `src/hooks/useScrollAnimation.ts` | Criar — hook com IntersectionObserver |
-| `src/components/landing/Navbar.tsx` | Reescrever — reveal on scroll, logo placeholder slot |
-| `src/components/landing/HeroSection.tsx` | Editar — logo com position fixed + scroll interpolation |
-| `src/pages/Index.tsx` | Editar — gerenciar estado de scroll compartilhado entre Navbar e Hero |
-| `src/components/landing/BenefitsSection.tsx` | Editar — animações 3D de entrada nos cards |
-| `src/components/landing/ProductsSection.tsx` | Editar — animações 3D escalonadas |
-| `src/components/landing/TestimonialsSection.tsx` | Editar — animação de entrada com rotateX |
-| `src/components/landing/LeadFormSection.tsx` | Editar — animação emerge-3d |
-| `src/components/landing/Footer.tsx` | Editar — fade-in on scroll |
-| `tailwind.config.ts` | Editar — novos keyframes 3D |
+#### 3. Fix "SUPLEMENTOS NATURAIS" Text Clipping
+- The container uses `items-end` and fixed widths causing overflow
+- Add proper responsive padding and ensure `<br />` between "SUPLEMENTOS" and "NATURAIS" renders correctly on all breakpoints
+- Adjust the services container to not clip on narrow screens
 
-### O que NÃO muda
-- Lógica do formulário e integração com banco
-- Estrutura de rotas e CRM admin
-- WhatsAppFloat
-- Nenhuma lib nova necessária (tudo CSS transforms + JS vanilla)
+#### 4. Mobile Responsiveness Pass
+- **HeroSection**: Scale down title font, adjust logo watermark size, fix image overlap on small screens
+- **BenefitsSection**: Ensure single-column cards have proper spacing on mobile
+- **ProductsSection**: Stack cards vertically with proper gaps
+- **LeadFormSection**: Already responsive, minor padding tweaks
+- **Footer**: Already uses responsive grid, verify on small screens
+- **Navbar**: Already responsive with mobile menu
+
+#### 5. General Optimizations
+- Add `loading="lazy"` to hero product image (below fold on mobile)
+- Use `contain: layout style` on animated sections to limit repaints
+
+---
+
+### Files to Edit
+- `src/components/landing/BenefitsSection.tsx` — remove Warp, use CSS gradients
+- `src/components/landing/ProductsSection.tsx` — remove Warp, use CSS gradients
+- `src/components/landing/HeroSection.tsx` — fix text clipping, optimize leaves, mobile fixes
+- `tailwind.config.ts` — minor animation tweaks
+
+### Expected Result
+- Dramatic performance improvement (removing 9 WebGL contexts)
+- Smooth 60fps scrolling on mobile and desktop
+- All text visible without clipping
+- Fully responsive layout across all breakpoints
 
