@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle, ArrowDownRight, Leaf } from 'lucide-react';
+import { MessageCircle, ArrowDownRight } from 'lucide-react';
 import { APP_CONFIG } from '@/config/app';
 import heroImg from '@/assets/hero-products.jpg';
 import logoImg from '@/assets/logo-cantim.png';
@@ -11,14 +11,11 @@ interface HeroSectionProps {
   scrollY: number;
 }
 
-const leaves = Array.from({ length: 12 }, (_, i) => ({
+// 8 leaves orbiting in a circle around the title
+const orbitLeaves = Array.from({ length: 8 }, (_, i) => ({
   id: i,
-  size: 14 + Math.random() * 18,
-  x: Math.random() * 100,
-  y: Math.random() * 100,
-  delay: Math.random() * 6,
-  duration: 8 + Math.random() * 6,
-  rotate: Math.random() * 360,
+  delay: (i / 8) * -20, // stagger evenly around the orbit
+  size: i % 2 === 0 ? 28 : 22,
 }));
 
 const HeroSection: React.FC<HeroSectionProps> = () => {
@@ -28,12 +25,12 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
 
   return (
     <section id="inicio" className="relative min-h-screen overflow-hidden py-20">
-      {/* Logo watermark background */}
-      <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
+      {/* Logo watermark background - left aligned, more visible */}
+      <div className="absolute inset-y-0 left-0 z-0 flex items-center pointer-events-none pl-4 md:pl-12">
         <img
           src={logoImg}
           alt=""
-          className="w-[500px] md:w-[700px] lg:w-[900px] opacity-[0.06]"
+          className="w-[350px] md:w-[500px] lg:w-[650px] opacity-[0.1]"
           aria-hidden="true"
         />
       </div>
@@ -45,24 +42,55 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
             100% Natural
           </p>
 
-          {/* Title with CSS animated leaves */}
-          <div className="relative">
-            {/* Floating leaves - pure CSS */}
-            {leaves.map((leaf) => (
-              <Leaf
-                key={leaf.id}
-                className="absolute text-primary/30 animate-leaf-float pointer-events-none"
-                style={{
-                  width: leaf.size,
-                  height: leaf.size,
-                  left: `${leaf.x}%`,
-                  top: `${leaf.y}%`,
-                  animationDelay: `${leaf.delay}s`,
-                  animationDuration: `${leaf.duration}s`,
-                  transform: `rotate(${leaf.rotate}deg)`,
-                }}
-              />
-            ))}
+          {/* Title with orbiting leaves */}
+          <div className="relative flex items-center justify-center">
+            {/* Orbit container */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="relative w-[320px] h-[120px] sm:w-[500px] sm:h-[160px] md:w-[700px] md:h-[200px] xl:w-[900px] xl:h-[240px]">
+                {orbitLeaves.map((leaf) => (
+                  <div
+                    key={leaf.id}
+                    className="absolute top-1/2 left-1/2 animate-leaf-orbit"
+                    style={{
+                      animationDelay: `${leaf.delay}s`,
+                      width: 0,
+                      height: 0,
+                    }}
+                  >
+                    {/* SVG leaf shape */}
+                    <svg
+                      width={leaf.size}
+                      height={leaf.size}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      className="absolute -translate-x-1/2 -translate-y-1/2"
+                      style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }}
+                    >
+                      <path
+                        d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.7C7.14 19.87 7.64 20 8.17 20C12.17 20 15.87 14.5 17 8Z"
+                        fill="hsl(125 47% 40%)"
+                        opacity="0.6"
+                      />
+                      <path
+                        d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.7C7.14 19.87 7.64 20 8.17 20C12.17 20 15.87 14.5 17 8Z"
+                        stroke="hsl(125 47% 30%)"
+                        strokeWidth="0.5"
+                        fill="none"
+                        opacity="0.4"
+                      />
+                      {/* Leaf vein */}
+                      <path
+                        d="M6 18C8 14 11 11 17 8"
+                        stroke="hsl(125 47% 30%)"
+                        strokeWidth="0.4"
+                        fill="none"
+                        opacity="0.3"
+                      />
+                    </svg>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             <h1
               className="relative z-20 text-center text-6xl font-bold tracking-[-2px] md:text-8xl md:tracking-[-6px] xl:text-9xl xl:tracking-[-8px]"
@@ -92,9 +120,9 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
         <div className="relative grid">
           <div className="flex justify-center gap-6 space-y-8 pt-20">
             <div className="bg-secondary/10 flex h-fit w-full max-w-xl items-end gap-6 space-y-2 p-10 text-xl font-bold md:text-2xl lg:text-3xl rounded-lg">
-              <div className="text-lg sm:text-xl font-semibold text-foreground space-y-2 whitespace-normal break-words">
+              <div className="text-lg sm:text-xl font-semibold text-foreground space-y-2">
                 <div>/ CHÁS E ERVAS</div>
-                <div>/ SUPLEMENTOS<br className="sm:hidden" /> NATURAIS</div>
+                <div className="whitespace-nowrap">/ SUPLEMENTOS NATURAIS</div>
                 <div>/ BEM-ESTAR</div>
               </div>
 
