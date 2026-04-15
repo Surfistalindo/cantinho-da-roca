@@ -11,11 +11,10 @@ interface HeroSectionProps {
   scrollY: number;
 }
 
-// Leaves positioned along an elliptical orbit, staggered with animation delay
-const orbitLeaves = Array.from({ length: 6 }, (_, i) => ({
+const orbitLeaves = Array.from({ length: 4 }, (_, i) => ({
   id: i,
-  delay: (i / 6) * -30,
-  size: 20 + (i % 3) * 5,
+  delay: (i / 4) * -30,
+  size: 18 + (i % 2) * 8,
 }));
 
 const LeafSVG = ({ size }: { size: number }) => (
@@ -48,33 +47,37 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
   };
 
   return (
-    <section id="inicio" className="relative min-h-screen overflow-hidden py-20">
+    <section id="inicio" className="relative min-h-screen overflow-hidden py-16 sm:py-20">
       {/* Logo watermark background - left aligned */}
-      <div className="absolute inset-y-0 left-0 z-0 flex items-center pointer-events-none pl-4 md:pl-12">
+      <div className="absolute inset-y-0 left-0 z-0 flex items-center pointer-events-none pl-2 sm:pl-4 md:pl-12">
         <img
           src={logoImg}
           alt=""
-          className="w-[350px] md:w-[500px] lg:w-[650px] opacity-[0.1]"
+          className="w-[250px] sm:w-[350px] md:w-[500px] lg:w-[650px] opacity-[0.1]"
           aria-hidden="true"
+          loading="lazy"
         />
       </div>
 
-      <div className="relative z-20 mx-auto max-w-7xl px-6">
+      <div className="relative z-20 mx-auto max-w-7xl px-4 sm:px-6">
         {/* Top section with big title */}
-        <div className="relative pb-14">
-          <p className="absolute -top-4 left-20 text-sm font-medium tracking-wider text-muted-foreground">
+        <div className="relative pb-10 sm:pb-14">
+          <p className="absolute -top-4 left-4 sm:left-20 text-xs sm:text-sm font-medium tracking-wider text-muted-foreground">
             100% Natural
           </p>
 
           {/* Title with orbiting leaves */}
-          <div className="relative flex items-center justify-center py-6">
-            {/* Orbit ring - leaves travel the full elliptical path around the text */}
+          <div className="relative flex items-center justify-center py-4 sm:py-6">
+            {/* Orbit ring */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
               {orbitLeaves.map((leaf) => (
                 <div
                   key={leaf.id}
                   className="absolute animate-leaf-orbit"
-                  style={{ animationDelay: `${leaf.delay}s` }}
+                  style={{
+                    animationDelay: `${leaf.delay}s`,
+                    willChange: 'transform',
+                  }}
                 >
                   <LeafSVG size={leaf.size} />
                 </div>
@@ -82,7 +85,7 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
             </div>
 
             <h1
-              className="hero-title-shimmer relative z-20 text-center text-6xl font-bold tracking-[-2px] md:text-8xl md:tracking-[-6px] xl:text-9xl xl:tracking-[-8px]"
+              className="hero-title-shimmer relative z-20 text-center text-4xl sm:text-6xl font-bold tracking-[-1px] sm:tracking-[-2px] md:text-8xl md:tracking-[-6px] xl:text-9xl xl:tracking-[-8px]"
               style={{ fontFamily: "'Satisfy', cursive" }}
             >
               Cantım da Roça
@@ -90,7 +93,7 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
           </div>
 
           <p
-            className="mt-4 text-center text-sm sm:text-base md:text-lg font-medium tracking-[3px] sm:tracking-[4px] uppercase text-foreground/50"
+            className="mt-3 sm:mt-4 text-center text-xs sm:text-base md:text-lg font-medium tracking-[2px] sm:tracking-[4px] uppercase text-foreground/50"
             style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
             Produtos Naturais
@@ -101,9 +104,9 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
 
         {/* Middle section with image and services */}
         <div className="relative grid">
-          <div className="flex justify-center gap-6 space-y-8 pt-20">
-            <div className="bg-secondary/10 flex h-fit w-full max-w-xl items-end gap-6 space-y-2 p-10 text-xl font-bold md:text-2xl lg:text-3xl rounded-lg">
-              <div className="text-lg sm:text-xl font-semibold text-foreground space-y-2">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 pt-10 sm:pt-20">
+            <div className="bg-secondary/10 flex flex-col sm:flex-row h-fit w-full max-w-xl items-start sm:items-end gap-4 sm:gap-6 p-6 sm:p-10 text-lg sm:text-xl font-bold md:text-2xl lg:text-3xl rounded-lg">
+              <div className="text-base sm:text-lg font-semibold text-foreground space-y-2">
                 <div>/ CHÁS E ERVAS</div>
                 <div>/ SUPLEMENTOS<br />NATURAIS</div>
                 <div>/ BEM-ESTAR</div>
@@ -115,6 +118,7 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
                   alt="Produtos naturais - chás, suplementos e ervas"
                   className="h-[400px] w-full object-cover"
                   src={heroImg}
+                  loading="lazy"
                 />
                 <div className="rotate-180 p-2 text-left text-xs font-medium tracking-widest [writing-mode:vertical-rl] text-muted-foreground">
                   SAÚDE E BEM-ESTAR
@@ -124,11 +128,12 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
           </div>
 
           {/* Image - Mobile */}
-          <div className="bg-secondary/10 -top-10 left-1/2 flex w-full overflow-hidden md:hidden md:w-fit rounded-lg">
+          <div className="bg-secondary/10 flex w-full overflow-hidden md:hidden rounded-lg mt-4">
             <img
               alt="Produtos naturais - chás, suplementos e ervas"
-              className="h-[400px] w-full object-cover"
+              className="h-[280px] sm:h-[400px] w-full object-cover"
               src={heroImg}
+              loading="lazy"
             />
             <div className="rotate-180 p-2 text-left text-xs font-medium tracking-widest [writing-mode:vertical-rl] text-muted-foreground">
               SAÚDE E BEM-ESTAR
@@ -137,44 +142,44 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
         </div>
 
         {/* Description */}
-        <div className="mt-14 md:mt-20">
-          <p className="mx-auto max-w-2xl text-center font-sans text-sm font-medium tracking-wide md:text-base text-foreground/80">
+        <div className="mt-10 sm:mt-14 md:mt-20">
+          <p className="mx-auto max-w-2xl text-center font-sans text-xs sm:text-sm font-medium tracking-wide md:text-base text-foreground/80">
             Mais disposição, menos inchaço e bem-estar no dia a dia.
-            <br />
-            Produtos naturais com orientação direta pelo WhatsApp,
-            <br />
-            sem complicação.
+            <br className="hidden sm:block" />
+            {' '}Produtos naturais com orientação direta pelo WhatsApp,
+            <br className="hidden sm:block" />
+            {' '}sem complicação.
           </p>
         </div>
 
         {/* CTA */}
-        <div className="flex justify-center gap-3 pt-6">
+        <div className="flex flex-col sm:flex-row justify-center gap-3 pt-6">
           <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-            <Button variant="whatsapp" size="lg" className="uppercase gap-2">
+            <Button variant="whatsapp" size="lg" className="uppercase gap-2 w-full sm:w-auto">
               <MessageCircle className="h-5 w-5" />
               Falar no WhatsApp
             </Button>
           </a>
-          <Button variant="outline" size="lg" className="uppercase" onClick={scrollToProducts}>
+          <Button variant="outline" size="lg" className="uppercase w-full sm:w-auto" onClick={scrollToProducts}>
             Ver produtos
           </Button>
         </div>
 
         {/* Bottom section */}
-        <div className="mt-20 items-end justify-between md:flex">
+        <div className="mt-14 sm:mt-20 items-end justify-between md:flex">
           <div className="relative">
             <span className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
               + de 500 clientes satisfeitos
             </span>
           </div>
-          <div>
+          <div className="mt-4 md:mt-0">
             <div className="flex items-center gap-2 md:justify-end">
-              <span className="text-lg font-medium tracking-wider text-foreground">NOSSOS PRODUTOS</span>
-              <ArrowDownRight className="size-6" />
+              <span className="text-base sm:text-lg font-medium tracking-wider text-foreground">NOSSOS PRODUTOS</span>
+              <ArrowDownRight className="size-5 sm:size-6" />
             </div>
             <div className="mt-3 md:text-right">
               <h2
-                className="text-5xl tracking-[-4px] uppercase text-foreground"
+                className="text-3xl sm:text-5xl tracking-[-2px] sm:tracking-[-4px] uppercase text-foreground"
                 style={{ fontFamily: "'Oswald', sans-serif" }}
               >
                 Saúde sem Limites
