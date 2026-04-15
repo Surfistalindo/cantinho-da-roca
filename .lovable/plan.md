@@ -1,46 +1,59 @@
 
 
-## Plan: Add 4 WebGL Shaders + Parallax Title + 3D Scroll Effects
+## Plan: More Leaves + Strategic Scatter + 3D Scroll Effects
 
-### What we're building
-1. **4 Warp WebGL shaders** — one on each of these sections: Hero, Benefits, Products, Testimonials (only 4, not 9 like before)
-2. **Parallax effect on "Cantım da Roça"** — title moves at a different speed than the rest when scrolling
-3. **3D scroll effects** — sections transform (rotate, scale, translate in Z) as the user scrolls into view
+### What changes
 
-### Changes
+#### 1. Increase orbiting leaves around title (HeroSection)
+- Go from 4 to **8 leaves** orbiting the full title width
+- Make the orbit ellipse wider (450px x 80px) so they circle the entire "Cantım da Roça" text
+- Vary leaf sizes (14-28px) and add slight rotation variation for organic feel
+- Keep `will-change: transform` and CSS animation (no JS = no lag)
 
-#### 1. HeroSection — Parallax title + 1 Warp shader background
-- Use the `scrollY` prop (already passed) to apply `translateY(scrollY * 0.4)` on the title for parallax
-- Add a single `<Warp>` behind the hero with subtle green tones and low speed
-- Keep leaves, shimmer, and existing layout intact
+#### 2. Scattered decorative leaves throughout the hero
+- Add **6 static/floating leaves** positioned absolutely around the hero section (corners, near CTA, near image)
+- Use a gentle CSS `float` keyframe (subtle up/down 8px movement, 6-10s duration) — extremely lightweight
+- Apply parallax via `scrollY` transform so they move at different speeds (0.1x, 0.15x, 0.25x) creating depth layers
 
-#### 2. BenefitsSection — 1 Warp shader + 3D scroll reveal
-- Add a single `<Warp>` as the section background (green/earthy tones, low opacity)
-- Add scroll-driven 3D transforms: cards rotate in from `rotateX(15deg)` as they enter viewport
-- Use `useScrollAnimation` for trigger
+#### 3. Scattered leaves on other sections
+- **BenefitsSection**: 2 small leaves, one top-right, one bottom-left, with slow float animation
+- **ProductsSection**: 2 leaves near section edges
+- **TestimonialsSection**: 1 leaf accent
+- All use the same `LeafSVG` component (extracted to shared file) with CSS-only float animation
 
-#### 3. ProductsSection — 1 Warp shader + 3D scroll reveal
-- Add a single `<Warp>` as section background (warm earthy tones)
-- Cards scale up from `scale(0.8) translateZ(-50px)` on scroll entry
+#### 4. 3D scroll effects (low-lag approach)
+- Use CSS `transform` driven by `useScrollAnimation` intersection observer (no scroll listener per-frame for these sections)
+- **BenefitsSection cards**: Already have 3D rotateX entry — keep as-is
+- **ProductsSection cards**: Already have 3D scale/rotateY entry — keep as-is  
+- **Section dividers**: Add a subtle `translateZ` + `rotateX(2deg)` parallax on section headings using `scrollY` prop (pass from Index.tsx)
+- All transforms use `will-change: transform` for GPU compositing
 
-#### 4. TestimonialsSection — 1 Warp shader
-- Need to check this file first, then add a subtle `<Warp>` background
-- Keep existing content, just add the shader layer
+#### 5. New CSS keyframe: `leaf-float`
+- Add to `tailwind.config.ts`:
+```
+"leaf-float": {
+  "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
+  "50%": { transform: "translateY(-8px) rotate(3deg)" }
+}
+```
+- Duration: 6-10s, linear infinite — minimal GPU cost
 
-#### 5. Index.tsx — Pass scrollY to more sections
-- Pass `scrollY` to Benefits, Products, Testimonials for scroll-driven 3D effects
+#### 6. Extract LeafSVG to shared component
+- Create `src/components/landing/LeafSVG.tsx` so it can be reused across Hero, Benefits, Products, Testimonials
+- Add a `leafGrad` id suffix per instance to avoid SVG gradient ID conflicts
 
-#### 6. Performance guardrails
-- Only 4 shader instances (vs 9 before)
-- Set `speed={0.3}` and low `scale` on all Warps to minimize GPU load
-- Use `will-change: transform` on parallax elements
-- Keep `@paper-design/shaders-react` (already in package.json)
+### Performance approach
+- All new leaves are **CSS-only animations** (no JS timers, no requestAnimationFrame)
+- Static positioned elements with `will-change: transform`
+- No additional WebGL shaders — keep the existing 4 Warp instances
+- Scattered leaves use `opacity: 0.15-0.3` so they're decorative, not distracting
 
 ### Files to edit
-- `src/components/landing/HeroSection.tsx` — add Warp bg + parallax on title
-- `src/components/landing/BenefitsSection.tsx` — add Warp bg + 3D scroll cards
-- `src/components/landing/ProductsSection.tsx` — add Warp bg + 3D scroll cards
-- `src/components/landing/TestimonialsSection.tsx` — add Warp bg
-- `src/pages/Index.tsx` — pass scrollY to more components
-- `src/index.css` — 3D scroll utility styles if needed
+- `src/components/landing/LeafSVG.tsx` — new shared component
+- `src/components/landing/HeroSection.tsx` — more orbit leaves + scattered hero leaves with parallax
+- `src/components/landing/BenefitsSection.tsx` — 2 scattered leaves
+- `src/components/landing/ProductsSection.tsx` — 2 scattered leaves  
+- `src/components/landing/TestimonialsSection.tsx` — 1 scattered leaf
+- `src/pages/Index.tsx` — pass `scrollY` to Benefits, Products, Testimonials
+- `tailwind.config.ts` — add `leaf-float` keyframe
 
