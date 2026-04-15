@@ -1,59 +1,43 @@
 
 
-## Plan: More Leaves + Strategic Scatter + 3D Scroll Effects
+## Problem Analysis
 
-### What changes
+From image-24, the current cards show a gray/blank area at the top where the shader should be — the `<Warp />` component requires WebGL which may not be available in the sandbox preview, resulting in empty shader areas. The current layout uses a "shader stripe at top + white content below" pattern.
 
-#### 1. Increase orbiting leaves around title (HeroSection)
-- Go from 4 to **8 leaves** orbiting the full title width
-- Make the orbit ellipse wider (450px x 80px) so they circle the entire "Cantım da Roça" text
-- Vary leaf sizes (14-28px) and add slight rotation variation for organic feel
-- Keep `will-change: transform` and CSS animation (no JS = no lag)
+From image-25 (the reference), the desired design has the **shader as the full card background** with text overlaid on top in white — a completely different layout than what's currently implemented.
 
-#### 2. Scattered decorative leaves throughout the hero
-- Add **6 static/floating leaves** positioned absolutely around the hero section (corners, near CTA, near image)
-- Use a gentle CSS `float` keyframe (subtle up/down 8px movement, 6-10s duration) — extremely lightweight
-- Apply parallax via `scrollY` transform so they move at different speeds (0.1x, 0.15x, 0.25x) creating depth layers
+## Plan
 
-#### 3. Scattered leaves on other sections
-- **BenefitsSection**: 2 small leaves, one top-right, one bottom-left, with slow float animation
-- **ProductsSection**: 2 leaves near section edges
-- **TestimonialsSection**: 1 leaf accent
-- All use the same `LeafSVG` component (extracted to shared file) with CSS-only float animation
+### 1. Rewrite BenefitsSection with CSS gradient fallbacks
 
-#### 4. 3D scroll effects (low-lag approach)
-- Use CSS `transform` driven by `useScrollAnimation` intersection observer (no scroll listener per-frame for these sections)
-- **BenefitsSection cards**: Already have 3D rotateX entry — keep as-is
-- **ProductsSection cards**: Already have 3D scale/rotateY entry — keep as-is  
-- **Section dividers**: Add a subtle `translateZ` + `rotateX(2deg)` parallax on section headings using `scrollY` prop (pass from Index.tsx)
-- All transforms use `will-change: transform` for GPU compositing
+Since WebGL shaders may fail silently in environments without GPU support, the cards need a **dual approach**:
+- Keep `<Warp />` for browsers that support WebGL
+- Add a CSS gradient background as a visible fallback behind the shader canvas
+- Change earthy/warm color palettes for the rural theme
 
-#### 5. New CSS keyframe: `leaf-float`
-- Add to `tailwind.config.ts`:
-```
-"leaf-float": {
-  "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
-  "50%": { transform: "translateY(-8px) rotate(3deg)" }
-}
-```
-- Duration: 6-10s, linear infinite — minimal GPU cost
+### 2. Restructure card layout to match reference (image-25)
 
-#### 6. Extract LeafSVG to shared component
-- Create `src/components/landing/LeafSVG.tsx` so it can be reused across Hero, Benefits, Products, Testimonials
-- Add a `leafGrad` id suffix per instance to avoid SVG gradient ID conflicts
+Change from "shader stripe + white content" to **full shader background with overlaid content**:
+- Shader fills the entire card (not just a top stripe)
+- Icon, title, description, and "Saiba mais" link rendered on top in white text
+- Semi-transparent dark overlay for text readability
+- Earthy warm tones: browns, greens, warm golds
 
-### Performance approach
-- All new leaves are **CSS-only animations** (no JS timers, no requestAnimationFrame)
-- Static positioned elements with `will-change: transform`
-- No additional WebGL shaders — keep the existing 4 Warp instances
-- Scattered leaves use `opacity: 0.15-0.3` so they're decorative, not distracting
+### 3. Add CSS gradient fallback colors
 
-### Files to edit
-- `src/components/landing/LeafSVG.tsx` — new shared component
-- `src/components/landing/HeroSection.tsx` — more orbit leaves + scattered hero leaves with parallax
-- `src/components/landing/BenefitsSection.tsx` — 2 scattered leaves
-- `src/components/landing/ProductsSection.tsx` — 2 scattered leaves  
-- `src/components/landing/TestimonialsSection.tsx` — 1 scattered leaf
-- `src/pages/Index.tsx` — pass `scrollY` to Benefits, Products, Testimonials
-- `tailwind.config.ts` — add `leaf-float` keyframe
+Each card gets a matching CSS gradient background that shows when WebGL is unavailable:
+- Card 1 (Saúde): Deep green gradient
+- Card 2 (Qualidade): Warm brown/amber gradient  
+- Card 3 (Resultados): Forest green gradient
+- Card 4 (Entrega): Earth brown gradient
+
+### 4. Mobile responsiveness
+
+- Single column on mobile (`grid-cols-1`), 2 columns on `sm:` breakpoint
+- Reduce card min-height on mobile
+- Adjust padding and font sizes for small screens
+- Ensure shader canvas has proper dimensions with `style={{ width: '100%', height: '100%', position: 'absolute' }}`
+
+### Files Modified
+- `src/components/landing/BenefitsSection.tsx` — Full rewrite of card structure
 
