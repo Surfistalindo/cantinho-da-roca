@@ -83,7 +83,7 @@ const FEATURES = [
     id: "frutas",
     label: "Frutas Desidratadas",
     icon: CheckmarkCircle01Icon,
-    image: "https://images.unsplash.com/photo-1604085572504-a392541f0422?q=80&w=1200",
+    image: "https://images.unsplash.com/photo-1573246123716-6b1782bfc499?q=80&w=1200",
     description: "Snacks naturais e saudáveis para o seu dia a dia.",
   },
 ];
