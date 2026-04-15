@@ -87,8 +87,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
           className="absolute inset-0 z-20 pointer-events-none"
           style={{
             opacity: heroOpacity,
-            transform: `translateY(${heroTranslateY}px)`,
-            transition: 'none',
+            transform: `translate3d(0, ${heroTranslateY}px, 0)`,
+            willChange: 'transform, opacity',
           }}
         >
           {/* Top bar */}
