@@ -10,15 +10,16 @@ const links = [
   { label: 'Contato', href: '#contato' },
 ];
 
-export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
+interface NavbarProps {
+  scrollY: number;
+}
+
+export default function Navbar({ scrollY }: NavbarProps) {
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  const showNavbar = scrollY > 150;
+  const navbarOpacity = Math.min(1, Math.max(0, (scrollY - 100) / 100));
+  const navbarTranslateY = showNavbar ? 0 : -100;
 
   const handleClick = (href: string) => {
     setOpen(false);
@@ -28,26 +29,48 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'bg-[#f7f5f0]/90 backdrop-blur-md shadow-sm'
-          : 'bg-transparent'
-      }`}
+      className="fixed top-0 left-0 right-0 z-50"
+      style={{
+        opacity: navbarOpacity,
+        transform: `translateY(${navbarTranslateY}%)`,
+        transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease',
+        pointerEvents: showNavbar ? 'auto' : 'none',
+      }}
     >
-      <div className="section-container flex items-center justify-between h-16 sm:h-[72px]">
-        <button onClick={() => handleClick('#inicio')} className="flex items-center">
-          <img src={logo} alt="Cantim da Roça" className="h-14 sm:h-16" />
-        </button>
+      <div
+        className="absolute inset-0 bg-[#f7f5f0]/85 backdrop-blur-xl shadow-lg shadow-black/[0.03]"
+        style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}
+      />
+      <div className="section-container relative flex items-center justify-between h-16 sm:h-[72px]">
+        {/* Logo slot — the morphing logo will be fixed positioned from Index */}
+        <div className="flex items-center h-full">
+          <img
+            src={logo}
+            alt="Cantim da Roça"
+            className="h-12 sm:h-14"
+            style={{
+              opacity: showNavbar ? 1 : 0,
+              transform: showNavbar ? 'scale(1)' : 'scale(0.8)',
+              transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+          />
+        </div>
 
-        {/* Desktop */}
+        {/* Desktop links */}
         <ul className="hidden md:flex items-center gap-8">
-          {links.map((l) => (
+          {links.map((l, i) => (
             <li key={l.href}>
               <button
                 onClick={() => handleClick(l.href)}
-                className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors tracking-wide"
+                className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors tracking-wide relative group"
+                style={{
+                  opacity: showNavbar ? 1 : 0,
+                  transform: showNavbar ? 'translateY(0)' : 'translateY(-8px)',
+                  transition: `all 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${i * 0.05}s`,
+                }}
               >
                 {l.label}
+                <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-primary group-hover:w-full transition-all duration-300" />
               </button>
             </li>
           ))}
@@ -55,7 +78,7 @@ export default function Navbar() {
 
         {/* Mobile toggle */}
         <button
-          className="md:hidden text-foreground/70"
+          className="md:hidden text-foreground/70 relative"
           onClick={() => setOpen(!open)}
           aria-label="Menu"
         >
@@ -64,14 +87,26 @@ export default function Navbar() {
       </div>
 
       {/* Mobile overlay */}
-      {open && (
-        <div className="md:hidden bg-[#f7f5f0]/95 backdrop-blur-lg border-t border-border/30">
+      <div
+        className="md:hidden overflow-hidden"
+        style={{
+          maxHeight: open ? '400px' : '0',
+          opacity: open ? 1 : 0,
+          transition: 'max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease',
+        }}
+      >
+        <div className="bg-[#f7f5f0]/95 backdrop-blur-xl border-t border-border/30">
           <ul className="flex flex-col py-4">
-            {links.map((l) => (
+            {links.map((l, i) => (
               <li key={l.href}>
                 <button
                   onClick={() => handleClick(l.href)}
                   className="w-full text-left px-6 py-3 text-foreground/80 hover:text-primary hover:bg-primary/5 transition-colors font-medium"
+                  style={{
+                    opacity: open ? 1 : 0,
+                    transform: open ? 'translateX(0)' : 'translateX(-20px)',
+                    transition: `all 0.3s ease ${i * 0.06}s`,
+                  }}
                 >
                   {l.label}
                 </button>
@@ -79,7 +114,7 @@ export default function Navbar() {
             ))}
           </ul>
         </div>
-      )}
+      </div>
     </nav>
   );
 }

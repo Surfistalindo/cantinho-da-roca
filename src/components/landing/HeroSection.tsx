@@ -5,9 +5,18 @@ import logo from '@/assets/logo-cantim.png';
 
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Quero saber mais sobre os produtos do Cantim da Roça 🌿')}`;
 
-const HeroSection: React.FC = () => {
+interface HeroSectionProps {
+  scrollY: number;
+}
+
+const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const layersRef = useRef<HTMLDivElement[]>([]);
+
+  // Parallax values based on scroll
+  const heroOpacity = Math.max(0, 1 - scrollY / 600);
+  const heroTranslateY = scrollY * 0.3;
+  const titleScale = Math.max(0.85, 1 - scrollY / 2000);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -53,14 +62,18 @@ const HeroSection: React.FC = () => {
           50% { transform: scaleY(1); transform-origin: top; }
           51% { transform: scaleY(1); transform-origin: bottom; }
         }
+        @keyframes hero-float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
       `}</style>
 
       <section
         id="inicio"
-        className="relative w-full min-h-screen overflow-hidden flex items-center justify-center pt-32 sm:pt-36"
+        className="relative w-full min-h-screen overflow-hidden flex items-center justify-center"
         style={{ background: 'linear-gradient(160deg, #f7f5f0 0%, #eef5ee 40%, #f0f7f0 100%)' }}
       >
-        {/* Subtle dot pattern */}
+        {/* Dot pattern */}
         <div
           className="absolute inset-0 opacity-[0.04]"
           style={{
@@ -69,10 +82,17 @@ const HeroSection: React.FC = () => {
           }}
         />
 
-        {/* UI Overlay */}
-        <div className="absolute inset-0 z-20 pointer-events-none">
+        {/* Parallax content wrapper */}
+        <div
+          className="absolute inset-0 z-20 pointer-events-none"
+          style={{
+            opacity: heroOpacity,
+            transform: `translateY(${heroTranslateY}px)`,
+            transition: 'none',
+          }}
+        >
           {/* Top bar */}
-          <div className="flex justify-between items-start px-6 sm:px-10 pt-28 sm:pt-32">
+          <div className="flex justify-between items-start px-6 sm:px-10 pt-20 sm:pt-24">
             <p
               className="text-foreground/60 text-xs sm:text-sm tracking-[0.3em] uppercase pointer-events-auto font-medium"
               style={{ fontFamily: "'SF Mono', 'Fira Code', 'Courier New', monospace" }}
@@ -86,7 +106,13 @@ const HeroSection: React.FC = () => {
           </div>
 
           {/* Title */}
-          <div className="absolute left-6 sm:left-10 top-[56%] -translate-y-1/2">
+          <div
+            className="absolute left-6 sm:left-10 top-[52%] -translate-y-1/2"
+            style={{
+              transform: `translateY(-50%) scale(${titleScale})`,
+              transformOrigin: 'left center',
+            }}
+          >
             <h1 className="text-5xl sm:text-7xl lg:text-8xl font-bold text-foreground leading-[0.9] tracking-tight">
               CANTIM
               <br />
@@ -127,7 +153,15 @@ const HeroSection: React.FC = () => {
         </div>
 
         {/* 3D Canvas */}
-        <div className="relative mt-10 sm:mt-16" style={{ perspective: '1200px', perspectiveOrigin: '50% 50%' }}>
+        <div
+          className="relative mt-10 sm:mt-16"
+          style={{
+            perspective: '1200px',
+            perspectiveOrigin: '50% 50%',
+            opacity: heroOpacity,
+            transform: `translateY(${heroTranslateY * 0.5}px)`,
+          }}
+        >
           <div
             ref={canvasRef}
             className="relative"

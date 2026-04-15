@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { MessageCircle } from 'lucide-react';
 import { APP_CONFIG } from '@/config/app';
+import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 11);
@@ -38,6 +39,8 @@ export default function LeadFormSection() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const lastSubmitRef = useRef<number>(0);
+
+  const { ref, isVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.1 });
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhone(formatPhone(e.target.value));
@@ -112,7 +115,6 @@ export default function LeadFormSection() {
 
   return (
     <section id="contato" className="py-24 relative" style={{ background: '#f7f5f0' }}>
-      {/* Subtle dot pattern */}
       <div
         className="absolute inset-0 opacity-[0.03] pointer-events-none"
         style={{
@@ -120,8 +122,17 @@ export default function LeadFormSection() {
           backgroundSize: '24px 24px',
         }}
       />
-      <div className="section-container relative">
-        <div className="max-w-lg mx-auto">
+      <div ref={ref} className="section-container relative">
+        <div
+          className="max-w-lg mx-auto"
+          style={{
+            opacity: isVisible ? 1 : 0,
+            transform: isVisible
+              ? 'scale3d(1, 1, 1) translateY(0)'
+              : 'scale3d(0.9, 0.9, 0.9) translateY(40px)',
+            transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        >
           <p className="text-primary text-sm font-semibold tracking-widest uppercase text-center mb-3">
             Contato
           </p>
