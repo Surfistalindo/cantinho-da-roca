@@ -11,8 +11,7 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { MessageCircle } from 'lucide-react';
-
-const WHATSAPP_NUMBER = '5571999999999';
+import { APP_CONFIG } from '@/config/app';
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 11);
@@ -25,6 +24,8 @@ function isValidPhone(value: string): boolean {
   const digits = value.replace(/\D/g, '');
   return digits.length === 10 || digits.length === 11;
 }
+
+const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Vim pelo site e quero saber mais sobre os produtos naturais 🌿')}`;
 
 export default function LeadFormSection() {
   const [name, setName] = useState('');
@@ -49,7 +50,6 @@ export default function LeadFormSection() {
     setLoading(true);
     try {
       const cleanPhone = phone.replace(/\D/g, '');
-
       const { error } = await supabase.from('leads').insert({
         name: name.trim(),
         phone: cleanPhone,
@@ -58,7 +58,7 @@ export default function LeadFormSection() {
       });
       if (error) throw error;
 
-      toast.success('Cadastro realizado!', { description: 'Em breve entraremos em contato.' });
+      toast.success('Cadastro realizado! 🎉', { description: 'Em breve entraremos em contato.' });
       setName('');
       setPhone('');
       setOrigin('');
@@ -70,18 +70,35 @@ export default function LeadFormSection() {
     }
   };
 
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Olá, vim pelo site Cantinho da Roça e gostaria de mais informações.')}`;
-
   return (
     <section id="lead-form" className="py-20">
       <div className="section-container">
         <div className="max-w-lg mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-3 font-heading">
-            Fique por dentro das novidades
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-3">
+            Fale com a gente agora
           </h2>
           <p className="text-muted-foreground text-center mb-8">
-            Cadastre-se e receba ofertas exclusivas direto da roça.
+            Tire dúvidas, peça recomendações ou faça seu pedido. Estamos aqui pra te ajudar! 💚
           </p>
+
+          <div className="text-center mb-8">
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+              <Button variant="whatsapp" size="lg" className="gap-2 w-full sm:w-auto">
+                <MessageCircle className="h-5 w-5" />
+                Chamar no WhatsApp
+              </Button>
+            </a>
+          </div>
+
+          <div className="relative mb-8">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-3 text-muted-foreground">ou deixe seus dados</span>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               placeholder="Seu nome"
@@ -116,16 +133,6 @@ export default function LeadFormSection() {
               {loading ? 'Enviando...' : 'Quero receber novidades'}
             </Button>
           </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground mb-3">Ou fale diretamente com a gente:</p>
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" size="lg" className="gap-2 border-secondary text-secondary hover:bg-secondary hover:text-secondary-foreground">
-                <MessageCircle className="h-5 w-5" />
-                Chamar no WhatsApp
-              </Button>
-            </a>
-          </div>
         </div>
       </div>
     </section>
