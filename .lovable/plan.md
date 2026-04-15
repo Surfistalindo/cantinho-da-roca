@@ -1,33 +1,53 @@
 
 
-## Análise: O formulário já está funcional
+## Plano: Navbar fixa + harmonização visual + redesign das seções
 
-Após revisar o código, o fluxo de captação de leads **já está implementado e funcional**:
+### O que será feito
 
-1. **Formulário → Banco**: `LeadFormSection.tsx` já insere diretamente na tabela `leads` via Supabase SDK (linha 53-58)
-2. **Validação client-side**: Nome obrigatório, telefone com máscara e validação de formato (10-11 dígitos)
-3. **Sanitização**: Telefone é limpo (`replace(/\D/g, '')`), nome é trimado
-4. **Feedback visual**: Toast de sucesso/erro já implementado (linhas 61, 67)
-5. **RLS**: Tabela `leads` permite INSERT para `anon` e `authenticated` — funciona sem login
-6. **SQL Injection**: Impossível — Supabase SDK usa queries parametrizadas internamente
-7. **Dados chegam no CRM**: `leadService.ts` lista os leads para o painel admin
+**1. Navbar fixa no topo**
+- Criar `src/components/landing/Navbar.tsx` com posição `fixed` e fundo translúcido (`backdrop-blur`)
+- Links: Início, Benefícios, Produtos, Depoimentos, Contato — smooth scroll para âncoras
+- Logo à esquerda, menu hamburger no mobile com overlay
+- Adicionar `id` em cada seção: `beneficios`, `produtos`, `depoimentos`, `contato`
+- Integrar no `Index.tsx` acima do `HeroSection`
 
-### O que pode ser melhorado
+**2. Trocar fontes**
+- Substituir Poppins/Inter por fontes mais premium e menos genéricas
+- Usar **DM Serif Display** para headings (elegante, natural) e **DM Sans** para body (moderno, limpo)
+- Atualizar `index.css` (import Google Fonts) e `tailwind.config.ts`
 
-| Melhoria | Descrição |
-|----------|-----------|
-| **Validação de nome** | Adicionar tamanho mínimo (2 caracteres) |
-| **Proteção contra duplicidade** | Verificar se telefone já existe antes de inserir |
-| **Redirecionamento WhatsApp** | Após envio com sucesso, oferecer abrir WhatsApp |
-| **Rate limiting** | Prevenir spam de submissões repetidas |
-| **Campo de mensagem** | Adicionar campo opcional de mensagem/observação (mapear para `notes`) |
+**3. Harmonizar cores com o hero**
+- O hero usa `#f7f5f0` → `#f0f7f0`. As seções intermediárias devem seguir essa paleta
+- BenefitsSection: fundo warm `#f7f5f0` em vez de `bg-accent` genérico
+- ProductsSection: fundo branco suave com borda sutil verde
+- TestimonialsSection: fundo `#eef5ee`
+- LeadFormSection: fundo `#f7f5f0` com destaque verde
+- Footer: verde escuro profundo (já está `bg-primary`)
+
+**4. Redesign das seções (estilo premium, não genérico)**
+
+- **BenefitsSection**: Layout em bento grid assimétrico. Cards com ícones grandes, fundo com gradiente sutil, bordas arredondadas com hover elevado. Estilo inspirado em feature sections do 21st.dev (cards com glassmorphism leve)
+- **ProductsSection**: Cards com hover animado (scale + shadow), badge "100% Natural" no canto, layout com destaque no card central. Botão WhatsApp com animação de pulse
+- **TestimonialsSection**: Layout com aspas grandes decorativas, avatar com iniciais coloridas, cards com borda esquerda verde accent. Mais espaçamento e tipografia refinada
+- **LeadFormSection**: Fundo com padrão sutil (dots como no hero), card centralizado com sombra elevada, inputs com estilo mais refinado
+- **Footer**: Manter estrutura, refinar tipografia
 
 ### Arquivos editados
-- `src/components/landing/LeadFormSection.tsx` — Validação aprimorada, check de duplicidade, redirect WhatsApp pós-envio, campo de mensagem, rate limiting básico
+| Arquivo | Ação |
+|---------|------|
+| `src/components/landing/Navbar.tsx` | Criar — navbar fixa com links âncora |
+| `src/pages/Index.tsx` | Adicionar Navbar, padding-top para compensar fixed |
+| `src/index.css` | Trocar fontes para DM Serif Display + DM Sans |
+| `tailwind.config.ts` | Atualizar fontFamily |
+| `src/components/landing/BenefitsSection.tsx` | Redesign visual — bento grid premium |
+| `src/components/landing/ProductsSection.tsx` | Redesign visual — cards animados |
+| `src/components/landing/TestimonialsSection.tsx` | Redesign visual — aspas decorativas |
+| `src/components/landing/LeadFormSection.tsx` | Harmonizar fundo e estilo |
+| `src/components/landing/HeroSection.tsx` | Adicionar padding-top para navbar |
 
 ### O que NÃO muda
-- Tabela `leads` no banco (já tem a estrutura correta)
-- RLS policies (já configuradas)
-- `leadService.ts` (já funcional para o CRM)
-- Nenhum endpoint separado necessário — Supabase SDK conecta direto ao banco com segurança
+- Lógica de formulário e integração com banco
+- Estrutura de rotas e CRM admin
+- WhatsAppFloat
+- Footer (apenas ajustes de fonte)
 
