@@ -70,20 +70,7 @@ const HeroSection: React.FC = () => {
         />
 
         {/* UI Overlay */}
-        <div className="absolute inset-0 z-20 pointer-events-none">
-          {/* Top bar */}
-          <div className="flex justify-between items-start p-6 sm:p-10">
-            <p
-              className="text-foreground/60 text-xs sm:text-sm tracking-[0.3em] uppercase pointer-events-auto font-medium"
-              style={{ fontFamily: "'SF Mono', 'Fira Code', 'Courier New', monospace" }}
-            >
-              CANTIM_DA_ROÇA
-            </p>
-            <div className="text-right" style={{ fontFamily: "'SF Mono', 'Fira Code', 'Courier New', monospace" }}>
-              <p className="text-primary/70 text-[10px] sm:text-xs tracking-wider">PROD. NATURAIS</p>
-              <p className="text-primary/70 text-[10px] sm:text-xs tracking-wider">& SUPLEMENTOS</p>
-            </div>
-          </div>
+        <div className="absolute inset-0 z-20 pointer-events-none pt-16">
 
           {/* Title */}
           <div className="absolute left-6 sm:left-10 top-1/2 -translate-y-1/2">
