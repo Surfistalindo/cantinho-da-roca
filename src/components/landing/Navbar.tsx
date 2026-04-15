@@ -47,7 +47,7 @@ export default function Navbar({ scrollY }: NavbarProps) {
           <img
             src={logo}
             alt="Cantim da Roça"
-            className="h-12 sm:h-14"
+            className="h-20 sm:h-24"
             style={{
               opacity: showNavbar ? 1 : 0,
               transform: showNavbar ? 'scale(1)' : 'scale(0.8)',
