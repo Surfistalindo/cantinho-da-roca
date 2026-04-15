@@ -4,6 +4,7 @@ import { APP_CONFIG } from '@/config/app';
 import heroImg from '@/assets/hero-products.jpg';
 import logoImg from '@/assets/logo-cantim.png';
 import { Button } from '@/components/ui/button';
+import { Warp } from '@paper-design/shaders-react';
 
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Quero saber mais sobre os produtos do Cantim da Roça 🌿')}`;
 
@@ -41,15 +42,24 @@ const LeafSVG = ({ size }: { size: number }) => (
   </svg>
 );
 
-const HeroSection: React.FC<HeroSectionProps> = () => {
+const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
   const scrollToProducts = () => {
     document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
     <section id="inicio" className="relative min-h-screen overflow-hidden py-16 sm:py-20">
+      {/* Warp shader background */}
+      <div className="absolute inset-0 z-0 opacity-20">
+        <Warp
+          speed={0.3}
+          scale={0.8}
+          colors={['#2d6a4f', '#40916c', '#95d5b2']}
+        />
+      </div>
+
       {/* Logo watermark background - left aligned */}
-      <div className="absolute inset-y-0 left-0 z-0 flex items-center pointer-events-none pl-2 sm:pl-4 md:pl-12">
+      <div className="absolute inset-y-0 left-0 z-[1] flex items-center pointer-events-none pl-2 sm:pl-4 md:pl-12">
         <img
           src={logoImg}
           alt=""
@@ -66,7 +76,7 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
             100% Natural
           </p>
 
-          {/* Title with orbiting leaves */}
+          {/* Title with orbiting leaves + parallax */}
           <div className="relative flex items-center justify-center py-4 sm:py-6">
             {/* Orbit ring */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
@@ -86,7 +96,11 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
 
             <h1
               className="hero-title-shimmer relative z-20 text-center text-4xl sm:text-6xl font-bold tracking-[-1px] sm:tracking-[-2px] md:text-8xl md:tracking-[-6px] xl:text-9xl xl:tracking-[-8px]"
-              style={{ fontFamily: "'Satisfy', cursive" }}
+              style={{
+                fontFamily: "'Satisfy', cursive",
+                transform: `translateY(${scrollY * 0.4}px)`,
+                willChange: 'transform',
+              }}
             >
               Cantım da Roça
             </h1>
@@ -94,7 +108,11 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
 
           <p
             className="mt-3 sm:mt-4 text-center text-xs sm:text-base md:text-lg font-medium tracking-[2px] sm:tracking-[4px] uppercase text-foreground/50"
-            style={{ fontFamily: "'DM Sans', sans-serif" }}
+            style={{
+              fontFamily: "'DM Sans', sans-serif",
+              transform: `translateY(${scrollY * 0.2}px)`,
+              willChange: 'transform',
+            }}
           >
             Produtos Naturais
             <br />

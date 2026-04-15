@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { APP_CONFIG } from '@/config/app';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useRef, useState, useCallback } from 'react';
+import { Warp } from '@paper-design/shaders-react';
 
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Oi! Quero saber mais sobre os produtos naturais 🌿')}`;
 
@@ -58,8 +59,9 @@ function ProductCard({ p, index, isVisible }: { p: typeof products[0]; index: nu
         opacity: isVisible ? 1 : 0,
         transform: isVisible
           ? `translateZ(0) scale(1) ${index === 1 ? 'translateY(-16px)' : ''}`
-          : `translateZ(100px) scale(0.85)`,
+          : `scale(0.8) translateZ(-50px) rotateY(${index === 0 ? '-10' : index === 2 ? '10' : '0'}deg)`,
         transition: `opacity 0.6s ease ${index * 0.2}s, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.2}s, box-shadow 0.3s ease`,
+        transformOrigin: 'center center',
         boxShadow: isHovered
           ? '0 30px 60px -15px rgba(0,0,0,0.2), 0 0 0 1px rgba(34,102,51,0.08)'
           : '0 4px 6px -1px rgba(0,0,0,0.05)',
@@ -112,8 +114,17 @@ export default function ProductsSection() {
   const { ref, isVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.1 });
 
   return (
-    <section id="produtos" className="py-24 bg-card">
-      <div className="section-container">
+    <section id="produtos" className="py-24 bg-card relative overflow-hidden">
+      {/* Warp shader background */}
+      <div className="absolute inset-0 z-0 opacity-10">
+        <Warp
+          speed={0.3}
+          scale={0.7}
+          colors={['#d4a373', '#e9c46a', '#f4e8c1']}
+        />
+      </div>
+
+      <div className="section-container relative z-10">
         <div
           style={{
             opacity: isVisible ? 1 : 0,
@@ -131,7 +142,7 @@ export default function ProductsSection() {
             Tudo pensado pra quem quer viver melhor de forma simples e natural.
           </p>
         </div>
-        <div ref={ref} className="grid md:grid-cols-3 gap-6 mb-14">
+        <div ref={ref} className="grid md:grid-cols-3 gap-6 mb-14" style={{ perspective: '1200px' }}>
           {products.map((p, i) => (
             <ProductCard key={p.title} p={p} index={i} isVisible={isVisible} />
           ))}
