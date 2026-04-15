@@ -156,7 +156,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
             perspective: '1200px',
             perspectiveOrigin: '50% 50%',
             opacity: heroOpacity,
-            transform: `translateY(${heroTranslateY * 0.5}px)`,
+            transform: `translate3d(0, ${heroTranslateY * 0.5}px, 0)`,
+            willChange: 'transform, opacity',
           }}
         >
           <div
