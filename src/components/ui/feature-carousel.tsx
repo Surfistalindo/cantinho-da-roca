@@ -31,7 +31,7 @@ const FEATURES = [
     id: "suplementos",
     label: "Suplementos Naturais",
     icon: Heart,
-    image: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=1200",
+    image: "https://images.unsplash.com/photo-1512069772995-ec65ed45afd6?q=80&w=1200",
     description: "Suplementos para mais disposição e bem-estar no dia a dia.",
   },
   {
@@ -52,7 +52,7 @@ const FEATURES = [
     id: "mel",
     label: "Mel & Própolis",
     icon: Sun,
-    image: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?q=80&w=1200",
+    image: "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?q=80&w=1200",
     description: "Mel puro de abelha e própolis para fortalecer a imunidade.",
   },
   {
@@ -73,7 +73,7 @@ const FEATURES = [
     id: "frutas",
     label: "Frutas Desidratadas",
     icon: Apple,
-    image: "https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?q=80&w=1200",
+    image: "https://images.unsplash.com/photo-1589917625571-871b5744f777?q=80&w=1200",
     description: "Snacks naturais e saudáveis para o seu dia a dia.",
   },
 ];
