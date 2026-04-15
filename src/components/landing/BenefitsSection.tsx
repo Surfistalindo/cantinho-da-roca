@@ -145,10 +145,10 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
       {/* Shader background — fills entire card */}
       <div
         className="absolute inset-0 transition-opacity duration-700"
-        style={{ opacity: isHovered ? 0.6 : 0.2 }}
+        style={{ opacity: isHovered ? 0.75 : 0.5 }}
       >
         <Warp
-          speed={isHovered ? 0.6 : 0.2}
+          speed={isHovered ? 0.6 : 0.35}
           {...config}
           style={{ width: '100%', height: '100%' }}
         />
@@ -159,8 +159,8 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
         className="absolute inset-0 transition-opacity duration-500"
         style={{
           background: isHovered
-            ? 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.3) 100%)'
-            : 'linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.75) 100%)',
+            ? 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.15) 100%)'
+            : 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.45) 100%)',
         }}
       />
 
