@@ -1,43 +1,57 @@
 
 
-## Problem Analysis
+## Plan: Replace Lucide icons with Font Awesome Slab icons across the entire site
 
-From image-24, the current cards show a gray/blank area at the top where the shader should be — the `<Warp />` component requires WebGL which may not be available in the sandbox preview, resulting in empty shader areas. The current layout uses a "shader stripe at top + white content below" pattern.
+### What changes
+Replace all Lucide React icons with Font Awesome icons using the **Slab** (sharp-solid) style — a rare, angular icon set that gives a unique, differentiated look.
 
-From image-25 (the reference), the desired design has the **shader as the full card background** with text overlaid on top in white — a completely different layout than what's currently implemented.
+### Setup
+1. **Install `@fortawesome/fontawesome-svg-core`, `@fortawesome/react-fontawesome`, and `@fortawesome/sharp-solid-svg-icons`** (the Slab/Sharp Solid pack)
+2. Note: The Sharp Solid icons require a Font Awesome Pro license. If unavailable, we'll use `@fortawesome/free-solid-svg-icons` with less common icon choices to achieve differentiation.
 
-## Plan
+### Files to modify
 
-### 1. Rewrite BenefitsSection with CSS gradient fallbacks
+**Landing Page (public site):**
 
-Since WebGL shaders may fail silently in environments without GPU support, the cards need a **dual approach**:
-- Keep `<Warp />` for browsers that support WebGL
-- Add a CSS gradient background as a visible fallback behind the shader canvas
-- Change earthy/warm color palettes for the rural theme
+| File | Current Lucide icons | New FA Slab icons |
+|------|---------------------|-------------------|
+| `HeroSection.tsx` | `MessageCircle`, `ArrowDownRight` | `faCommentDots`, `faArrowTurnDown` |
+| `BenefitsSection.tsx` | `Heart`, `ShieldCheck`, `Sparkles`, `Truck` | `faHeartPulse`, `faCertificate`, `faWandMagicSparkles`, `faTruckFast` |
+| `ProductsSection.tsx` | `MessageCircle` | `faCommentDots` |
+| `TestimonialsSection.tsx` | `Star`, `Quote` | `faStarSharp` / `faStar`, `faQuoteLeft` |
+| `LeadFormSection.tsx` | `MessageCircle` | `faCommentDots` |
+| `Navbar.tsx` | `Menu`, `X` | `faBarsStaggered`, `faXmark` |
+| `Footer.tsx` | `Instagram`, `MessageCircle`, `ArrowRight`, `MapPin` | `faInstagram` (brands), `faCommentDots`, `faArrowRightLong`, `faLocationDot` |
+| `WhatsAppFloat.tsx` | `MessageCircle` | `faWhatsapp` (brands) |
 
-### 2. Restructure card layout to match reference (image-25)
+**CRM/Admin area:**
 
-Change from "shader stripe + white content" to **full shader background with overlaid content**:
-- Shader fills the entire card (not just a top stripe)
-- Icon, title, description, and "Saiba mais" link rendered on top in white text
-- Semi-transparent dark overlay for text readability
-- Earthy warm tones: browns, greens, warm golds
+| File | Current Lucide icons | New FA icons |
+|------|---------------------|-------------|
+| `AdminSidebar.tsx` | `LayoutDashboard`, `Users`, `Kanban`, `UserCheck` | `faGaugeHigh`, `faUserGroup`, `faTableColumns`, `faUserCheck` |
+| `AdminNavbar.tsx` | `LogOut`, `ExternalLink` | `faArrowRightFromBracket`, `faUpRightFromSquare` |
+| `DashboardPage.tsx` | `Users`, `BarChart3`, `MessageSquare`, `PhoneOff`, `UserCheck` | `faUserGroup`, `faChartColumn`, `faComments`, `faPhoneSlash`, `faUserCheck` |
+| `LeadCard.tsx` | `MessageCircle`, `Clock`, `AlertTriangle` | `faCommentDots`, `faClockRotateLeft`, `faTriangleExclamation` |
+| `LeadsPage.tsx` | `Eye`, `MessageCircle`, `Trash2` | `faEye`, `faCommentDots`, `faTrashCan` |
+| `ClientsPage.tsx` | `Eye`, `MessageCircle`, `UserCheck`, `Plus`, `Search` | `faEye`, `faCommentDots`, `faUserCheck`, `faPlus`, `faMagnifyingGlass` |
+| `LeadDetailSheet.tsx` | `Send`, `MessageCircle`, `Phone`, `FileText`, `Pencil`, `Trash2`, `UserCheck`, `Save`, `X` | `faPaperPlane`, `faCommentDots`, `faPhone`, `faFileLines`, `faPenToSquare`, `faTrashCan`, `faUserCheck`, `faFloppyDisk`, `faXmark` |
+| `CustomerDetailSheet.tsx` | Same set as LeadDetailSheet | Same mapping |
+| `LeadFilters.tsx` | `Search`, `AlertTriangle` | `faMagnifyingGlass`, `faTriangleExclamation` |
 
-### 3. Add CSS gradient fallback colors
+**UI components** (keep Lucide for shadcn/ui internals like `dialog.tsx`, `sheet.tsx`, `accordion.tsx` etc. — these are standard and shouldn't be changed).
 
-Each card gets a matching CSS gradient background that shows when WebGL is unavailable:
-- Card 1 (Saúde): Deep green gradient
-- Card 2 (Qualidade): Warm brown/amber gradient  
-- Card 3 (Resultados): Forest green gradient
-- Card 4 (Entrega): Earth brown gradient
+### Implementation approach
+1. Install `@fortawesome/fontawesome-svg-core`, `@fortawesome/react-fontawesome`, `@fortawesome/free-solid-svg-icons`, `@fortawesome/free-brands-svg-icons`
+2. Create a helper wrapper `src/components/ui/fa-icon.tsx` for consistent sizing/styling
+3. Update each file listed above, replacing Lucide imports with FA imports
+4. Keep shadcn/ui internal components unchanged (they use Lucide for structural icons like X, ChevronDown)
 
-### 4. Mobile responsiveness
-
-- Single column on mobile (`grid-cols-1`), 2 columns on `sm:` breakpoint
-- Reduce card min-height on mobile
-- Adjust padding and font sizes for small screens
-- Ensure shader canvas has proper dimensions with `style={{ width: '100%', height: '100%', position: 'absolute' }}`
-
-### Files Modified
-- `src/components/landing/BenefitsSection.tsx` — Full rewrite of card structure
+### Icon differentiation strategy
+Instead of generic icons, we pick uncommon FA alternatives:
+- `faHeartPulse` instead of plain heart
+- `faBarsStaggered` instead of plain hamburger
+- `faClockRotateLeft` instead of plain clock
+- `faCertificate` instead of shield
+- `faWandMagicSparkles` instead of sparkles
+- `faTruckFast` instead of plain truck
 
