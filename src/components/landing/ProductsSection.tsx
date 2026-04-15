@@ -1,4 +1,5 @@
 import logo from '@/assets/logo-cantim.png';
+import logoImg from '@/assets/logo-cantim.png';
 import { Button } from '@/components/ui/button';
 import { APP_CONFIG } from '@/config/app';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
@@ -8,7 +9,11 @@ import FeatureCarousel from '@/components/ui/feature-carousel';
 
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Oi! Quero saber mais sobre os produtos naturais 🌿')}`;
 
-export default function ProductsSection() {
+interface ProductsSectionProps {
+  scrollY?: number;
+}
+
+export default function ProductsSection({ scrollY = 0 }: ProductsSectionProps) {
   const { ref, isVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.1 });
 
   return (
@@ -24,12 +29,25 @@ export default function ProductsSection() {
         <LeafSVG size={16} id="prod2" style={{ transform: 'rotate(-25deg)' }} />
       </div>
 
+      {/* Decorative parallax logo */}
+      <div
+        className="absolute -right-20 top-1/3 pointer-events-none opacity-[0.04] z-[1]"
+        style={{
+          transform: `translateY(${scrollY * -0.15}px) rotate(15deg)`,
+          willChange: 'transform',
+        }}
+      >
+        <img src={logoImg} alt="" className="w-[300px] sm:w-[400px]" aria-hidden="true" />
+      </div>
+
       <div className="relative z-10" ref={ref}>
         <div
           className="text-center mb-12"
           style={{
             opacity: isVisible ? 1 : 0,
-            transform: isVisible ? 'translateY(0)' : 'translateY(30px)',
+            transform: isVisible
+              ? `translateY(${scrollY * 0.03}px)`
+              : 'translateY(30px)',
             transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
@@ -68,7 +86,6 @@ export default function ProductsSection() {
             rel="noopener noreferrer"
             className="relative inline-block group perspective-[800px]"
           >
-            {/* Rotating border glow */}
             <span className="absolute -inset-[2px] rounded-xl overflow-hidden z-0">
               <span
                 className="absolute inset-[-100%] animate-[spin_3s_linear_infinite]"
@@ -77,7 +94,6 @@ export default function ProductsSection() {
                 }}
               />
             </span>
-            {/* Inner bg to mask center */}
             <span className="absolute inset-[1px] rounded-[10px] bg-[#25D366] z-[1]" />
             <Button
               variant="whatsapp"
