@@ -2,77 +2,87 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import {
+  Pizza04Icon,
+  CommandFreeIcons,
+  GlobalSearchIcon,
+  AiCloudIcon,
+  SmartPhone01Icon,
+  CheckmarkCircle01Icon,
+  DashboardSquare01Icon,
+  MagicWandIcon,
+} from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
-import { Leaf, Flame, Cookie, Heart, Droplets, Wheat, Sun, Coffee, Flower2, Apple } from "lucide-react";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 const FEATURES = [
   {
     id: "chas",
     label: "Chás Naturais",
-    icon: Leaf,
+    icon: Pizza04Icon,
     image: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?q=80&w=1200",
     description: "Chás funcionais para emagrecer, desinflamar e relaxar. 100% natural.",
   },
   {
     id: "ervas",
     label: "Ervas Medicinais",
-    icon: Flower2,
+    icon: CommandFreeIcons,
     image: "https://images.unsplash.com/photo-1471193945509-9ad0617afabf?q=80&w=1200",
     description: "Ervas selecionadas com propriedades terapêuticas comprovadas.",
   },
   {
     id: "temperos",
     label: "Temperos & Especiarias",
-    icon: Flame,
+    icon: GlobalSearchIcon,
     image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?q=80&w=1200",
     description: "Temperos frescos e artesanais pra dar sabor às suas refeições.",
   },
   {
     id: "suplementos",
     label: "Suplementos Naturais",
-    icon: Heart,
+    icon: CheckmarkCircle01Icon,
     image: "https://images.unsplash.com/photo-1505576399279-0d06b7f4de29?q=80&w=1200",
     description: "Suplementos para mais disposição e bem-estar no dia a dia.",
   },
   {
     id: "graos",
     label: "Grãos & Farinhas",
-    icon: Wheat,
+    icon: AiCloudIcon,
     image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?q=80&w=1200",
     description: "Grãos integrais e farinhas artesanais sem aditivos químicos.",
   },
   {
     id: "oleos",
     label: "Óleos Essenciais",
-    icon: Droplets,
+    icon: SmartPhone01Icon,
     image: "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=80&w=1200",
     description: "Óleos puros para aromaterapia e cuidados com o corpo.",
   },
   {
     id: "mel",
     label: "Mel & Própolis",
-    icon: Sun,
+    icon: DashboardSquare01Icon,
     image: "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?q=80&w=1200",
     description: "Mel puro de abelha e própolis para fortalecer a imunidade.",
   },
   {
     id: "artesanais",
     label: "Produtos Artesanais",
-    icon: Cookie,
+    icon: MagicWandIcon,
     image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=1200",
     description: "Feitos à mão com ingredientes naturais e muito carinho.",
   },
   {
     id: "infusoes",
     label: "Infusões Especiais",
-    icon: Coffee,
+    icon: CheckmarkCircle01Icon,
     image: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?q=80&w=1200",
     description: "Blends exclusivos criados para momentos únicos de bem-estar.",
   },
   {
     id: "frutas",
     label: "Frutas Desidratadas",
-    icon: Apple,
+    icon: CheckmarkCircle01Icon,
     image: "https://images.unsplash.com/photo-1589917625571-871b5744f777?q=80&w=1200",
     description: "Snacks naturais e saudáveis para o seu dia a dia.",
   },
@@ -168,7 +178,7 @@ export function FeatureCarousel() {
                       "flex items-center justify-center w-8 h-8 rounded-full transition-colors duration-500",
                       isActive ? "bg-primary-foreground/20" : "bg-muted"
                     )}>
-                      <feature.icon className="w-4 h-4" />
+                      <HugeiconsIcon icon={feature.icon} className="w-4 h-4" />
                     </span>
 
                     <span className="text-sm font-semibold tracking-wide">
@@ -207,7 +217,6 @@ export function FeatureCarousel() {
                       transition={{ type: "spring", stiffness: 200, damping: 30 }}
                       style={{ transformStyle: "preserve-3d", zIndex: isActive ? 10 : 1 }}
                     >
-                      {/* Image */}
                       <img
                         src={feature.image}
                         alt={feature.label}
@@ -215,7 +224,6 @@ export function FeatureCarousel() {
                         loading="lazy"
                       />
 
-                      {/* Overlay with info */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
                         {isActive && (
                           <motion.div
@@ -227,7 +235,6 @@ export function FeatureCarousel() {
                             <p className="text-white/70 text-xs font-medium tracking-widest uppercase mb-2">
                               {index + 1} • {feature.label}
                             </p>
-
                             <p className="text-white text-lg sm:text-xl font-serif leading-snug">
                               {feature.description}
                             </p>
@@ -235,7 +242,6 @@ export function FeatureCarousel() {
                         )}
                       </div>
 
-                      {/* Badge */}
                       <div className="absolute top-4 right-4 flex items-center gap-2 bg-white/20 backdrop-blur-md rounded-full px-3 py-1.5">
                         <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
                         <span className="text-white text-xs font-medium">
