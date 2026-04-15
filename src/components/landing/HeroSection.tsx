@@ -11,12 +11,36 @@ interface HeroSectionProps {
   scrollY: number;
 }
 
-// 8 leaves orbiting in a circle around the title
-const orbitLeaves = Array.from({ length: 8 }, (_, i) => ({
+// Leaves positioned along an elliptical orbit, staggered with animation delay
+const orbitLeaves = Array.from({ length: 10 }, (_, i) => ({
   id: i,
-  delay: (i / 8) * -20, // stagger evenly around the orbit
-  size: i % 2 === 0 ? 28 : 22,
+  delay: (i / 10) * -18,
+  size: 18 + (i % 3) * 6,
 }));
+
+const LeafSVG = ({ size }: { size: number }) => (
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+    <path
+      d="M16 2C16 2 6 8 6 18C6 24 10 28 16 30C22 28 26 24 26 18C26 8 16 2 16 2Z"
+      fill="hsl(125 47% 42%)"
+      opacity="0.7"
+    />
+    <path
+      d="M16 2C16 2 6 8 6 18C6 24 10 28 16 30C22 28 26 24 26 18C26 8 16 2 16 2Z"
+      fill="url(#leafGrad)"
+      opacity="0.5"
+    />
+    <path d="M16 6V26" stroke="hsl(125 47% 28%)" strokeWidth="0.6" opacity="0.5" />
+    <path d="M16 10C13 13 10 16 8 19" stroke="hsl(125 47% 28%)" strokeWidth="0.4" opacity="0.3" />
+    <path d="M16 14C19 16 22 18 24 20" stroke="hsl(125 47% 28%)" strokeWidth="0.4" opacity="0.3" />
+    <defs>
+      <linearGradient id="leafGrad" x1="6" y1="2" x2="26" y2="30">
+        <stop offset="0%" stopColor="hsl(100 50% 55%)" />
+        <stop offset="100%" stopColor="hsl(130 50% 30%)" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
 
 const HeroSection: React.FC<HeroSectionProps> = () => {
   const scrollToProducts = () => {
@@ -25,7 +49,7 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
 
   return (
     <section id="inicio" className="relative min-h-screen overflow-hidden py-20">
-      {/* Logo watermark background - left aligned, more visible */}
+      {/* Logo watermark background - left aligned */}
       <div className="absolute inset-y-0 left-0 z-0 flex items-center pointer-events-none pl-4 md:pl-12">
         <img
           src={logoImg}
@@ -43,64 +67,23 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
           </p>
 
           {/* Title with orbiting leaves */}
-          <div className="relative flex items-center justify-center">
-            {/* Orbit container */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="relative w-[320px] h-[120px] sm:w-[500px] sm:h-[160px] md:w-[700px] md:h-[200px] xl:w-[900px] xl:h-[240px]">
-                {orbitLeaves.map((leaf) => (
-                  <div
-                    key={leaf.id}
-                    className="absolute top-1/2 left-1/2 animate-leaf-orbit"
-                    style={{
-                      animationDelay: `${leaf.delay}s`,
-                      width: 0,
-                      height: 0,
-                    }}
-                  >
-                    {/* SVG leaf shape */}
-                    <svg
-                      width={leaf.size}
-                      height={leaf.size}
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      className="absolute -translate-x-1/2 -translate-y-1/2"
-                      style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }}
-                    >
-                      <path
-                        d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.7C7.14 19.87 7.64 20 8.17 20C12.17 20 15.87 14.5 17 8Z"
-                        fill="hsl(125 47% 40%)"
-                        opacity="0.6"
-                      />
-                      <path
-                        d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22L6.66 19.7C7.14 19.87 7.64 20 8.17 20C12.17 20 15.87 14.5 17 8Z"
-                        stroke="hsl(125 47% 30%)"
-                        strokeWidth="0.5"
-                        fill="none"
-                        opacity="0.4"
-                      />
-                      {/* Leaf vein */}
-                      <path
-                        d="M6 18C8 14 11 11 17 8"
-                        stroke="hsl(125 47% 30%)"
-                        strokeWidth="0.4"
-                        fill="none"
-                        opacity="0.3"
-                      />
-                    </svg>
-                  </div>
-                ))}
-              </div>
+          <div className="relative flex items-center justify-center py-6">
+            {/* Orbit ring - leaves travel the full elliptical path around the text */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
+              {orbitLeaves.map((leaf) => (
+                <div
+                  key={leaf.id}
+                  className="absolute animate-leaf-orbit"
+                  style={{ animationDelay: `${leaf.delay}s` }}
+                >
+                  <LeafSVG size={leaf.size} />
+                </div>
+              ))}
             </div>
 
             <h1
-              className="relative z-20 text-center text-6xl font-bold tracking-[-2px] md:text-8xl md:tracking-[-6px] xl:text-9xl xl:tracking-[-8px]"
-              style={{
-                fontFamily: "'Satisfy', cursive",
-                background: 'linear-gradient(135deg, hsl(125 47% 33%) 0%, hsl(125 47% 45%) 40%, hsl(80 60% 50%) 70%, hsl(125 47% 33%) 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
+              className="hero-title-shimmer relative z-20 text-center text-6xl font-bold tracking-[-2px] md:text-8xl md:tracking-[-6px] xl:text-9xl xl:tracking-[-8px]"
+              style={{ fontFamily: "'Satisfy', cursive" }}
             >
               Cantım da Roça
             </h1>
@@ -122,7 +105,7 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
             <div className="bg-secondary/10 flex h-fit w-full max-w-xl items-end gap-6 space-y-2 p-10 text-xl font-bold md:text-2xl lg:text-3xl rounded-lg">
               <div className="text-lg sm:text-xl font-semibold text-foreground space-y-2">
                 <div>/ CHÁS E ERVAS</div>
-                <div className="whitespace-nowrap">/ SUPLEMENTOS NATURAIS</div>
+                <div>/ SUPLEMENTOS<br />NATURAIS</div>
                 <div>/ BEM-ESTAR</div>
               </div>
 
