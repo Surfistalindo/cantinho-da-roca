@@ -31,7 +31,7 @@ const FEATURES = [
     id: "suplementos",
     label: "Suplementos Naturais",
     icon: Heart,
-    image: "https://images.unsplash.com/photo-1512069772995-ec65ed45afd6?q=80&w=1200",
+    image: "https://images.unsplash.com/photo-1505576399279-0d06b7f4de29?q=80&w=1200",
     description: "Suplementos para mais disposição e bem-estar no dia a dia.",
   },
   {
@@ -126,9 +126,9 @@ export function FeatureCarousel() {
     <div className="w-full max-w-7xl mx-auto px-4">
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-center">
         {/* Left side - Chips list */}
-        <div className="w-full lg:w-[45%] relative">
-          <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-card to-transparent z-10 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-card to-transparent z-10 pointer-events-none" />
+        <div className="w-full lg:w-[45%] relative h-[340px] sm:h-[400px] overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-card to-transparent z-10 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-card to-transparent z-10 pointer-events-none" />
 
           <motion.div
             className="flex flex-col gap-2 py-4"
