@@ -4,6 +4,7 @@ import { APP_CONFIG } from '@/config/app';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useRef, useState, useCallback } from 'react';
 import { Warp } from '@paper-design/shaders-react';
+import LeafSVG from './LeafSVG';
 
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Oi! Quero saber mais sobre os produtos naturais 🌿')}`;
 
@@ -67,7 +68,6 @@ function ProductCard({ p, index, isVisible }: { p: typeof products[0]; index: nu
           : '0 4px 6px -1px rgba(0,0,0,0.05)',
       }}
     >
-      {/* CSS gradient background */}
       <div
         className="absolute inset-0 transition-all duration-700"
         style={{
@@ -75,8 +75,6 @@ function ProductCard({ p, index, isVisible }: { p: typeof products[0]; index: nu
           opacity: isHovered ? 0.6 : 0.4,
         }}
       />
-
-      {/* Overlay */}
       <div
         className="absolute inset-0 transition-opacity duration-500"
         style={{
@@ -85,13 +83,9 @@ function ProductCard({ p, index, isVisible }: { p: typeof products[0]; index: nu
             : 'linear-gradient(180deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0.5) 100%)',
         }}
       />
-
-      {/* Badge */}
       <span className="absolute top-4 right-4 z-10 text-[10px] font-bold uppercase tracking-wider bg-primary/15 text-primary px-3 py-1 rounded-full backdrop-blur-sm">
         {p.badge}
       </span>
-
-      {/* Content */}
       <div className="relative p-8">
         <div
           className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6 transition-all duration-500"
@@ -117,11 +111,15 @@ export default function ProductsSection() {
     <section id="produtos" className="py-24 bg-card relative overflow-hidden">
       {/* Warp shader background */}
       <div className="absolute inset-0 z-0 opacity-10">
-        <Warp
-          speed={0.3}
-          scale={0.7}
-          colors={['#d4a373', '#e9c46a', '#f4e8c1']}
-        />
+        <Warp speed={0.3} scale={0.7} colors={['#d4a373', '#e9c46a', '#f4e8c1']} />
+      </div>
+
+      {/* Scattered decorative leaves */}
+      <div className="absolute top-16 left-6 pointer-events-none animate-leaf-float opacity-15 z-[1]" style={{ animationDelay: '2s' }}>
+        <LeafSVG size={20} id="prod1" style={{ transform: 'rotate(55deg)' }} />
+      </div>
+      <div className="absolute bottom-20 right-10 pointer-events-none animate-leaf-float opacity-20 z-[1]" style={{ animationDelay: '0.5s' }}>
+        <LeafSVG size={16} id="prod2" style={{ transform: 'rotate(-25deg)' }} />
       </div>
 
       <div className="section-container relative z-10">

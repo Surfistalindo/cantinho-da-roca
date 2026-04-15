@@ -5,6 +5,7 @@ import heroImg from '@/assets/hero-products.jpg';
 import logoImg from '@/assets/logo-cantim.png';
 import { Button } from '@/components/ui/button';
 import { Warp } from '@paper-design/shaders-react';
+import LeafSVG from './LeafSVG';
 
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Quero saber mais sobre os produtos do Cantim da Roça 🌿')}`;
 
@@ -12,35 +13,20 @@ interface HeroSectionProps {
   scrollY: number;
 }
 
-const orbitLeaves = Array.from({ length: 4 }, (_, i) => ({
+const orbitLeaves = Array.from({ length: 8 }, (_, i) => ({
   id: i,
-  delay: (i / 4) * -30,
-  size: 18 + (i % 2) * 8,
+  delay: (i / 8) * -30,
+  size: 14 + (i % 3) * 7,
 }));
 
-const LeafSVG = ({ size }: { size: number }) => (
-  <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-    <path
-      d="M16 2C16 2 6 8 6 18C6 24 10 28 16 30C22 28 26 24 26 18C26 8 16 2 16 2Z"
-      fill="hsl(125 47% 42%)"
-      opacity="0.7"
-    />
-    <path
-      d="M16 2C16 2 6 8 6 18C6 24 10 28 16 30C22 28 26 24 26 18C26 8 16 2 16 2Z"
-      fill="url(#leafGrad)"
-      opacity="0.5"
-    />
-    <path d="M16 6V26" stroke="hsl(125 47% 28%)" strokeWidth="0.6" opacity="0.5" />
-    <path d="M16 10C13 13 10 16 8 19" stroke="hsl(125 47% 28%)" strokeWidth="0.4" opacity="0.3" />
-    <path d="M16 14C19 16 22 18 24 20" stroke="hsl(125 47% 28%)" strokeWidth="0.4" opacity="0.3" />
-    <defs>
-      <linearGradient id="leafGrad" x1="6" y1="2" x2="26" y2="30">
-        <stop offset="0%" stopColor="hsl(100 50% 55%)" />
-        <stop offset="100%" stopColor="hsl(130 50% 30%)" />
-      </linearGradient>
-    </defs>
-  </svg>
-);
+const scatteredLeaves = [
+  { top: '8%', left: '5%', size: 20, speed: 0.1, delay: '0s', rotate: 25, id: 'hs1' },
+  { top: '15%', right: '8%', size: 16, speed: 0.15, delay: '1.5s', rotate: -35, id: 'hs2' },
+  { top: '45%', left: '3%', size: 24, speed: 0.25, delay: '3s', rotate: 60, id: 'hs3' },
+  { top: '55%', right: '5%', size: 18, speed: 0.12, delay: '2s', rotate: -15, id: 'hs4' },
+  { top: '75%', left: '10%', size: 14, speed: 0.2, delay: '4s', rotate: 45, id: 'hs5' },
+  { top: '80%', right: '12%', size: 22, speed: 0.08, delay: '0.5s', rotate: -50, id: 'hs6' },
+];
 
 const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
   const scrollToProducts = () => {
@@ -51,14 +37,30 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
     <section id="inicio" className="relative min-h-screen overflow-hidden py-16 sm:py-20">
       {/* Warp shader background */}
       <div className="absolute inset-0 z-0 opacity-20">
-        <Warp
-          speed={0.3}
-          scale={0.8}
-          colors={['#2d6a4f', '#40916c', '#95d5b2']}
-        />
+        <Warp speed={0.3} scale={0.8} colors={['#2d6a4f', '#40916c', '#95d5b2']} />
       </div>
 
-      {/* Logo watermark background - left aligned */}
+      {/* Scattered floating leaves with parallax */}
+      {scatteredLeaves.map((leaf) => (
+        <div
+          key={leaf.id}
+          className="absolute z-[2] pointer-events-none animate-leaf-float"
+          style={{
+            top: leaf.top,
+            left: leaf.left,
+            right: (leaf as any).right,
+            transform: `translateY(${scrollY * leaf.speed}px) rotate(${leaf.rotate}deg)`,
+            animationDelay: leaf.delay,
+            animationDuration: `${6 + Math.random() * 4}s`,
+            opacity: 0.2,
+            willChange: 'transform',
+          }}
+        >
+          <LeafSVG size={leaf.size} id={leaf.id} />
+        </div>
+      ))}
+
+      {/* Logo watermark background */}
       <div className="absolute inset-y-0 left-0 z-[1] flex items-center pointer-events-none pl-2 sm:pl-4 md:pl-12">
         <img
           src={logoImg}
@@ -78,7 +80,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
 
           {/* Title with orbiting leaves + parallax */}
           <div className="relative flex items-center justify-center py-4 sm:py-6">
-            {/* Orbit ring */}
+            {/* Orbit ring — wider ellipse */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
               {orbitLeaves.map((leaf) => (
                 <div
@@ -89,7 +91,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
                     willChange: 'transform',
                   }}
                 >
-                  <LeafSVG size={leaf.size} />
+                  <LeafSVG size={leaf.size} id={`orbit${leaf.id}`} />
                 </div>
               ))}
             </div>
