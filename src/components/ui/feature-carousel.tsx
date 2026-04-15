@@ -84,7 +84,7 @@ const FEATURES = [
     id: "frutas",
     label: "Frutas Desidratadas",
     icon: CheckmarkCircle01Icon,
-    image: "https://images.unsplash.com/photo-1542223189-67a03fa0f0bd?q=80&w=1200",
+    image: frutasDesidratadas,
     description: "Snacks naturais e saudáveis para o seu dia a dia.",
   },
 ];
