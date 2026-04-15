@@ -134,8 +134,8 @@ export function FeatureCarousel() {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4">
-      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-stretch">
+    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-stretch">
         {/* Left side - Chips list */}
         <div className="w-full lg:w-[45%] relative h-[400px] sm:h-[500px] overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-card to-transparent z-10 pointer-events-none" />
