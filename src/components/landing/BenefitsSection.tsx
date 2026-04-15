@@ -2,6 +2,7 @@ import { Heart, ShieldCheck, Sparkles, Truck } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useRef, useState, useCallback } from 'react';
 import { Warp } from '@paper-design/shaders-react';
+import LeafSVG from './LeafSVG';
 
 const benefits = [
   {
@@ -71,16 +72,9 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
           : '0 2px 10px -3px rgba(0,0,0,0.08)',
       }}
     >
-      {/* Warp shader background per card */}
       <div className="absolute inset-0 z-0" style={{ opacity: isHovered ? 0.35 : 0.2 }}>
-        <Warp
-          speed={0.2}
-          scale={0.5}
-          colors={b.shaderColors}
-        />
+        <Warp speed={0.2} scale={0.5} colors={b.shaderColors} />
       </div>
-
-      {/* Overlay for readability */}
       <div
         className="absolute inset-0 z-[1] transition-opacity duration-500"
         style={{
@@ -89,8 +83,6 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
             : 'linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.5) 100%)',
         }}
       />
-
-      {/* Content */}
       <div className="relative z-[2] p-7 sm:p-8 h-full flex flex-col" style={{ transform: 'translateZ(30px)' }}>
         <div
           className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-5 transition-all duration-500"
@@ -104,7 +96,6 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
         </div>
         <h3 className="text-lg sm:text-xl font-serif mb-2 text-foreground">{b.title}</h3>
         <p className="text-muted-foreground text-sm leading-relaxed flex-1">{b.description}</p>
-
         <div
           className="mt-4 flex items-center gap-2 text-primary text-sm font-medium"
           style={{
@@ -128,6 +119,14 @@ export default function BenefitsSection() {
 
   return (
     <section id="beneficios" className="py-24 relative overflow-hidden" style={{ background: '#f7f5f0' }}>
+      {/* Scattered decorative leaves */}
+      <div className="absolute top-8 right-10 pointer-events-none animate-leaf-float opacity-20 z-[1]" style={{ animationDelay: '1s' }}>
+        <LeafSVG size={22} id="ben1" style={{ transform: 'rotate(-30deg)' }} />
+      </div>
+      <div className="absolute bottom-12 left-8 pointer-events-none animate-leaf-float opacity-15 z-[1]" style={{ animationDelay: '3.5s' }}>
+        <LeafSVG size={18} id="ben2" style={{ transform: 'rotate(40deg)' }} />
+      </div>
+
       <div className="section-container relative z-10">
         <div
           style={{

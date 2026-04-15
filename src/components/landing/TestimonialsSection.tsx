@@ -1,6 +1,7 @@
 import { Star, Quote } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { Warp } from '@paper-design/shaders-react';
+import LeafSVG from './LeafSVG';
 
 const testimonials = [
   {
@@ -30,11 +31,12 @@ export default function TestimonialsSection() {
     <section id="depoimentos" className="py-24 relative overflow-hidden" style={{ background: '#eef5ee' }}>
       {/* Warp shader background */}
       <div className="absolute inset-0 z-0 opacity-10">
-        <Warp
-          speed={0.2}
-          scale={0.5}
-          colors={['#b7e4c7', '#d8f3dc', '#eef5ee']}
-        />
+        <Warp speed={0.2} scale={0.5} colors={['#b7e4c7', '#d8f3dc', '#eef5ee']} />
+      </div>
+
+      {/* Scattered decorative leaf */}
+      <div className="absolute top-10 right-16 pointer-events-none animate-leaf-float opacity-20 z-[1]" style={{ animationDelay: '2.5s' }}>
+        <LeafSVG size={20} id="test1" style={{ transform: 'rotate(35deg)' }} />
       </div>
 
       <div className="section-container relative z-10">

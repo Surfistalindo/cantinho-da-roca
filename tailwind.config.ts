@@ -91,6 +91,10 @@ export default {
           from: { opacity: "0", transform: "translateY(20px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
+        "leaf-float": {
+          "0%, 100%": { transform: "translateY(0) rotate(0deg)" },
+          "50%": { transform: "translateY(-8px) rotate(3deg)" },
+        },
         "leaf-orbit": {
           "0%": { transform: "translate(380px, 0px) rotate(0deg)", opacity: "0.6" },
           "12.5%": { transform: "translate(268px, 55px) rotate(45deg)", opacity: "0.7" },
@@ -107,6 +111,7 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in-up": "fade-in-up 0.6s ease-out forwards",
+        "leaf-float": "leaf-float 7s ease-in-out infinite",
         "leaf-orbit": "leaf-orbit 30s linear infinite",
       },
     },
