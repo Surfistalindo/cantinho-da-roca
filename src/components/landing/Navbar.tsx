@@ -35,11 +35,8 @@ export default function Navbar() {
       }`}
     >
       <div className="section-container flex items-center justify-between h-16">
-        <button onClick={() => handleClick('#inicio')} className="flex items-center gap-2">
-          <img src={logo} alt="Cantim da Roça" className="h-8" />
-          <span className="font-serif text-lg font-bold text-foreground hidden sm:inline">
-            Cantim da Roça
-          </span>
+        <button onClick={() => handleClick('#inicio')} className="flex items-center">
+          <img src={logo} alt="Cantim da Roça" className="h-12" />
         </button>
 
         {/* Desktop */}
