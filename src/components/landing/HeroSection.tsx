@@ -34,6 +34,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
     document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const imgScale = 1 + scrollY * 0.0003;
+  const imgTranslateY = scrollY * 0.15;
+
   return (
     <section id="inicio" className="relative min-h-screen overflow-hidden py-16 sm:py-20">
       {/* Warp shader background */}
@@ -69,6 +72,10 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
           className="w-[250px] sm:w-[350px] md:w-[500px] lg:w-[650px] opacity-[0.1]"
           aria-hidden="true"
           loading="lazy"
+          style={{
+            transform: `translateY(${scrollY * -0.1}px) scale(${1 + scrollY * 0.0002})`,
+            willChange: 'transform',
+          }}
         />
       </div>
 
@@ -81,16 +88,12 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
 
           {/* Title with orbiting leaves + parallax */}
           <div className="relative flex items-center justify-center py-4 sm:py-6">
-            {/* Orbit ring */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
               {orbitLeaves.map((leaf) => (
                 <div
                   key={leaf.id}
                   className="absolute animate-leaf-orbit"
-                  style={{
-                    animationDelay: `${leaf.delay}s`,
-                    willChange: 'transform',
-                  }}
+                  style={{ animationDelay: `${leaf.delay}s`, willChange: 'transform' }}
                 >
                   <LeafSVG size={leaf.size} id={`orbit${leaf.id}`} />
                 </div>
@@ -133,13 +136,18 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
                 <div>/ BEM-ESTAR</div>
               </div>
 
-              {/* Image - Desktop */}
+              {/* Image - Desktop with parallax + scale */}
               <div className="bg-secondary/10 absolute -top-10 left-1/2 hidden w-fit overflow-hidden md:flex rounded-lg">
                 <img
                   alt="Produtos naturais - chás, suplementos e ervas"
                   className="h-[400px] w-full object-cover"
                   src={heroImg}
                   loading="lazy"
+                  style={{
+                    transform: `translateY(${imgTranslateY}px) scale(${imgScale})`,
+                    willChange: 'transform',
+                    transition: 'transform 0.1s linear',
+                  }}
                 />
                 <div className="rotate-180 p-2 text-left text-xs font-medium tracking-widest [writing-mode:vertical-rl] text-muted-foreground">
                   SAÚDE E BEM-ESTAR
@@ -155,6 +163,10 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
               className="h-[280px] sm:h-[400px] w-full object-cover"
               src={heroImg}
               loading="lazy"
+              style={{
+                transform: `scale(${imgScale})`,
+                willChange: 'transform',
+              }}
             />
             <div className="rotate-180 p-2 text-left text-xs font-medium tracking-widest [writing-mode:vertical-rl] text-muted-foreground">
               SAÚDE E BEM-ESTAR
@@ -164,7 +176,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
 
         {/* Description */}
         <div className="mt-10 sm:mt-14 md:mt-20">
-          <p className="mx-auto max-w-2xl text-center font-sans text-xs sm:text-sm font-medium tracking-wide md:text-base text-foreground/80">
+          <p
+            className="mx-auto max-w-2xl text-center font-sans text-xs sm:text-sm font-medium tracking-wide md:text-base text-foreground/80"
+            style={{
+              transform: `translateY(${scrollY * 0.08}px)`,
+              willChange: 'transform',
+            }}
+          >
             Mais disposição, menos inchaço e bem-estar no dia a dia.
             <br className="hidden sm:block" />
             {' '}Produtos naturais com orientação direta pelo WhatsApp,
