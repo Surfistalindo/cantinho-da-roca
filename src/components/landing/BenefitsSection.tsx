@@ -152,9 +152,7 @@ export default function BenefitsSection() {
         <Warp
           speed={0.3}
           scale={0.6}
-          color1="#95d5b2"
-          color2="#b7e4c7"
-          color3="#d8f3dc"
+          colors={['#95d5b2', '#b7e4c7', '#d8f3dc']}
         />
       </div>
 

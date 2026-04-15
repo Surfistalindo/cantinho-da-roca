@@ -54,9 +54,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
         <Warp
           speed={0.3}
           scale={0.8}
-          color1="#2d6a4f"
-          color2="#40916c"
-          color3="#95d5b2"
+          colors={['#2d6a4f', '#40916c', '#95d5b2']}
         />
       </div>
 

@@ -120,9 +120,7 @@ export default function ProductsSection() {
         <Warp
           speed={0.3}
           scale={0.7}
-          color1="#d4a373"
-          color2="#e9c46a"
-          color3="#f4e8c1"
+          colors={['#d4a373', '#e9c46a', '#f4e8c1']}
         />
       </div>
 

@@ -33,9 +33,7 @@ export default function TestimonialsSection() {
         <Warp
           speed={0.2}
           scale={0.5}
-          color1="#b7e4c7"
-          color2="#d8f3dc"
-          color3="#eef5ee"
+          colors={['#b7e4c7', '#d8f3dc', '#eef5ee']}
         />
       </div>
 
