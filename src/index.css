@@ -109,3 +109,16 @@
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 }
+
+/* GPU compositing for shader canvases */
+canvas {
+  will-change: contents;
+  contain: strict;
+}
+
+/* Smooth scroll for the whole page */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
