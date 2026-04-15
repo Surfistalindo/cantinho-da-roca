@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
-import { MessageCircle, ArrowRight, Leaf } from 'lucide-react';
+import React from 'react';
+import { MessageCircle, ArrowDown } from 'lucide-react';
 import { APP_CONFIG } from '@/config/app';
-import logo from '@/assets/logo-cantim.png';
+import heroImg from '@/assets/hero-products.jpg';
 
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Quero saber mais sobre os produtos do Cantim da Roça 🌿')}`;
 
@@ -9,234 +9,63 @@ interface HeroSectionProps {
   scrollY: number;
 }
 
-const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const layersRef = useRef<HTMLDivElement[]>([]);
-
-  // Parallax values based on scroll
-  const heroOpacity = Math.max(0, 1 - scrollY / 600);
-  const heroTranslateY = scrollY * 0.3;
-  const titleScale = Math.max(0.85, 1 - scrollY / 2000);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const x = (window.innerWidth / 2 - e.pageX) / 25;
-      const y = (window.innerHeight / 2 - e.pageY) / 25;
-      canvas.style.transform = `rotateX(${55 + y / 2}deg) rotateZ(${-25 + x / 2}deg)`;
-      layersRef.current.forEach((layer, index) => {
-        if (!layer) return;
-        const depth = (index + 1) * 15;
-        const moveX = x * (index + 1) * 0.2;
-        const moveY = y * (index + 1) * 0.2;
-        layer.style.transform = `translateZ(${depth}px) translate(${moveX}px, ${moveY}px)`;
-      });
-    };
-
-    canvas.style.opacity = '0';
-    canvas.style.transform = 'rotateX(90deg) rotateZ(0deg) scale(0.8)';
-    const timeout = setTimeout(() => {
-      canvas.style.transition = 'all 2.5s cubic-bezier(0.16, 1, 0.3, 1)';
-      canvas.style.opacity = '1';
-      canvas.style.transform = 'rotateX(55deg) rotateZ(-25deg) scale(1)';
-    }, 300);
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      clearTimeout(timeout);
-    };
-  }, []);
-
+const HeroSection: React.FC<HeroSectionProps> = () => {
   const scrollToProducts = () => {
     document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
-    <>
-      <style>{`
-        @keyframes flow {
-          0%, 100% { transform: scaleY(0); transform-origin: top; }
-          50% { transform: scaleY(1); transform-origin: top; }
-          51% { transform: scaleY(1); transform-origin: bottom; }
-        }
-        @keyframes hero-float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-8px); }
-        }
-      `}</style>
+    <section
+      id="inicio"
+      className="relative w-full min-h-screen flex items-center"
+      style={{ background: 'linear-gradient(160deg, #f7f5f0 0%, #eef5ee 40%, #f0f7f0 100%)' }}
+    >
+      <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 py-24 sm:py-32 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+        {/* Text */}
+        <div className="flex flex-col gap-6 sm:gap-8 z-10">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif text-foreground leading-tight">
+            Mais disposição, menos inchaço e{' '}
+            <span className="text-primary">bem-estar no dia a dia</span>
+          </h1>
 
-      <section
-        id="inicio"
-        className="relative w-full min-h-screen overflow-hidden flex items-center justify-center"
-        style={{ background: 'linear-gradient(160deg, #f7f5f0 0%, #eef5ee 40%, #f0f7f0 100%)' }}
-      >
-        {/* Dot pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage: 'radial-gradient(circle, hsl(125 47% 33%) 1px, transparent 1px)',
-            backgroundSize: '30px 30px',
-          }}
-        />
+          <p className="text-base sm:text-lg text-foreground/70 max-w-lg leading-relaxed">
+            Produtos naturais com orientação direta pelo WhatsApp, sem complicação.
+          </p>
 
-        {/* Parallax content wrapper */}
-        <div
-          className="absolute inset-0 z-20 pointer-events-none"
-          style={{
-            opacity: heroOpacity,
-            transform: `translate3d(0, ${heroTranslateY}px, 0)`,
-            willChange: 'transform, opacity',
-          }}
-        >
-          {/* Top bar */}
-          <div className="flex justify-between items-start px-6 sm:px-10 pt-20 sm:pt-24">
-            <p
-              className="text-foreground/60 text-xs sm:text-sm tracking-[0.3em] uppercase pointer-events-auto font-medium"
-              style={{ fontFamily: "'SF Mono', 'Fira Code', 'Courier New', monospace" }}
-            >
-              CANTIM_DA_ROÇA
-            </p>
-            <div className="text-right" style={{ fontFamily: "'SF Mono', 'Fira Code', 'Courier New', monospace" }}>
-              <p className="text-primary/70 text-[10px] sm:text-xs tracking-wider">PROD. NATURAIS</p>
-              <p className="text-primary/70 text-[10px] sm:text-xs tracking-wider">& SUPLEMENTOS</p>
-            </div>
-          </div>
-
-          {/* Title */}
-          <div
-            className="absolute left-6 sm:left-10 top-[52%] -translate-y-1/2"
-            style={{
-              transform: `translateY(-50%) scale(${titleScale})`,
-              transformOrigin: 'left center',
-            }}
-          >
-            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-serif text-foreground leading-[1.1] tracking-normal">
-              Cant
-              <span className="relative inline-block" style={{ fontVariant: 'normal' }}>
-                <span style={{ visibility: 'hidden' }}>i</span>
-                <span className="absolute inset-0 flex items-end justify-center" style={{ lineHeight: 'inherit' }}>
-                  ı
-                </span>
-                <Leaf className="absolute -top-2 sm:-top-3 lg:-top-4 left-1/2 -translate-x-1/2 h-4 w-4 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-primary -rotate-45" />
-              </span>
-              m
-              <br />
-              <span className="text-primary">da Roça</span>
-            </h1>
-          </div>
-
-          {/* Bottom bar */}
-          <div className="absolute bottom-6 sm:bottom-10 left-6 sm:left-10 right-6 sm:right-10 flex justify-between items-end">
-            <div style={{ fontFamily: "'SF Mono', 'Fira Code', 'Courier New', monospace" }}>
-              <p className="text-foreground/30 text-[10px] sm:text-xs tracking-wider uppercase">
-                [ SAÚDE NATURAL ]
-              </p>
-              <p className="text-foreground/30 text-[10px] sm:text-xs tracking-wider uppercase mt-1">
-                ATENDIMENTO PERSONALIZADO
-              </p>
-            </div>
-
-            <div className="flex gap-3 pointer-events-auto">
-              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-                <button className="bg-primary text-primary-foreground px-5 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold tracking-wider uppercase hover:bg-primary/90 transition-all flex items-center gap-2 rounded-md shadow-lg shadow-primary/20">
-                  <MessageCircle className="h-4 w-4" />
-                  WHATSAPP
-                </button>
-              </a>
-              <button
-                onClick={scrollToProducts}
-                className="border border-foreground/20 text-foreground px-5 sm:px-8 py-2.5 sm:py-3 text-xs sm:text-sm font-medium tracking-wider uppercase hover:bg-foreground/5 transition-all flex items-center gap-2 rounded-md"
-              >
-                PRODUTOS
-                <ArrowRight className="h-4 w-4" />
+          <div className="flex flex-wrap gap-3 pt-2">
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+              <button className="bg-[#25D366] text-white px-6 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base font-semibold hover:bg-[#20bd5a] transition-colors flex items-center gap-2.5 rounded-lg shadow-md">
+                <MessageCircle className="h-5 w-5" />
+                Falar no WhatsApp
               </button>
-            </div>
+            </a>
+            <button
+              onClick={scrollToProducts}
+              className="border border-foreground/20 text-foreground px-6 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base font-medium hover:bg-foreground/5 transition-colors flex items-center gap-2 rounded-lg"
+            >
+              Ver produtos
+              <ArrowDown className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
-        {/* 3D Canvas */}
-        <div
-          className="relative mt-10 sm:mt-16"
-          style={{
-            perspective: '1200px',
-            perspectiveOrigin: '50% 50%',
-            opacity: heroOpacity,
-            transform: `translate3d(0, ${heroTranslateY * 0.5}px, 0)`,
-            willChange: 'transform, opacity',
-          }}
-        >
-          <div
-            ref={canvasRef}
-            className="relative"
-            style={{
-              transformStyle: 'preserve-3d',
-              transform: 'rotateX(55deg) rotateZ(-25deg)',
-              width: 'clamp(320px, 55vw, 700px)',
-              height: 'clamp(220px, 40vw, 500px)',
-            }}
-          >
-            {/* Shadow */}
-            <div
-              className="absolute inset-0 blur-2xl"
-              style={{ transform: 'translateZ(-10px) scale(1.1)', background: 'rgba(34,102,51,0.1)' }}
-            />
-
-            {/* Logo image */}
-            <div
-              ref={(el) => (layersRef.current[0] = el!)}
-              className="absolute inset-0 overflow-hidden rounded-lg"
-              style={{ transform: 'translateZ(15px)', backfaceVisibility: 'hidden' }}
-            >
-              <div className="w-full h-full bg-white flex items-center justify-center p-8 sm:p-12">
-                <img src={logo} alt="Cantim da Roça" className="w-full h-full object-contain" />
-              </div>
-              <div
-                className="absolute inset-0"
-                style={{ background: 'linear-gradient(135deg, transparent 40%, rgba(34,102,51,0.08) 100%)' }}
-              />
-            </div>
-
-            {/* Scan lines */}
-            <div
-              ref={(el) => (layersRef.current[1] = el!)}
-              className="absolute inset-0 pointer-events-none rounded-lg"
-              style={{ transform: 'translateZ(30px)' }}
-            >
-              <div
-                className="w-full h-full"
-                style={{
-                  background: 'repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(34,102,51,0.03) 3px, rgba(34,102,51,0.03) 4px)',
-                }}
-              />
-            </div>
-
-            {/* Accent line */}
-            <div
-              ref={(el) => (layersRef.current[2] = el!)}
-              className="absolute left-0 top-0 w-[2px] h-full pointer-events-none"
-              style={{ transform: 'translateZ(45px)' }}
-            >
-              <div
-                className="w-full h-full bg-primary"
-                style={{ animation: 'flow 4s ease-in-out infinite' }}
-              />
-            </div>
-
-            {/* Border */}
-            <div
-              className="absolute inset-0 border border-primary/15 rounded-lg pointer-events-none"
-              style={{ transform: 'translateZ(50px)' }}
+        {/* Image */}
+        <div className="relative">
+          <div className="rounded-2xl overflow-hidden shadow-xl">
+            <img
+              src={heroImg}
+              alt="Produtos naturais - chás, suplementos e ervas sobre mesa de madeira"
+              width={1920}
+              height={1080}
+              className="w-full h-auto object-cover"
             />
           </div>
         </div>
+      </div>
 
-        {/* Bottom fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#f7f5f0] to-transparent z-10" />
-      </section>
-    </>
+      {/* Bottom fade */}
+      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#f7f5f0] to-transparent" />
+    </section>
   );
 };
 
