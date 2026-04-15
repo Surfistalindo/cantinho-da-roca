@@ -82,28 +82,46 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
             className="mt-4 text-center text-sm sm:text-base md:text-lg font-medium tracking-[3px] sm:tracking-[4px] uppercase text-foreground/50"
             style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
-            Produtos Naturais e Suplementos
+            Produtos Naturais
+            <br />
+            e Suplementos
           </p>
         </div>
 
         {/* Middle section with image and services */}
-        <div className="relative grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          {/* Services */}
-          <div className="bg-secondary/10 p-8 sm:p-10 rounded-lg flex items-center">
-            <div className="text-lg sm:text-xl font-semibold text-foreground space-y-2">
-              <div>/ CHÁS E ERVAS</div>
-              <div>/ SUPLEMENTOS NATURAIS</div>
-              <div>/ BEM-ESTAR</div>
+        <div className="relative grid">
+          <div className="flex justify-center gap-6 space-y-8 pt-20">
+            <div className="bg-secondary/10 flex h-fit w-full max-w-xl items-end gap-6 space-y-2 p-10 text-xl font-bold md:text-2xl lg:text-3xl rounded-lg">
+              <div className="text-lg sm:text-xl font-semibold text-foreground space-y-2 whitespace-normal break-words">
+                <div>/ CHÁS E ERVAS</div>
+                <div>/ SUPLEMENTOS<br className="sm:hidden" /> NATURAIS</div>
+                <div>/ BEM-ESTAR</div>
+              </div>
+
+              {/* Image - Desktop */}
+              <div className="bg-secondary/10 absolute -top-10 left-1/2 hidden w-fit overflow-hidden md:flex rounded-lg">
+                <img
+                  alt="Produtos naturais - chás, suplementos e ervas"
+                  className="h-[400px] w-full object-cover"
+                  src={heroImg}
+                />
+                <div className="rotate-180 p-2 text-left text-xs font-medium tracking-widest [writing-mode:vertical-rl] text-muted-foreground">
+                  SAÚDE E BEM-ESTAR
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Image */}
-          <div className="rounded-lg overflow-hidden">
+          {/* Image - Mobile */}
+          <div className="bg-secondary/10 -top-10 left-1/2 flex w-full overflow-hidden md:hidden md:w-fit rounded-lg">
             <img
               alt="Produtos naturais - chás, suplementos e ervas"
-              className="h-[300px] sm:h-[400px] w-full object-cover"
+              className="h-[400px] w-full object-cover"
               src={heroImg}
             />
+            <div className="rotate-180 p-2 text-left text-xs font-medium tracking-widest [writing-mode:vertical-rl] text-muted-foreground">
+              SAÚDE E BEM-ESTAR
+            </div>
           </div>
         </div>
 
