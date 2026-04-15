@@ -42,12 +42,10 @@ export default function ProductsSection({ scrollY = 0 }: ProductsSectionProps) {
 
       <div className="relative z-10" ref={ref}>
         <div
-          className="text-center mb-8 sm:mb-12 px-4"
+          className="text-center mb-10 sm:mb-14 px-4"
           style={{
             opacity: isVisible ? 1 : 0,
-            transform: isVisible
-              ? `translateY(${scrollY * 0.03}px)`
-              : 'translateY(30px)',
+            transform: isVisible ? 'translateY(0)' : 'translateY(30px)',
             transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
