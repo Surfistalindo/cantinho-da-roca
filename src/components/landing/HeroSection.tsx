@@ -57,7 +57,7 @@ const HeroSection: React.FC = () => {
 
       <section
         id="inicio"
-        className="relative w-full min-h-screen overflow-hidden flex items-center justify-center pt-24"
+        className="relative w-full min-h-screen overflow-hidden flex items-center justify-center pt-32 sm:pt-36"
         style={{ background: 'linear-gradient(160deg, #f7f5f0 0%, #eef5ee 40%, #f0f7f0 100%)' }}
       >
         {/* Subtle dot pattern */}
@@ -72,7 +72,7 @@ const HeroSection: React.FC = () => {
         {/* UI Overlay */}
         <div className="absolute inset-0 z-20 pointer-events-none">
           {/* Top bar */}
-          <div className="flex justify-between items-start p-6 sm:p-10">
+          <div className="flex justify-between items-start px-6 sm:px-10 pt-28 sm:pt-32">
             <p
               className="text-foreground/60 text-xs sm:text-sm tracking-[0.3em] uppercase pointer-events-auto font-medium"
               style={{ fontFamily: "'SF Mono', 'Fira Code', 'Courier New', monospace" }}
@@ -86,7 +86,7 @@ const HeroSection: React.FC = () => {
           </div>
 
           {/* Title */}
-          <div className="absolute left-6 sm:left-10 top-1/2 -translate-y-1/2">
+          <div className="absolute left-6 sm:left-10 top-[56%] -translate-y-1/2">
             <h1 className="text-5xl sm:text-7xl lg:text-8xl font-bold text-foreground leading-[0.9] tracking-tight">
               CANTIM
               <br />
@@ -127,7 +127,7 @@ const HeroSection: React.FC = () => {
         </div>
 
         {/* 3D Canvas */}
-        <div className="relative" style={{ perspective: '1200px', perspectiveOrigin: '50% 50%' }}>
+        <div className="relative mt-10 sm:mt-16" style={{ perspective: '1200px', perspectiveOrigin: '50% 50%' }}>
           <div
             ref={canvasRef}
             className="relative"

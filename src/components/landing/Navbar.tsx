@@ -34,9 +34,9 @@ export default function Navbar() {
           : 'bg-transparent'
       }`}
     >
-      <div className="section-container flex items-center justify-between h-20">
+      <div className="section-container flex items-center justify-between h-16 sm:h-[72px]">
         <button onClick={() => handleClick('#inicio')} className="flex items-center">
-          <img src={logo} alt="Cantim da Roça" className="h-12" />
+          <img src={logo} alt="Cantim da Roça" className="h-14 sm:h-16" />
         </button>
 
         {/* Desktop */}
