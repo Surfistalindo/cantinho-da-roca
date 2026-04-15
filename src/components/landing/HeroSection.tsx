@@ -54,24 +54,24 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
             ))}
 
             <h1
-              className="text-primary relative z-20 text-center text-7xl font-bold tracking-[-7px] md:text-9xl md:tracking-[-14px] xl:text-[10rem] xl:tracking-[-1rem]"
-              style={{ fontFamily: "'Oswald', sans-serif" }}
+              className="text-primary relative z-20 text-center text-6xl font-bold tracking-[-4px] md:text-8xl md:tracking-[-10px] xl:text-9xl xl:tracking-[-12px]"
+              style={{ fontFamily: "'Satisfy', cursive" }}
             >
-              PRODUTOS NATURAIS
+              Cantım da Roça
             </h1>
           </div>
 
           <p
-            className="absolute right-24 -bottom-12 hidden text-4xl font-thin tracking-[6px] xl:block text-foreground/60"
-            style={{ fontFamily: "'Satisfy', cursive" }}
+            className="absolute right-24 -bottom-10 hidden text-lg font-medium tracking-[4px] uppercase xl:block text-foreground/50"
+            style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
-            Cantım da Roça
+            Produtos Naturais e Suplementos
           </p>
           <p
-            className="absolute -bottom-12 left-24 text-4xl font-thin tracking-[6px] xl:hidden text-foreground/60"
-            style={{ fontFamily: "'Satisfy', cursive" }}
+            className="absolute -bottom-10 left-24 text-lg font-medium tracking-[4px] uppercase xl:hidden text-foreground/50"
+            style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
-            Cantım da Roça
+            Produtos Naturais e Suplementos
           </p>
         </div>
 
