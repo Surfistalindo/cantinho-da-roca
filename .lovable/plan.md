@@ -1,71 +1,33 @@
 
 
-## Plan: Redesign da Landing Page — "Cantim da Roça"
+## Análise: O formulário já está funcional
 
-Atualização completa da identidade visual da landing page para refletir o posicionamento natural, acessível e focado em saúde/bem-estar, com nova paleta verde, tipografia moderna e foco em conversão via WhatsApp.
+Após revisar o código, o fluxo de captação de leads **já está implementado e funcional**:
 
----
+1. **Formulário → Banco**: `LeadFormSection.tsx` já insere diretamente na tabela `leads` via Supabase SDK (linha 53-58)
+2. **Validação client-side**: Nome obrigatório, telefone com máscara e validação de formato (10-11 dígitos)
+3. **Sanitização**: Telefone é limpo (`replace(/\D/g, '')`), nome é trimado
+4. **Feedback visual**: Toast de sucesso/erro já implementado (linhas 61, 67)
+5. **RLS**: Tabela `leads` permite INSERT para `anon` e `authenticated` — funciona sem login
+6. **SQL Injection**: Impossível — Supabase SDK usa queries parametrizadas internamente
+7. **Dados chegam no CRM**: `leadService.ts` lista os leads para o painel admin
 
-### O que muda
+### O que pode ser melhorado
 
-**1. Paleta de cores e tipografia** (`src/index.css`, `tailwind.config.ts`)
-- Substituir paleta marrom/terrosa por verde natural: primário `#2E7D32`, secundário `#66BB6A`, fundo `#E8F5E9`, destaque/botões `#F9A825`, texto `#333333`
-- Trocar fontes: Playfair Display → **Poppins** (títulos), Source Sans 3 → **Inter** (corpo)
-- Atualizar variante `hero` do botão para usar amarelo destaque `#F9A825`
-
-**2. Hero Section** (`src/components/landing/HeroSection.tsx`)
-- Gradiente verde em vez de marrom
-- Headline focada em benefício: "Saúde e bem-estar com produtos 100% naturais"
-- Subtítulo sobre atendimento próximo e personalizado
-- Botão principal: "Falar no WhatsApp" (amarelo, alta visibilidade) linkando direto ao WhatsApp
-- Botão secundário: "Conhecer produtos"
-
-**3. Benefícios** (`src/components/landing/BenefitsSection.tsx`)
-- Reescrever para focar em saúde, emagrecimento, bem-estar
-- Ícones e textos mais simples e diretos
-- Fundo `#E8F5E9` com cards brancos
-
-**4. Nova seção educativa** — Criar `src/components/landing/ProductsSection.tsx`
-- Seção "Conheça nossos produtos" com cards curtos explicando categorias (chás, temperos, produtos naturais)
-- Linguagem simples, estilo Instagram
-- CTA "Falar no WhatsApp" ao final
-
-**5. Depoimentos** (`src/components/landing/TestimonialsSection.tsx`)
-- Atualizar textos para mencionar resultados reais (saúde, emagrecimento, disposição)
-- Visual com fundo verde claro, cards brancos
-- Adicionar mais prova social (quantidade de clientes atendidos)
-
-**6. Formulário / CTA** (`src/components/landing/LeadFormSection.tsx`)
-- Manter formulário de cadastro mas adicionar botão WhatsApp proeminente acima
-- Headline: "Fale com a gente agora"
-- Botão WhatsApp amarelo grande + formulário como alternativa
-
-**7. Footer** (`src/components/landing/Footer.tsx`)
-- Atualizar cores para verde escuro
-- Manter link administrativo discreto
-
-**8. WhatsApp Float** (`src/components/landing/WhatsAppFloat.tsx`)
-- Cor verde WhatsApp `#25D366` em vez de secondary
-
-**9. Index.tsx** — Incluir nova seção `ProductsSection` entre Benefits e Testimonials
-
----
+| Melhoria | Descrição |
+|----------|-----------|
+| **Validação de nome** | Adicionar tamanho mínimo (2 caracteres) |
+| **Proteção contra duplicidade** | Verificar se telefone já existe antes de inserir |
+| **Redirecionamento WhatsApp** | Após envio com sucesso, oferecer abrir WhatsApp |
+| **Rate limiting** | Prevenir spam de submissões repetidas |
+| **Campo de mensagem** | Adicionar campo opcional de mensagem/observação (mapear para `notes`) |
 
 ### Arquivos editados
-- `src/index.css` — Nova paleta e fontes
-- `tailwind.config.ts` — Novas font families
-- `src/components/ui/button.tsx` — Variante hero amarela
-- `src/components/landing/HeroSection.tsx`
-- `src/components/landing/BenefitsSection.tsx`
-- `src/components/landing/TestimonialsSection.tsx`
-- `src/components/landing/LeadFormSection.tsx`
-- `src/components/landing/Footer.tsx`
-- `src/components/landing/WhatsAppFloat.tsx`
-- `src/pages/Index.tsx`
-- **Novo:** `src/components/landing/ProductsSection.tsx`
+- `src/components/landing/LeadFormSection.tsx` — Validação aprimorada, check de duplicidade, redirect WhatsApp pós-envio, campo de mensagem, rate limiting básico
 
 ### O que NÃO muda
-- Rotas, autenticação, CRM, banco de dados, pipeline
-- Estrutura de componentes do admin
-- Funcionalidade do formulário de leads
+- Tabela `leads` no banco (já tem a estrutura correta)
+- RLS policies (já configuradas)
+- `leadService.ts` (já funcional para o CRM)
+- Nenhum endpoint separado necessário — Supabase SDK conecta direto ao banco com segurança
 
