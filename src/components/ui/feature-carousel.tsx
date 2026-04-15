@@ -17,7 +17,7 @@ const FEATURES = [
     id: "ervas",
     label: "Ervas Medicinais",
     icon: Flower2,
-    image: "https://images.unsplash.com/photo-1515694346937-b29e1f49fe78?q=80&w=1200",
+    image: "https://images.unsplash.com/photo-1471193945509-9ad0617afabf?q=80&w=1200",
     description: "Ervas selecionadas com propriedades terapêuticas comprovadas.",
   },
   {
