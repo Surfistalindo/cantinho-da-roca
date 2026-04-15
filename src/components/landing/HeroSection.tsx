@@ -118,9 +118,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
               <br />
               <span className="text-primary">DA ROÇA</span>
             </h1>
-            <p className="text-muted-foreground text-sm sm:text-base mt-4 max-w-xs leading-relaxed">
-              Chás, temperos e suplementos naturais pra cuidar da sua saúde 💚
-            </p>
           </div>
 
           {/* Bottom bar */}

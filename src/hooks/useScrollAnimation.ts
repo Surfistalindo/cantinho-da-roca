@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 interface ScrollAnimationOptions {
   threshold?: number;
@@ -36,15 +36,26 @@ export function useScrollAnimation<T extends HTMLElement>(
   return { ref, isVisible };
 }
 
+/**
+ * Optimized scroll progress — updates a ref (no re-renders) 
+ * and only triggers setState when value crosses thresholds needed by consumers.
+ * For continuous parallax, uses RAF-throttled updates with a dead zone to skip tiny changes.
+ */
 export function useScrollProgress() {
   const [scrollY, setScrollY] = useState(0);
+  const lastValue = useRef(0);
 
   useEffect(() => {
     let ticking = false;
     const onScroll = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
-          setScrollY(window.scrollY);
+          const current = window.scrollY;
+          // Only update state if scroll changed by more than 2px (reduces re-renders)
+          if (Math.abs(current - lastValue.current) > 2) {
+            lastValue.current = current;
+            setScrollY(current);
+          }
           ticking = false;
         });
         ticking = true;
