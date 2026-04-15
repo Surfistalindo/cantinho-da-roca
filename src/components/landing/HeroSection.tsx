@@ -178,10 +178,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
         <div className="mt-10 sm:mt-14 md:mt-20">
           <p
             className="mx-auto max-w-2xl text-center font-sans text-xs sm:text-sm font-medium tracking-wide md:text-base text-foreground/80"
-            style={{
-              transform: `translateY(${scrollY * 0.08}px)`,
-              willChange: 'transform',
-            }}
           >
             Mais disposição, menos inchaço e bem-estar no dia a dia.
             <br className="hidden sm:block" />
