@@ -2,6 +2,7 @@ import React from 'react';
 import { MessageCircle, ArrowDownRight, Leaf } from 'lucide-react';
 import { APP_CONFIG } from '@/config/app';
 import heroImg from '@/assets/hero-products.jpg';
+import logoImg from '@/assets/logo-cantim.png';
 import { Button } from '@/components/ui/button';
 
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Quero saber mais sobre os produtos do Cantim da Roça 🌿')}`;
@@ -27,9 +28,19 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
 
   return (
     <section id="inicio" className="relative min-h-screen overflow-hidden py-20">
+      {/* Logo watermark background */}
+      <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
+        <img
+          src={logoImg}
+          alt=""
+          className="w-[500px] md:w-[700px] lg:w-[900px] opacity-[0.06]"
+          aria-hidden="true"
+        />
+      </div>
+
       <div className="relative z-20 mx-auto max-w-7xl px-6">
         {/* Top section with big title */}
-        <div className="relative">
+        <div className="relative pb-14">
           <p className="absolute -top-4 left-20 text-sm font-medium tracking-wider text-muted-foreground">
             100% Natural
           </p>
@@ -54,21 +65,21 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
             ))}
 
             <h1
-              className="text-primary relative z-20 text-center text-6xl font-bold tracking-[-4px] md:text-8xl md:tracking-[-10px] xl:text-9xl xl:tracking-[-12px]"
-              style={{ fontFamily: "'Satisfy', cursive" }}
+              className="relative z-20 text-center text-6xl font-bold tracking-[-2px] md:text-8xl md:tracking-[-6px] xl:text-9xl xl:tracking-[-8px]"
+              style={{
+                fontFamily: "'Satisfy', cursive",
+                background: 'linear-gradient(135deg, hsl(125 47% 33%) 0%, hsl(125 47% 45%) 40%, hsl(80 60% 50%) 70%, hsl(125 47% 33%) 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
             >
               Cantım da Roça
             </h1>
           </div>
 
           <p
-            className="absolute right-24 -bottom-10 hidden text-lg font-medium tracking-[4px] uppercase xl:block text-foreground/50"
-            style={{ fontFamily: "'DM Sans', sans-serif" }}
-          >
-            Produtos Naturais e Suplementos
-          </p>
-          <p
-            className="absolute -bottom-10 left-24 text-lg font-medium tracking-[4px] uppercase xl:hidden text-foreground/50"
+            className="mt-4 text-center text-sm sm:text-base md:text-lg font-medium tracking-[3px] sm:tracking-[4px] uppercase text-foreground/50"
             style={{ fontFamily: "'DM Sans', sans-serif" }}
           >
             Produtos Naturais e Suplementos
@@ -76,44 +87,28 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
         </div>
 
         {/* Middle section with image and services */}
-        <div className="relative grid">
-          <div className="flex justify-center gap-6 space-y-8 pt-20">
-            <div className="bg-secondary/10 flex h-fit w-full max-w-xl items-end gap-6 space-y-2 p-10 text-xl font-bold md:text-2xl lg:text-3xl rounded-lg">
-              <div className="text-xl font-semibold text-foreground">
-                <div>/ CHÁS E ERVAS</div>
-                <div>/ SUPLEMENTOS NATURAIS</div>
-                <div>/ BEM-ESTAR</div>
-              </div>
-
-              {/* Image - Desktop */}
-              <div className="bg-secondary/10 absolute -top-10 left-1/2 hidden w-fit overflow-hidden md:flex rounded-lg">
-                <img
-                  alt="Produtos naturais - chás, suplementos e ervas"
-                  className="h-[400px] w-full object-cover"
-                  src={heroImg}
-                />
-                <div className="rotate-180 p-2 text-left text-xs font-medium tracking-widest [writing-mode:vertical-rl] text-muted-foreground">
-                  SAÚDE E BEM-ESTAR
-                </div>
-              </div>
+        <div className="relative grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          {/* Services */}
+          <div className="bg-secondary/10 p-8 sm:p-10 rounded-lg flex items-center">
+            <div className="text-lg sm:text-xl font-semibold text-foreground space-y-2">
+              <div>/ CHÁS E ERVAS</div>
+              <div>/ SUPLEMENTOS NATURAIS</div>
+              <div>/ BEM-ESTAR</div>
             </div>
           </div>
 
-          {/* Image - Mobile */}
-          <div className="bg-secondary/10 -top-10 left-1/2 flex w-full overflow-hidden md:hidden md:w-fit rounded-lg">
+          {/* Image */}
+          <div className="rounded-lg overflow-hidden">
             <img
               alt="Produtos naturais - chás, suplementos e ervas"
-              className="h-[400px] w-full object-cover"
+              className="h-[300px] sm:h-[400px] w-full object-cover"
               src={heroImg}
             />
-            <div className="rotate-180 p-2 text-left text-xs font-medium tracking-widest [writing-mode:vertical-rl] text-muted-foreground">
-              SAÚDE E BEM-ESTAR
-            </div>
           </div>
         </div>
 
         {/* Description */}
-        <div className="mt-10 md:mt-40">
+        <div className="mt-14 md:mt-20">
           <p className="mx-auto max-w-2xl text-center font-sans text-sm font-medium tracking-wide md:text-base text-foreground/80">
             Mais disposição, menos inchaço e bem-estar no dia a dia.
             <br />
@@ -162,7 +157,7 @@ const HeroSection: React.FC<HeroSectionProps> = () => {
 
       {/* Grid background */}
       <div
-        className="absolute inset-0 z-0 block dark:hidden"
+        className="absolute inset-0 z-[1] block dark:hidden"
         style={{
           backgroundImage:
             'linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px), linear-gradient(hsl(var(--border)) 1px, transparent 1px)',
