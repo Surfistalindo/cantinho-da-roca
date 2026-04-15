@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import logo from '@/assets/logo-cantim.png';
 import { Button } from '@/components/ui/button';
 import { APP_CONFIG } from '@/config/app';
