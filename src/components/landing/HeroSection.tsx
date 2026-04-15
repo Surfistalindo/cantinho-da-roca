@@ -115,9 +115,12 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
           >
             <h1 className="text-5xl sm:text-7xl lg:text-8xl font-serif text-foreground leading-[1.1] tracking-normal">
               Cant
-              <span className="relative inline-block">
-                i
-                <Leaf className="absolute -top-3 sm:-top-5 lg:-top-6 left-1/2 -translate-x-1/2 h-5 w-5 sm:h-7 sm:w-7 lg:h-9 lg:w-9 text-primary -rotate-45" />
+              <span className="relative inline-block" style={{ fontVariant: 'normal' }}>
+                <span style={{ visibility: 'hidden' }}>i</span>
+                <span className="absolute inset-0 flex items-end justify-center" style={{ lineHeight: 'inherit' }}>
+                  ı
+                </span>
+                <Leaf className="absolute -top-2 sm:-top-3 lg:-top-4 left-1/2 -translate-x-1/2 h-4 w-4 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-primary -rotate-45" />
               </span>
               m
               <br />
