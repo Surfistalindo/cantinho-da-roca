@@ -1,6 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { LogOut, ExternalLink } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowRightFromBracket, faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate, Link } from 'react-router-dom';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import logo from '@/assets/logo-cantim.png';
@@ -29,12 +30,12 @@ export default function AdminNavbar() {
         <span className="text-xs text-muted-foreground hidden sm:inline">{user?.email}</span>
         <Button variant="ghost" size="sm" asChild className="h-8 px-2">
           <Link to="/">
-            <ExternalLink className="w-4 h-4 mr-1.5" />
+            <FontAwesomeIcon icon={faUpRightFromSquare} className="w-4 h-4 mr-1.5" />
             <span className="hidden sm:inline text-xs">Ver Site</span>
           </Link>
         </Button>
         <Button variant="ghost" size="sm" onClick={handleSignOut} className="h-8 px-2">
-          <LogOut className="w-4 h-4 mr-1.5" />
+          <FontAwesomeIcon icon={faArrowRightFromBracket} className="w-4 h-4 mr-1.5" />
           <span className="hidden sm:inline text-xs">Sair</span>
         </Button>
       </div>

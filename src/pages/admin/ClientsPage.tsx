@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import CustomerDetailSheet from '@/components/admin/CustomerDetailSheet';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Eye, MessageCircle, UserCheck, Plus, Search } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faCommentDots, faUserCheck, faPlus, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'sonner';
 
 interface Customer {
@@ -83,13 +84,13 @@ export default function ClientsPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold font-heading">Clientes</h2>
         <Button size="sm" onClick={() => setAddOpen(true)}>
-          <Plus className="h-4 w-4 mr-1.5" /> Novo Cliente
+          <FontAwesomeIcon icon={faPlus} className="h-4 w-4 mr-1.5" /> Novo Cliente
         </Button>
       </div>
 
       <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
         <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por nome ou telefone..."
             value={search}
@@ -102,7 +103,7 @@ export default function ClientsPage() {
           <p className="text-muted-foreground text-sm py-8 text-center">Carregando...</p>
         ) : filtered.length === 0 ? (
           <div className="text-center py-12">
-            <UserCheck className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+            <FontAwesomeIcon icon={faUserCheck} className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
             <p className="text-muted-foreground text-sm">Nenhum cliente encontrado.</p>
             <p className="text-xs text-muted-foreground mt-1">Cadastre ou converta leads em clientes.</p>
           </div>
@@ -130,11 +131,11 @@ export default function ClientsPage() {
                     <TableCell>
                       <div className="flex gap-1">
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openDetail(c)}>
-                          <Eye className="h-3.5 w-3.5" />
+                          <FontAwesomeIcon icon={faEye} className="h-3.5 w-3.5" />
                         </Button>
                         {c.phone && (
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-green-600" onClick={() => openWhatsApp(c.phone)}>
-                            <MessageCircle className="h-3.5 w-3.5" />
+                            <FontAwesomeIcon icon={faCommentDots} className="h-3.5 w-3.5" />
                           </Button>
                         )}
                       </div>

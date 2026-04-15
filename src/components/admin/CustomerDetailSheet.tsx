@@ -10,7 +10,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Send, MessageCircle, Phone, FileText, Pencil, Trash2, Save, X } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPaperPlane, faCommentDots, faPhone, faFileLines, faPenToSquare, faTrashCan, faFloppyDisk, faXmark } from '@fortawesome/free-solid-svg-icons';
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
 interface Customer {
   id: string;
@@ -37,10 +39,10 @@ interface Props {
   onUpdated?: () => void;
 }
 
-const interactionTypes = [
-  { value: 'mensagem', label: 'Mensagem', icon: MessageCircle },
-  { value: 'ligação', label: 'Ligação', icon: Phone },
-  { value: 'observação', label: 'Observação', icon: FileText },
+const interactionTypes: { value: string; label: string; icon: IconDefinition }[] = [
+  { value: 'mensagem', label: 'Mensagem', icon: faCommentDots },
+  { value: 'ligação', label: 'Ligação', icon: faPhone },
+  { value: 'observação', label: 'Observação', icon: faFileLines },
 ];
 
 export default function CustomerDetailSheet({ customer, open, onOpenChange, onUpdated }: Props) {
@@ -126,7 +128,7 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
 
   const typeIcon = (ct: string) => {
     const t = interactionTypes.find((i) => i.value === ct);
-    return t ? <t.icon className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />;
+    return <FontAwesomeIcon icon={t ? t.icon : faFileLines} className="h-3.5 w-3.5" />;
   };
 
   return (
@@ -139,10 +141,10 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
 
           <div className="flex gap-2 mt-4">
             <Button variant="outline" size="sm" onClick={startEditing} disabled={editing}>
-              <Pencil className="h-3.5 w-3.5 mr-1.5" /> Editar
+              <FontAwesomeIcon icon={faPenToSquare} className="h-3.5 w-3.5 mr-1.5" /> Editar
             </Button>
             <Button variant="outline" size="sm" onClick={() => setDeleteDialogOpen(true)} className="text-destructive ml-auto">
-              <Trash2 className="h-3.5 w-3.5" />
+              <FontAwesomeIcon icon={faTrashCan} className="h-3.5 w-3.5" />
             </Button>
           </div>
 
@@ -153,8 +155,8 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
               <Input placeholder="Produto comprado" value={editData.product_bought} onChange={(e) => setEditData({ ...editData, product_bought: e.target.value })} />
               <Textarea placeholder="Observações" value={editData.notes} onChange={(e) => setEditData({ ...editData, notes: e.target.value })} />
               <div className="flex gap-2">
-                <Button size="sm" onClick={saveEdit}><Save className="h-3.5 w-3.5 mr-1.5" /> Salvar</Button>
-                <Button size="sm" variant="ghost" onClick={() => setEditing(false)}><X className="h-3.5 w-3.5 mr-1.5" /> Cancelar</Button>
+                <Button size="sm" onClick={saveEdit}><FontAwesomeIcon icon={faFloppyDisk} className="h-3.5 w-3.5 mr-1.5" /> Salvar</Button>
+                <Button size="sm" variant="ghost" onClick={() => setEditing(false)}><FontAwesomeIcon icon={faXmark} className="h-3.5 w-3.5 mr-1.5" /> Cancelar</Button>
               </div>
             </div>
           ) : (
@@ -184,7 +186,7 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
               const num = clean.startsWith('55') ? clean : `55${clean}`;
               window.open(`https://wa.me/${num}`, '_blank');
             }}>
-              <MessageCircle className="h-4 w-4 mr-2 text-green-600" /> Contato via WhatsApp
+              <FontAwesomeIcon icon={faCommentDots} className="h-4 w-4 mr-2 text-green-600" /> Contato via WhatsApp
             </Button>
           )}
 
@@ -202,7 +204,7 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
               <div className="flex gap-2">
                 <Textarea placeholder="Registrar interação..." value={newContent} onChange={(e) => setNewContent(e.target.value)} className="min-h-[60px]" />
                 <Button size="icon" onClick={addInteraction} disabled={sending || !newContent.trim()}>
-                  <Send className="h-4 w-4" />
+                  <FontAwesomeIcon icon={faPaperPlane} className="h-4 w-4" />
                 </Button>
               </div>
             </div>

@@ -1,4 +1,5 @@
-import { LayoutDashboard, Users, Kanban, UserCheck } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGaugeHigh, faUserGroup, faTableColumns, faUserCheck } from '@fortawesome/free-solid-svg-icons';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
@@ -12,18 +13,18 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
-const menuItems = [
-  { title: 'Dashboard', url: '/admin/dashboard', icon: LayoutDashboard },
-  { title: 'Leads', url: '/admin/leads', icon: Users },
-  { title: 'Pipeline', url: '/admin/pipeline', icon: Kanban },
-  { title: 'Clientes', url: '/admin/clients', icon: UserCheck },
+const menuItems: { title: string; url: string; icon: IconDefinition }[] = [
+  { title: 'Dashboard', url: '/admin/dashboard', icon: faGaugeHigh },
+  { title: 'Leads', url: '/admin/leads', icon: faUserGroup },
+  { title: 'Pipeline', url: '/admin/pipeline', icon: faTableColumns },
+  { title: 'Clientes', url: '/admin/clients', icon: faUserCheck },
 ];
 
 export default function AdminSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
-  const location = useLocation();
 
   return (
     <Sidebar collapsible="icon">
@@ -41,7 +42,7 @@ export default function AdminSidebar() {
                       className="hover:bg-sidebar-accent/50"
                       activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
                     >
-                      <item.icon className="mr-2 h-4 w-4" />
+                      <FontAwesomeIcon icon={item.icon} className="mr-2 h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>

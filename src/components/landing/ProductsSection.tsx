@@ -1,4 +1,5 @@
-import { MessageCircle } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@/components/ui/button';
 import { APP_CONFIG } from '@/config/app';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
@@ -13,12 +14,10 @@ export default function ProductsSection() {
 
   return (
     <section id="produtos" className="py-24 bg-card relative overflow-hidden">
-      {/* Warp shader background */}
       <div className="absolute inset-0 z-0 opacity-10">
         <Warp speed={0.3} scale={0.7} colors={['#d4a373', '#e9c46a', '#f4e8c1']} />
       </div>
 
-      {/* Scattered decorative leaves */}
       <div className="absolute top-16 left-6 pointer-events-none animate-leaf-float opacity-15 z-[1]" style={{ animationDelay: '2s' }}>
         <LeafSVG size={20} id="prod1" style={{ transform: 'rotate(55deg)' }} />
       </div>
@@ -66,7 +65,7 @@ export default function ProductsSection() {
         >
           <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
             <Button variant="whatsapp" size="lg" className="gap-2 shadow-lg shadow-green-600/20 animate-pulse hover:animate-none">
-              <MessageCircle className="h-5 w-5" />
+              <FontAwesomeIcon icon={faCommentDots} className="h-5 w-5" />
               Falar no WhatsApp sobre produtos
             </Button>
           </a>

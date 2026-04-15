@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBarsStaggered, faXmark } from '@fortawesome/free-solid-svg-icons';
 import logo from '@/assets/logo-cantim.png';
 
 const links = [
@@ -42,7 +43,6 @@ export default function Navbar({ scrollY }: NavbarProps) {
         style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}
       />
       <div className="section-container relative flex items-center justify-between h-16 sm:h-[72px]">
-        {/* Logo slot — the morphing logo will be fixed positioned from Index */}
         <div className="flex items-center h-full">
           <img
             src={logo}
@@ -82,7 +82,7 @@ export default function Navbar({ scrollY }: NavbarProps) {
           onClick={() => setOpen(!open)}
           aria-label="Menu"
         >
-          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          <FontAwesomeIcon icon={open ? faXmark : faBarsStaggered} className="h-6 w-6" />
         </button>
       </div>
 

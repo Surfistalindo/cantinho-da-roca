@@ -1,13 +1,14 @@
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { Warp } from '@paper-design/shaders-react';
-import { Heart, ShieldCheck, Sparkles, Truck } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHeartPulse, faCertificate, faWandMagicSparkles, faTruckFast } from '@fortawesome/free-solid-svg-icons';
 import LeafSVG from './LeafSVG';
 
 const benefits = [
   {
     title: 'Cuide da sua saúde',
     description: 'Produtos naturais que ajudam no emagrecimento, digestão e disposição no dia a dia.',
-    icon: <Heart size={28} fill="currentColor" />,
+    icon: faHeartPulse,
     fallbackGradient: 'from-green-800 via-green-700 to-emerald-600',
     shaderConfig: {
       proportion: 0.35,
@@ -23,7 +24,7 @@ const benefits = [
   {
     title: 'Qualidade garantida',
     description: 'Selecionamos cada produto com cuidado. Sem química, sem conservantes artificiais.',
-    icon: <ShieldCheck size={28} fill="currentColor" />,
+    icon: faCertificate,
     fallbackGradient: 'from-amber-900 via-amber-800 to-yellow-700',
     shaderConfig: {
       proportion: 0.45,
@@ -39,7 +40,7 @@ const benefits = [
   {
     title: 'Resultados reais',
     description: 'Nossos clientes relatam mais energia, menos inchaço e melhora no bem-estar geral.',
-    icon: <Sparkles size={28} fill="currentColor" />,
+    icon: faWandMagicSparkles,
     fallbackGradient: 'from-emerald-900 via-emerald-800 to-green-700',
     shaderConfig: {
       proportion: 0.3,
@@ -55,7 +56,7 @@ const benefits = [
   {
     title: 'Entrega rápida',
     description: 'Enviamos para todo o Brasil com agilidade e cuidado. Seu pedido chega fresquinho.',
-    icon: <Truck size={28} />,
+    icon: faTruckFast,
     fallbackGradient: 'from-stone-800 via-stone-700 to-amber-800',
     shaderConfig: {
       proportion: 0.42,
@@ -94,7 +95,7 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
       {/* Content */}
       <div className="relative z-[3] flex flex-col justify-end h-full p-6 sm:p-8">
         <div className="inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl mb-4 bg-white/15 text-white backdrop-blur-sm group-hover:bg-white/25 transition-all duration-500">
-          {b.icon}
+          <FontAwesomeIcon icon={b.icon} className="text-xl sm:text-2xl" />
         </div>
 
         <h3 className="text-lg sm:text-xl font-bold mb-1.5 text-white">{b.title}</h3>

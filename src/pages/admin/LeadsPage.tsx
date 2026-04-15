@@ -9,7 +9,8 @@ import LeadStatusSelect from '@/components/admin/LeadStatusSelect';
 import LeadDetailSheet from '@/components/admin/LeadDetailSheet';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Eye, MessageCircle, Trash2 } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faCommentDots, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'sonner';
 import { isLeadStale } from '@/services/followUpService';
 
@@ -133,15 +134,15 @@ export default function LeadsPage() {
                     <TableCell>
                       <div className="flex gap-1">
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openDetail(lead)}>
-                          <Eye className="h-3.5 w-3.5" />
+                          <FontAwesomeIcon icon={faEye} className="h-3.5 w-3.5" />
                         </Button>
                         {lead.phone && (
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-green-600" onClick={() => openWhatsApp(lead.phone)}>
-                            <MessageCircle className="h-3.5 w-3.5" />
+                            <FontAwesomeIcon icon={faCommentDots} className="h-3.5 w-3.5" />
                           </Button>
                         )}
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100" onClick={(e) => deleteLead(e, lead.id)}>
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <FontAwesomeIcon icon={faTrashCan} className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </TableCell>

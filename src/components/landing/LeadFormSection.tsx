@@ -11,7 +11,8 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageCircle } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 import { APP_CONFIG } from '@/config/app';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
@@ -146,7 +147,7 @@ export default function LeadFormSection() {
           <div className="text-center mb-8">
             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
               <Button variant="whatsapp" size="lg" className="gap-2 w-full sm:w-auto shadow-lg shadow-green-600/20">
-                <MessageCircle className="h-5 w-5" />
+                <FontAwesomeIcon icon={faCommentDots} className="h-5 w-5" />
                 Chamar no WhatsApp
               </Button>
             </a>
@@ -163,27 +164,10 @@ export default function LeadFormSection() {
 
           <div className="bg-card rounded-2xl p-6 sm:p-8 shadow-xl border border-border/30">
             <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                placeholder="Seu nome"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                minLength={2}
-                maxLength={100}
-                className="bg-background/50"
-              />
-              <Input
-                type="tel"
-                placeholder="(00) 00000-0000"
-                value={phone}
-                onChange={handlePhoneChange}
-                required
-                className="bg-background/50"
-              />
+              <Input placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} required minLength={2} maxLength={100} className="bg-background/50" />
+              <Input type="tel" placeholder="(00) 00000-0000" value={phone} onChange={handlePhoneChange} required className="bg-background/50" />
               <Select value={origin} onValueChange={setOrigin}>
-                <SelectTrigger className="bg-background/50">
-                  <SelectValue placeholder="Como nos conheceu?" />
-                </SelectTrigger>
+                <SelectTrigger className="bg-background/50"><SelectValue placeholder="Como nos conheceu?" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="whatsapp">WhatsApp</SelectItem>
                   <SelectItem value="instagram">Instagram</SelectItem>
@@ -191,21 +175,8 @@ export default function LeadFormSection() {
                   <SelectItem value="outro">Outro</SelectItem>
                 </SelectContent>
               </Select>
-              <Input
-                placeholder="O que você procura? (opcional)"
-                value={productInterest}
-                onChange={(e) => setProductInterest(e.target.value)}
-                maxLength={200}
-                className="bg-background/50"
-              />
-              <Textarea
-                placeholder="Alguma mensagem ou observação? (opcional)"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                maxLength={500}
-                rows={3}
-                className="bg-background/50"
-              />
+              <Input placeholder="O que você procura? (opcional)" value={productInterest} onChange={(e) => setProductInterest(e.target.value)} maxLength={200} className="bg-background/50" />
+              <Textarea placeholder="Alguma mensagem ou observação? (opcional)" value={message} onChange={(e) => setMessage(e.target.value)} maxLength={500} rows={3} className="bg-background/50" />
               <Button type="submit" className="w-full" size="lg" disabled={loading}>
                 {loading ? 'Enviando...' : 'Quero receber novidades'}
               </Button>

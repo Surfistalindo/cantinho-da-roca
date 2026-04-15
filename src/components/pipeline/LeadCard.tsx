@@ -1,6 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { MessageCircle, Clock, AlertTriangle } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCommentDots, faClockRotateLeft, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { isLeadStale } from '@/services/followUpService';
@@ -76,18 +77,18 @@ export default function LeadCard({ lead, onClick }: Props) {
       <div className="flex items-center gap-1 mt-2">
         {stale && (
           <span className="inline-flex items-center gap-0.5 text-[10px] text-orange-600 bg-orange-50 rounded-full px-1.5 py-0.5">
-            <AlertTriangle className="h-2.5 w-2.5" /> Follow-up
+            <FontAwesomeIcon icon={faTriangleExclamation} className="h-2.5 w-2.5" /> Follow-up
           </span>
         )}
         <div className="ml-auto flex gap-0.5">
           {lead.phone && (
             <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600" onClick={openWhatsApp}>
-              <MessageCircle className="h-3 w-3" />
+              <FontAwesomeIcon icon={faCommentDots} className="h-3 w-3" />
             </Button>
           )}
           {stale && lead.phone && (
             <Button variant="ghost" size="icon" className="h-6 w-6 text-orange-500" onClick={sendFollowUp} title="Enviar follow-up">
-              <Clock className="h-3 w-3" />
+              <FontAwesomeIcon icon={faClockRotateLeft} className="h-3 w-3" />
             </Button>
           )}
         </div>
