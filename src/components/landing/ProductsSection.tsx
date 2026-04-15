@@ -17,7 +17,7 @@ export default function ProductsSection({ scrollY = 0 }: ProductsSectionProps) {
   const { ref, isVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.1 });
 
   return (
-    <section id="produtos" className="py-24 bg-card relative overflow-hidden">
+    <section id="produtos" className="py-16 sm:py-24 bg-card relative overflow-hidden">
       <div className="absolute inset-0 z-0 opacity-10">
         <Warp speed={0.3} scale={0.7} colors={['#d4a373', '#e9c46a', '#f4e8c1']} />
       </div>
@@ -42,7 +42,7 @@ export default function ProductsSection({ scrollY = 0 }: ProductsSectionProps) {
 
       <div className="relative z-10" ref={ref}>
         <div
-          className="text-center mb-12"
+          className="text-center mb-8 sm:mb-12 px-4"
           style={{
             opacity: isVisible ? 1 : 0,
             transform: isVisible
