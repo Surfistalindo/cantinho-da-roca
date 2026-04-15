@@ -112,12 +112,15 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
         <h3 className="text-lg sm:text-xl font-bold mb-1.5 text-white">{b.title}</h3>
         <p className="text-white/80 text-sm leading-relaxed">{b.description}</p>
 
-        <div className="mt-3 flex items-center gap-2 text-white/70 text-sm font-medium opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+        <button
+          onClick={() => document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' })}
+          className="mt-3 flex items-center gap-2 text-white/70 hover:text-white text-sm font-medium opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 cursor-pointer"
+        >
           Saiba mais
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="transition-transform group-hover:translate-x-1">
             <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-        </div>
+        </button>
       </div>
     </div>
   );
