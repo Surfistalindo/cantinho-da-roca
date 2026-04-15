@@ -12,10 +12,10 @@ interface HeroSectionProps {
 }
 
 // Leaves positioned along an elliptical orbit, staggered with animation delay
-const orbitLeaves = Array.from({ length: 10 }, (_, i) => ({
+const orbitLeaves = Array.from({ length: 6 }, (_, i) => ({
   id: i,
-  delay: (i / 10) * -18,
-  size: 18 + (i % 3) * 6,
+  delay: (i / 6) * -30,
+  size: 20 + (i % 3) * 5,
 }));
 
 const LeafSVG = ({ size }: { size: number }) => (
