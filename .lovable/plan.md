@@ -1,55 +1,46 @@
 
 
-## Plan: Optimize Performance and Mobile Responsiveness
+## Plan: Add 4 WebGL Shaders + Parallax Title + 3D Scroll Effects
 
-### Problem Analysis
-
-The main performance bottleneck is the **Warp WebGL shader** from `@paper-design/shaders-react`. There are **9 active WebGL shader instances** (6 in BenefitsSection + 3 in ProductsSection), each running continuous GPU-heavy animations. This is the primary cause of lag.
-
-Secondary issues: leaf orbit animation needs `will-change` for GPU compositing, and several sections have layout issues on mobile.
-
----
+### What we're building
+1. **4 Warp WebGL shaders** — one on each of these sections: Hero, Benefits, Products, Testimonials (only 4, not 9 like before)
+2. **Parallax effect on "Cantım da Roça"** — title moves at a different speed than the rest when scrolling
+3. **3D scroll effects** — sections transform (rotate, scale, translate in Z) as the user scrolls into view
 
 ### Changes
 
-#### 1. Remove Warp Shaders from BenefitsSection and ProductsSection
-- Replace the heavy WebGL `<Warp>` backgrounds with lightweight **CSS gradient backgrounds** that match the current color schemes
-- Remove the `@paper-design/shaders-react` import from both files
-- Keep the 3D tilt hover effect on cards (CSS-only, not heavy)
+#### 1. HeroSection — Parallax title + 1 Warp shader background
+- Use the `scrollY` prop (already passed) to apply `translateY(scrollY * 0.4)` on the title for parallax
+- Add a single `<Warp>` behind the hero with subtle green tones and low speed
+- Keep leaves, shimmer, and existing layout intact
 
-#### 2. Optimize Leaf Orbit Animation
-- Add `will-change: transform` to promote leaves to GPU layers
-- Reduce from 6 to 4 leaves for less paint work
-- Keep the 30s duration (already slow enough)
+#### 2. BenefitsSection — 1 Warp shader + 3D scroll reveal
+- Add a single `<Warp>` as the section background (green/earthy tones, low opacity)
+- Add scroll-driven 3D transforms: cards rotate in from `rotateX(15deg)` as they enter viewport
+- Use `useScrollAnimation` for trigger
 
-#### 3. Fix "SUPLEMENTOS NATURAIS" Text Clipping
-- The container uses `items-end` and fixed widths causing overflow
-- Add proper responsive padding and ensure `<br />` between "SUPLEMENTOS" and "NATURAIS" renders correctly on all breakpoints
-- Adjust the services container to not clip on narrow screens
+#### 3. ProductsSection — 1 Warp shader + 3D scroll reveal
+- Add a single `<Warp>` as section background (warm earthy tones)
+- Cards scale up from `scale(0.8) translateZ(-50px)` on scroll entry
 
-#### 4. Mobile Responsiveness Pass
-- **HeroSection**: Scale down title font, adjust logo watermark size, fix image overlap on small screens
-- **BenefitsSection**: Ensure single-column cards have proper spacing on mobile
-- **ProductsSection**: Stack cards vertically with proper gaps
-- **LeadFormSection**: Already responsive, minor padding tweaks
-- **Footer**: Already uses responsive grid, verify on small screens
-- **Navbar**: Already responsive with mobile menu
+#### 4. TestimonialsSection — 1 Warp shader
+- Need to check this file first, then add a subtle `<Warp>` background
+- Keep existing content, just add the shader layer
 
-#### 5. General Optimizations
-- Add `loading="lazy"` to hero product image (below fold on mobile)
-- Use `contain: layout style` on animated sections to limit repaints
+#### 5. Index.tsx — Pass scrollY to more sections
+- Pass `scrollY` to Benefits, Products, Testimonials for scroll-driven 3D effects
 
----
+#### 6. Performance guardrails
+- Only 4 shader instances (vs 9 before)
+- Set `speed={0.3}` and low `scale` on all Warps to minimize GPU load
+- Use `will-change: transform` on parallax elements
+- Keep `@paper-design/shaders-react` (already in package.json)
 
-### Files to Edit
-- `src/components/landing/BenefitsSection.tsx` — remove Warp, use CSS gradients
-- `src/components/landing/ProductsSection.tsx` — remove Warp, use CSS gradients
-- `src/components/landing/HeroSection.tsx` — fix text clipping, optimize leaves, mobile fixes
-- `tailwind.config.ts` — minor animation tweaks
-
-### Expected Result
-- Dramatic performance improvement (removing 9 WebGL contexts)
-- Smooth 60fps scrolling on mobile and desktop
-- All text visible without clipping
-- Fully responsive layout across all breakpoints
+### Files to edit
+- `src/components/landing/HeroSection.tsx` — add Warp bg + parallax on title
+- `src/components/landing/BenefitsSection.tsx` — add Warp bg + 3D scroll cards
+- `src/components/landing/ProductsSection.tsx` — add Warp bg + 3D scroll cards
+- `src/components/landing/TestimonialsSection.tsx` — add Warp bg
+- `src/pages/Index.tsx` — pass scrollY to more components
+- `src/index.css` — 3D scroll utility styles if needed
 
