@@ -18,7 +18,7 @@ export default function Index() {
       <main className="flex-1">
         <HeroSection scrollY={scrollY} />
         <BenefitsSection />
-        <ProductsSection />
+        <ProductsSection scrollY={scrollY} />
         <TestimonialsSection />
         <LeadFormSection />
       </main>

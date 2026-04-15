@@ -179,25 +179,42 @@ export default function LeadFormSection() {
             </div>
           </div>
 
-          <div className="bg-card rounded-2xl p-6 sm:p-8 shadow-xl border border-border/30">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Input placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} required minLength={2} maxLength={100} className="bg-background/50" />
-              <Input type="tel" placeholder="(00) 00000-0000" value={phone} onChange={handlePhoneChange} required className="bg-background/50" />
-              <Select value={origin} onValueChange={setOrigin}>
-                <SelectTrigger className="bg-background/50"><SelectValue placeholder="Como nos conheceu?" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                  <SelectItem value="instagram">Instagram</SelectItem>
-                  <SelectItem value="indicacao">Indicação</SelectItem>
-                  <SelectItem value="outro">Outro</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input placeholder="O que você procura? (opcional)" value={productInterest} onChange={(e) => setProductInterest(e.target.value)} maxLength={200} className="bg-background/50" />
-              <Textarea placeholder="Alguma mensagem ou observação? (opcional)" value={message} onChange={(e) => setMessage(e.target.value)} maxLength={500} rows={3} className="bg-background/50" />
-              <Button type="submit" className="w-full" size="lg" disabled={loading}>
-                {loading ? 'Enviando...' : 'Quero receber novidades'}
-              </Button>
-            </form>
+          {/* Form card with floating animation + glow border */}
+          <div
+            className="relative rounded-2xl"
+            style={{
+              animation: 'float 6s ease-in-out infinite',
+            }}
+          >
+            {/* Pulsing glow border */}
+            <div
+              className="absolute -inset-[1px] rounded-2xl opacity-60"
+              style={{
+                background: 'linear-gradient(135deg, hsl(125 47% 33% / 0.3), hsl(45 96% 56% / 0.2), hsl(125 47% 33% / 0.3))',
+                animation: 'pulse-glow 3s ease-in-out infinite',
+                filter: 'blur(4px)',
+              }}
+            />
+            <div className="relative bg-card rounded-2xl p-6 sm:p-8 shadow-xl border border-border/30">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <Input placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} required minLength={2} maxLength={100} className="bg-background/50" />
+                <Input type="tel" placeholder="(00) 00000-0000" value={phone} onChange={handlePhoneChange} required className="bg-background/50" />
+                <Select value={origin} onValueChange={setOrigin}>
+                  <SelectTrigger className="bg-background/50"><SelectValue placeholder="Como nos conheceu?" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                    <SelectItem value="instagram">Instagram</SelectItem>
+                    <SelectItem value="indicacao">Indicação</SelectItem>
+                    <SelectItem value="outro">Outro</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input placeholder="O que você procura? (opcional)" value={productInterest} onChange={(e) => setProductInterest(e.target.value)} maxLength={200} className="bg-background/50" />
+                <Textarea placeholder="Alguma mensagem ou observação? (opcional)" value={message} onChange={(e) => setMessage(e.target.value)} maxLength={500} rows={3} className="bg-background/50" />
+                <Button type="submit" className="w-full" size="lg" disabled={loading}>
+                  {loading ? 'Enviando...' : 'Quero receber novidades'}
+                </Button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
