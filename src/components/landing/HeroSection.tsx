@@ -108,7 +108,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
                 willChange: 'transform',
               }}
             >
-              Cantım da Roça
+              Cant
+              <span className="relative inline-block">
+                ı
+                <span className="absolute -top-[0.18em] left-1/2 -translate-x-1/2 pointer-events-none">
+                  <LeafSVG size={typeof window !== 'undefined' && window.innerWidth >= 768 ? 22 : 14} id="title-leaf" />
+                </span>
+              </span>
+              m da Roça
             </h1>
           </div>
 
