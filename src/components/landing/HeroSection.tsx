@@ -58,8 +58,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
 
       setLeafPos({
         left: r.left - h1Rect.left + r.width * 0.5,
-        top: r.top - h1Rect.top - fontSize * 0.02,
-        size: fontSize * 0.18,
+        top: r.top - h1Rect.top + fontSize * 0.06,
+        size: fontSize * 0.2,
       });
     };
 
