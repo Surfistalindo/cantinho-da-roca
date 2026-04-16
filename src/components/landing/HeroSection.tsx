@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCommentDots, faArrowTurnDown } from '@fortawesome/free-solid-svg-icons';
+import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 import { APP_CONFIG } from '@/config/app';
 import heroImg from '@/assets/hero-products.jpg';
 import logoImg from '@/assets/logo-cantim.png';
@@ -266,28 +266,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
           </Button>
         </div>
 
-        {/* Bottom section */}
-        <div className="mt-14 sm:mt-20 items-end justify-between md:flex">
-          <div className="relative">
-            <span className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
-              + de 500 clientes satisfeitos
-            </span>
-          </div>
-          <div className="mt-4 md:mt-0">
-            <div className="flex items-center gap-2 md:justify-end">
-              <span className="text-base sm:text-lg font-medium tracking-wider text-foreground">NOSSOS PRODUTOS</span>
-              <FontAwesomeIcon icon={faArrowTurnDown} className="size-5 sm:size-6" />
-            </div>
-            <div className="mt-3 md:text-right">
-              <h2
-                className="text-3xl sm:text-5xl tracking-[-2px] sm:tracking-[-4px] uppercase text-foreground"
-                style={{ fontFamily: "'Oswald', sans-serif" }}
-              >
-                Saúde sem Limites
-              </h2>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Grid background */}
