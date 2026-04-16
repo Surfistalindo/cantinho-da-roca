@@ -113,13 +113,13 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
               <span
                 className="absolute pointer-events-none z-30"
                 style={{
-                  top: '-0.05em',
-                  left: '29.5%',
-                  transform: 'rotate(-15deg)',
+                  top: '-0.12em',
+                  left: '31%',
+                  transform: 'rotate(-20deg)',
                 }}
                 aria-hidden="true"
               >
-                <LeafSVG size={20} id="title-leaf" className="sm:w-[28px] sm:h-[28px] md:w-[38px] md:h-[38px] xl:w-[46px] xl:h-[46px]" />
+                <LeafSVG size={18} id="title-leaf" className="sm:!w-[24px] sm:!h-[24px] md:!w-[34px] md:!h-[34px] xl:!w-[42px] xl:!h-[42px]" />
               </span>
             </h1>
           </div>
