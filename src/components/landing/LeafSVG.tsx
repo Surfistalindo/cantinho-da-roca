@@ -12,11 +12,12 @@ const LeafSVG: React.FC<LeafSVGProps> = ({ size = 24, id = 'leaf', className, st
     <path
       d="M16 2C16 2 6 8 6 18C6 24 10 28 16 30C22 28 26 24 26 18C26 8 16 2 16 2Z"
       fill="hsl(125 47% 42%)"
+      opacity="0.7"
     />
     <path
       d="M16 2C16 2 6 8 6 18C6 24 10 28 16 30C22 28 26 24 26 18C26 8 16 2 16 2Z"
       fill={`url(#${id}Grad)`}
-      opacity="0.8"
+      opacity="0.5"
     />
     <path d="M16 6V26" stroke="hsl(125 47% 28%)" strokeWidth="0.6" opacity="0.5" />
     <path d="M16 10C13 13 10 16 8 19" stroke="hsl(125 47% 28%)" strokeWidth="0.4" opacity="0.3" />

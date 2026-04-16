@@ -68,13 +68,32 @@ export default function Footer() {
       <div className="section-container relative py-12 sm:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8">
           {/* Brand column */}
-          <div className="lg:col-span-4">
+          <div className="lg:col-span-5">
             <div className="mb-4">
               <img src={logo} alt="Cantim da Roça" className="h-28 sm:h-36 brightness-0 invert" />
             </div>
             <p className="text-white/50 text-sm leading-relaxed max-w-sm mb-6">
               Produtos naturais selecionados com cuidado pra quem quer viver com mais saúde, energia e bem-estar. 🌿
             </p>
+
+            {/* Addresses */}
+            <div className="space-y-3 mb-6">
+              <div className="flex gap-2.5">
+                <FontAwesomeIcon icon={faLocationDot} className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <div className="text-white/40 text-xs leading-relaxed">
+                  <p className="text-white/60 font-semibold text-sm mb-0.5">Unidade 1</p>
+                  Centro, Rua B, 22, Loja 10.<br />Lot. Encanto das Árvores
+                </div>
+              </div>
+              <div className="flex gap-2.5">
+                <FontAwesomeIcon icon={faLocationDot} className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <div className="text-white/40 text-xs leading-relaxed">
+                  <p className="text-white/60 font-semibold text-sm mb-0.5">Unidade 2</p>
+                  CIA 2, Av Via Universitária, 347.<br />Shopping Vivaz Center - Loja 03
+                </div>
+              </div>
+              <p className="text-white/40 text-xs ml-6">Simões Filho / BA</p>
+            </div>
 
             {/* WhatsApp CTA */}
             <div className="flex items-center gap-0 max-w-xs">
@@ -135,33 +154,6 @@ export default function Footer() {
               </ul>
             </div>
           ))}
-
-          {/* Addresses column */}
-          <div className="lg:col-span-2">
-            <h4
-              className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 mb-5"
-              style={{ fontFamily: "'SF Mono', 'Fira Code', monospace" }}
-            >
-              Endereços
-            </h4>
-            <div className="space-y-3">
-              <div className="flex gap-2">
-                <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5 text-primary mt-0.5 flex-shrink-0" />
-                <div className="text-white/40 text-xs leading-relaxed">
-                  <p className="text-white/60 font-semibold text-sm mb-0.5">Unidade 1</p>
-                  Centro, Rua B, 22, Loja 10.<br />Lot. Encanto das Árvores
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5 text-primary mt-0.5 flex-shrink-0" />
-                <div className="text-white/40 text-xs leading-relaxed">
-                  <p className="text-white/60 font-semibold text-sm mb-0.5">Unidade 2</p>
-                  CIA 2, Av Via Universitária, 347.<br />Shopping Vivaz Center - Loja 03
-                </div>
-              </div>
-              <p className="text-white/40 text-xs ml-5">Simões Filho / BA</p>
-            </div>
-          </div>
         </div>
 
         {/* Bottom bar */}

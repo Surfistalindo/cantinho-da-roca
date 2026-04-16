@@ -5,6 +5,7 @@ import ProductsSection from '@/components/landing/ProductsSection';
 import TestimonialsSection from '@/components/landing/TestimonialsSection';
 import LeadFormSection from '@/components/landing/LeadFormSection';
 import Footer from '@/components/landing/Footer';
+import WhatsAppFloat from '@/components/landing/WhatsAppFloat';
 import { useScrollProgress } from '@/hooks/useScrollAnimation';
 
 export default function Index() {
@@ -12,6 +13,8 @@ export default function Index() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Navbar scrollY={scrollY} />
+      <WhatsAppFloat />
       <main className="flex-1">
         <HeroSection scrollY={scrollY} />
         <BenefitsSection />
