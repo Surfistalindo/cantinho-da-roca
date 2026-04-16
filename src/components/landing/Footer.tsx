@@ -65,19 +65,19 @@ export default function Footer() {
         }}
       />
 
-      <div className="section-container relative py-16 sm:py-20">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8">
+      <div className="section-container relative py-12 sm:py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8">
           {/* Brand column */}
           <div className="lg:col-span-5">
-            <div className="mb-5">
-              <img src={logo} alt="Cantim da Roça" className="h-40 sm:h-52 brightness-0 invert" />
+            <div className="mb-4">
+              <img src={logo} alt="Cantim da Roça" className="h-28 sm:h-36 brightness-0 invert" />
             </div>
-            <p className="text-white/50 text-sm leading-relaxed max-w-sm mb-8">
+            <p className="text-white/50 text-sm leading-relaxed max-w-sm mb-6">
               Produtos naturais selecionados com cuidado pra quem quer viver com mais saúde, energia e bem-estar. 🌿
             </p>
 
             {/* Addresses */}
-            <div className="space-y-4 mb-8">
+            <div className="space-y-3 mb-6">
               <div className="flex gap-2.5">
                 <FontAwesomeIcon icon={faLocationDot} className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                 <div className="text-white/40 text-xs leading-relaxed">
@@ -157,7 +157,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-16 pt-6 border-t border-white/[0.06] flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="mt-10 pt-5 border-t border-white/[0.06] flex flex-col sm:flex-row justify-between items-center gap-4">
           <p
             className="text-white/20 text-xs tracking-wider"
             style={{ fontFamily: "'SF Mono', 'Fira Code', monospace" }}
