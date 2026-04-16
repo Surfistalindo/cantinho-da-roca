@@ -12,8 +12,6 @@ export default function Index() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar scrollY={scrollY} />
-      <WhatsAppFloat />
       <main className="flex-1">
         <HeroSection scrollY={scrollY} />
         <BenefitsSection />
