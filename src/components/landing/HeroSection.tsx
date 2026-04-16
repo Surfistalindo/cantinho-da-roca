@@ -115,16 +115,16 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
               <span className="hero-title-shimmer relative inline-block">
                 {heroTitleBeforeI}
                 <span className="relative inline-block">
-                  i
+                  ı
                   <span
-                    className="pointer-events-none absolute left-1/2 top-[0.08em] z-30"
-                    style={{ transform: 'translate(-50%, -50%) rotate(-18deg)' }}
+                    className="pointer-events-none absolute left-1/2 top-0 z-30"
+                    style={{ transform: 'translate(-50%, -68%) rotate(-18deg)' }}
                     aria-hidden="true"
                   >
                     <LeafSVG
-                      size={24}
+                      size={22}
                       id="title-leaf-mark"
-                      style={{ width: '0.26em', height: '0.26em' }}
+                      style={{ width: '0.22em', height: '0.22em' }}
                     />
                   </span>
                 </span>
