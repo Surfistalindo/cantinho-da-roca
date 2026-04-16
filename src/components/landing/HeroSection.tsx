@@ -10,8 +10,7 @@ import LeafSVG from './LeafSVG';
 
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Quero saber mais sobre os produtos do Cantim da Roça 🌿')}`;
 const heroTitleText = 'Cantim da Roça';
-const heroTitleBeforeI = 'Cant';
-const heroTitleThroughI = 'Canti';
+const heroTitleIIndex = heroTitleText.indexOf('i');
 
 interface HeroSectionProps {
   scrollY: number;
@@ -34,6 +33,7 @@ const scatteredLeaves = [
 
 const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const titleTextRef = useRef<HTMLSpanElement>(null);
   const [titleLeafPosition, setTitleLeafPosition] = useState<{ left: number; top: number; size: number } | null>(null);
 
   const scrollToProducts = () => {
@@ -46,39 +46,27 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
   useLayoutEffect(() => {
     const updateTitleLeafPosition = () => {
       const titleElement = titleRef.current;
-      if (!titleElement) return;
+      const titleTextElement = titleTextRef.current;
+      const textNode = titleTextElement?.firstChild;
+
+      if (!titleElement || !titleTextElement || !textNode || textNode.nodeType !== Node.TEXT_NODE) return;
 
       const titleStyles = window.getComputedStyle(titleElement);
-      const measureElement = document.createElement('span');
-      measureElement.style.position = 'absolute';
-      measureElement.style.visibility = 'hidden';
-      measureElement.style.whiteSpace = 'pre';
-      measureElement.style.fontFamily = titleStyles.fontFamily;
-      measureElement.style.fontSize = titleStyles.fontSize;
-      measureElement.style.fontWeight = titleStyles.fontWeight;
-      measureElement.style.fontStyle = titleStyles.fontStyle;
-      measureElement.style.letterSpacing = titleStyles.letterSpacing;
-      measureElement.style.lineHeight = titleStyles.lineHeight;
-      document.body.appendChild(measureElement);
-
-      const getWidth = (text: string) => {
-        measureElement.textContent = text;
-        return measureElement.getBoundingClientRect().width;
-      };
-
-      const fullWidth = getWidth(heroTitleText);
-      const beforeIWidth = getWidth(heroTitleBeforeI);
-      const throughIWidth = getWidth(heroTitleThroughI);
-
-      document.body.removeChild(measureElement);
-
+      const titleRect = titleElement.getBoundingClientRect();
       const fontSize = parseFloat(titleStyles.fontSize);
-      const iWidthInContext = throughIWidth - beforeIWidth;
+      const range = document.createRange();
+
+      range.setStart(textNode, heroTitleIIndex);
+      range.setEnd(textNode, heroTitleIIndex + 1);
+
+      const glyphRect = range.getBoundingClientRect();
+
+      if (!glyphRect.width && !glyphRect.height) return;
 
       setTitleLeafPosition({
-        left: (titleElement.clientWidth - fullWidth) / 2 + beforeIWidth + iWidthInContext * 0.5,
-        top: fontSize * 0.04,
-        size: fontSize * 0.34,
+        left: glyphRect.left - titleRect.left + glyphRect.width * 0.34,
+        top: glyphRect.top - titleRect.top + fontSize * 0.12,
+        size: fontSize * 0.22,
       });
     };
 
@@ -89,6 +77,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
 
     const resizeObserver = new ResizeObserver(updateTitleLeafPosition);
     resizeObserver.observe(titleElement);
+    window.addEventListener('resize', updateTitleLeafPosition);
 
     if ('fonts' in document) {
       void document.fonts.ready.then(updateTitleLeafPosition);
@@ -96,6 +85,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
 
     return () => {
       resizeObserver.disconnect();
+      window.removeEventListener('resize', updateTitleLeafPosition);
     };
   }, []);
 
@@ -171,14 +161,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
                 willChange: 'transform',
               }}
             >
-              {heroTitleText}
+              <span ref={titleTextRef}>{heroTitleText}</span>
               {titleLeafPosition && (
                 <span
                   className="pointer-events-none absolute z-30"
                   style={{
                     top: `${titleLeafPosition.top}px`,
                     left: `${titleLeafPosition.left}px`,
-                    transform: 'translateX(-50%) rotate(-20deg)',
+                    transform: 'translate(-50%, -50%) rotate(-20deg)',
                   }}
                   aria-hidden="true"
                 >
