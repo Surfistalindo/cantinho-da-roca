@@ -51,8 +51,8 @@ export function useScrollProgress() {
       if (!ticking) {
         requestAnimationFrame(() => {
           const current = window.scrollY;
-          // Only update state if scroll changed by more than 2px (reduces re-renders)
-          if (Math.abs(current - lastValue.current) > 2) {
+          // Only update state if scroll changed by more than 5px (reduces re-renders)
+          if (Math.abs(current - lastValue.current) > 5) {
             lastValue.current = current;
             setScrollY(current);
           }
