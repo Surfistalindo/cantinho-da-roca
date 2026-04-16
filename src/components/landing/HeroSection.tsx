@@ -108,7 +108,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
                 willChange: 'transform',
               }}
             >
-              Cant<span className="i-dot-leaf">i</span>m da Roça
+              Cantim da Roça
+              <span className="i-dot-leaf" aria-hidden="true" />
             </h1>
           </div>
 
