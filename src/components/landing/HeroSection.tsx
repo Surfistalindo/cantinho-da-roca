@@ -41,7 +41,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
     <section id="inicio" className="relative min-h-screen overflow-hidden py-16 sm:py-20">
       {/* Warp shader background */}
       <div className="absolute inset-0 z-0 opacity-20">
-        <Warp speed={0.3} scale={0.8} colors={['#2d6a4f', '#40916c', '#95d5b2']} />
+        <Warp speed={0.15} scale={0.8} colors={['#2d6a4f', '#40916c', '#95d5b2']} />
       </div>
 
       {/* Scattered floating leaves with parallax */}

@@ -83,16 +83,18 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
         {/* CSS gradient fallback */}
         <div className={`absolute inset-0 z-0 bg-gradient-to-br ${b.fallbackGradient}`} />
 
-        {/* Shader layer */}
-        <div className="absolute inset-0 z-[1]" style={{ width: '100%', height: '100%' }}>
-          <Warp
-            speed={tilt.rotateX !== 0 ? 0.8 : 0.15}
-            scale={tilt.rotateX !== 0 ? 0.6 : 0.4}
-            {...b.shaderConfig}
-            distortion={tilt.rotateX !== 0 ? (b.shaderConfig.distortion ?? 0.18) * 2.5 : b.shaderConfig.distortion}
-            style={{ width: '100%', height: '100%', display: 'block' }}
-          />
-        </div>
+        {/* Shader layer - only render when card is visible */}
+        {isVisible && (
+          <div className="absolute inset-0 z-[1]" style={{ width: '100%', height: '100%' }}>
+            <Warp
+              speed={tilt.rotateX !== 0 ? 0.8 : 0.15}
+              scale={tilt.rotateX !== 0 ? 0.6 : 0.4}
+              {...b.shaderConfig}
+              distortion={tilt.rotateX !== 0 ? (b.shaderConfig.distortion ?? 0.18) * 2.5 : b.shaderConfig.distortion}
+              style={{ width: '100%', height: '100%', display: 'block' }}
+            />
+          </div>
+        )}
 
         {/* Dark overlay */}
         <div className="absolute inset-0 z-[2] bg-black/30 group-hover:bg-black/40 transition-colors duration-500" />
