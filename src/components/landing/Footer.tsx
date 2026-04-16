@@ -35,8 +35,12 @@ const sections = [
       { label: 'Instagram', href: instagramUrl, external: true },
     ],
   },
+  {
+    title: 'Endereços',
+    isAddress: true,
+    links: [],
+  },
 ];
-
 export default function Footer() {
   const { ref, isVisible } = useScrollAnimation<HTMLElement>({ threshold: 0.1 });
 
