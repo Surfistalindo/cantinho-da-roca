@@ -113,8 +113,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
               <span
                 className="absolute pointer-events-none z-30"
                 style={{
-                  top: '-0.05em',
-                  left: '36.5%',
+                  top: '0em',
+                  left: '39.5%',
                   transform: 'rotate(-20deg)',
                 }}
                 aria-hidden="true"
