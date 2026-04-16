@@ -10,6 +10,9 @@ import LeafSVG from './LeafSVG';
 
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Quero saber mais sobre os produtos do Cantim da Roça 🌿')}`;
 const heroTitleText = 'Cantim da Roça';
+const heroTitleIIndex = heroTitleText.indexOf('i');
+const heroTitleBeforeI = heroTitleText.slice(0, heroTitleIIndex);
+const heroTitleAfterI = heroTitleText.slice(heroTitleIIndex + 1);
 
 interface HeroSectionProps {
   scrollY: number;
@@ -102,26 +105,30 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
             </div>
 
             <h1
-              className="hero-title-shimmer relative z-20 text-center text-4xl sm:text-6xl font-bold leading-[0.95] tracking-[-1px] sm:tracking-[-2px] md:text-8xl md:tracking-[-6px] xl:text-9xl xl:tracking-[-8px]"
+              className="relative z-20 text-center text-4xl sm:text-6xl font-bold leading-[0.95] tracking-[-1px] sm:tracking-[-2px] md:text-8xl md:tracking-[-6px] xl:text-9xl xl:tracking-[-8px]"
               style={{
                 fontFamily: "'Satisfy', cursive",
                 transform: `translateY(${scrollY * 0.4}px)`,
                 willChange: 'transform',
               }}
             >
-              <span className="relative inline-block">
-                {heroTitleText}
-                <span
-                  className="pointer-events-none absolute left-[29.4%] top-[10.5%] z-30"
-                  style={{ transform: 'translate(-50%, -50%) rotate(-18deg)' }}
-                  aria-hidden="true"
-                >
-                  <LeafSVG
-                    size={32}
-                    id="title-leaf-mark"
-                    style={{ width: '0.34em', height: '0.34em' }}
-                  />
+              <span className="hero-title-shimmer relative inline-block">
+                {heroTitleBeforeI}
+                <span className="relative inline-block">
+                  i
+                  <span
+                    className="pointer-events-none absolute left-1/2 top-[0.08em] z-30"
+                    style={{ transform: 'translate(-50%, -50%) rotate(-18deg)' }}
+                    aria-hidden="true"
+                  >
+                    <LeafSVG
+                      size={24}
+                      id="title-leaf-mark"
+                      style={{ width: '0.26em', height: '0.26em' }}
+                    />
+                  </span>
                 </span>
+                {heroTitleAfterI}
               </span>
             </h1>
           </div>
