@@ -172,7 +172,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
                   }}
                   aria-hidden="true"
                 >
-                  <LeafSVG size={titleLeafPosition.size} id="title-leaf-mark" opaque />
+                  <LeafSVG size={titleLeafPosition.size} id="title-leaf-mark" />
                 </span>
               )}
             </h1>
