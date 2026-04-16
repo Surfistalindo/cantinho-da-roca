@@ -151,7 +151,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
                   style={{
                     left: `${leafPos.left}px`,
                     top: `${leafPos.top}px`,
-                    transform: 'translate(-50%, -100%) rotate(-18deg)',
+                    transform: 'translate(-50%, -60%) rotate(-18deg)',
                   }}
                   aria-hidden="true"
                 >
