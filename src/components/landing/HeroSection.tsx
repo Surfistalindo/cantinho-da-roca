@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
 import { APP_CONFIG } from '@/config/app';
@@ -11,6 +11,8 @@ import LeafSVG from './LeafSVG';
 const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Quero saber mais sobre os produtos do Cantim da Roça 🌿')}`;
 const heroTitleText = 'Cantim da Roça';
 const heroTitleIIndex = heroTitleText.indexOf('i');
+const heroTitleBeforeI = heroTitleText.slice(0, heroTitleIIndex);
+const heroTitleAfterI = heroTitleText.slice(heroTitleIIndex + 1);
 
 interface HeroSectionProps {
   scrollY: number;
@@ -32,62 +34,12 @@ const scatteredLeaves = [
 ];
 
 const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const titleTextRef = useRef<HTMLSpanElement>(null);
-  const [titleLeafPosition, setTitleLeafPosition] = useState<{ left: number; top: number; size: number } | null>(null);
-
   const scrollToProducts = () => {
     document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const imgScale = 1 + scrollY * 0.0003;
   const imgTranslateY = scrollY * 0.15;
-
-  useLayoutEffect(() => {
-    const updateTitleLeafPosition = () => {
-      const titleElement = titleRef.current;
-      const titleTextElement = titleTextRef.current;
-      const textNode = titleTextElement?.firstChild;
-
-      if (!titleElement || !titleTextElement || !textNode || textNode.nodeType !== Node.TEXT_NODE) return;
-
-      const titleStyles = window.getComputedStyle(titleElement);
-      const titleRect = titleElement.getBoundingClientRect();
-      const fontSize = parseFloat(titleStyles.fontSize);
-      const range = document.createRange();
-
-      range.setStart(textNode, heroTitleIIndex);
-      range.setEnd(textNode, heroTitleIIndex + 1);
-
-      const glyphRect = range.getBoundingClientRect();
-
-      if (!glyphRect.width && !glyphRect.height) return;
-
-      setTitleLeafPosition({
-        left: glyphRect.left - titleRect.left + glyphRect.width * 0.34,
-        top: glyphRect.top - titleRect.top + fontSize * 0.12,
-        size: fontSize * 0.22,
-      });
-    };
-
-    updateTitleLeafPosition();
-
-    const titleElement = titleRef.current;
-    if (!titleElement) return;
-
-    const resizeObserver = new ResizeObserver(updateTitleLeafPosition);
-    resizeObserver.observe(titleElement);
-    window.addEventListener('resize', updateTitleLeafPosition);
-
-    if ('fonts' in document) {
-      void document.fonts.ready.then(updateTitleLeafPosition);
-    }
-
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', updateTitleLeafPosition);
-    };
-  }, []);
 
   return (
     <section id="inicio" className="relative min-h-screen overflow-hidden py-16 sm:py-20">
@@ -153,28 +105,31 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
             </div>
 
             <h1
-              ref={titleRef}
-              className="hero-title-shimmer relative z-20 text-center text-4xl sm:text-6xl font-bold tracking-[-1px] sm:tracking-[-2px] md:text-8xl md:tracking-[-6px] xl:text-9xl xl:tracking-[-8px]"
+              className="relative z-20 text-center text-4xl sm:text-6xl font-bold leading-[0.95] tracking-[-1px] sm:tracking-[-2px] md:text-8xl md:tracking-[-6px] xl:text-9xl xl:tracking-[-8px]"
               style={{
                 fontFamily: "'Satisfy', cursive",
                 transform: `translateY(${scrollY * 0.4}px)`,
                 willChange: 'transform',
               }}
             >
-              <span ref={titleTextRef}>{heroTitleText}</span>
-              {titleLeafPosition && (
-                <span
-                  className="pointer-events-none absolute z-30"
-                  style={{
-                    top: `${titleLeafPosition.top}px`,
-                    left: `${titleLeafPosition.left}px`,
-                    transform: 'translate(-50%, -50%) rotate(-20deg)',
-                  }}
-                  aria-hidden="true"
-                >
-                  <LeafSVG size={titleLeafPosition.size} id="title-leaf-mark" />
+              <span className="hero-title-shimmer relative inline-block">
+                {heroTitleBeforeI}
+                <span className="relative inline-block">
+                  i
+                  <span
+                    className="pointer-events-none absolute left-1/2 top-[0.02em] z-30"
+                    style={{ transform: 'translate(-50%, -92%) rotate(-18deg)' }}
+                    aria-hidden="true"
+                  >
+                    <LeafSVG
+                      size={20}
+                      id="title-leaf-mark"
+                      style={{ width: '0.22em', height: '0.22em' }}
+                    />
+                  </span>
                 </span>
-              )}
+                {heroTitleAfterI}
+              </span>
             </h1>
           </div>
 
