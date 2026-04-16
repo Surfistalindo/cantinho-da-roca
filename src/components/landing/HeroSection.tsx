@@ -108,7 +108,19 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
                 willChange: 'transform',
               }}
             >
-              Cant<span className="relative inline-block">i<span className="absolute -top-[0.22em] left-1/2 -translate-x-[45%] pointer-events-none" style={{ WebkitTextFillColor: 'initial' }}><LeafSVG size={typeof window !== 'undefined' && window.innerWidth >= 768 ? 24 : 14} id="title-leaf" /></span></span>m da Roça
+              Cantim da Roça
+              {/* Leaf on the "i" dot */}
+              <span
+                className="absolute pointer-events-none z-30"
+                style={{
+                  top: '-0.05em',
+                  left: '29.5%',
+                  transform: 'rotate(-15deg)',
+                }}
+                aria-hidden="true"
+              >
+                <LeafSVG size={20} id="title-leaf" className="sm:w-[28px] sm:h-[28px] md:w-[38px] md:h-[38px] xl:w-[46px] xl:h-[46px]" />
+              </span>
             </h1>
           </div>
 
