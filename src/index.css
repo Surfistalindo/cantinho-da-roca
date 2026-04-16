@@ -156,3 +156,19 @@ html {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 0.7; }
 }
+
+.i-dot-leaf {
+  position: relative;
+}
+
+.i-dot-leaf::after {
+  content: "";
+  position: absolute;
+  top: -0.15em;
+  left: 50%;
+  transform: translateX(-50%) rotate(-20deg);
+  width: 0.35em;
+  height: 0.35em;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'%3E%3Cpath d='M16 2C16 2 6 8 6 18C6 24 10 28 16 30C22 28 26 24 26 18C26 8 16 2 16 2Z' fill='hsl(125 47%25 42%25)' opacity='0.85'/%3E%3Cpath d='M16 2C16 2 6 8 6 18C6 24 10 28 16 30C22 28 26 24 26 18C26 8 16 2 16 2Z' fill='url(%23lg)' opacity='0.5'/%3E%3Cpath d='M16 6V26' stroke='hsl(125 47%25 28%25)' stroke-width='0.6' opacity='0.5'/%3E%3Cdefs%3E%3ClinearGradient id='lg' x1='6' y1='2' x2='26' y2='30'%3E%3Cstop offset='0%25' stop-color='hsl(100 50%25 55%25)'/%3E%3Cstop offset='100%25' stop-color='hsl(130 50%25 30%25)'/%3E%3C/linearGradient%3E%3C/defs%3E%3C/svg%3E") no-repeat center/contain;
+  pointer-events: none;
+}
