@@ -108,19 +108,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
                 willChange: 'transform',
               }}
             >
-              Cantim da Roça
-              {/* Leaf on the "i" dot */}
-              <span
-                className="absolute pointer-events-none z-30"
-                style={{
-                  top: '0.08em',
-                  left: '39%',
-                  transform: 'rotate(-25deg)',
-                }}
-                aria-hidden="true"
-              >
-                <LeafSVG size={18} id="title-leaf" className="sm:!w-[24px] sm:!h-[24px] md:!w-[34px] md:!h-[34px] xl:!w-[42px] xl:!h-[42px]" />
-              </span>
+              Cant<span className="i-dot-leaf">i</span>m da Roça
             </h1>
           </div>
 
