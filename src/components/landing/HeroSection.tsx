@@ -145,19 +145,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
               }}
             >
               <span data-title>{heroTitleText}</span>
-              {leafPos && (
-                <span
-                  className="pointer-events-none absolute z-30"
-                  style={{
-                    left: `${leafPos.left}px`,
-                    top: `${leafPos.top}px`,
-                    transform: 'translate(-50%, -60%) rotate(-18deg)',
-                  }}
-                  aria-hidden="true"
-                >
-                  <LeafSVG size={leafPos.size} id="title-leaf-mark" />
-                </span>
-              )}
             </h1>
           </div>
 
