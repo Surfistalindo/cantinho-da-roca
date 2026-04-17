@@ -18,9 +18,9 @@ interface NavbarProps {
 export default function Navbar({ scrollY }: NavbarProps) {
   const [open, setOpen] = useState(false);
 
-  const showNavbar = scrollY > 150;
-  const navbarOpacity = Math.min(1, Math.max(0, (scrollY - 100) / 100));
-  const navbarTranslateY = showNavbar ? 0 : -100;
+  const showNavbar = true;
+  const navbarOpacity = 1;
+  const navbarTranslateY = 0;
 
   const handleClick = (href: string) => {
     setOpen(false);
