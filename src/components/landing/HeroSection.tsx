@@ -73,7 +73,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
   }, []);
 
   return (
-    <section id="inicio" className="relative min-h-screen overflow-hidden py-16 sm:py-20">
+    <section id="inicio" className="relative min-h-screen overflow-hidden pt-16 sm:pt-20 pb-0">
       {/* Warp shader background */}
       <div className="absolute inset-0 z-0 opacity-20">
         <Warp speed={0.15} scale={0.8} colors={['#2d6a4f', '#40916c', '#95d5b2']} />
