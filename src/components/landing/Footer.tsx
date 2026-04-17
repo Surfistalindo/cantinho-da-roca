@@ -70,7 +70,7 @@ export default function Footer() {
           {/* Brand column */}
           <div className="lg:col-span-4">
             <div className="mb-4">
-              <img src={logo} alt="Cantim da Roça" className="h-28 sm:h-36 brightness-0 invert" />
+              <img src={logo} alt="Cantim da Roça" className="h-16 sm:h-20 brightness-0 invert" />
             </div>
             <p className="text-white/50 text-sm leading-relaxed max-w-sm mb-6">
               Produtos naturais selecionados com cuidado pra quem quer viver com mais saúde, energia e bem-estar. 🌿
