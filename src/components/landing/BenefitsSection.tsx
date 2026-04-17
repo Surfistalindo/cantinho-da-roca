@@ -1,54 +1,37 @@
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useMouseTilt } from '@/hooks/useMouseTilt';
-import { Warp } from '@paper-design/shaders-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeartPulse, faCertificate, faSeedling, faTruckFast } from '@fortawesome/free-solid-svg-icons';
 import LeafSVG from './LeafSVG';
+import imgSaude from '@/assets/benefit-saude.jpg';
+import imgQualidade from '@/assets/benefit-qualidade.jpg';
+import imgResultados from '@/assets/benefit-resultados.jpg';
+import imgEntrega from '@/assets/benefit-entrega.jpg';
 
 const benefits = [
   {
     title: 'Cuide da sua saúde',
     description: 'Produtos naturais que ajudam no emagrecimento, digestão e disposição no dia a dia.',
     icon: faHeartPulse,
-    fallbackGradient: 'from-green-800 via-green-700 to-emerald-600',
-    shaderConfig: {
-      proportion: 0.35, softness: 0.9, distortion: 0.18, swirl: 0.7, swirlIterations: 10,
-      shape: 'checks' as const, shapeScale: 0.1,
-      colors: ['hsl(120, 40%, 20%)', 'hsl(140, 50%, 35%)', 'hsl(100, 35%, 25%)', 'hsl(130, 45%, 40%)'],
-    },
+    image: imgSaude,
   },
   {
     title: 'Qualidade garantida',
     description: 'Selecionamos cada produto com cuidado. Sem química, sem conservantes artificiais.',
     icon: faCertificate,
-    fallbackGradient: 'from-amber-900 via-amber-800 to-yellow-700',
-    shaderConfig: {
-      proportion: 0.45, softness: 1.1, distortion: 0.22, swirl: 0.8, swirlIterations: 15,
-      shape: 'stripes' as const, shapeScale: 0.09,
-      colors: ['hsl(30, 60%, 25%)', 'hsl(40, 70%, 40%)', 'hsl(35, 55%, 30%)', 'hsl(45, 65%, 45%)'],
-    },
+    image: imgQualidade,
   },
   {
     title: 'Resultados reais',
     description: 'Nossos clientes relatam mais energia, menos inchaço e melhora no bem-estar geral.',
     icon: faSeedling,
-    fallbackGradient: 'from-emerald-900 via-emerald-800 to-green-700',
-    shaderConfig: {
-      proportion: 0.3, softness: 0.8, distortion: 0.15, swirl: 0.6, swirlIterations: 8,
-      shape: 'checks' as const, shapeScale: 0.08,
-      colors: ['hsl(150, 40%, 20%)', 'hsl(140, 50%, 30%)', 'hsl(160, 35%, 25%)', 'hsl(145, 45%, 35%)'],
-    },
+    image: imgResultados,
   },
   {
     title: 'Entrega rápida',
     description: 'Enviamos para todo o Brasil com agilidade e cuidado. Seu pedido chega fresquinho.',
     icon: faTruckFast,
-    fallbackGradient: 'from-stone-800 via-stone-700 to-amber-800',
-    shaderConfig: {
-      proportion: 0.42, softness: 1.0, distortion: 0.19, swirl: 0.75, swirlIterations: 9,
-      shape: 'edge' as const, shapeScale: 0.13,
-      colors: ['hsl(25, 50%, 25%)', 'hsl(35, 60%, 35%)', 'hsl(30, 45%, 30%)', 'hsl(20, 55%, 40%)'],
-    },
+    image: imgEntrega,
   },
 ];
 
@@ -80,24 +63,17 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
           willChange: 'transform',
         }}
       >
-        {/* CSS gradient fallback */}
-        <div className={`absolute inset-0 z-0 bg-gradient-to-br ${b.fallbackGradient}`} />
+        {/* Background image */}
+        <img
+          src={b.image}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          className="absolute inset-0 w-full h-full object-cover z-0 group-hover:scale-105 transition-transform duration-700"
+        />
 
-        {/* Shader layer - only render when card is visible */}
-        {isVisible && (
-          <div className="absolute inset-0 z-[1]" style={{ width: '100%', height: '100%' }}>
-            <Warp
-              speed={tilt.rotateX !== 0 ? 0.8 : 0.15}
-              scale={tilt.rotateX !== 0 ? 0.6 : 0.4}
-              {...b.shaderConfig}
-              distortion={tilt.rotateX !== 0 ? (b.shaderConfig.distortion ?? 0.18) * 2.5 : b.shaderConfig.distortion}
-              style={{ width: '100%', height: '100%', display: 'block' }}
-            />
-          </div>
-        )}
-
-        {/* Dark overlay */}
-        <div className="absolute inset-0 z-[2] bg-black/30 group-hover:bg-black/40 transition-colors duration-500" />
+        {/* Dark overlay for text legibility */}
+        <div className="absolute inset-0 z-[2] bg-gradient-to-t from-black/75 via-black/45 to-black/30 group-hover:from-black/80 transition-colors duration-500" />
 
         {/* Light reflection that follows mouse */}
         <div
