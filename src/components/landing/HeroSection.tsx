@@ -222,7 +222,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
         </div>
 
         {/* Logo below CTA - compact background mark */}
-        <div className="flex justify-center mt-6 sm:mt-8">
+        <div className="flex justify-center mt-6 sm:mt-8 my-0 pr-0 pt-[20px]">
           <img
             src={logoImg}
             alt="Cantim da Roça"
