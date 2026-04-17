@@ -99,21 +99,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
         </div>
       ))}
 
-      {/* Logo watermark background */}
-      <div className="absolute inset-y-0 left-[5%] z-[1] flex items-center pointer-events-none -ml-16 sm:-ml-20 md:-ml-10 lg:-ml-6">
-        <img
-          src={logoImg}
-          alt=""
-          className="w-[250px] sm:w-[350px] md:w-[500px] lg:w-[650px] opacity-[0.1]"
-          aria-hidden="true"
-          loading="lazy"
-          style={{
-            transform: `translateY(${scrollY * -0.1}px) scale(${1 + scrollY * 0.0002})`,
-            willChange: 'transform',
-          }}
-        />
-      </div>
-
       <div className="relative z-20 mx-auto max-w-7xl px-4 sm:px-6">
         {/* Top section with big title */}
         <div className="relative pb-10 sm:pb-14">
