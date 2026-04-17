@@ -14,8 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { APP_CONFIG } from '@/config/app';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import logo from '@/assets/logo-cantim.png';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
+import { ChevronDown } from 'lucide-react';
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 11);
@@ -31,7 +30,10 @@ function isValidPhone(value: string): boolean {
 
 const RATE_LIMIT_MS = 30_000;
 
-const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Vim pelo site e quero saber mais sobre os produtos naturais 🌿')}`;
+const buildWhatsappUrl = (firstName: string) =>
+  `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent(
+    `Olá! Acabei de me cadastrar pelo site, sou ${firstName} 🌿`
+  )}`;
 
 export default function LeadFormSection() {
   const [name, setName] = useState('');
@@ -40,6 +42,7 @@ export default function LeadFormSection() {
   const [productInterest, setProductInterest] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showOptional, setShowOptional] = useState(false);
   const lastSubmitRef = useRef<number>(0);
 
   const { ref, isVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.1 });
@@ -77,8 +80,12 @@ export default function LeadFormSection() {
         .eq('phone', cleanPhone)
         .limit(1);
 
+      const firstName = trimmedName.split(' ')[0];
+      const waUrl = buildWhatsappUrl(firstName);
+
       if (existing && existing.length > 0) {
-        toast.info('Você já está cadastrado! 😊', { description: 'Em breve entraremos em contato.' });
+        toast.info('Você já está cadastrado! 😊', { description: 'Abrindo o WhatsApp pra continuar a conversa.' });
+        window.open(waUrl, '_blank', 'noopener,noreferrer');
         setLoading(false);
         return;
       }
@@ -95,19 +102,17 @@ export default function LeadFormSection() {
       lastSubmitRef.current = now;
 
       toast.success('Cadastro realizado! 🎉', {
-        description: 'Quer falar agora no WhatsApp?',
-        action: {
-          label: 'Abrir WhatsApp',
-          onClick: () => window.open(whatsappUrl, '_blank'),
-        },
-        duration: 8000,
+        description: 'Abrindo o WhatsApp pra te dar boas-vindas.',
+        duration: 6000,
       });
+      window.open(waUrl, '_blank', 'noopener,noreferrer');
 
       setName('');
       setPhone('');
       setOrigin('');
       setProductInterest('');
       setMessage('');
+      setShowOptional(false);
     } catch {
       toast.error('Erro ao cadastrar', { description: 'Tente novamente mais tarde.' });
     } finally {
@@ -136,50 +141,14 @@ export default function LeadFormSection() {
           }}
         >
           <p className="text-primary text-sm font-semibold tracking-widest uppercase text-center mb-3">
-            Contato
+            Cadastre-se
           </p>
           <h2 className="text-3xl sm:text-5xl font-serif text-center mb-3 text-foreground">
-            Fale com a gente agora
+            Receba ofertas e novidades no WhatsApp
           </h2>
           <p className="text-muted-foreground text-center mb-10 text-lg">
-            Tire dúvidas, peça recomendações ou faça seu pedido. Estamos aqui pra te ajudar! <img src={logo} alt="" className="inline h-5 w-5 align-text-bottom" />
+            Deixe seu nome e WhatsApp pra receber dicas, lançamentos e promoções dos nossos produtos naturais. <img src={logo} alt="" className="inline h-5 w-5 align-text-bottom" />
           </p>
-
-          <div className="text-center mb-8">
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="relative inline-block group perspective-[800px]"
-            >
-              <span className="absolute -inset-[2px] rounded-xl overflow-hidden z-0">
-                <span
-                  className="absolute inset-[-100%] animate-[spin_3s_linear_infinite]"
-                  style={{
-                    background: 'conic-gradient(from 0deg, transparent 0%, transparent 60%, rgba(255,255,255,0.9) 75%, transparent 90%, transparent 100%)',
-                  }}
-                />
-              </span>
-              <span className="absolute inset-[1px] rounded-[10px] bg-[#25D366] z-[1]" />
-              <Button
-                variant="whatsapp"
-                size="lg"
-                className="relative z-[2] gap-2 w-full sm:w-auto shadow-lg shadow-green-600/30 transition-transform duration-300 group-hover:scale-[1.03] group-hover:[transform:rotateX(-2deg)_rotateY(2deg)] bg-transparent border-none"
-              >
-                <FontAwesomeIcon icon={faWhatsapp} className="h-5 w-5" />
-                Chamar no WhatsApp
-              </Button>
-            </a>
-          </div>
-
-          <div className="relative mb-8">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-[#f7f5f0] px-3 text-muted-foreground">ou deixe seus dados</span>
-            </div>
-          </div>
 
           {/* Form card with floating animation + glow border */}
           <div
@@ -201,20 +170,38 @@ export default function LeadFormSection() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <Input placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} required minLength={2} maxLength={100} className="bg-background/50" />
                 <Input type="tel" placeholder="(00) 00000-0000" value={phone} onChange={handlePhoneChange} required className="bg-background/50" />
-                <Select value={origin} onValueChange={setOrigin}>
-                  <SelectTrigger className="bg-background/50"><SelectValue placeholder="Como nos conheceu?" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                    <SelectItem value="instagram">Instagram</SelectItem>
-                    <SelectItem value="indicacao">Indicação</SelectItem>
-                    <SelectItem value="outro">Outro</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input placeholder="O que você procura? (opcional)" value={productInterest} onChange={(e) => setProductInterest(e.target.value)} maxLength={200} className="bg-background/50" />
-                <Textarea placeholder="Alguma mensagem ou observação? (opcional)" value={message} onChange={(e) => setMessage(e.target.value)} maxLength={500} rows={3} className="bg-background/50" />
+
+                <button
+                  type="button"
+                  onClick={() => setShowOptional((v) => !v)}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showOptional ? 'rotate-180' : ''}`} />
+                  {showOptional ? 'Ocultar detalhes' : 'Adicionar mais detalhes (opcional)'}
+                </button>
+
+                {showOptional && (
+                  <div className="space-y-4 pt-1">
+                    <Select value={origin} onValueChange={setOrigin}>
+                      <SelectTrigger className="bg-background/50"><SelectValue placeholder="Como nos conheceu?" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                        <SelectItem value="instagram">Instagram</SelectItem>
+                        <SelectItem value="indicacao">Indicação</SelectItem>
+                        <SelectItem value="outro">Outro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input placeholder="O que você procura?" value={productInterest} onChange={(e) => setProductInterest(e.target.value)} maxLength={200} className="bg-background/50" />
+                    <Textarea placeholder="Alguma mensagem ou observação?" value={message} onChange={(e) => setMessage(e.target.value)} maxLength={500} rows={3} className="bg-background/50" />
+                  </div>
+                )}
+
                 <Button type="submit" className="w-full" size="lg" disabled={loading}>
-                  {loading ? 'Enviando...' : 'Quero receber novidades'}
+                  {loading ? 'Enviando...' : 'Quero receber novidades 🌿'}
                 </Button>
+                <p className="text-xs text-muted-foreground text-center pt-1">
+                  Não enviamos spam. Você pode sair quando quiser.
+                </p>
               </form>
             </div>
           </div>

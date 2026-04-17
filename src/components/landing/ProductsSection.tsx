@@ -1,14 +1,9 @@
 import logoImg from '@/assets/logo-cantim.png';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { Button } from '@/components/ui/button';
-import { APP_CONFIG } from '@/config/app';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { Warp } from '@paper-design/shaders-react';
 import LeafSVG from './LeafSVG';
 import FeatureCarousel from '@/components/ui/feature-carousel';
-
-const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Oi! Quero saber mais sobre os produtos naturais 🌿')}`;
 
 interface ProductsSectionProps {
   scrollY?: number;
@@ -16,6 +11,9 @@ interface ProductsSectionProps {
 
 export default function ProductsSection({ scrollY = 0 }: ProductsSectionProps) {
   const { ref, isVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.1 });
+  const scrollToContato = () => {
+    document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <section id="produtos" className="py-16 sm:py-24 bg-card relative overflow-hidden">
@@ -79,30 +77,9 @@ export default function ProductsSection({ scrollY = 0 }: ProductsSectionProps) {
             transition: 'all 0.6s ease 0.6s',
           }}
         >
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="relative inline-block group perspective-[800px]"
-          >
-            <span className="absolute -inset-[2px] rounded-xl overflow-hidden z-0">
-              <span
-                className="absolute inset-[-100%] animate-[spin_3s_linear_infinite]"
-                style={{
-                  background: 'conic-gradient(from 0deg, transparent 0%, transparent 60%, rgba(255,255,255,0.9) 75%, transparent 90%, transparent 100%)',
-                }}
-              />
-            </span>
-            <span className="absolute inset-[1px] rounded-[10px] bg-[#25D366] z-[1]" />
-            <Button
-              variant="whatsapp"
-              size="lg"
-              className="relative z-[2] gap-2 shadow-lg shadow-green-600/30 transition-transform duration-300 group-hover:scale-[1.03] group-hover:[transform:rotateX(-2deg)_rotateY(2deg)] bg-transparent border-none"
-            >
-              <FontAwesomeIcon icon={faWhatsapp} className="h-5 w-5" />
-              Falar no WhatsApp sobre produtos
-            </Button>
-          </a>
+          <Button size="lg" onClick={scrollToContato} className="shadow-lg">
+            Quero esses produtos
+          </Button>
         </div>
       </div>
     </section>
