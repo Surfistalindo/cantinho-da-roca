@@ -1,5 +1,6 @@
-import logo from '@/assets/logo-cantim.png';
 import logoImg from '@/assets/logo-cantim.png';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { Button } from '@/components/ui/button';
 import { APP_CONFIG } from '@/config/app';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
