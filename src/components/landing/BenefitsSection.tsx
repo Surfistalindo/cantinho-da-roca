@@ -111,7 +111,7 @@ export default function BenefitsSection() {
   const { ref, isVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.08 });
 
   return (
-    <section id="beneficios" className="py-16 sm:py-24 relative overflow-hidden" style={{ background: '#f7f5f0' }}>
+    <section id="beneficios" className="py-16 relative overflow-hidden sm:py-[85px]" style={{ background: '#f7f5f0' }}>
       <div className="absolute top-8 right-10 pointer-events-none animate-leaf-float opacity-20 z-[1]" style={{ animationDelay: '1s' }}>
         <LeafSVG size={22} id="ben1" style={{ transform: 'rotate(-30deg)' }} />
       </div>
