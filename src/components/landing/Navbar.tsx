@@ -62,11 +62,11 @@ export default function Navbar({ scrollY }: NavbarProps) {
             <li key={l.href}>
               <button
                 onClick={() => handleClick(l.href)}
-                className={`text-sm font-medium tracking-wide relative group transition-colors ${
+                className={
                   (l as any).highlight
-                    ? 'text-primary font-semibold hover:text-primary/80'
-                    : 'text-foreground/60 hover:text-primary'
-                }`}
+                    ? 'text-sm font-semibold tracking-wide bg-primary text-primary-foreground px-4 py-2 rounded-full hover:bg-primary/90 transition-colors'
+                    : 'text-sm font-medium tracking-wide text-foreground/60 hover:text-primary transition-colors relative group'
+                }
                 style={{
                   opacity: showNavbar ? 1 : 0,
                   transform: showNavbar ? 'translateY(0)' : 'translateY(-8px)',
@@ -74,7 +74,9 @@ export default function Navbar({ scrollY }: NavbarProps) {
                 }}
               >
                 {l.label}
-                <span className={`absolute -bottom-1 left-0 h-[2px] bg-primary transition-all duration-300 ${(l as any).highlight ? 'w-full' : 'w-0 group-hover:w-full'}`} />
+                {!(l as any).highlight && (
+                  <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-primary group-hover:w-full transition-all duration-300" />
+                )}
               </button>
             </li>
           ))}
