@@ -122,7 +122,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
 
             <h1
               ref={titleRef}
-              className="hero-title-shimmer relative z-20 text-center text-4xl sm:text-6xl font-bold leading-[0.95] tracking-[-1px] sm:tracking-[-2px] md:text-8xl md:tracking-[-6px] xl:text-9xl xl:tracking-[-8px]"
+              className="hero-title-shimmer relative z-20 text-center text-4xl sm:text-6xl font-bold leading-[1.15] pb-2 sm:pb-3 tracking-[-1px] sm:tracking-[-2px] md:text-8xl md:tracking-[-6px] xl:text-9xl xl:tracking-[-8px]"
               style={{
                 fontFamily: "'Satisfy', cursive",
                 transform: `translateY(${scrollY * 0.4}px)`,
