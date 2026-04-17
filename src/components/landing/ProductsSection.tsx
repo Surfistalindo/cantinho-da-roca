@@ -1,5 +1,6 @@
-import logo from '@/assets/logo-cantim.png';
 import logoImg from '@/assets/logo-cantim.png';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { Button } from '@/components/ui/button';
 import { APP_CONFIG } from '@/config/app';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
@@ -98,7 +99,7 @@ export default function ProductsSection({ scrollY = 0 }: ProductsSectionProps) {
               size="lg"
               className="relative z-[2] gap-2 shadow-lg shadow-green-600/30 transition-transform duration-300 group-hover:scale-[1.03] group-hover:[transform:rotateX(-2deg)_rotateY(2deg)] bg-transparent border-none"
             >
-              <img src={logo} alt="" className="h-5 w-5 brightness-0 invert" />
+              <FontAwesomeIcon icon={faWhatsapp} className="h-5 w-5" />
               Falar no WhatsApp sobre produtos
             </Button>
           </a>
