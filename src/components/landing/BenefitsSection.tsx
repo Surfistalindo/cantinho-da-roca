@@ -127,7 +127,7 @@ export default function BenefitsSection() {
             transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
-          <p className="text-primary text-sm font-semibold tracking-widest uppercase text-center mb-3">
+          <p className="text-primary text-sm font-semibold tracking-widest uppercase text-center mb-3 py-0 pt-[40px]">
             Por que nos escolher
           </p>
           <h2 className="text-2xl sm:text-5xl font-serif text-center mb-4 text-foreground">
