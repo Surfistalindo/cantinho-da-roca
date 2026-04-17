@@ -1,14 +1,10 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
-import { APP_CONFIG } from '@/config/app';
 import heroImg from '@/assets/hero-products.jpg';
 import logoImg from '@/assets/logo-cantim.png';
 import { Button } from '@/components/ui/button';
 import { Warp } from '@paper-design/shaders-react';
 import LeafSVG from './LeafSVG';
 
-const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Quero saber mais sobre os produtos do Cantim da Roça 🌿')}`;
 const heroTitleText = 'Cantim da Roça';
 const heroTitleIIndex = heroTitleText.indexOf('i');
 
@@ -37,6 +33,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
 
   const scrollToProducts = () => {
     document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' });
+  };
+  const scrollToContato = () => {
+    document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const imgScale = 1 + scrollY * 0.0003;
@@ -202,20 +201,17 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
           >
             Mais disposição, menos inchaço e bem-estar no dia a dia.
             <br className="hidden sm:block" />
-            {' '}Produtos naturais com orientação direta pelo WhatsApp,
+            {' '}Cadastre-se e receba dicas, novidades e ofertas
             <br className="hidden sm:block" />
-            {' '}sem complicação.
+            {' '}direto no seu WhatsApp.
           </p>
         </div>
 
         {/* CTA */}
         <div className="flex flex-col sm:flex-row justify-center gap-3 pt-6">
-          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-            <Button variant="whatsapp" size="lg" className="uppercase gap-2 w-full sm:w-auto">
-              <FontAwesomeIcon icon={faWhatsapp} className="h-5 w-5" />
-              Falar no WhatsApp
-            </Button>
-          </a>
+          <Button size="lg" className="uppercase w-full sm:w-auto" onClick={scrollToContato}>
+            Quero receber novidades
+          </Button>
           <Button variant="outline" size="lg" className="uppercase w-full sm:w-auto" onClick={scrollToProducts}>
             Ver produtos
           </Button>

@@ -8,7 +8,7 @@ const links = [
   { label: 'Benefícios', href: '#beneficios' },
   { label: 'Produtos', href: '#produtos' },
   { label: 'Depoimentos', href: '#depoimentos' },
-  { label: 'Contato', href: '#contato' },
+  { label: 'Cadastre-se', href: '#contato', highlight: true },
 ];
 
 interface NavbarProps {
@@ -62,7 +62,11 @@ export default function Navbar({ scrollY }: NavbarProps) {
             <li key={l.href}>
               <button
                 onClick={() => handleClick(l.href)}
-                className="text-sm font-medium text-foreground/60 hover:text-primary transition-colors tracking-wide relative group"
+                className={`text-sm font-medium tracking-wide relative group transition-colors ${
+                  (l as any).highlight
+                    ? 'text-primary font-semibold hover:text-primary/80'
+                    : 'text-foreground/60 hover:text-primary'
+                }`}
                 style={{
                   opacity: showNavbar ? 1 : 0,
                   transform: showNavbar ? 'translateY(0)' : 'translateY(-8px)',
@@ -70,7 +74,7 @@ export default function Navbar({ scrollY }: NavbarProps) {
                 }}
               >
                 {l.label}
-                <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-primary group-hover:w-full transition-all duration-300" />
+                <span className={`absolute -bottom-1 left-0 h-[2px] bg-primary transition-all duration-300 ${(l as any).highlight ? 'w-full' : 'w-0 group-hover:w-full'}`} />
               </button>
             </li>
           ))}

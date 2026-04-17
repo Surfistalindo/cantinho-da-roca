@@ -1,13 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCommentDots, faArrowRightLong, faLocationDot } from '@fortawesome/free-solid-svg-icons';
-import { faInstagram, faWhatsapp } from '@fortawesome/free-brands-svg-icons';
+import { faArrowRightLong, faLocationDot } from '@fortawesome/free-solid-svg-icons';
+import { faInstagram } from '@fortawesome/free-brands-svg-icons';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import logo from '@/assets/logo-cantim.png';
-import { APP_CONFIG } from '@/config/app';
 
-const whatsappUrl = `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent('Olá! Vim pelo site 🌿')}`;
 const instagramUrl = 'https://instagram.com/cantimdarocaa';
 
 const linkSections = [
@@ -25,13 +23,12 @@ const linkSections = [
     links: [
       { label: 'Sobre nós', href: '#beneficios' },
       { label: 'Depoimentos', href: '#depoimentos' },
-      { label: 'Contato', href: '#contato' },
+      { label: 'Cadastre-se', href: '#contato' },
     ],
   },
   {
     title: 'Conecte-se',
     links: [
-      { label: 'WhatsApp', href: whatsappUrl, external: true },
       { label: 'Instagram', href: instagramUrl, external: true },
     ],
   },
@@ -76,27 +73,14 @@ export default function Footer() {
               Produtos naturais selecionados com cuidado pra quem quer viver com mais saúde, energia e bem-estar. 🌿
             </p>
 
-            {/* WhatsApp CTA */}
-            <div className="flex items-center gap-0 max-w-xs">
-              <div className="flex-1 relative">
-                <FontAwesomeIcon icon={faWhatsapp} className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
-                <input
-                  type="text"
-                  placeholder="Fale conosco no WhatsApp"
-                  className="w-full bg-white/[0.06] border border-white/10 rounded-l-lg py-2.5 pl-10 pr-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/25 transition-colors cursor-pointer"
-                  readOnly
-                  onClick={() => window.open(whatsappUrl, '_blank')}
-                />
-              </div>
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-primary hover:bg-primary/80 text-primary-foreground px-4 py-2.5 rounded-r-lg transition-colors flex items-center"
-              >
-                <FontAwesomeIcon icon={faArrowRightLong} className="h-4 w-4" />
-              </a>
-            </div>
+            {/* Lead capture CTA */}
+            <button
+              onClick={() => handleAnchor('#contato')}
+              className="group flex items-center gap-3 bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-3 rounded-lg transition-colors text-sm font-semibold"
+            >
+              Cadastre-se e receba novidades
+              <FontAwesomeIcon icon={faArrowRightLong} className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </button>
           </div>
 
           {/* Link columns */}
@@ -175,9 +159,6 @@ export default function Footer() {
 
           <div className="flex items-center gap-5">
             <div className="flex items-center gap-3">
-              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-white/25 hover:text-primary transition-colors">
-                <FontAwesomeIcon icon={faWhatsapp} className="h-4 w-4" />
-              </a>
               <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="text-white/25 hover:text-primary transition-colors">
                 <FontAwesomeIcon icon={faInstagram} className="h-4 w-4" />
               </a>
