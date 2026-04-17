@@ -99,21 +99,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
         </div>
       ))}
 
-      {/* Logo watermark background */}
-      <div className="absolute inset-y-0 left-[5%] z-[1] flex items-center pointer-events-none -ml-16 sm:-ml-20 md:-ml-10 lg:-ml-6">
-        <img
-          src={logoImg}
-          alt=""
-          className="w-[250px] sm:w-[350px] md:w-[500px] lg:w-[650px] opacity-[0.1]"
-          aria-hidden="true"
-          loading="lazy"
-          style={{
-            transform: `translateY(${scrollY * -0.1}px) scale(${1 + scrollY * 0.0002})`,
-            willChange: 'transform',
-          }}
-        />
-      </div>
-
       <div className="relative z-20 mx-auto max-w-7xl px-4 sm:px-6">
         {/* Top section with big title */}
         <div className="relative pb-10 sm:pb-14">
@@ -234,6 +219,16 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
           <Button variant="outline" size="lg" className="uppercase w-full sm:w-auto" onClick={scrollToProducts}>
             Ver produtos
           </Button>
+        </div>
+
+        {/* Logo below CTA */}
+        <div className="flex justify-center pt-10 sm:pt-14">
+          <img
+            src={logoImg}
+            alt="Cantim da Roça"
+            className="w-[180px] sm:w-[240px] md:w-[280px] opacity-40"
+            loading="lazy"
+          />
         </div>
 
       </div>
