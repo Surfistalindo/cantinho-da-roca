@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCommentDots } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { APP_CONFIG } from '@/config/app';
 import heroImg from '@/assets/hero-products.jpg';
 import logoImg from '@/assets/logo-cantim.png';
@@ -212,7 +212,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
         <div className="flex flex-col sm:flex-row justify-center gap-3 pt-6">
           <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
             <Button variant="whatsapp" size="lg" className="uppercase gap-2 w-full sm:w-auto">
-              <FontAwesomeIcon icon={faCommentDots} className="h-5 w-5" />
+              <FontAwesomeIcon icon={faWhatsapp} className="h-5 w-5" />
               Falar no WhatsApp
             </Button>
           </a>

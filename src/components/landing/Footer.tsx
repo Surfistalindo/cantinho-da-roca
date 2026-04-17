@@ -79,7 +79,7 @@ export default function Footer() {
             {/* WhatsApp CTA */}
             <div className="flex items-center gap-0 max-w-xs">
               <div className="flex-1 relative">
-                <FontAwesomeIcon icon={faCommentDots} className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+                <FontAwesomeIcon icon={faWhatsapp} className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
                 <input
                   type="text"
                   placeholder="Fale conosco no WhatsApp"

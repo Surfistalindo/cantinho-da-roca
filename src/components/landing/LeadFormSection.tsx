@@ -14,6 +14,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { APP_CONFIG } from '@/config/app';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import logo from '@/assets/logo-cantim.png';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, '').slice(0, 11);
@@ -164,7 +166,7 @@ export default function LeadFormSection() {
                 size="lg"
                 className="relative z-[2] gap-2 w-full sm:w-auto shadow-lg shadow-green-600/30 transition-transform duration-300 group-hover:scale-[1.03] group-hover:[transform:rotateX(-2deg)_rotateY(2deg)] bg-transparent border-none"
               >
-                <img src={logo} alt="" className="h-5 w-5 brightness-0 invert" />
+                <FontAwesomeIcon icon={faWhatsapp} className="h-5 w-5" />
                 Chamar no WhatsApp
               </Button>
             </a>
