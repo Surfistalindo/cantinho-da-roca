@@ -221,6 +221,16 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
           </Button>
         </div>
 
+        {/* Logo below CTA */}
+        <div className="flex justify-center pt-10 sm:pt-14">
+          <img
+            src={logoImg}
+            alt="Cantim da Roça"
+            className="w-[180px] sm:w-[240px] md:w-[280px] opacity-40"
+            loading="lazy"
+          />
+        </div>
+
       </div>
 
       {/* Grid background */}
