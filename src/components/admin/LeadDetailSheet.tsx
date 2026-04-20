@@ -101,11 +101,6 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
 
   if (!lead) return null;
 
-  const typeIcon = (ct: string) => {
-    const t = interactionTypes.find((i) => i.value === ct);
-    return <FontAwesomeIcon icon={t ? t.icon : faFileLines} className="h-3.5 w-3.5" />;
-  };
-
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
