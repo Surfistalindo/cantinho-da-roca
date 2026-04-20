@@ -176,39 +176,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
 
           <div className="mt-8">
             <h4 className="font-semibold mb-3">Histórico de Interações</h4>
-            <div className="space-y-2 mb-4">
-              <Select value={newType} onValueChange={setNewType}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {interactionTypes.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="flex gap-2">
-                <Textarea placeholder="Registrar interação..." value={newContent} onChange={(e) => setNewContent(e.target.value)} className="min-h-[60px]" />
-                <Button size="icon" onClick={addInteraction} disabled={sending || !newContent.trim()}>
-                  <FontAwesomeIcon icon={faPaperPlane} className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {interactions.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">Nenhuma interação registrada.</p>
-              )}
-              {interactions.map((n) => (
-                <div key={n.id} className="bg-muted rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    {typeIcon(n.contact_type)}
-                    <span className="text-xs font-medium capitalize">{n.contact_type}</span>
-                    <span className="text-xs text-muted-foreground ml-auto">
-                      {format(new Date(n.interaction_date), "dd/MM/yy HH:mm", { locale: ptBR })}
-                    </span>
-                  </div>
-                  <p className="text-sm">{n.description}</p>
-                </div>
-              ))}
-            </div>
+            <InteractionTimeline entityId={lead.id} entityType="lead" />
           </div>
         </SheetContent>
       </Sheet>
