@@ -10,6 +10,7 @@ import LeadFilters from '@/components/admin/LeadFilters';
 import LeadStatusSelect from '@/components/admin/LeadStatusSelect';
 import LeadStatusBadge from '@/components/admin/LeadStatusBadge';
 import LeadDetailSheet from '@/components/admin/LeadDetailSheet';
+import NewLeadDialog from '@/components/admin/NewLeadDialog';
 import PageHeader from '@/components/admin/PageHeader';
 import EmptyState from '@/components/admin/EmptyState';
 import LoadingState from '@/components/admin/LoadingState';
@@ -19,7 +20,7 @@ import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEye, faTrashCan, faUserGroup, faArrowDownShortWide, faArrowUpShortWide,
-  faCommentDots, faSeedling,
+  faCommentDots, faSeedling, faPlus,
 } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { toast } from 'sonner';
@@ -52,6 +53,7 @@ export default function LeadsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [followUpFilter, setFollowUpFilter] = useState(false);
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [newOpen, setNewOpen] = useState(false);
 
   useEffect(() => {
     if (searchParams.get('followup') === '1') setFollowUpFilter(true);
@@ -138,6 +140,12 @@ export default function LeadsPage() {
       <PageHeader
         title="Leads"
         description="Central comercial — acompanhe, filtre e gerencie todos os leads em um só lugar."
+        actions={
+          <Button onClick={() => setNewOpen(true)} size="sm">
+            <FontAwesomeIcon icon={faPlus} className="h-3.5 w-3.5 mr-1.5" />
+            Novo contato
+          </Button>
+        }
         meta={
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span>{filtered.length} resultado(s)</span>
@@ -314,6 +322,7 @@ export default function LeadsPage() {
       </div>
 
       <LeadDetailSheet lead={selectedLead} open={sheetOpen} onOpenChange={setSheetOpen} onUpdated={fetchLeads} />
+      <NewLeadDialog open={newOpen} onOpenChange={setNewOpen} onCreated={fetchLeads} />
     </div>
   );
 }
