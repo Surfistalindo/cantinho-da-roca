@@ -1,100 +1,112 @@
 
 
-## Plano: Linha do tempo de interações por lead
+## Plano: Controle confiável de "último contato"
 
-A infraestrutura já existe (`interactions` table, `interactionService`, formulário básico no `LeadDetailSheet`). Vou **refinar** para entregar uma timeline comercial real, sem refazer.
+A base já existe (`last_contact_at` na tabela `leads`, atualização client-side ao registrar interação, exibição em listagem/cards/detalhe, filtro `Follow-up` binário, helper `isLeadStale`). Vou **reforçar** para ficar automático no banco, com indicador de 3 níveis e filtro mais granular — sem refazer o que já funciona.
 
-### 1. Expandir tipos de interação
+### 1. Automação no banco (fonte da verdade)
 
-Atualmente: `mensagem`, `ligação`, `observação`. Adicionar: **WhatsApp**, **reunião**, **outro** — totalizando os 6 tipos pedidos. Cada tipo terá ícone e cor própria:
+Hoje o `last_contact_at` depende do client chamar `update` após inserir interação — se falhar, fica desincronizado. Migração SQL com **trigger automático**:
 
-| Tipo | Ícone | Cor |
-|---|---|---|
-| WhatsApp | `faWhatsapp` (brands) | verde |
-| Ligação | `faPhone` | primary |
-| Mensagem | `faCommentDots` | info |
-| Reunião | `faUsers` | warning |
-| Observação | `faFileLines` | muted |
-| Outro | `faCircleInfo` | muted |
+```sql
+CREATE OR REPLACE FUNCTION public.sync_last_contact_from_interaction()
+RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$
+BEGIN
+  IF NEW.lead_id IS NOT NULL THEN
+    UPDATE public.leads
+       SET last_contact_at = GREATEST(COALESCE(last_contact_at, NEW.interaction_date), NEW.interaction_date)
+     WHERE id = NEW.lead_id;
+  END IF;
+  IF NEW.customer_id IS NOT NULL THEN
+    UPDATE public.customers
+       SET last_contact_at = GREATEST(COALESCE(last_contact_at, NEW.interaction_date), NEW.interaction_date)
+     WHERE id = NEW.customer_id;
+  END IF;
+  RETURN NEW;
+END $$;
 
-Centralizar em `src/lib/interactionTypes.ts` para que `LeadDetailSheet`, `CustomerDetailSheet` e futuras telas leiam da mesma fonte.
-
-### 2. Timeline visual (não lista)
-
-Substituir a lista de cards atual por uma **timeline vertical** dentro do mesmo `LeadDetailSheet`:
-
-```text
-┌─ Histórico de Interações ────────────────┐
-│                                          │
-│  ●─── WhatsApp · há 2 horas              │
-│  │    "Cliente confirmou interesse..."   │
-│  │    por Maria Silva                    │
-│  │                                       │
-│  ●─── Ligação · ontem 14:32              │
-│  │    "Não atendeu, tentar amanhã"       │
-│  │    por João Santos                    │
-│  │                                       │
-│  ●─── Observação · 12/04 09:15           │
-│       "Lead veio do Instagram"           │
-└──────────────────────────────────────────┘
+CREATE TRIGGER trg_sync_last_contact
+AFTER INSERT ON public.interactions
+FOR EACH ROW EXECUTE FUNCTION public.sync_last_contact_from_interaction();
 ```
 
-- Linha vertical contínua (`border-l` no container, marcadores `●` coloridos por tipo).
-- Data **relativa** ("há 2 horas") + tooltip com data absoluta.
-- Ordem cronológica decrescente (mais recente no topo) — já implementado.
-- Empty state elegante quando não há interações.
+Resultado: qualquer interação registrada (agora ou no futuro, por qualquer caminho) atualiza `last_contact_at` automaticamente. Usa `GREATEST` para suportar interações retroativas sem regredir.
 
-### 3. Usuário responsável visível
+**Backfill** (insert tool): popular `last_contact_at` para leads/customers existentes a partir da última interação registrada — garante consistência histórica imediata.
 
-Hoje `created_by` é salvo mas nunca exibido. Buscar nome do usuário via JOIN com `profiles`:
+Como bônus, **remover o update manual** em `InteractionTimeline.addInteraction` (linhas 84-86) — a trigger faz isso melhor.
+
+### 2. Helper de recência com 3 níveis
+
+Estender `src/lib/leadStatus.ts` (ou criar `src/lib/contactRecency.ts`) com:
 
 ```ts
-// interactionService.listByLead — refatorar:
-.select('id, contact_type, description, interaction_date, created_by, profiles:created_by(name)')
+export type ContactRecency = 'recent' | 'attention' | 'overdue' | 'never';
+
+export function getContactRecency(lastContactAt: string | null, status: string):
+  { level: ContactRecency; days: number | null; label: string; toneClass: string }
 ```
 
-Como não há FK formal, usar uma busca em duas etapas (ids únicos → `profiles`) e mapear no client. Exibir nome (ou "Sistema" se ausente) abaixo da descrição, em texto pequeno e discreto.
+Regras (leads abertos apenas — fechados `won`/`lost` retornam `recent` neutro):
+- **Recente** (verde): ≤ 2 dias desde último contato
+- **Atenção** (amarelo): 3–6 dias
+- **Atrasado** (vermelho): ≥ 7 dias *ou* nunca contatado e criado há ≥ 7 dias
+- **Nunca**: `last_contact_at` nulo (exibe "ainda não contatado")
 
-### 4. Formulário de nova interação (mais completo)
+Mantém `isLeadStale` como compatibilidade (= `attention | overdue`), redirecionando para o novo helper.
 
-No bloco de adicionar interação:
-- Select de tipo expandido (6 opções) com ícone ao lado de cada label.
-- Textarea de descrição (já existe).
-- Botão único "Registrar interação" (largura total) em vez de ícone enviar — mais claro.
-- Ao salvar: atualiza `last_contact_at` no lead (já existe), realtime propaga.
+### 3. Indicador visual (badge/pill) reutilizável
 
-### 5. Realtime nas interações
+Criar `src/components/admin/ContactRecencyBadge.tsx` — pequeno pill com ponto colorido + label relativa ("há 3 dias") + tooltip data absoluta. 4 variantes:
 
-Adicionar `useRealtimeTable('interactions', leadId)` no `LeadDetailSheet` para que, se outro usuário registrar interação, o sheet atual atualize sem refresh manual.
+| Nível | Cor token | Ícone |
+|---|---|---|
+| Recente | `success` | `faCircleCheck` |
+| Atenção | `warning` | `faClock` |
+| Atrasado | `destructive` | `faTriangleExclamation` |
+| Nunca | `muted` | `faCircleQuestion` |
 
-### 6. Aplicar mesma timeline em `CustomerDetailSheet`
+### 4. Aplicar nas 4 telas
 
-A tabela `interactions` já tem `customer_id`. Reaproveitar o componente extraído.
+- **Listagem (`LeadsPage`)** — coluna "Último contato" passa a usar `<ContactRecencyBadge />`. Mobile card idem.
+- **Pipeline (`LeadCard`)** — substituir o texto atual de "última hora" por `<ContactRecencyBadge size="sm" />` discreto. A borda lateral colorida atual passa a refletir **recência** quando o lead estiver `attention`/`overdue` (override sobre a cor de status, igual ao comportamento atual com `stale`, mas com o vermelho novo para `overdue`).
+- **Detalhe (`LeadDetailSheet`)** — adicionar bloco compacto logo abaixo do "Status atual": "Último contato: [badge] · [data absoluta]". Manter linha "Último contato" existente na grade.
+- **Dashboard** — o card "Follow-ups" hoje conta `stale` (atenção+atrasado). Dividir visualmente em **dois indicadores**:
+  - "Atenção" (3–6 dias sem contato)
+  - "Atrasados" (7+ dias ou nunca contatado)
+  
+  Cada um vira atalho que abre `/admin/leads?recency=attention` ou `?recency=overdue`.
 
-### Refator: extrair `<InteractionTimeline />`
+### 5. Filtro de recência na listagem
 
-Para evitar duplicação entre `LeadDetailSheet` e `CustomerDetailSheet`:
+Trocar o botão binário "Follow-up" por um **select com 4 opções**:
 
-- **Criar `src/components/admin/InteractionTimeline.tsx`** — componente self-contained que recebe `leadId` ou `customerId`, faz fetch + realtime + render da timeline + form de adição. Aceita prop `entityType: 'lead' | 'customer'`.
+- Todos
+- Recentes (≤ 2 dias)
+- Atenção (3–6 dias)
+- Atrasados (7+ dias ou nunca)
+
+Em `LeadsPage`, ler `?recency=` da URL para deep-link do dashboard. Manter `?followup=1` como alias retrocompatível mapeando para "atenção+atrasados".
 
 ### Arquivos tocados
 
-- **Criar:** `src/lib/interactionTypes.ts` — fonte única dos 6 tipos com ícones/cores
-- **Criar:** `src/components/admin/InteractionTimeline.tsx` — componente reutilizável (timeline + form)
-- **Editar:** `src/components/admin/LeadDetailSheet.tsx` — substituir bloco atual de interações por `<InteractionTimeline entityId={lead.id} entityType="lead" />`
-- **Editar:** `src/components/admin/CustomerDetailSheet.tsx` — adicionar `<InteractionTimeline entityId={customer.id} entityType="customer" />`
-- **Editar:** `src/services/interactionService.ts` — incluir `created_by` no select e helper para resolver nomes via `profiles`
-
-### Visual
-
-- Tokens semânticos do design system (sem cores hardcoded fora do token verde do WhatsApp já estabelecido).
-- Bordas suaves `rounded-lg`, fundo `bg-muted/30` em cada item, marcador circular com a cor do tipo.
-- Tipografia coerente: descrição em `text-sm`, meta em `text-xs text-muted-foreground`.
-- Sem mudanças em `tailwind.config` ou `index.css`.
+- **Migration SQL** — função + trigger `trg_sync_last_contact` em `interactions`
+- **Insert tool (backfill)** — popular `last_contact_at` em leads/customers a partir do MAX(`interaction_date`) por entidade
+- **Criar:** `src/lib/contactRecency.ts` — helper `getContactRecency` + tipos
+- **Criar:** `src/components/admin/ContactRecencyBadge.tsx` — pill visual reutilizável
+- **Editar:** `src/services/followUpService.ts` — `isLeadStale` delega ao novo helper (compat)
+- **Editar:** `src/components/admin/InteractionTimeline.tsx` — remover update manual de `last_contact_at` (trigger cuida)
+- **Editar:** `src/components/admin/LeadFilters.tsx` — substituir botão Follow-up por select de recência
+- **Editar:** `src/pages/admin/LeadsPage.tsx` — ler `?recency=`, aplicar filtro novo, usar `<ContactRecencyBadge />` na coluna e mobile card
+- **Editar:** `src/components/pipeline/LeadCard.tsx` — usar badge + estilo de borda para `overdue`
+- **Editar:** `src/components/admin/LeadDetailSheet.tsx` — bloco compacto de recência
+- **Editar:** `src/pages/admin/DashboardPage.tsx` — split "Follow-ups" em "Atenção" + "Atrasados", links com `?recency=`
 
 ### Garantias
 
-- Timeline vive **dentro** do sheet do lead — não é tela solta.
-- Mesma tabela `interactions`, mesmo serviço, zero fluxo paralelo.
-- RLS já cobre INSERT/UPDATE/DELETE (`auth.uid() = created_by`) — sem mudanças de schema.
+- **Automático no banco**: trigger garante sincronização independente do client.
+- **Integrado com timeline**: cada interação alimenta o campo automaticamente.
+- **Visível em todas as 4 superfícies**: listagem, pipeline, detalhe, dashboard, com mesma lógica e cores.
+- **Acionável**: filtro granular + atalhos do dashboard direcionam direto para os leads que precisam de atenção.
+- Zero breaking change nas tabelas (só adiciona trigger), zero fluxo paralelo (mesmo `last_contact_at`, mesmo helper).
 
