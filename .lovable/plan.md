@@ -1,67 +1,68 @@
 
 
-## Plano: Pipeline Kanban Comercial
+## Plano: Padronização única de status do lead
 
-Vou trabalhar **em cima do kanban existente** (`PipelineBoard`, `PipelineColumn`, `LeadCard`) adicionando 1 coluna nova, enriquecendo os cards e melhorando integração — sem refazer.
+Reforçar a lógica de status para que **todas as telas leiam, exibam e atualizem do mesmo lugar**, e o banco mantenha `updated_at` sincronizado automaticamente.
 
-### 1. Nova estrutura de colunas (5 status)
+### 1. Fonte única já existe — reforçar uso
 
-Atualizar `src/config/app.ts` para refletir o funil pedido. Mapeamento dos status atuais para os novos:
+`APP_CONFIG.leadStatuses` em `src/config/app.ts` já é a fonte única (5 status: `new`, `contacting`, `negotiating`, `won`, `lost`). Os componentes `LeadStatusBadge`, `LeadStatusSelect`, `LeadFilters`, `NewLeadDialog` e `PipelineColumn` já leem de lá. **Nenhuma alteração de config necessária.**
 
-| Atual | Novo | Label |
-|---|---|---|
-| `new` | `new` | Novo lead |
-| — (criar) | `contacting` | Em contato |
-| `negotiating` | `negotiating` | Negociação |
-| `sold` | `won` | Cliente |
-| `no_response` | `lost` | Perdido |
+Para evitar regressão futura, criar um helper utilitário central:
 
-**Migração de dados** (via insert tool, não schema): `UPDATE leads SET status='won' WHERE status='sold'` e `UPDATE leads SET status='lost' WHERE status='no_response'`. Default da coluna `status` continua `'new'` (já correto). Atualizar também:
-- `LeadFilters.tsx`, `LeadStatusBadge`, `LeadStatusSelect` — automático, leem de `APP_CONFIG`.
-- `DashboardPage.tsx` — trocar `'sold'`/`'no_response'` por `'won'`/`'lost'` nos `filter`.
-- `LeadDetailSheet.convertToCustomer` — atualizar para `status: 'won'`.
-- `isLeadStale` em `followUpService.ts` — excluir `'won'` e `'lost'` (em vez de `sold`/`no_response`).
+- **Criar `src/lib/leadStatus.ts`** com:
+  - `getLeadStatusConfig(status)` — retorna `{ value, label, color }` do `APP_CONFIG`, com fallback seguro.
+  - `LEAD_STATUS_VALUES` — array tipado dos valores (`['new','contacting','negotiating','won','lost']`) para uso em filtros/contadores tipados.
+  - `isClosedStatus(status)` — `won` ou `lost` (usado em follow-up e em conversões).
 
-Cores semânticas (já existem no design system): `new`→info, `contacting`→primary suave, `negotiating`→warning, `won`→success, `lost`→muted.
+Refatorar (sem mudar comportamento) para usar o helper:
+- `LeadStatusBadge.tsx` → `getLeadStatusConfig`
+- `followUpService.ts` → `isClosedStatus`
+- `DashboardPage.tsx` → trocar strings literais (`'won'`, `'new'`, etc.) por constantes do helper, mantendo os mesmos contadores.
 
-### 2. Cards mais informativos (`LeadCard.tsx`)
+### 2. Mudança de status no detalhe do lead
 
-Os cards já mostram nome, telefone e origem. Adicionar de forma compacta e elegante (sem virar "sistema corporativo"):
+Hoje `LeadDetailSheet` mostra o status apenas como badge — **não dá pra mudar dali**. Adicionar:
 
-- **Interesse** (`product_interest`) — linha discreta com ícone de tag, só se preenchido.
-- **Último contato** — "há 2 dias" (relativo via `date-fns/formatDistanceToNow` pt-BR), com ícone de relógio. Usa `last_contact_at` ou cai para `created_at`.
-- Manter a borda colorida lateral por status, o pulso/destaque de stale, e os botões WhatsApp/follow-up já existentes.
+- Logo abaixo do título do sheet, um bloco compacto com label "Status atual" + `<LeadStatusSelect />` reaproveitado (já existe), gravando direto via `supabase.from('leads').update({ status })` e disparando `onUpdated`.
+- Remover a linha duplicada "Status" da grade de campos (evita exibir duas vezes).
+- O badge antigo permanece no header do sheet ao lado do nome para feedback visual imediato.
 
-### 3. Botão "+ Novo lead" por coluna
+Isso completa as 3 superfícies de mudança de status:
+- ✅ Listagem (`LeadStatusSelect` na coluna)
+- ✅ Detalhe do lead (novo bloco no sheet)
+- ✅ Pipeline drag-and-drop (`PipelineBoard`)
 
-No header de cada `PipelineColumn`, adicionar um botão ícone `+` discreto que abre o `NewLeadDialog` já existente, **pré-selecionando o status daquela coluna**. Requer:
-- Adicionar prop `defaultStatus?: string` ao `NewLeadDialog` (override do estado inicial do select).
-- `PipelineBoard` controla um único `NewLeadDialog` (estado `newLeadStatus`) para evitar 5 instâncias.
+Todas chamam o **mesmo update** em `leads.status`, e o realtime (`useRealtimeTable`) propaga para Dashboard, Leads e Pipeline simultaneamente.
 
-### 4. Confiabilidade do drag & drop (revisar, não refazer)
+### 3. `updated_at` automático no banco
 
-O fluxo atual já: aplica update otimista no `onDragOver`, persiste no `onDragEnd`, faz rollback via `fetchLeads` em erro, e usa realtime para sincronizar com a listagem de Leads. Ajustes pequenos:
-- **Bug atual no rollback**: o realtime do próprio update pode "piscar". Manter como está — aceitável.
-- Garantir que ao soltar em coluna vazia funciona (já funciona via `useDroppable` na coluna).
-- Adicionar `aria-label` na coluna pra acessibilidade.
+A coluna `updated_at` existe em `leads` e a função `update_updated_at_column()` já está criada, mas **não há trigger ligando as duas**. Migration:
 
-### 5. Integração CRM
+```sql
+CREATE TRIGGER set_leads_updated_at
+BEFORE UPDATE ON public.leads
+FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+```
 
-Já está integrado via realtime (`useRealtimeTable('leads')` em Pipeline, Leads e Dashboard). Confirmar que mover card no pipeline atualiza listagem de Leads em tempo real (sim — mesma tabela, mesmo canal).
+Resultado: qualquer mudança de status (vindo da listagem, sheet ou pipeline) atualiza `updated_at` automaticamente, sem código no frontend. O sheet já exibe "Atualizado em" — vai refletir automaticamente.
+
+### 4. Dashboard reflete tudo
+
+`DashboardPage` já assina `useRealtimeTable('leads')`. Após refator usando o helper, os cards de "Novos", "Em contato", "Negociação", "Cliente", "Perdido" e a taxa de conversão (`won / total`) continuam corretos e em tempo real.
 
 ### Arquivos tocados
 
-- `src/config/app.ts` — novos 5 status + cores
-- `src/components/pipeline/LeadCard.tsx` — interesse + último contato relativo
-- `src/components/pipeline/PipelineColumn.tsx` — botão "+ Novo lead"
-- `src/components/pipeline/PipelineBoard.tsx` — controlar NewLeadDialog com status default
-- `src/components/admin/NewLeadDialog.tsx` — aceitar `defaultStatus`
-- `src/services/followUpService.ts` — atualizar filtros de status
-- `src/pages/admin/DashboardPage.tsx` — trocar nomes de status nos `.filter`
-- `src/components/admin/LeadDetailSheet.tsx` — `convertToCustomer` usa `won`
-- **Migração de dados** (insert tool, não schema): renomear `sold`→`won`, `no_response`→`lost` nos registros existentes
+- **Criar:** `src/lib/leadStatus.ts` (helper central)
+- **Migration:** trigger `set_leads_updated_at` em `leads`
+- **Editar:** `src/components/admin/LeadDetailSheet.tsx` (adicionar `LeadStatusSelect` no topo, remover linha duplicada)
+- **Editar:** `src/components/admin/LeadStatusBadge.tsx` (usar helper)
+- **Editar:** `src/services/followUpService.ts` (`isClosedStatus`)
+- **Editar:** `src/pages/admin/DashboardPage.tsx` (constantes do helper)
 
-### Visual
+### Garantias finais
 
-Estilo orgânico preservado: bordas suaves (`rounded-xl`), tokens semânticos da paleta, hover discreto, sem sombras pesadas. Nenhuma alteração no `tailwind.config` ou `index.css`.
+- Mesmo label/cor em listagem, pipeline, detalhe, dashboard e modal de novo contato (todos via `APP_CONFIG`).
+- Mudança de status em qualquer tela → update na mesma coluna → trigger atualiza `updated_at` → realtime propaga para todas as outras telas.
+- Zero fluxo paralelo: helper único + tabela única + canal realtime único.
 
