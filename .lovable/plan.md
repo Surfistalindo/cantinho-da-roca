@@ -1,68 +1,100 @@
 
 
-## Plano: Padronização única de status do lead
+## Plano: Linha do tempo de interações por lead
 
-Reforçar a lógica de status para que **todas as telas leiam, exibam e atualizem do mesmo lugar**, e o banco mantenha `updated_at` sincronizado automaticamente.
+A infraestrutura já existe (`interactions` table, `interactionService`, formulário básico no `LeadDetailSheet`). Vou **refinar** para entregar uma timeline comercial real, sem refazer.
 
-### 1. Fonte única já existe — reforçar uso
+### 1. Expandir tipos de interação
 
-`APP_CONFIG.leadStatuses` em `src/config/app.ts` já é a fonte única (5 status: `new`, `contacting`, `negotiating`, `won`, `lost`). Os componentes `LeadStatusBadge`, `LeadStatusSelect`, `LeadFilters`, `NewLeadDialog` e `PipelineColumn` já leem de lá. **Nenhuma alteração de config necessária.**
+Atualmente: `mensagem`, `ligação`, `observação`. Adicionar: **WhatsApp**, **reunião**, **outro** — totalizando os 6 tipos pedidos. Cada tipo terá ícone e cor própria:
 
-Para evitar regressão futura, criar um helper utilitário central:
+| Tipo | Ícone | Cor |
+|---|---|---|
+| WhatsApp | `faWhatsapp` (brands) | verde |
+| Ligação | `faPhone` | primary |
+| Mensagem | `faCommentDots` | info |
+| Reunião | `faUsers` | warning |
+| Observação | `faFileLines` | muted |
+| Outro | `faCircleInfo` | muted |
 
-- **Criar `src/lib/leadStatus.ts`** com:
-  - `getLeadStatusConfig(status)` — retorna `{ value, label, color }` do `APP_CONFIG`, com fallback seguro.
-  - `LEAD_STATUS_VALUES` — array tipado dos valores (`['new','contacting','negotiating','won','lost']`) para uso em filtros/contadores tipados.
-  - `isClosedStatus(status)` — `won` ou `lost` (usado em follow-up e em conversões).
+Centralizar em `src/lib/interactionTypes.ts` para que `LeadDetailSheet`, `CustomerDetailSheet` e futuras telas leiam da mesma fonte.
 
-Refatorar (sem mudar comportamento) para usar o helper:
-- `LeadStatusBadge.tsx` → `getLeadStatusConfig`
-- `followUpService.ts` → `isClosedStatus`
-- `DashboardPage.tsx` → trocar strings literais (`'won'`, `'new'`, etc.) por constantes do helper, mantendo os mesmos contadores.
+### 2. Timeline visual (não lista)
 
-### 2. Mudança de status no detalhe do lead
+Substituir a lista de cards atual por uma **timeline vertical** dentro do mesmo `LeadDetailSheet`:
 
-Hoje `LeadDetailSheet` mostra o status apenas como badge — **não dá pra mudar dali**. Adicionar:
-
-- Logo abaixo do título do sheet, um bloco compacto com label "Status atual" + `<LeadStatusSelect />` reaproveitado (já existe), gravando direto via `supabase.from('leads').update({ status })` e disparando `onUpdated`.
-- Remover a linha duplicada "Status" da grade de campos (evita exibir duas vezes).
-- O badge antigo permanece no header do sheet ao lado do nome para feedback visual imediato.
-
-Isso completa as 3 superfícies de mudança de status:
-- ✅ Listagem (`LeadStatusSelect` na coluna)
-- ✅ Detalhe do lead (novo bloco no sheet)
-- ✅ Pipeline drag-and-drop (`PipelineBoard`)
-
-Todas chamam o **mesmo update** em `leads.status`, e o realtime (`useRealtimeTable`) propaga para Dashboard, Leads e Pipeline simultaneamente.
-
-### 3. `updated_at` automático no banco
-
-A coluna `updated_at` existe em `leads` e a função `update_updated_at_column()` já está criada, mas **não há trigger ligando as duas**. Migration:
-
-```sql
-CREATE TRIGGER set_leads_updated_at
-BEFORE UPDATE ON public.leads
-FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+```text
+┌─ Histórico de Interações ────────────────┐
+│                                          │
+│  ●─── WhatsApp · há 2 horas              │
+│  │    "Cliente confirmou interesse..."   │
+│  │    por Maria Silva                    │
+│  │                                       │
+│  ●─── Ligação · ontem 14:32              │
+│  │    "Não atendeu, tentar amanhã"       │
+│  │    por João Santos                    │
+│  │                                       │
+│  ●─── Observação · 12/04 09:15           │
+│       "Lead veio do Instagram"           │
+└──────────────────────────────────────────┘
 ```
 
-Resultado: qualquer mudança de status (vindo da listagem, sheet ou pipeline) atualiza `updated_at` automaticamente, sem código no frontend. O sheet já exibe "Atualizado em" — vai refletir automaticamente.
+- Linha vertical contínua (`border-l` no container, marcadores `●` coloridos por tipo).
+- Data **relativa** ("há 2 horas") + tooltip com data absoluta.
+- Ordem cronológica decrescente (mais recente no topo) — já implementado.
+- Empty state elegante quando não há interações.
 
-### 4. Dashboard reflete tudo
+### 3. Usuário responsável visível
 
-`DashboardPage` já assina `useRealtimeTable('leads')`. Após refator usando o helper, os cards de "Novos", "Em contato", "Negociação", "Cliente", "Perdido" e a taxa de conversão (`won / total`) continuam corretos e em tempo real.
+Hoje `created_by` é salvo mas nunca exibido. Buscar nome do usuário via JOIN com `profiles`:
+
+```ts
+// interactionService.listByLead — refatorar:
+.select('id, contact_type, description, interaction_date, created_by, profiles:created_by(name)')
+```
+
+Como não há FK formal, usar uma busca em duas etapas (ids únicos → `profiles`) e mapear no client. Exibir nome (ou "Sistema" se ausente) abaixo da descrição, em texto pequeno e discreto.
+
+### 4. Formulário de nova interação (mais completo)
+
+No bloco de adicionar interação:
+- Select de tipo expandido (6 opções) com ícone ao lado de cada label.
+- Textarea de descrição (já existe).
+- Botão único "Registrar interação" (largura total) em vez de ícone enviar — mais claro.
+- Ao salvar: atualiza `last_contact_at` no lead (já existe), realtime propaga.
+
+### 5. Realtime nas interações
+
+Adicionar `useRealtimeTable('interactions', leadId)` no `LeadDetailSheet` para que, se outro usuário registrar interação, o sheet atual atualize sem refresh manual.
+
+### 6. Aplicar mesma timeline em `CustomerDetailSheet`
+
+A tabela `interactions` já tem `customer_id`. Reaproveitar o componente extraído.
+
+### Refator: extrair `<InteractionTimeline />`
+
+Para evitar duplicação entre `LeadDetailSheet` e `CustomerDetailSheet`:
+
+- **Criar `src/components/admin/InteractionTimeline.tsx`** — componente self-contained que recebe `leadId` ou `customerId`, faz fetch + realtime + render da timeline + form de adição. Aceita prop `entityType: 'lead' | 'customer'`.
 
 ### Arquivos tocados
 
-- **Criar:** `src/lib/leadStatus.ts` (helper central)
-- **Migration:** trigger `set_leads_updated_at` em `leads`
-- **Editar:** `src/components/admin/LeadDetailSheet.tsx` (adicionar `LeadStatusSelect` no topo, remover linha duplicada)
-- **Editar:** `src/components/admin/LeadStatusBadge.tsx` (usar helper)
-- **Editar:** `src/services/followUpService.ts` (`isClosedStatus`)
-- **Editar:** `src/pages/admin/DashboardPage.tsx` (constantes do helper)
+- **Criar:** `src/lib/interactionTypes.ts` — fonte única dos 6 tipos com ícones/cores
+- **Criar:** `src/components/admin/InteractionTimeline.tsx` — componente reutilizável (timeline + form)
+- **Editar:** `src/components/admin/LeadDetailSheet.tsx` — substituir bloco atual de interações por `<InteractionTimeline entityId={lead.id} entityType="lead" />`
+- **Editar:** `src/components/admin/CustomerDetailSheet.tsx` — adicionar `<InteractionTimeline entityId={customer.id} entityType="customer" />`
+- **Editar:** `src/services/interactionService.ts` — incluir `created_by` no select e helper para resolver nomes via `profiles`
 
-### Garantias finais
+### Visual
 
-- Mesmo label/cor em listagem, pipeline, detalhe, dashboard e modal de novo contato (todos via `APP_CONFIG`).
-- Mudança de status em qualquer tela → update na mesma coluna → trigger atualiza `updated_at` → realtime propaga para todas as outras telas.
-- Zero fluxo paralelo: helper único + tabela única + canal realtime único.
+- Tokens semânticos do design system (sem cores hardcoded fora do token verde do WhatsApp já estabelecido).
+- Bordas suaves `rounded-lg`, fundo `bg-muted/30` em cada item, marcador circular com a cor do tipo.
+- Tipografia coerente: descrição em `text-sm`, meta em `text-xs text-muted-foreground`.
+- Sem mudanças em `tailwind.config` ou `index.css`.
+
+### Garantias
+
+- Timeline vive **dentro** do sheet do lead — não é tela solta.
+- Mesma tabela `interactions`, mesmo serviço, zero fluxo paralelo.
+- RLS já cobre INSERT/UPDATE/DELETE (`auth.uid() = created_by`) — sem mudanças de schema.
 
