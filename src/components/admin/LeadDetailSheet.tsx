@@ -136,7 +136,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
     if (!lead) return;
     try {
       await clientService.createFromLead(lead);
-      await supabase.from('leads').update({ status: 'sold' }).eq('id', lead.id);
+      await supabase.from('leads').update({ status: 'won' }).eq('id', lead.id);
       toast.success('Lead convertido em cliente!');
       setConvertDialogOpen(false);
       onOpenChange(false);
@@ -277,7 +277,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Converter em cliente</DialogTitle>
-            <DialogDescription>Deseja converter "{lead.name}" em cliente? O lead será marcado como vendido e um novo cliente será criado.</DialogDescription>
+            <DialogDescription>Deseja converter "{lead.name}" em cliente? O lead será marcado como Cliente no funil e um novo registro de cliente será criado.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setConvertDialogOpen(false)}>Cancelar</Button>

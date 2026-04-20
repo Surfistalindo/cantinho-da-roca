@@ -42,13 +42,14 @@ export default function DashboardPage() {
   const stats = useMemo(() => {
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const total = leads.length;
-    const sold = leads.filter((l) => l.status === 'sold').length;
+    const sold = leads.filter((l) => l.status === 'won').length;
     return {
       total,
       newLeads: leads.filter((l) => l.status === 'new').length,
+      contacting: leads.filter((l) => l.status === 'contacting').length,
       negotiating: leads.filter((l) => l.status === 'negotiating').length,
       sold,
-      noResponse: leads.filter((l) => l.status === 'no_response').length,
+      noResponse: leads.filter((l) => l.status === 'lost').length,
       last7d: leads.filter((l) => new Date(l.created_at).getTime() >= sevenDaysAgo).length,
       followUps: leads.filter((l) => isLeadStale(l)).length,
       conversionRate: total > 0 ? Math.round((sold / total) * 100) : 0,
@@ -57,16 +58,17 @@ export default function DashboardPage() {
 
   const primaryCards: { icon: IconDefinition; label: string; value: string | number; description: string; accent: string }[] = [
     { icon: faUserGroup, label: 'Total de Leads', value: stats.total, description: `${stats.last7d} nos últimos 7 dias`, accent: 'text-primary bg-primary/10' },
-    { icon: faArrowTrendUp, label: 'Conversão', value: `${stats.conversionRate}%`, description: `${stats.sold} vendidos de ${stats.total}`, accent: 'text-success bg-success-soft' },
+    { icon: faArrowTrendUp, label: 'Conversão', value: `${stats.conversionRate}%`, description: `${stats.sold} clientes de ${stats.total}`, accent: 'text-success bg-success-soft' },
     { icon: faClockRotateLeft, label: 'Follow-ups', value: stats.followUps, description: 'Aguardando contato há 2+ dias', accent: 'text-warning bg-warning-soft' },
     { icon: faUserCheck, label: 'Clientes', value: customerCount, description: 'Convertidos em vendas', accent: 'text-primary bg-primary/10' },
   ];
 
   const statusCards: { icon: IconDefinition; label: string; value: number; accent: string }[] = [
     { icon: faUserGroup, label: 'Novos', value: stats.newLeads, accent: 'text-info bg-info-soft' },
-    { icon: faChartColumn, label: 'Negociando', value: stats.negotiating, accent: 'text-warning bg-warning-soft' },
-    { icon: faComments, label: 'Vendidos', value: stats.sold, accent: 'text-success bg-success-soft' },
-    { icon: faPhoneSlash, label: 'Sem resposta', value: stats.noResponse, accent: 'text-muted-foreground bg-muted' },
+    { icon: faComments, label: 'Em contato', value: stats.contacting, accent: 'text-primary bg-primary/10' },
+    { icon: faChartColumn, label: 'Negociação', value: stats.negotiating, accent: 'text-warning bg-warning-soft' },
+    { icon: faUserCheck, label: 'Clientes', value: stats.sold, accent: 'text-success bg-success-soft' },
+    { icon: faPhoneSlash, label: 'Perdidos', value: stats.noResponse, accent: 'text-muted-foreground bg-muted' },
   ];
 
   if (loading) return <LoadingState />;
@@ -102,7 +104,7 @@ export default function DashboardPage() {
             <Link to="/admin/pipeline"><FontAwesomeIcon icon={faTableColumns} className="w-3 h-3 mr-1.5" /> Ver pipeline</Link>
           </Button>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {statusCards.map((c) => (
             <div key={c.label} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
               <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${c.accent}`}>

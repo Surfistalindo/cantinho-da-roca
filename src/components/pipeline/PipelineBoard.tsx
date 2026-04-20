@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { APP_CONFIG } from '@/config/app';
 import PipelineColumn from './PipelineColumn';
 import LeadDetailSheet from '@/components/admin/LeadDetailSheet';
+import NewLeadDialog from '@/components/admin/NewLeadDialog';
 import LoadingState from '@/components/admin/LoadingState';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import { toast } from 'sonner';
@@ -37,6 +38,8 @@ export default function PipelineBoard() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [newOpen, setNewOpen] = useState(false);
+  const [newStatus, setNewStatus] = useState<string>('new');
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -87,11 +90,10 @@ export default function PipelineBoard() {
 
     if (!targetStatus || lead.status === targetStatus) return;
 
-    // Optimistic update already applied in handleDragOver
     const { error } = await supabase.from('leads').update({ status: targetStatus }).eq('id', lead.id);
     if (error) {
       toast.error('Erro ao atualizar status');
-      fetchLeads(); // rollback
+      fetchLeads();
     } else {
       toast.success(`Lead movido para "${APP_CONFIG.leadStatuses.find((s) => s.value === targetStatus)?.label}"`);
     }
@@ -100,6 +102,11 @@ export default function PipelineBoard() {
   const openDetail = (lead: Lead) => {
     setSelectedLead(lead);
     setSheetOpen(true);
+  };
+
+  const openNewLead = (status: string) => {
+    setNewStatus(status);
+    setNewOpen(true);
   };
 
   if (loading) return <LoadingState />;
@@ -113,13 +120,14 @@ export default function PipelineBoard() {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {APP_CONFIG.leadStatuses.map((s) => (
             <PipelineColumn
               key={s.value}
               status={s.value}
               leads={leads.filter((l) => l.status === s.value)}
               onLeadClick={openDetail}
+              onAddLead={openNewLead}
             />
           ))}
         </div>
@@ -135,6 +143,7 @@ export default function PipelineBoard() {
       </DndContext>
 
       <LeadDetailSheet lead={selectedLead} open={sheetOpen} onOpenChange={setSheetOpen} onUpdated={fetchLeads} />
+      <NewLeadDialog open={newOpen} onOpenChange={setNewOpen} onCreated={fetchLeads} defaultStatus={newStatus} />
     </>
   );
 }
