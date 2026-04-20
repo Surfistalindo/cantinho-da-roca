@@ -80,10 +80,7 @@ export default function InteractionTimeline({ entityId, entityType }: Props) {
     }
     setNewContent('');
     toast.success('Interação registrada');
-
-    // Atualiza last_contact_at na entidade
-    const table = entityType === 'lead' ? 'leads' : 'customers';
-    await supabase.from(table).update({ last_contact_at: new Date().toISOString() }).eq('id', entityId);
+    // last_contact_at é atualizado automaticamente pelo trigger trg_sync_last_contact no banco.
   };
 
   return (

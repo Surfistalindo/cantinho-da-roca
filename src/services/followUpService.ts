@@ -1,11 +1,11 @@
 /**
- * Follow-up service — identifies stale leads that need attention.
- * Prepared for future automation (scheduled messages, WhatsApp API integration).
+ * Follow-up service — identifica leads que precisam de atenção.
+ *
+ * A lógica de recência foi centralizada em src/lib/contactRecency.ts.
+ * Este arquivo mantém helpers de compatibilidade e utilitários de WhatsApp.
  */
 
-import { isClosedStatus } from '@/lib/leadStatus';
-
-const STALE_DAYS = 2;
+import { getContactRecency, needsFollowUp } from '@/lib/contactRecency';
 
 interface LeadForFollowUp {
   status: string;
@@ -13,20 +13,13 @@ interface LeadForFollowUp {
   last_contact_at: string | null;
 }
 
-/** Returns true if a lead has had no contact for STALE_DAYS or more */
+/** Compat: true quando o lead precisa de atenção (atenção ou atrasado). */
 export function isLeadStale(lead: LeadForFollowUp): boolean {
-  if (isClosedStatus(lead.status)) return false;
-
-  const reference = lead.last_contact_at ?? lead.created_at;
-  const refDate = new Date(reference);
-  const now = new Date();
-  const diffMs = now.getTime() - refDate.getTime();
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
-
-  return diffDays >= STALE_DAYS;
+  const info = getContactRecency(lead.last_contact_at, lead.status, lead.created_at);
+  return needsFollowUp(info.level);
 }
 
-/** Generates the default follow-up WhatsApp URL */
+/** Gera URL padrão de follow-up no WhatsApp */
 export function getFollowUpWhatsAppUrl(phone: string): string {
   const clean = phone.replace(/\D/g, '');
   const num = clean.startsWith('55') ? clean : `55${clean}`;
@@ -34,20 +27,13 @@ export function getFollowUpWhatsAppUrl(phone: string): string {
 }
 
 /**
- * Future automation hooks — NOT implemented yet.
- * These stubs prepare the codebase for:
- * - Scheduled follow-up messages via WhatsApp Business API
- * - Automated status transitions
- * - Follow-up sequences with escalation
+ * Hooks de automação futura — NÃO implementado ainda.
  */
 export const followUpAutomation = {
-  /** Schedule a follow-up for a specific lead */
   async schedule(_leadId: string, _delayDays: number): Promise<void> {
-    // TODO: Implement with edge function + cron
+    // TODO: edge function + cron
   },
-
-  /** Process all pending follow-ups */
   async processAll(): Promise<void> {
-    // TODO: Implement batch processing
+    // TODO: batch
   },
 };

@@ -1,13 +1,12 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClockRotateLeft, faTriangleExclamation, faTag, faClock } from '@fortawesome/free-solid-svg-icons';
+import { faClockRotateLeft, faTag } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { isLeadStale } from '@/services/followUpService';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
+import { getContactRecency } from '@/lib/contactRecency';
 
 interface Lead {
   id: string;
@@ -33,9 +32,9 @@ export default function LeadCard({ lead, onClick }: Props) {
     transition,
   };
 
-  const stale = isLeadStale(lead);
-  const contactRef = lead.last_contact_at ?? lead.created_at;
-  const contactLabel = formatDistanceToNow(new Date(contactRef), { locale: ptBR, addSuffix: true });
+  const recency = getContactRecency(lead.last_contact_at, lead.status, lead.created_at);
+  const needsAttention = recency.level === 'attention';
+  const overdue = recency.level === 'overdue';
 
   const openWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -69,12 +68,14 @@ export default function LeadCard({ lead, onClick }: Props) {
       className={cn(
         'bg-card border border-border rounded-lg p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow',
         isDragging && 'opacity-50 shadow-lg ring-2 ring-primary/30',
-        stale && 'border-l-4 border-l-warning',
-        lead.status === 'new' && !stale && 'border-l-4 border-l-info',
-        lead.status === 'contacting' && !stale && 'border-l-4 border-l-primary/60',
-        lead.status === 'negotiating' && !stale && 'border-l-4 border-l-warning/60',
-        lead.status === 'won' && !stale && 'border-l-4 border-l-success',
-        lead.status === 'lost' && !stale && 'border-l-4 border-l-muted-foreground/40',
+        // Borda lateral: recência tem prioridade sobre cor de status
+        overdue && 'border-l-4 border-l-destructive',
+        !overdue && needsAttention && 'border-l-4 border-l-warning',
+        !overdue && !needsAttention && lead.status === 'new' && 'border-l-4 border-l-info',
+        !overdue && !needsAttention && lead.status === 'contacting' && 'border-l-4 border-l-primary/60',
+        !overdue && !needsAttention && lead.status === 'negotiating' && 'border-l-4 border-l-warning/60',
+        !overdue && !needsAttention && lead.status === 'won' && 'border-l-4 border-l-success',
+        !overdue && !needsAttention && lead.status === 'lost' && 'border-l-4 border-l-muted-foreground/40',
       )}
     >
       <p className="font-medium text-sm truncate">{lead.name}</p>
@@ -87,28 +88,27 @@ export default function LeadCard({ lead, onClick }: Props) {
         </p>
       )}
 
-      <p className={cn(
-        'text-[11px] mt-1 flex items-center gap-1',
-        stale ? 'text-warning' : 'text-muted-foreground/80'
-      )}>
-        <FontAwesomeIcon icon={faClock} className="h-2.5 w-2.5" />
-        {contactLabel}
-      </p>
-
       <div className="flex items-center gap-1 mt-2">
-        {stale && (
-          <span className="inline-flex items-center gap-0.5 text-[10px] text-warning bg-warning-soft rounded-full px-1.5 py-0.5">
-            <FontAwesomeIcon icon={faTriangleExclamation} className="h-2.5 w-2.5" /> Follow-up
-          </span>
-        )}
+        <ContactRecencyBadge
+          lastContactAt={lead.last_contact_at}
+          status={lead.status}
+          createdAt={lead.created_at}
+          size="sm"
+        />
         <div className="ml-auto flex gap-0.5">
           {lead.phone && (
             <Button variant="ghost" size="icon" className="h-6 w-6 text-success" onClick={openWhatsApp}>
               <FontAwesomeIcon icon={faWhatsapp} className="h-3 w-3" />
             </Button>
           )}
-          {stale && lead.phone && (
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-warning" onClick={sendFollowUp} title="Enviar follow-up">
+          {(needsAttention || overdue) && lead.phone && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn('h-6 w-6', overdue ? 'text-destructive' : 'text-warning')}
+              onClick={sendFollowUp}
+              title="Enviar follow-up"
+            >
               <FontAwesomeIcon icon={faClockRotateLeft} className="h-3 w-3" />
             </Button>
           )}
