@@ -56,7 +56,7 @@ export default function LeadFilters({ search, onSearchChange, statusFilter, onSt
           variant={followUpFilter ? 'default' : 'outline'}
           size="sm"
           onClick={() => onFollowUpChange(!followUpFilter)}
-          className={cn('gap-1.5', followUpFilter && 'bg-orange-500 hover:bg-orange-600')}
+          className={cn('gap-1.5', followUpFilter && 'bg-warning text-warning-foreground hover:bg-warning/90')}
         >
           <FontAwesomeIcon icon={faTriangleExclamation} className="h-3.5 w-3.5" /> Follow-up
         </Button>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -7,10 +8,15 @@ import { Button } from '@/components/ui/button';
 import LeadFilters from '@/components/admin/LeadFilters';
 import LeadStatusSelect from '@/components/admin/LeadStatusSelect';
 import LeadDetailSheet from '@/components/admin/LeadDetailSheet';
+import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
+import LoadingState from '@/components/admin/LoadingState';
+import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faCommentDots, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faTrashCan, faUserGroup } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { toast } from 'sonner';
 import { isLeadStale } from '@/services/followUpService';
 
@@ -28,6 +34,7 @@ interface Lead {
 }
 
 export default function LeadsPage() {
+  const [searchParams] = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -36,6 +43,10 @@ export default function LeadsPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [followUpFilter, setFollowUpFilter] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('followup') === '1') setFollowUpFilter(true);
+  }, [searchParams]);
 
   const fetchLeads = useCallback(async () => {
     const { data } = await supabase
@@ -47,6 +58,7 @@ export default function LeadsPage() {
   }, []);
 
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
+  useRealtimeTable('leads', fetchLeads);
 
   const filtered = useMemo(() => {
     return leads.filter((l) => {
@@ -82,11 +94,12 @@ export default function LeadsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold font-heading">Leads</h2>
-        <span className="text-sm text-muted-foreground">{filtered.length} resultado(s)</span>
-      </div>
+    <div className="max-w-7xl mx-auto space-y-5">
+      <PageHeader
+        title="Leads"
+        description="Acompanhe, filtre e gerencie todos os leads capturados pelo site."
+        meta={<span className="text-xs text-muted-foreground">{filtered.length} resultado(s)</span>}
+      />
 
       <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
         <LeadFilters
@@ -101,9 +114,13 @@ export default function LeadsPage() {
         />
 
         {loading ? (
-          <p className="text-muted-foreground text-sm py-8 text-center">Carregando...</p>
+          <LoadingState />
         ) : filtered.length === 0 ? (
-          <p className="text-muted-foreground text-sm py-8 text-center">Nenhum lead encontrado.</p>
+          <EmptyState
+            icon={faUserGroup}
+            title="Nenhum lead encontrado"
+            description="Ajuste os filtros ou aguarde novos cadastros pelo site."
+          />
         ) : (
           <div className="overflow-x-auto -mx-5">
             <Table>
@@ -137,8 +154,8 @@ export default function LeadsPage() {
                           <FontAwesomeIcon icon={faEye} className="h-3.5 w-3.5" />
                         </Button>
                         {lead.phone && (
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-green-600" onClick={() => openWhatsApp(lead.phone)}>
-                            <FontAwesomeIcon icon={faCommentDots} className="h-3.5 w-3.5" />
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-success" onClick={() => openWhatsApp(lead.phone)}>
+                            <FontAwesomeIcon icon={faWhatsapp} className="h-3.5 w-3.5" />
                           </Button>
                         )}
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100" onClick={(e) => deleteLead(e, lead.id)}>

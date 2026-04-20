@@ -7,10 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import CustomerDetailSheet from '@/components/admin/CustomerDetailSheet';
+import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
+import LoadingState from '@/components/admin/LoadingState';
+import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faCommentDots, faUserCheck, faPlus, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faUserCheck, faPlus, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { toast } from 'sonner';
 
 interface Customer {
@@ -43,6 +48,7 @@ export default function ClientsPage() {
   }, []);
 
   useEffect(() => { fetchCustomers(); }, [fetchCustomers]);
+  useRealtimeTable('customers', fetchCustomers);
 
   const filtered = useMemo(() => {
     if (!search) return customers;
@@ -80,13 +86,17 @@ export default function ClientsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold font-heading">Clientes</h2>
-        <Button size="sm" onClick={() => setAddOpen(true)}>
-          <FontAwesomeIcon icon={faPlus} className="h-4 w-4 mr-1.5" /> Novo Cliente
-        </Button>
-      </div>
+    <div className="max-w-7xl mx-auto space-y-5">
+      <PageHeader
+        title="Clientes"
+        description="Base de clientes convertidos a partir de leads ou cadastros manuais."
+        meta={<span className="text-xs text-muted-foreground">{filtered.length} cliente(s)</span>}
+        actions={
+          <Button size="sm" onClick={() => setAddOpen(true)}>
+            <FontAwesomeIcon icon={faPlus} className="h-4 w-4 mr-1.5" /> Novo cliente
+          </Button>
+        }
+      />
 
       <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
         <div className="relative mb-4">
@@ -100,13 +110,13 @@ export default function ClientsPage() {
         </div>
 
         {loading ? (
-          <p className="text-muted-foreground text-sm py-8 text-center">Carregando...</p>
+          <LoadingState />
         ) : filtered.length === 0 ? (
-          <div className="text-center py-12">
-            <FontAwesomeIcon icon={faUserCheck} className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground text-sm">Nenhum cliente encontrado.</p>
-            <p className="text-xs text-muted-foreground mt-1">Cadastre ou converta leads em clientes.</p>
-          </div>
+          <EmptyState
+            icon={faUserCheck}
+            title="Nenhum cliente encontrado"
+            description="Cadastre manualmente ou converta leads em clientes."
+          />
         ) : (
           <div className="overflow-x-auto -mx-5">
             <Table>
@@ -115,7 +125,7 @@ export default function ClientsPage() {
                   <TableHead>Nome</TableHead>
                   <TableHead>Telefone</TableHead>
                   <TableHead className="hidden md:table-cell">Produto</TableHead>
-                  <TableHead className="hidden sm:table-cell">Data Compra</TableHead>
+                  <TableHead className="hidden sm:table-cell">Data compra</TableHead>
                   <TableHead className="w-[80px]">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -134,8 +144,8 @@ export default function ClientsPage() {
                           <FontAwesomeIcon icon={faEye} className="h-3.5 w-3.5" />
                         </Button>
                         {c.phone && (
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-green-600" onClick={() => openWhatsApp(c.phone)}>
-                            <FontAwesomeIcon icon={faCommentDots} className="h-3.5 w-3.5" />
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-success" onClick={() => openWhatsApp(c.phone)}>
+                            <FontAwesomeIcon icon={faWhatsapp} className="h-3.5 w-3.5" />
                           </Button>
                         )}
                       </div>
@@ -153,7 +163,7 @@ export default function ClientsPage() {
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Novo Cliente</DialogTitle>
+            <DialogTitle>Novo cliente</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Input placeholder="Nome *" value={newCustomer.name} onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })} />

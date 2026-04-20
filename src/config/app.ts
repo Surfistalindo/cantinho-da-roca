@@ -19,10 +19,10 @@ export const APP_CONFIG = {
 
   /** Opções de status dos leads */
   leadStatuses: [
-    { value: 'new', label: 'Novo', color: 'bg-blue-100 text-blue-800' },
-    { value: 'negotiating', label: 'Negociando', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'sold', label: 'Vendido', color: 'bg-green-100 text-green-800' },
-    { value: 'no_response', label: 'Sem resposta', color: 'bg-gray-100 text-gray-800' },
+    { value: 'new', label: 'Novo', color: 'bg-info-soft text-info' },
+    { value: 'negotiating', label: 'Negociando', color: 'bg-warning-soft text-warning' },
+    { value: 'sold', label: 'Vendido', color: 'bg-success-soft text-success' },
+    { value: 'no_response', label: 'Sem resposta', color: 'bg-muted text-muted-foreground' },
   ] as const,
 
   /** Opções de origem */
