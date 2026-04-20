@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -7,10 +8,15 @@ import { Button } from '@/components/ui/button';
 import LeadFilters from '@/components/admin/LeadFilters';
 import LeadStatusSelect from '@/components/admin/LeadStatusSelect';
 import LeadDetailSheet from '@/components/admin/LeadDetailSheet';
+import PageHeader from '@/components/admin/PageHeader';
+import EmptyState from '@/components/admin/EmptyState';
+import LoadingState from '@/components/admin/LoadingState';
+import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faCommentDots, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faTrashCan, faUserGroup } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { toast } from 'sonner';
 import { isLeadStale } from '@/services/followUpService';
 
@@ -28,6 +34,7 @@ interface Lead {
 }
 
 export default function LeadsPage() {
+  const [searchParams] = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -36,6 +43,10 @@ export default function LeadsPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [followUpFilter, setFollowUpFilter] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('followup') === '1') setFollowUpFilter(true);
+  }, [searchParams]);
 
   const fetchLeads = useCallback(async () => {
     const { data } = await supabase
@@ -47,6 +58,7 @@ export default function LeadsPage() {
   }, []);
 
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
+  useRealtimeTable('leads', fetchLeads);
 
   const filtered = useMemo(() => {
     return leads.filter((l) => {
