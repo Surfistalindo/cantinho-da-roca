@@ -103,6 +103,7 @@ export default function InteractionTimeline({ entityId, entityType }: Props) {
           </SelectContent>
         </Select>
         <Textarea
+          id="new-interaction-textarea"
           placeholder="Descreva a interação..."
           value={newContent}
           onChange={(e) => setNewContent(e.target.value)}
