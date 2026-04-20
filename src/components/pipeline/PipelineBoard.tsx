@@ -14,6 +14,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { APP_CONFIG } from '@/config/app';
 import PipelineColumn from './PipelineColumn';
 import LeadDetailSheet from '@/components/admin/LeadDetailSheet';
+import LoadingState from '@/components/admin/LoadingState';
+import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import { toast } from 'sonner';
 
 interface Lead {
@@ -50,6 +52,7 @@ export default function PipelineBoard() {
   }, []);
 
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
+  useRealtimeTable('leads', fetchLeads);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -99,7 +102,7 @@ export default function PipelineBoard() {
     setSheetOpen(true);
   };
 
-  if (loading) return <p className="text-muted-foreground text-sm py-12 text-center">Carregando...</p>;
+  if (loading) return <LoadingState />;
 
   return (
     <>

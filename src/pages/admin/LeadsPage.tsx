@@ -94,11 +94,12 @@ export default function LeadsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold font-heading">Leads</h2>
-        <span className="text-sm text-muted-foreground">{filtered.length} resultado(s)</span>
-      </div>
+    <div className="max-w-7xl mx-auto space-y-5">
+      <PageHeader
+        title="Leads"
+        description="Acompanhe, filtre e gerencie todos os leads capturados pelo site."
+        meta={<span className="text-xs text-muted-foreground">{filtered.length} resultado(s)</span>}
+      />
 
       <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
         <LeadFilters
@@ -113,9 +114,13 @@ export default function LeadsPage() {
         />
 
         {loading ? (
-          <p className="text-muted-foreground text-sm py-8 text-center">Carregando...</p>
+          <LoadingState />
         ) : filtered.length === 0 ? (
-          <p className="text-muted-foreground text-sm py-8 text-center">Nenhum lead encontrado.</p>
+          <EmptyState
+            icon={faUserGroup}
+            title="Nenhum lead encontrado"
+            description="Ajuste os filtros ou aguarde novos cadastros pelo site."
+          />
         ) : (
           <div className="overflow-x-auto -mx-5">
             <Table>
@@ -149,8 +154,8 @@ export default function LeadsPage() {
                           <FontAwesomeIcon icon={faEye} className="h-3.5 w-3.5" />
                         </Button>
                         {lead.phone && (
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-green-600" onClick={() => openWhatsApp(lead.phone)}>
-                            <FontAwesomeIcon icon={faCommentDots} className="h-3.5 w-3.5" />
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-success" onClick={() => openWhatsApp(lead.phone)}>
+                            <FontAwesomeIcon icon={faWhatsapp} className="h-3.5 w-3.5" />
                           </Button>
                         )}
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100" onClick={(e) => deleteLead(e, lead.id)}>

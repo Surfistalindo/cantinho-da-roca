@@ -1,7 +1,8 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCommentDots, faClockRotateLeft, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import { faClockRotateLeft, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { isLeadStale } from '@/services/followUpService';
@@ -63,9 +64,9 @@ export default function LeadCard({ lead, onClick }: Props) {
       className={cn(
         'bg-card border border-border rounded-lg p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow',
         isDragging && 'opacity-50 shadow-lg ring-2 ring-primary/30',
-        stale && 'border-l-4 border-l-orange-400',
-        lead.status === 'new' && !stale && 'border-l-4 border-l-blue-400',
-        lead.status === 'negotiating' && !stale && 'border-l-4 border-l-yellow-400',
+        stale && 'border-l-4 border-l-warning',
+        lead.status === 'new' && !stale && 'border-l-4 border-l-info',
+        lead.status === 'negotiating' && !stale && 'border-l-4 border-l-warning/60',
       )}
     >
       <p className="font-medium text-sm truncate">{lead.name}</p>
@@ -76,18 +77,18 @@ export default function LeadCard({ lead, onClick }: Props) {
 
       <div className="flex items-center gap-1 mt-2">
         {stale && (
-          <span className="inline-flex items-center gap-0.5 text-[10px] text-orange-600 bg-orange-50 rounded-full px-1.5 py-0.5">
+          <span className="inline-flex items-center gap-0.5 text-[10px] text-warning bg-warning-soft rounded-full px-1.5 py-0.5">
             <FontAwesomeIcon icon={faTriangleExclamation} className="h-2.5 w-2.5" /> Follow-up
           </span>
         )}
         <div className="ml-auto flex gap-0.5">
           {lead.phone && (
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-green-600" onClick={openWhatsApp}>
-              <FontAwesomeIcon icon={faCommentDots} className="h-3 w-3" />
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-success" onClick={openWhatsApp}>
+              <FontAwesomeIcon icon={faWhatsapp} className="h-3 w-3" />
             </Button>
           )}
           {stale && lead.phone && (
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-orange-500" onClick={sendFollowUp} title="Enviar follow-up">
+            <Button variant="ghost" size="icon" className="h-6 w-6 text-warning" onClick={sendFollowUp} title="Enviar follow-up">
               <FontAwesomeIcon icon={faClockRotateLeft} className="h-3 w-3" />
             </Button>
           )}
