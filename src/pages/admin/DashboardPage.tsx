@@ -4,18 +4,26 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faUserGroup, faChartColumn, faComments, faPhoneSlash, faUserCheck,
   faArrowTrendUp, faClockRotateLeft, faBolt, faTableColumns, faTriangleExclamation,
+  faChevronRight, faSeedling, faCircleCheck,
 } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import PageHeader from '@/components/admin/PageHeader';
 import LoadingState from '@/components/admin/LoadingState';
+import LeadStatusBadge from '@/components/admin/LeadStatusBadge';
+import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
 import { Button } from '@/components/ui/button';
 import { LEAD_STATUS } from '@/lib/leadStatus';
 import { getContactRecency } from '@/lib/contactRecency';
 
 interface LeadLite {
   id: string;
+  name: string;
+  origin: string | null;
+  product_interest: string | null;
   status: string;
   created_at: string;
   last_contact_at: string | null;
@@ -28,7 +36,10 @@ export default function DashboardPage() {
 
   const fetchData = useCallback(async () => {
     const [leadsRes, customersRes] = await Promise.all([
-      supabase.from('leads').select('id, status, created_at, last_contact_at'),
+      supabase
+        .from('leads')
+        .select('id, name, origin, product_interest, status, created_at, last_contact_at')
+        .order('created_at', { ascending: false }),
       supabase.from('customers').select('id', { count: 'exact', head: true }),
     ]);
     setLeads((leadsRes.data as LeadLite[]) ?? []);
@@ -67,9 +78,24 @@ export default function DashboardPage() {
     };
   }, [leads]);
 
+  const recentLeads = useMemo(() => leads.slice(0, 5), [leads]);
+
+  const attentionLeads = useMemo(() => {
+    return leads
+      .map((l) => ({ lead: l, info: getContactRecency(l.last_contact_at, l.status, l.created_at) }))
+      .filter((x) => x.info.level === 'attention' || x.info.level === 'overdue')
+      .sort((a, b) => {
+        if (a.info.level !== b.info.level) return a.info.level === 'overdue' ? -1 : 1;
+        const da = a.info.days ?? 9999;
+        const db = b.info.days ?? 9999;
+        return db - da;
+      })
+      .slice(0, 5);
+  }, [leads]);
+
   const primaryCards: { icon: IconDefinition; label: string; value: string | number; description: string; accent: string; href?: string }[] = [
     { icon: faUserGroup, label: 'Total de Leads', value: stats.total, description: `${stats.last7d} nos últimos 7 dias`, accent: 'text-primary bg-primary/10' },
-    { icon: faArrowTrendUp, label: 'Conversão', value: `${stats.conversionRate}%`, description: `${stats.sold} clientes de ${stats.total}`, accent: 'text-success bg-success-soft' },
+    { icon: faArrowTrendUp, label: 'Conversão', value: `${stats.conversionRate}%`, description: `${stats.sold} fechados · ${customerCount} no cadastro`, accent: 'text-success bg-success-soft' },
     { icon: faClockRotateLeft, label: 'Atenção', value: stats.attention, description: '3–6 dias sem contato', accent: 'text-warning bg-warning-soft', href: '/admin/leads?recency=attention' },
     { icon: faTriangleExclamation, label: 'Atrasados', value: stats.overdue, description: '7+ dias ou nunca contatado', accent: 'text-destructive bg-destructive/10', href: '/admin/leads?recency=overdue' },
   ];
@@ -142,6 +168,102 @@ export default function DashboardPage() {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Leads recentes + Precisam de atenção */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Leads recentes */}
+        <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide flex items-center gap-2">
+              <FontAwesomeIcon icon={faSeedling} className="w-3.5 h-3.5 text-primary" /> Leads recentes
+            </h3>
+            <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
+              <Link to="/admin/leads">Ver todos <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 ml-1" /></Link>
+            </Button>
+          </div>
+          {recentLeads.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              Nenhum lead ainda. Compartilhe sua landing page!
+            </p>
+          ) : (
+            <ul className="space-y-1">
+              {recentLeads.map((l) => {
+                const meta = [l.origin, l.product_interest].filter(Boolean).join(' · ');
+                return (
+                  <li key={l.id}>
+                    <Link
+                      to="/admin/leads"
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 transition-colors"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-foreground truncate">{l.name}</p>
+                          <LeadStatusBadge status={l.status} />
+                        </div>
+                        {meta && (
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">{meta}</p>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {formatDistanceToNow(new Date(l.created_at), { addSuffix: true, locale: ptBR })}
+                      </span>
+                      <FontAwesomeIcon icon={faChevronRight} className="w-3 h-3 text-muted-foreground/50" />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        {/* Precisam de atenção */}
+        <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide flex items-center gap-2">
+              <FontAwesomeIcon icon={faTriangleExclamation} className="w-3.5 h-3.5 text-warning" /> Precisam de atenção
+            </h3>
+            {attentionLeads.length > 0 && (
+              <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
+                <Link to="/admin/leads?recency=overdue">Ver todos <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 ml-1" /></Link>
+              </Button>
+            )}
+          </div>
+          {attentionLeads.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-6 text-center">
+              <FontAwesomeIcon icon={faCircleCheck} className="w-6 h-6 text-success mb-2" />
+              <p className="text-sm text-muted-foreground">Tudo em dia</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Nenhum lead precisando de retorno.</p>
+            </div>
+          ) : (
+            <ul className="space-y-1">
+              {attentionLeads.map(({ lead, info }) => {
+                const meta = [lead.origin, lead.product_interest].filter(Boolean).join(' · ');
+                return (
+                  <li key={lead.id}>
+                    <Link
+                      to={`/admin/leads?recency=${info.level}`}
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 transition-colors"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-foreground truncate">{lead.name}</p>
+                        {meta && (
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">{meta}</p>
+                        )}
+                      </div>
+                      <ContactRecencyBadge
+                        lastContactAt={lead.last_contact_at}
+                        status={lead.status}
+                        createdAt={lead.created_at}
+                        size="sm"
+                      />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       </div>
 
