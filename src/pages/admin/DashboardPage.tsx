@@ -171,6 +171,102 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Leads recentes + Precisam de atenção */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Leads recentes */}
+        <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide flex items-center gap-2">
+              <FontAwesomeIcon icon={faSeedling} className="w-3.5 h-3.5 text-primary" /> Leads recentes
+            </h3>
+            <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
+              <Link to="/admin/leads">Ver todos <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 ml-1" /></Link>
+            </Button>
+          </div>
+          {recentLeads.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              Nenhum lead ainda. Compartilhe sua landing page!
+            </p>
+          ) : (
+            <ul className="space-y-1">
+              {recentLeads.map((l) => {
+                const meta = [l.origin, l.product_interest].filter(Boolean).join(' · ');
+                return (
+                  <li key={l.id}>
+                    <Link
+                      to="/admin/leads"
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 transition-colors"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-foreground truncate">{l.name}</p>
+                          <LeadStatusBadge status={l.status} />
+                        </div>
+                        {meta && (
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">{meta}</p>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {formatDistanceToNow(new Date(l.created_at), { addSuffix: true, locale: ptBR })}
+                      </span>
+                      <FontAwesomeIcon icon={faChevronRight} className="w-3 h-3 text-muted-foreground/50" />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        {/* Precisam de atenção */}
+        <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide flex items-center gap-2">
+              <FontAwesomeIcon icon={faTriangleExclamation} className="w-3.5 h-3.5 text-warning" /> Precisam de atenção
+            </h3>
+            {attentionLeads.length > 0 && (
+              <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
+                <Link to="/admin/leads?recency=overdue">Ver todos <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 ml-1" /></Link>
+              </Button>
+            )}
+          </div>
+          {attentionLeads.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-6 text-center">
+              <FontAwesomeIcon icon={faCircleCheck} className="w-6 h-6 text-success mb-2" />
+              <p className="text-sm text-muted-foreground">Tudo em dia</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">Nenhum lead precisando de retorno.</p>
+            </div>
+          ) : (
+            <ul className="space-y-1">
+              {attentionLeads.map(({ lead, info }) => {
+                const meta = [lead.origin, lead.product_interest].filter(Boolean).join(' · ');
+                return (
+                  <li key={lead.id}>
+                    <Link
+                      to={`/admin/leads?recency=${info.level}`}
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 transition-colors"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-foreground truncate">{lead.name}</p>
+                        {meta && (
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">{meta}</p>
+                        )}
+                      </div>
+                      <ContactRecencyBadge
+                        lastContactAt={lead.last_contact_at}
+                        status={lead.status}
+                        createdAt={lead.created_at}
+                        size="sm"
+                      />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </div>
+
       {/* Atalhos rápidos */}
       <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
         <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
