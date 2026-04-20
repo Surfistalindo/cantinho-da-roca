@@ -1,10 +1,10 @@
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
 import { APP_CONFIG } from '@/config/app';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
-import { cn } from '@/lib/utils';
+import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+
+export type RecencyFilter = 'all' | 'recent' | 'attention' | 'overdue';
 
 interface Props {
   search: string;
@@ -13,11 +13,16 @@ interface Props {
   onStatusChange: (v: string) => void;
   originFilter: string;
   onOriginChange: (v: string) => void;
-  followUpFilter?: boolean;
-  onFollowUpChange?: (v: boolean) => void;
+  recencyFilter?: RecencyFilter;
+  onRecencyChange?: (v: RecencyFilter) => void;
 }
 
-export default function LeadFilters({ search, onSearchChange, statusFilter, onStatusChange, originFilter, onOriginChange, followUpFilter, onFollowUpChange }: Props) {
+export default function LeadFilters({
+  search, onSearchChange,
+  statusFilter, onStatusChange,
+  originFilter, onOriginChange,
+  recencyFilter, onRecencyChange,
+}: Props) {
   return (
     <div className="flex flex-wrap gap-3 mb-6">
       <div className="relative flex-1 min-w-[200px]">
@@ -51,15 +56,18 @@ export default function LeadFilters({ search, onSearchChange, statusFilter, onSt
           ))}
         </SelectContent>
       </Select>
-      {onFollowUpChange && (
-        <Button
-          variant={followUpFilter ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => onFollowUpChange(!followUpFilter)}
-          className={cn('gap-1.5', followUpFilter && 'bg-warning text-warning-foreground hover:bg-warning/90')}
-        >
-          <FontAwesomeIcon icon={faTriangleExclamation} className="h-3.5 w-3.5" /> Follow-up
-        </Button>
+      {onRecencyChange && (
+        <Select value={recencyFilter ?? 'all'} onValueChange={(v) => onRecencyChange(v as RecencyFilter)}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Recência" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toda recência</SelectItem>
+            <SelectItem value="recent">Recentes (≤ 2 dias)</SelectItem>
+            <SelectItem value="attention">Atenção (3–6 dias)</SelectItem>
+            <SelectItem value="overdue">Atrasados (7+ dias / nunca)</SelectItem>
+          </SelectContent>
+        </Select>
       )}
     </div>
   );

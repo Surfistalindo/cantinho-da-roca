@@ -6,7 +6,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import LeadFilters from '@/components/admin/LeadFilters';
+import LeadFilters, { type RecencyFilter } from '@/components/admin/LeadFilters';
 import LeadStatusSelect from '@/components/admin/LeadStatusSelect';
 import LeadStatusBadge from '@/components/admin/LeadStatusBadge';
 import LeadDetailSheet from '@/components/admin/LeadDetailSheet';
@@ -14,8 +14,9 @@ import NewLeadDialog from '@/components/admin/NewLeadDialog';
 import PageHeader from '@/components/admin/PageHeader';
 import EmptyState from '@/components/admin/EmptyState';
 import LoadingState from '@/components/admin/LoadingState';
+import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -24,7 +25,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { toast } from 'sonner';
-import { isLeadStale } from '@/services/followUpService';
+import { getContactRecency } from '@/lib/contactRecency';
 import { cn } from '@/lib/utils';
 
 interface Lead {
@@ -43,7 +44,7 @@ interface Lead {
 type SortDir = 'desc' | 'asc';
 
 export default function LeadsPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -51,13 +52,31 @@ export default function LeadsPage() {
   const [originFilter, setOriginFilter] = useState('all');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [followUpFilter, setFollowUpFilter] = useState(false);
+  const [recencyFilter, setRecencyFilter] = useState<RecencyFilter>('all');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [newOpen, setNewOpen] = useState(false);
 
+  // Lê ?recency= e ?followup= (compat) da URL
   useEffect(() => {
-    if (searchParams.get('followup') === '1') setFollowUpFilter(true);
+    const recency = searchParams.get('recency') as RecencyFilter | null;
+    if (recency && ['recent', 'attention', 'overdue', 'all'].includes(recency)) {
+      setRecencyFilter(recency);
+      return;
+    }
+    if (searchParams.get('followup') === '1') {
+      // compat: mapeia para "atrasados" (mais crítico)
+      setRecencyFilter('overdue');
+    }
   }, [searchParams]);
+
+  const updateRecency = (v: RecencyFilter) => {
+    setRecencyFilter(v);
+    const params = new URLSearchParams(searchParams);
+    params.delete('followup');
+    if (v === 'all') params.delete('recency');
+    else params.set('recency', v);
+    setSearchParams(params, { replace: true });
+  };
 
   const fetchLeads = useCallback(async () => {
     const { data } = await supabase
@@ -75,7 +94,13 @@ export default function LeadsPage() {
     const list = leads.filter((l) => {
       if (statusFilter !== 'all' && l.status !== statusFilter) return false;
       if (originFilter !== 'all' && l.origin !== originFilter) return false;
-      if (followUpFilter && !isLeadStale(l)) return false;
+      if (recencyFilter !== 'all') {
+        const info = getContactRecency(l.last_contact_at, l.status, l.created_at);
+        // 'recent' filter exclui leads "never" (que ainda não foram contatados)
+        if (recencyFilter === 'recent' && info.level !== 'recent') return false;
+        if (recencyFilter === 'attention' && info.level !== 'attention') return false;
+        if (recencyFilter === 'overdue' && info.level !== 'overdue') return false;
+      }
       if (search) {
         const q = search.toLowerCase();
         if (!l.name.toLowerCase().includes(q) && !(l.phone ?? '').includes(q)) return false;
@@ -88,7 +113,7 @@ export default function LeadsPage() {
       return sortDir === 'desc' ? db - da : da - db;
     });
     return list;
-  }, [leads, statusFilter, originFilter, search, followUpFilter, sortDir]);
+  }, [leads, statusFilter, originFilter, search, recencyFilter, sortDir]);
 
   const newestId = useMemo(() => {
     if (leads.length === 0) return null;
@@ -125,16 +150,6 @@ export default function LeadsPage() {
     fetchLeads();
   };
 
-  const lastContactLabel = (lead: Lead) => {
-    const ref = lead.last_contact_at;
-    if (!ref) return <span className="text-muted-foreground italic">—</span>;
-    return (
-      <span title={format(new Date(ref), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}>
-        {formatDistanceToNow(new Date(ref), { locale: ptBR, addSuffix: true })}
-      </span>
-    );
-  };
-
   return (
     <div className="max-w-7xl mx-auto space-y-5">
       <PageHeader
@@ -167,8 +182,8 @@ export default function LeadsPage() {
           onStatusChange={setStatusFilter}
           originFilter={originFilter}
           onOriginChange={setOriginFilter}
-          followUpFilter={followUpFilter}
-          onFollowUpChange={setFollowUpFilter}
+          recencyFilter={recencyFilter}
+          onRecencyChange={updateRecency}
         />
 
         {loading ? (
@@ -210,7 +225,6 @@ export default function LeadsPage() {
                 <TableBody>
                   {filtered.map((lead) => {
                     const isNewest = lead.id === newestId;
-                    const stale = isLeadStale(lead);
                     return (
                       <TableRow
                         key={lead.id}
@@ -236,11 +250,13 @@ export default function LeadsPage() {
                         <TableCell onClick={(e) => e.stopPropagation()}>
                           <LeadStatusSelect leadId={lead.id} currentStatus={lead.status} onUpdated={fetchLeads} />
                         </TableCell>
-                        <TableCell className={cn(
-                          'hidden lg:table-cell text-xs',
-                          stale ? 'text-warning font-medium' : 'text-muted-foreground'
-                        )}>
-                          {lastContactLabel(lead)}
+                        <TableCell className="hidden lg:table-cell">
+                          <ContactRecencyBadge
+                            lastContactAt={lead.last_contact_at}
+                            status={lead.status}
+                            createdAt={lead.created_at}
+                            size="sm"
+                          />
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                           {format(new Date(lead.created_at), 'dd/MM/yy', { locale: ptBR })}
@@ -271,7 +287,6 @@ export default function LeadsPage() {
             <div className="md:hidden space-y-3">
               {filtered.map((lead) => {
                 const isNewest = lead.id === newestId;
-                const stale = isLeadStale(lead);
                 return (
                   <button
                     key={lead.id}
@@ -295,12 +310,13 @@ export default function LeadsPage() {
                       {lead.origin && <span>📍 {lead.origin}</span>}
                       {lead.product_interest && <span className="truncate max-w-[200px]">💡 {lead.product_interest}</span>}
                     </div>
-                    <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between text-xs">
-                      <span className={cn(stale ? 'text-warning font-medium' : 'text-muted-foreground')}>
-                        Último contato: {lead.last_contact_at
-                          ? formatDistanceToNow(new Date(lead.last_contact_at), { locale: ptBR, addSuffix: true })
-                          : 'nunca'}
-                      </span>
+                    <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between gap-2 text-xs">
+                      <ContactRecencyBadge
+                        lastContactAt={lead.last_contact_at}
+                        status={lead.status}
+                        createdAt={lead.created_at}
+                        size="sm"
+                      />
                       <span className="text-muted-foreground">{format(new Date(lead.created_at), 'dd/MM/yy', { locale: ptBR })}</span>
                     </div>
                     {lead.phone && (

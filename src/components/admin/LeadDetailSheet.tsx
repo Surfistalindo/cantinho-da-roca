@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import LeadStatusBadge from './LeadStatusBadge';
 import LeadStatusSelect from './LeadStatusSelect';
 import InteractionTimeline from './InteractionTimeline';
+import ContactRecencyBadge from './ContactRecencyBadge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -115,6 +116,19 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
           <div className="mt-4 flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status atual</span>
             <LeadStatusSelect leadId={lead.id} currentStatus={lead.status} onUpdated={() => onUpdated?.()} />
+          </div>
+
+          <div className="mt-2 flex items-center gap-2 px-1 text-xs text-muted-foreground">
+            <span className="font-medium">Último contato:</span>
+            <ContactRecencyBadge
+              lastContactAt={lead.last_contact_at}
+              status={lead.status}
+              createdAt={lead.created_at}
+              size="sm"
+            />
+            {lead.last_contact_at && (
+              <span>· {format(new Date(lead.last_contact_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+            )}
           </div>
 
           <div className="flex gap-2 mt-4">
