@@ -4,18 +4,26 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faUserGroup, faChartColumn, faComments, faPhoneSlash, faUserCheck,
   faArrowTrendUp, faClockRotateLeft, faBolt, faTableColumns, faTriangleExclamation,
+  faChevronRight, faSeedling, faCircleCheck,
 } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import PageHeader from '@/components/admin/PageHeader';
 import LoadingState from '@/components/admin/LoadingState';
+import LeadStatusBadge from '@/components/admin/LeadStatusBadge';
+import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
 import { Button } from '@/components/ui/button';
 import { LEAD_STATUS } from '@/lib/leadStatus';
 import { getContactRecency } from '@/lib/contactRecency';
 
 interface LeadLite {
   id: string;
+  name: string;
+  origin: string | null;
+  product_interest: string | null;
   status: string;
   created_at: string;
   last_contact_at: string | null;
