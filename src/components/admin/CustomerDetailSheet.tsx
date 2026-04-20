@@ -3,16 +3,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import InteractionTimeline from './InteractionTimeline';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPaperPlane, faCommentDots, faPhone, faFileLines, faPenToSquare, faTrashCan, faFloppyDisk, faXmark } from '@fortawesome/free-solid-svg-icons';
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { faCommentDots, faPenToSquare, faTrashCan, faFloppyDisk, faXmark } from '@fortawesome/free-solid-svg-icons';
 
 interface Customer {
   id: string;
@@ -25,13 +23,6 @@ interface Customer {
   created_at: string;
 }
 
-interface Interaction {
-  id: string;
-  contact_type: string;
-  description: string;
-  interaction_date: string;
-}
-
 interface Props {
   customer: Customer | null;
   open: boolean;
@@ -39,55 +30,14 @@ interface Props {
   onUpdated?: () => void;
 }
 
-const interactionTypes: { value: string; label: string; icon: IconDefinition }[] = [
-  { value: 'mensagem', label: 'Mensagem', icon: faCommentDots },
-  { value: 'ligação', label: 'Ligação', icon: faPhone },
-  { value: 'observação', label: 'Observação', icon: faFileLines },
-];
-
 export default function CustomerDetailSheet({ customer, open, onOpenChange, onUpdated }: Props) {
-  const { user } = useAuth();
-  const [interactions, setInteractions] = useState<Interaction[]>([]);
-  const [newContent, setNewContent] = useState('');
-  const [newType, setNewType] = useState('observação');
-  const [sending, setSending] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({ name: '', phone: '', product_bought: '', notes: '' });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (customer && open) {
-      fetchInteractions();
-      setEditing(false);
-    }
+    if (customer && open) setEditing(false);
   }, [customer, open]);
-
-  const fetchInteractions = async () => {
-    if (!customer) return;
-    const { data } = await supabase
-      .from('interactions')
-      .select('id, contact_type, description, interaction_date')
-      .eq('customer_id', customer.id)
-      .order('interaction_date', { ascending: false });
-    setInteractions((data as Interaction[]) ?? []);
-  };
-
-  const addInteraction = async () => {
-    if (!customer || !user || !newContent.trim()) return;
-    setSending(true);
-    const { error } = await supabase.from('interactions').insert({
-      customer_id: customer.id,
-      created_by: user.id,
-      contact_type: newType,
-      description: newContent.trim(),
-    });
-    setSending(false);
-    if (error) { toast.error('Erro ao salvar interação'); return; }
-    setNewContent('');
-    toast.success('Interação registrada');
-    fetchInteractions();
-    await supabase.from('customers').update({ last_contact_at: new Date().toISOString() }).eq('id', customer.id);
-  };
 
   const startEditing = () => {
     if (!customer) return;
@@ -125,11 +75,6 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
   };
 
   if (!customer) return null;
-
-  const typeIcon = (ct: string) => {
-    const t = interactionTypes.find((i) => i.value === ct);
-    return <FontAwesomeIcon icon={t ? t.icon : faFileLines} className="h-3.5 w-3.5" />;
-  };
 
   return (
     <>
@@ -192,39 +137,7 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
 
           <div className="mt-8">
             <h4 className="font-semibold mb-3">Histórico de Interações</h4>
-            <div className="space-y-2 mb-4">
-              <Select value={newType} onValueChange={setNewType}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {interactionTypes.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="flex gap-2">
-                <Textarea placeholder="Registrar interação..." value={newContent} onChange={(e) => setNewContent(e.target.value)} className="min-h-[60px]" />
-                <Button size="icon" onClick={addInteraction} disabled={sending || !newContent.trim()}>
-                  <FontAwesomeIcon icon={faPaperPlane} className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {interactions.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">Nenhuma interação registrada.</p>
-              )}
-              {interactions.map((n) => (
-                <div key={n.id} className="bg-muted rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    {typeIcon(n.contact_type)}
-                    <span className="text-xs font-medium capitalize">{n.contact_type}</span>
-                    <span className="text-xs text-muted-foreground ml-auto">
-                      {format(new Date(n.interaction_date), "dd/MM/yy HH:mm", { locale: ptBR })}
-                    </span>
-                  </div>
-                  <p className="text-sm">{n.description}</p>
-                </div>
-              ))}
-            </div>
+            <InteractionTimeline entityId={customer.id} entityType="customer" />
           </div>
         </SheetContent>
       </Sheet>
