@@ -36,7 +36,10 @@ export default function DashboardPage() {
 
   const fetchData = useCallback(async () => {
     const [leadsRes, customersRes] = await Promise.all([
-      supabase.from('leads').select('id, status, created_at, last_contact_at'),
+      supabase
+        .from('leads')
+        .select('id, name, origin, product_interest, status, created_at, last_contact_at')
+        .order('created_at', { ascending: false }),
       supabase.from('customers').select('id', { count: 'exact', head: true }),
     ]);
     setLeads((leadsRes.data as LeadLite[]) ?? []);
