@@ -29,13 +29,6 @@ interface Lead {
   notes: string | null;
 }
 
-interface Interaction {
-  id: string;
-  contact_type: string;
-  description: string;
-  interaction_date: string;
-}
-
 interface Props {
   lead: Lead | null;
   open: boolean;
@@ -43,18 +36,7 @@ interface Props {
   onUpdated?: () => void;
 }
 
-const interactionTypes: { value: string; label: string; icon: IconDefinition }[] = [
-  { value: 'mensagem', label: 'Mensagem', icon: faCommentDots },
-  { value: 'ligação', label: 'Ligação', icon: faPhone },
-  { value: 'observação', label: 'Observação', icon: faFileLines },
-];
-
 export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }: Props) {
-  const { user } = useAuth();
-  const [interactions, setInteractions] = useState<Interaction[]>([]);
-  const [newContent, setNewContent] = useState('');
-  const [newType, setNewType] = useState('observação');
-  const [sending, setSending] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({ name: '', phone: '', origin: '', product_interest: '', notes: '' });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -62,37 +44,9 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
 
   useEffect(() => {
     if (lead && open) {
-      fetchInteractions();
       setEditing(false);
     }
   }, [lead, open]);
-
-  const fetchInteractions = async () => {
-    if (!lead) return;
-    const { data } = await supabase
-      .from('interactions')
-      .select('id, contact_type, description, interaction_date')
-      .eq('lead_id', lead.id)
-      .order('interaction_date', { ascending: false });
-    setInteractions((data as Interaction[]) ?? []);
-  };
-
-  const addInteraction = async () => {
-    if (!lead || !user || !newContent.trim()) return;
-    setSending(true);
-    const { error } = await supabase.from('interactions').insert({
-      lead_id: lead.id,
-      created_by: user.id,
-      contact_type: newType,
-      description: newContent.trim(),
-    });
-    setSending(false);
-    if (error) { toast.error('Erro ao salvar interação'); return; }
-    setNewContent('');
-    toast.success('Interação registrada');
-    fetchInteractions();
-    await supabase.from('leads').update({ last_contact_at: new Date().toISOString() }).eq('id', lead.id);
-  };
 
   const startEditing = () => {
     if (!lead) return;
