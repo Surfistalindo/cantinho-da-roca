@@ -1,48 +1,67 @@
 
 
-## Plan: Efeitos 3D, Parallax e Fluidos Estratégicos
+## Plano: Pipeline Kanban Comercial
 
-### Resumo
-Adicionar efeitos visuais premium em locais estratégicos do site sem poluir a experiência. Foco em: parallax por scroll, tilt 3D interativo, e transições fluidas.
+Vou trabalhar **em cima do kanban existente** (`PipelineBoard`, `PipelineColumn`, `LeadCard`) adicionando 1 coluna nova, enriquecendo os cards e melhorando integração — sem refazer.
 
-### Mudanças por seção
+### 1. Nova estrutura de colunas (5 status)
 
-**1. Hero — Parallax em camadas (já parcial, melhorar)**
-- Adicionar parallax diferencial na imagem do hero (velocidade diferente do texto)
-- Efeito de escala sutil na imagem conforme scroll (`scale: 1 + scrollY * 0.0003`)
+Atualizar `src/config/app.ts` para refletir o funil pedido. Mapeamento dos status atuais para os novos:
 
-**2. Benefits Section — Tilt 3D nos cards ao hover**
-- Implementar mouse-tracking tilt 3D nos cards de benefícios usando `onMouseMove` para calcular `rotateX/rotateY` baseado na posição do cursor
-- Adicionar reflexo de luz (gradient overlay) que segue o mouse
-- Efeito de "lift" mais pronunciado com `translateZ` e sombra dinâmica
+| Atual | Novo | Label |
+|---|---|---|
+| `new` | `new` | Novo lead |
+| — (criar) | `contacting` | Em contato |
+| `negotiating` | `negotiating` | Negociação |
+| `sold` | `won` | Cliente |
+| `no_response` | `lost` | Perdido |
 
-**3. Products Section — Parallax no título + floating elements**
-- Receber `scrollY` como prop e aplicar parallax sutil no heading da seção
-- Adicionar um elemento decorativo (logo ou folha) com parallax invertido no fundo
+**Migração de dados** (via insert tool, não schema): `UPDATE leads SET status='won' WHERE status='sold'` e `UPDATE leads SET status='lost' WHERE status='no_response'`. Default da coluna `status` continua `'new'` (já correto). Atualizar também:
+- `LeadFilters.tsx`, `LeadStatusBadge`, `LeadStatusSelect` — automático, leem de `APP_CONFIG`.
+- `DashboardPage.tsx` — trocar `'sold'`/`'no_response'` por `'won'`/`'lost'` nos `filter`.
+- `LeadDetailSheet.convertToCustomer` — atualizar para `status: 'won'`.
+- `isLeadStale` em `followUpService.ts` — excluir `'won'` e `'lost'` (em vez de `sold`/`no_response`).
 
-**4. Testimonials Section — Stagger 3D flip-in + hover tilt**
-- Manter o flip-in 3D existente no scroll, adicionar tilt 3D leve no hover dos cards (menos intenso que benefits)
-- Adicionar brilho sutil que segue o mouse nos cards
+Cores semânticas (já existem no design system): `new`→info, `contacting`→primary suave, `negotiating`→warning, `won`→success, `lost`→muted.
 
-**5. Lead Form Section — Glass morphism + float**
-- Adicionar animação de "floating" sutil no card do formulário (micro-movimento vertical contínuo)
-- Efeito de borda brilhante sutil (glow pulsante) no card do formulário para chamar atenção
+### 2. Cards mais informativos (`LeadCard.tsx`)
 
-**6. Novo hook: `useMouseTilt`**
-- Hook reutilizável que retorna `rotateX`, `rotateY` e `lightPosition` baseado na posição do mouse dentro de um elemento
-- Usado nos cards de benefícios e depoimentos
+Os cards já mostram nome, telefone e origem. Adicionar de forma compacta e elegante (sem virar "sistema corporativo"):
 
-### Arquivos modificados
-- `src/hooks/useMouseTilt.ts` — novo hook
-- `src/components/landing/HeroSection.tsx` — parallax na imagem
-- `src/components/landing/BenefitsSection.tsx` — tilt 3D + light follow
-- `src/components/landing/ProductsSection.tsx` — parallax no título
-- `src/components/landing/TestimonialsSection.tsx` — hover tilt leve
-- `src/components/landing/LeadFormSection.tsx` — floating + glow
-- `src/pages/Index.tsx` — passar scrollY para ProductsSection
+- **Interesse** (`product_interest`) — linha discreta com ícone de tag, só se preenchido.
+- **Último contato** — "há 2 dias" (relativo via `date-fns/formatDistanceToNow` pt-BR), com ícone de relógio. Usa `last_contact_at` ou cai para `created_at`.
+- Manter a borda colorida lateral por status, o pulso/destaque de stale, e os botões WhatsApp/follow-up já existentes.
 
-### Princípios
-- Todos os efeitos usam `will-change: transform` e são GPU-composited
-- `prefers-reduced-motion` respeita acessibilidade (sem animação quando ativado)
-- Efeitos são sutis e elegantes, não exagerados
+### 3. Botão "+ Novo lead" por coluna
+
+No header de cada `PipelineColumn`, adicionar um botão ícone `+` discreto que abre o `NewLeadDialog` já existente, **pré-selecionando o status daquela coluna**. Requer:
+- Adicionar prop `defaultStatus?: string` ao `NewLeadDialog` (override do estado inicial do select).
+- `PipelineBoard` controla um único `NewLeadDialog` (estado `newLeadStatus`) para evitar 5 instâncias.
+
+### 4. Confiabilidade do drag & drop (revisar, não refazer)
+
+O fluxo atual já: aplica update otimista no `onDragOver`, persiste no `onDragEnd`, faz rollback via `fetchLeads` em erro, e usa realtime para sincronizar com a listagem de Leads. Ajustes pequenos:
+- **Bug atual no rollback**: o realtime do próprio update pode "piscar". Manter como está — aceitável.
+- Garantir que ao soltar em coluna vazia funciona (já funciona via `useDroppable` na coluna).
+- Adicionar `aria-label` na coluna pra acessibilidade.
+
+### 5. Integração CRM
+
+Já está integrado via realtime (`useRealtimeTable('leads')` em Pipeline, Leads e Dashboard). Confirmar que mover card no pipeline atualiza listagem de Leads em tempo real (sim — mesma tabela, mesmo canal).
+
+### Arquivos tocados
+
+- `src/config/app.ts` — novos 5 status + cores
+- `src/components/pipeline/LeadCard.tsx` — interesse + último contato relativo
+- `src/components/pipeline/PipelineColumn.tsx` — botão "+ Novo lead"
+- `src/components/pipeline/PipelineBoard.tsx` — controlar NewLeadDialog com status default
+- `src/components/admin/NewLeadDialog.tsx` — aceitar `defaultStatus`
+- `src/services/followUpService.ts` — atualizar filtros de status
+- `src/pages/admin/DashboardPage.tsx` — trocar nomes de status nos `.filter`
+- `src/components/admin/LeadDetailSheet.tsx` — `convertToCustomer` usa `won`
+- **Migração de dados** (insert tool, não schema): renomear `sold`→`won`, `no_response`→`lost` nos registros existentes
+
+### Visual
+
+Estilo orgânico preservado: bordas suaves (`rounded-xl`), tokens semânticos da paleta, hover discreto, sem sombras pesadas. Nenhuma alteração no `tailwind.config` ou `index.css`.
 
