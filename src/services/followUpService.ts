@@ -3,6 +3,8 @@
  * Prepared for future automation (scheduled messages, WhatsApp API integration).
  */
 
+import { isClosedStatus } from '@/lib/leadStatus';
+
 const STALE_DAYS = 2;
 
 interface LeadForFollowUp {
@@ -13,7 +15,7 @@ interface LeadForFollowUp {
 
 /** Returns true if a lead has had no contact for STALE_DAYS or more */
 export function isLeadStale(lead: LeadForFollowUp): boolean {
-  if (lead.status === 'won' || lead.status === 'lost') return false;
+  if (isClosedStatus(lead.status)) return false;
 
   const reference = lead.last_contact_at ?? lead.created_at;
   const refDate = new Date(reference);

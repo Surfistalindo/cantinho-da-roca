@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import LeadStatusBadge from './LeadStatusBadge';
+import LeadStatusSelect from './LeadStatusSelect';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -158,10 +159,16 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent className="overflow-y-auto sm:max-w-md">
           <SheetHeader>
-            <SheetTitle className="font-heading flex items-center gap-2">
+            <SheetTitle className="font-heading flex flex-wrap items-center gap-2">
               {lead.name}
+              <LeadStatusBadge status={lead.status} />
             </SheetTitle>
           </SheetHeader>
+
+          <div className="mt-4 flex items-center gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2">
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Status atual</span>
+            <LeadStatusSelect leadId={lead.id} currentStatus={lead.status} onUpdated={() => onUpdated?.()} />
+          </div>
 
           <div className="flex gap-2 mt-4">
             <Button variant="outline" size="sm" onClick={startEditing} disabled={editing}>
@@ -194,7 +201,6 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
                 { label: 'Telefone', value: lead.phone },
                 { label: 'Origem', value: lead.origin },
                 { label: 'Interesse', value: lead.product_interest },
-                { label: 'Status', value: <LeadStatusBadge status={lead.status} /> },
                 { label: 'Criado em', value: format(new Date(lead.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) },
                 { label: 'Atualizado em', value: lead.updated_at ? format(new Date(lead.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : null },
                 { label: 'Último contato', value: lead.last_contact_at ? format(new Date(lead.last_contact_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : null },

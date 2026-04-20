@@ -12,6 +12,7 @@ import PageHeader from '@/components/admin/PageHeader';
 import LoadingState from '@/components/admin/LoadingState';
 import { Button } from '@/components/ui/button';
 import { isLeadStale } from '@/services/followUpService';
+import { LEAD_STATUS } from '@/lib/leadStatus';
 
 interface LeadLite {
   id: string;
@@ -42,14 +43,14 @@ export default function DashboardPage() {
   const stats = useMemo(() => {
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const total = leads.length;
-    const sold = leads.filter((l) => l.status === 'won').length;
+    const sold = leads.filter((l) => l.status === LEAD_STATUS.WON).length;
     return {
       total,
-      newLeads: leads.filter((l) => l.status === 'new').length,
-      contacting: leads.filter((l) => l.status === 'contacting').length,
-      negotiating: leads.filter((l) => l.status === 'negotiating').length,
+      newLeads: leads.filter((l) => l.status === LEAD_STATUS.NEW).length,
+      contacting: leads.filter((l) => l.status === LEAD_STATUS.CONTACTING).length,
+      negotiating: leads.filter((l) => l.status === LEAD_STATUS.NEGOTIATING).length,
       sold,
-      noResponse: leads.filter((l) => l.status === 'lost').length,
+      noResponse: leads.filter((l) => l.status === LEAD_STATUS.LOST).length,
       last7d: leads.filter((l) => new Date(l.created_at).getTime() >= sevenDaysAgo).length,
       followUps: leads.filter((l) => isLeadStale(l)).length,
       conversionRate: total > 0 ? Math.round((sold / total) * 100) : 0,
