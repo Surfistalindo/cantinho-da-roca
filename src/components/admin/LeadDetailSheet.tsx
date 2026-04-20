@@ -3,18 +3,16 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import LeadStatusBadge from './LeadStatusBadge';
 import LeadStatusSelect from './LeadStatusSelect';
+import InteractionTimeline from './InteractionTimeline';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPaperPlane, faCommentDots, faPhone, faFileLines, faPenToSquare, faTrashCan, faUserCheck, faFloppyDisk, faXmark } from '@fortawesome/free-solid-svg-icons';
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import { faCommentDots, faPenToSquare, faTrashCan, faUserCheck, faFloppyDisk, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { clientService } from '@/services/clientService';
 
 interface Lead {
