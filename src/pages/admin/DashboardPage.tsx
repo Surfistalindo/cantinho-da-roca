@@ -78,9 +78,24 @@ export default function DashboardPage() {
     };
   }, [leads]);
 
+  const recentLeads = useMemo(() => leads.slice(0, 5), [leads]);
+
+  const attentionLeads = useMemo(() => {
+    return leads
+      .map((l) => ({ lead: l, info: getContactRecency(l.last_contact_at, l.status, l.created_at) }))
+      .filter((x) => x.info.level === 'attention' || x.info.level === 'overdue')
+      .sort((a, b) => {
+        if (a.info.level !== b.info.level) return a.info.level === 'overdue' ? -1 : 1;
+        const da = a.info.days ?? 9999;
+        const db = b.info.days ?? 9999;
+        return db - da;
+      })
+      .slice(0, 5);
+  }, [leads]);
+
   const primaryCards: { icon: IconDefinition; label: string; value: string | number; description: string; accent: string; href?: string }[] = [
     { icon: faUserGroup, label: 'Total de Leads', value: stats.total, description: `${stats.last7d} nos últimos 7 dias`, accent: 'text-primary bg-primary/10' },
-    { icon: faArrowTrendUp, label: 'Conversão', value: `${stats.conversionRate}%`, description: `${stats.sold} clientes de ${stats.total}`, accent: 'text-success bg-success-soft' },
+    { icon: faArrowTrendUp, label: 'Conversão', value: `${stats.conversionRate}%`, description: `${stats.sold} fechados · ${customerCount} no cadastro`, accent: 'text-success bg-success-soft' },
     { icon: faClockRotateLeft, label: 'Atenção', value: stats.attention, description: '3–6 dias sem contato', accent: 'text-warning bg-warning-soft', href: '/admin/leads?recency=attention' },
     { icon: faTriangleExclamation, label: 'Atrasados', value: stats.overdue, description: '7+ dias ou nunca contatado', accent: 'text-destructive bg-destructive/10', href: '/admin/leads?recency=overdue' },
   ];
