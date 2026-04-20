@@ -42,6 +42,15 @@
     --surface-warm: 40 33% 95%;
     --success: 125 47% 33%;
     --success-foreground: 0 0% 100%;
+    --success-soft: 125 40% 92%;
+
+    --warning: 32 95% 50%;
+    --warning-foreground: 0 0% 100%;
+    --warning-soft: 38 92% 92%;
+
+    --info: 210 85% 50%;
+    --info-foreground: 0 0% 100%;
+    --info-soft: 210 85% 94%;
 
     --sidebar-background: 125 30% 12%;
     --sidebar-foreground: 120 15% 90%;
