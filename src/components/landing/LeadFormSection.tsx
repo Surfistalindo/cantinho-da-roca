@@ -96,8 +96,18 @@ export default function LeadFormSection() {
         origin: origin || 'direto',
         product_interest: productInterest.trim() || null,
         notes: message.trim() || null,
+        status: 'new',
       });
-      if (error) throw error;
+      if (error) {
+        // 23505 = unique_violation (telefone já cadastrado no banco)
+        if ((error as { code?: string }).code === '23505') {
+          toast.info('Você já está cadastrado! 😊', { description: 'Abrindo o WhatsApp pra continuar a conversa.' });
+          window.open(waUrl, '_blank', 'noopener,noreferrer');
+          setLoading(false);
+          return;
+        }
+        throw error;
+      }
 
       lastSubmitRef.current = now;
 
