@@ -24,6 +24,7 @@ interface Lead {
   product_interest: string | null;
   status: string;
   created_at: string;
+  updated_at?: string | null;
   last_contact_at: string | null;
   next_contact_at: string | null;
   notes: string | null;
@@ -195,6 +196,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
                 { label: 'Interesse', value: lead.product_interest },
                 { label: 'Status', value: <LeadStatusBadge status={lead.status} /> },
                 { label: 'Criado em', value: format(new Date(lead.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) },
+                { label: 'Atualizado em', value: lead.updated_at ? format(new Date(lead.updated_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : null },
                 { label: 'Último contato', value: lead.last_contact_at ? format(new Date(lead.last_contact_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : null },
                 { label: 'Próximo contato', value: lead.next_contact_at ? format(new Date(lead.next_contact_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : null },
                 { label: 'Observações', value: lead.notes },
