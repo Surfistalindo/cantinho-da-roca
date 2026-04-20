@@ -1,112 +1,71 @@
 
 
-## Plano: Visualização individual do lead reorganizada
+## Plano: Aprimorar dashboard com leads recentes e leads que precisam atenção
 
-O `LeadDetailSheet` já reúne todas as informações pedidas (dados, status, recência, edição, conversão, WhatsApp, timeline), mas está disposto como uma lista vertical sem hierarquia. Vou **reorganizar em blocos visuais claros**, destacar ações rápidas no topo e adicionar um atalho para registrar interação sem rolar — sem trocar a infraestrutura.
+O dashboard atual já cobre quase tudo do pedido (total, novos, em contato, negociação, clientes, perdidos, atenção, atrasados, conversão, distribuição por status, atalhos rápidos, dados em tempo real). **A única lacuna real é "destacar leads mais recentes"** — hoje só há contagem, sem lista. Vou adicionar isso e fazer dois pequenos ajustes para tornar o painel mais acionável, mantendo o mesmo estilo visual orgânico.
 
-### 1. Estrutura por blocos (4 seções)
+### 1. Nova seção: "Leads recentes" (lista clicável)
 
-Reorganizar o conteúdo do sheet (mantendo `sm:max-w-md` → expandir para `sm:max-w-lg` para caber a estrutura mais respirada):
-
-```text
-┌─────────────────────────────────────────┐
-│ HEADER                                  │
-│  Nome do Lead        [badge status]     │
-│  📞 +55 11 99999-9999 · 📅 há 3 dias    │
-├─────────────────────────────────────────┤
-│ AÇÕES RÁPIDAS (barra horizontal)        │
-│  [WhatsApp] [+Interação] [Editar] [⋯]   │
-├─────────────────────────────────────────┤
-│ BLOCO 1 · Status & Acompanhamento       │
-│  Status atual: [select]                 │
-│  Último contato: [badge] · data         │
-│  Próximo contato: data ou "—"           │
-├─────────────────────────────────────────┤
-│ BLOCO 2 · Dados do Contato              │
-│  Origem · Interesse                     │
-│  Entrou em · Atualizado em              │
-├─────────────────────────────────────────┤
-│ BLOCO 3 · Mensagem do formulário /      │
-│            Observações internas         │
-│  Texto completo, fundo destacado        │
-├─────────────────────────────────────────┤
-│ BLOCO 4 · Histórico de Interações       │
-│  [+ Nova interação] (collapse opcional) │
-│  Timeline vertical (já existe)          │
-└─────────────────────────────────────────┘
-```
-
-Cada bloco vira uma seção visual com:
-- Título pequeno em `text-xs font-semibold uppercase text-muted-foreground`
-- Card com `rounded-lg border border-border bg-card` ou `bg-muted/20`
-- Espaçamento `space-y-4` entre blocos
-
-### 2. Header reformulado
-
-Substituir o `SheetHeader` minimalista atual por um header denso e útil:
-- **Linha 1**: Nome (heading) + `LeadStatusBadge` (já existe)
-- **Linha 2**: Telefone formatado clicável (`tel:` ou WhatsApp) + `ContactRecencyBadge size="sm"` inline + tempo desde criação (ex.: "Lead há 12 dias")
-
-### 3. Barra de ações rápidas (sticky logo abaixo do header)
-
-Hoje as ações estão espalhadas (Editar/Converter/Excluir em cima, WhatsApp no meio, registrar interação só no fim da timeline). Consolidar em **uma única barra horizontal** logo abaixo do header:
-
-| Ação | Variante | Ícone |
-|---|---|---|
-| Abrir WhatsApp | `default` (verde) | `faWhatsapp` |
-| Registrar interação | `outline` | `faPlus` |
-| Editar lead | `outline` | `faPenToSquare` |
-| Converter em cliente | `outline` (escondido em menu se status=`won`) | `faUserCheck` |
-| Excluir | `ghost` destrutivo (no menu `⋯`) | `faTrashCan` |
-
-A ação **"Registrar interação"** abre um pequeno popover/inline expandido com o mesmo formulário do `InteractionTimeline`, **sem precisar rolar**. Para isso, expor um modo `compact` ou `defaultOpen` no `InteractionTimeline`, ou simplesmente fazer scroll suave para a seção de timeline + abrir o foco no textarea (mais simples, sem refator).
-
-### 4. Bloco "Mensagem & Observações"
-
-A "mensagem enviada no formulário" hoje é gravada no campo `notes` da tabela `leads` (vindo do `LeadFormSection` da landing page). Vou:
-- Manter o campo `notes` como fonte (sem mudança de schema).
-- Renderizar em **bloco próprio destacado**, com label "Mensagem do contato / Observações internas", fundo `bg-muted/30`, ícone de aspas e texto preservando quebras de linha (`whitespace-pre-wrap`).
-- No modo edição, este bloco vira o `Textarea` único de observações (já existe).
-
-### 5. Bloco "Dados do contato" em grid 2 colunas
-
-Hoje cada campo é uma linha `flex justify-between`. Trocar por grid `grid-cols-2 gap-3` com cada par "label/valor" empilhado verticalmente, mais legível e compacto:
+Adicionar bloco entre "Distribuição por status" e "Atalhos rápidos":
 
 ```text
-ORIGEM               INTERESSE
-Instagram            Café orgânico
-
-ENTROU EM            ATUALIZADO EM
-12/04 · 09:15        18/04 · 14:32
+┌─ LEADS RECENTES ────────────────── Ver todos →┐
+│ ● Maria Silva    WhatsApp · Café   há 2h  [▸] │
+│ ● João Santos    Instagram · Mel   há 5h  [▸] │
+│ ● Ana Costa      Site · Geleia     ontem  [▸] │
+│ ● Pedro Lima     WhatsApp · Café   2 dias [▸] │
+│ ● Lucia Rocha    Indicação · Mel   3 dias [▸] │
+└───────────────────────────────────────────────┘
 ```
 
-Campos vazios são omitidos (comportamento atual).
+- Mostra os **5 leads mais recentes** (ordenados por `created_at` desc).
+- Cada linha exibe: nome, origem · interesse, tempo relativo (`há 2h` via `formatDistanceToNow`), badge de status (`LeadStatusBadge`).
+- Clicar na linha leva para `/admin/leads?focus=<id>` (ou simplesmente `/admin/leads` se preferirmos abrir o sheet exigir mais infra). **Decisão: linkar para `/admin/leads`** por simplicidade — usuário vê a listagem completa onde pode abrir o sheet.
+- Empty state discreto: "Nenhum lead ainda. Compartilhe sua landing page!" quando não houver leads.
+- Estilo coerente: `bg-card rounded-xl border border-border p-5 shadow-sm`, linhas com `hover:bg-muted/30 rounded-lg`.
 
-### 6. Modo de edição inline (in place no bloco, não substitui tudo)
+Para isso, expandir o `select` do `fetchData` para incluir `name, origin, product_interest` nos leads (já busca `id, status, created_at, last_contact_at`).
 
-Hoje, ao clicar em "Editar", **toda a área de informações some** e vira form. Manter a estrutura visual:
-- Header e ações continuam visíveis.
-- Os blocos "Dados do contato" e "Mensagem/Observações" trocam para inputs no mesmo lugar.
-- Botões "Salvar / Cancelar" aparecem fixos no rodapé do sheet (`sticky bottom-0`).
-- Histórico de interações continua acessível abaixo (não some).
+### 2. Nova mini-seção: "Precisam de atenção agora" (top 3-5)
 
-### 7. Integração com listagem e pipeline
+Junto com a contagem "Atenção" e "Atrasados" que já existem como KPI, adicionar uma **lista compacta dos leads mais críticos** (até 5 leads) ordenados por dias sem contato (descendente), apenas se houver algum.
 
-Sem mudanças de contrato: o sheet continua sendo aberto pelos mesmos pontos:
-- `LeadsPage` → linha clicada
-- `PipelineBoard` → card clicado (já passa o lead completo)
+Exibido em duas colunas no desktop com "Leads recentes":
 
-A prop `Lead` interface ganha apenas garantia de receber `notes` (já recebe). Realtime via `useRealtimeTable('leads')` já propaga edições.
+```text
+┌─ LEADS RECENTES ──────┐ ┌─ PRECISAM DE ATENÇÃO ─┐
+│ ● Maria · há 2h       │ │ ⚠ João · 12 dias      │
+│ ● João · há 5h        │ │ ⚠ Ana · 9 dias        │
+│ ● Ana · ontem         │ │ ⏰ Pedro · 5 dias      │
+│ ● Pedro · 2 dias      │ │ ⏰ Lucia · 4 dias      │
+│ ● Lucia · 3 dias      │ │                       │
+└────────────────────── ┘ └────────────────────── ┘
+```
 
-### Arquivos tocados
+- Mostra `ContactRecencyBadge size="sm"` ao lado de cada nome.
+- Apenas leads abertos (não fechados) com nível `attention` ou `overdue`.
+- Clicar leva para `/admin/leads?recency=overdue` (ou attention).
+- Se não houver nenhum: bloco discreto com "Tudo em dia ✓".
 
-- **Editar:** `src/components/admin/LeadDetailSheet.tsx` — reestruturar layout completo em blocos, header reformulado, barra de ações sticky, edição inline preservando estrutura, expandir largura para `sm:max-w-lg`.
-- **(Opcional) Editar:** `src/components/admin/InteractionTimeline.tsx` — aceitar `ref` ou prop `autoFocus` opcional para foco programático no textarea quando o usuário clica em "Registrar interação" no header. Alternativa mais simples: usar `id="interaction-form"` no form e `scrollIntoView` + foco direto pelo DOM, sem alterar o componente.
+### 3. Card "Clientes" no KPI principal usar `customers` real
+
+Hoje o card "Conversão" mostra `${stats.sold} clientes de ${stats.total}` mas usa `won` da tabela `leads`, ignorando `customerCount` (que já é buscado mas não usado). Manter `won` para a taxa de conversão (faz sentido: % do funil), e deixar essa informação clara no description: `${stats.sold} fechados · ${customerCount} no cadastro` — assim o usuário vê os dois números reais.
+
+### 4. Mudanças mínimas no resto
+
+- **Sem mudanças** nos 4 KPIs principais — já cobrem tudo do pedido.
+- **Sem mudanças** na "Distribuição por status" — já tem todos os 5 status pedidos.
+- **Sem mudanças** nos atalhos rápidos — já bem dimensionados.
+- Manter `useRealtimeTable('leads')` — as duas novas listas atualizam sozinhas.
+
+### Arquivo tocado
+
+- **Editar:** `src/pages/admin/DashboardPage.tsx` — expandir `LeadLite` com `name/origin/product_interest`, adicionar grid de 2 colunas `Recentes + Atenção` antes dos atalhos, ajustar description do card "Conversão".
 
 ### Garantias
 
-- Zero mudança de schema, zero novo serviço, zero fluxo paralelo.
-- Mesmas integrações de realtime (`leads` + `interactions`), mesmas RLS policies.
-- Toda a operação por lead (ler dados, mudar status, registrar interação, contatar via WhatsApp, editar, converter, excluir) acessível **sem sair da tela**.
-- Estilo orgânico preservado: bordas suaves, tokens semânticos, sem sombras pesadas, tipografia consistente com o resto do CRM.
+- Zero mudança de schema, zero novo componente, zero nova dependência.
+- Mesmos dados reais do CRM via `supabase.from('leads')` em uma única query.
+- Realtime já configurado propaga novos leads para a lista de "recentes" automaticamente.
+- Estilo mantido: `rounded-xl border border-border bg-card`, tokens semânticos, sem sombras pesadas, tipografia consistente. Continua não parecendo dashboard genérico.
 
