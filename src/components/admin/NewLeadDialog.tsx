@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -27,18 +27,27 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated?: () => void;
+  /** Pré-seleciona o status (útil ao criar lead a partir de uma coluna do pipeline) */
+  defaultStatus?: string;
 }
 
-const initial = {
-  name: '', phone: '', origin: '', product_interest: '', message: '', notes: '', status: 'new',
-};
+const buildInitial = (status = 'new') => ({
+  name: '', phone: '', origin: '', product_interest: '', message: '', notes: '', status,
+});
 
-export default function NewLeadDialog({ open, onOpenChange, onCreated }: Props) {
-  const [data, setData] = useState(initial);
+export default function NewLeadDialog({ open, onOpenChange, onCreated, defaultStatus }: Props) {
+  const [data, setData] = useState(() => buildInitial(defaultStatus));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
-  const reset = () => { setData(initial); setErrors({}); };
+  // Sincroniza status quando defaultStatus muda ou dialog abre
+  useEffect(() => {
+    if (open) {
+      setData((d) => ({ ...d, status: defaultStatus ?? d.status ?? 'new' }));
+    }
+  }, [open, defaultStatus]);
+
+  const reset = () => { setData(buildInitial(defaultStatus)); setErrors({}); };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

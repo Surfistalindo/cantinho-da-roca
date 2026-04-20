@@ -1,17 +1,20 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClockRotateLeft, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import { faClockRotateLeft, faTriangleExclamation, faTag, faClock } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { isLeadStale } from '@/services/followUpService';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface Lead {
   id: string;
   name: string;
   phone: string | null;
   origin: string | null;
+  product_interest?: string | null;
   status: string;
   created_at: string;
   last_contact_at: string | null;
@@ -31,6 +34,8 @@ export default function LeadCard({ lead, onClick }: Props) {
   };
 
   const stale = isLeadStale(lead);
+  const contactRef = lead.last_contact_at ?? lead.created_at;
+  const contactLabel = formatDistanceToNow(new Date(contactRef), { locale: ptBR, addSuffix: true });
 
   const openWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -66,14 +71,29 @@ export default function LeadCard({ lead, onClick }: Props) {
         isDragging && 'opacity-50 shadow-lg ring-2 ring-primary/30',
         stale && 'border-l-4 border-l-warning',
         lead.status === 'new' && !stale && 'border-l-4 border-l-info',
+        lead.status === 'contacting' && !stale && 'border-l-4 border-l-primary/60',
         lead.status === 'negotiating' && !stale && 'border-l-4 border-l-warning/60',
+        lead.status === 'won' && !stale && 'border-l-4 border-l-success',
+        lead.status === 'lost' && !stale && 'border-l-4 border-l-muted-foreground/40',
       )}
     >
       <p className="font-medium text-sm truncate">{lead.name}</p>
-      <p className="text-xs text-muted-foreground mt-0.5">{lead.phone ?? 'Sem telefone'}</p>
-      {lead.origin && (
-        <p className="text-xs text-muted-foreground/70 mt-0.5">{lead.origin}</p>
+      <p className="text-xs text-muted-foreground mt-0.5 font-mono">{lead.phone ?? 'Sem telefone'}</p>
+
+      {lead.product_interest && (
+        <p className="text-xs text-foreground/70 mt-1.5 flex items-center gap-1 truncate">
+          <FontAwesomeIcon icon={faTag} className="h-2.5 w-2.5 text-primary/70 shrink-0" />
+          <span className="truncate">{lead.product_interest}</span>
+        </p>
       )}
+
+      <p className={cn(
+        'text-[11px] mt-1 flex items-center gap-1',
+        stale ? 'text-warning' : 'text-muted-foreground/80'
+      )}>
+        <FontAwesomeIcon icon={faClock} className="h-2.5 w-2.5" />
+        {contactLabel}
+      </p>
 
       <div className="flex items-center gap-1 mt-2">
         {stale && (

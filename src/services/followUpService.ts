@@ -13,7 +13,7 @@ interface LeadForFollowUp {
 
 /** Returns true if a lead has had no contact for STALE_DAYS or more */
 export function isLeadStale(lead: LeadForFollowUp): boolean {
-  if (lead.status === 'sold' || lead.status === 'no_response') return false;
+  if (lead.status === 'won' || lead.status === 'lost') return false;
 
   const reference = lead.last_contact_at ?? lead.created_at;
   const refDate = new Date(reference);
