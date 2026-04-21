@@ -19,7 +19,7 @@ export const clientService = {
     return data;
   },
 
-  async createFromLead(lead: { name: string; phone?: string | null; product_interest?: string | null }) {
+  async createFromLead(lead: { id?: string; name: string; phone?: string | null; product_interest?: string | null }) {
     const { data, error } = await supabase.from('customers').insert({
       name: lead.name,
       phone: lead.phone ?? undefined,
@@ -27,6 +27,15 @@ export const clientService = {
       purchase_date: new Date().toISOString().split('T')[0],
     }).select().single();
     if (error) throw error;
+
+    // Transfere histórico de interações do lead para o cliente, mantendo lead_id para rastreabilidade.
+    if (lead.id && data?.id) {
+      await supabase
+        .from('interactions')
+        .update({ customer_id: data.id })
+        .eq('lead_id', lead.id);
+    }
+
     return data;
   },
 

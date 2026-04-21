@@ -93,7 +93,7 @@ export default function LeadFormSection() {
       const { error } = await supabase.from('leads').insert({
         name: trimmedName,
         phone: cleanPhone,
-        origin: origin || 'direto',
+        origin: origin || 'Site',
         product_interest: productInterest.trim() || null,
         notes: message.trim() || null,
         status: 'new',
@@ -195,10 +195,10 @@ export default function LeadFormSection() {
                     <Select value={origin} onValueChange={setOrigin}>
                       <SelectTrigger className="bg-background/50"><SelectValue placeholder="Como nos conheceu?" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                        <SelectItem value="instagram">Instagram</SelectItem>
-                        <SelectItem value="indicacao">Indicação</SelectItem>
-                        <SelectItem value="outro">Outro</SelectItem>
+                        <SelectItem value="WhatsApp">WhatsApp</SelectItem>
+                        <SelectItem value="Instagram">Instagram</SelectItem>
+                        <SelectItem value="Indicação">Indicação</SelectItem>
+                        <SelectItem value="Outro">Outro</SelectItem>
                       </SelectContent>
                     </Select>
                     <Input placeholder="O que você procura?" value={productInterest} onChange={(e) => setProductInterest(e.target.value)} maxLength={200} className="bg-background/50" />

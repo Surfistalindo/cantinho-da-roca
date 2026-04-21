@@ -14,38 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      clients: {
-        Row: {
-          created_at: string
-          id: string
-          lead_id: string | null
-          name: string
-          phone: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          lead_id?: string | null
-          name: string
-          phone?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          lead_id?: string | null
-          name?: string
-          phone?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "clients_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       customers: {
         Row: {
           created_at: string

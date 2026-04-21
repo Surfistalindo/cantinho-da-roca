@@ -3,14 +3,38 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import InteractionTimeline from './InteractionTimeline';
-import { format } from 'date-fns';
+import ContactRecencyBadge from './ContactRecencyBadge';
+import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCommentDots, faPenToSquare, faTrashCan, faFloppyDisk, faXmark } from '@fortawesome/free-solid-svg-icons';
+import {
+  faPenToSquare,
+  faTrashCan,
+  faFloppyDisk,
+  faXmark,
+  faPlus,
+  faPhone,
+  faEllipsisVertical,
+  faQuoteLeft,
+} from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 
 interface Customer {
   id: string;
@@ -28,6 +52,23 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdated?: () => void;
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+      {children}
+    </h4>
+  );
+}
+
+function Field({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="space-y-0.5">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-sm font-medium text-foreground break-words">{value}</p>
+    </div>
+  );
 }
 
 export default function CustomerDetailSheet({ customer, open, onOpenChange, onUpdated }: Props) {
@@ -74,71 +115,178 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
     onUpdated?.();
   };
 
+  const openWhatsApp = () => {
+    if (!customer?.phone) return;
+    const clean = customer.phone.replace(/\D/g, '');
+    const num = clean.startsWith('55') ? clean : `55${clean}`;
+    window.open(`https://wa.me/${num}`, '_blank');
+  };
+
+  const focusInteractionForm = () => {
+    const el = document.getElementById('new-interaction-form');
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => {
+      const ta = document.getElementById('new-interaction-textarea') as HTMLTextAreaElement | null;
+      ta?.focus();
+    }, 350);
+  };
+
   if (!customer) return null;
+
+  const createdRelative = formatDistanceToNow(new Date(customer.created_at), { locale: ptBR, addSuffix: false });
 
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="overflow-y-auto sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle className="font-heading">{customer.name}</SheetTitle>
-          </SheetHeader>
-
-          <div className="flex gap-2 mt-4">
-            <Button variant="outline" size="sm" onClick={startEditing} disabled={editing}>
-              <FontAwesomeIcon icon={faPenToSquare} className="h-3.5 w-3.5 mr-1.5" /> Editar
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setDeleteDialogOpen(true)} className="text-destructive ml-auto">
-              <FontAwesomeIcon icon={faTrashCan} className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-
-          {editing ? (
-            <div className="mt-4 space-y-3">
-              <Input placeholder="Nome" value={editData.name} onChange={(e) => setEditData({ ...editData, name: e.target.value })} />
-              <Input placeholder="Telefone" value={editData.phone} onChange={(e) => setEditData({ ...editData, phone: e.target.value })} />
-              <Input placeholder="Produto comprado" value={editData.product_bought} onChange={(e) => setEditData({ ...editData, product_bought: e.target.value })} />
-              <Textarea placeholder="Observações" value={editData.notes} onChange={(e) => setEditData({ ...editData, notes: e.target.value })} />
-              <div className="flex gap-2">
-                <Button size="sm" onClick={saveEdit}><FontAwesomeIcon icon={faFloppyDisk} className="h-3.5 w-3.5 mr-1.5" /> Salvar</Button>
-                <Button size="sm" variant="ghost" onClick={() => setEditing(false)}><FontAwesomeIcon icon={faXmark} className="h-3.5 w-3.5 mr-1.5" /> Cancelar</Button>
+        <SheetContent className="overflow-y-auto sm:max-w-lg p-0 flex flex-col">
+          {/* HEADER */}
+          <SheetHeader className="px-6 pt-6 pb-4 border-b border-border bg-card sticky top-0 z-10">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <SheetTitle className="font-heading text-xl">
+                  <span className="truncate">{customer.name}</span>
+                </SheetTitle>
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
+                  {customer.phone && (
+                    <button
+                      onClick={openWhatsApp}
+                      className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+                    >
+                      <FontAwesomeIcon icon={faPhone} className="h-3 w-3" />
+                      <span className="font-medium">{customer.phone}</span>
+                    </button>
+                  )}
+                  <ContactRecencyBadge
+                    lastContactAt={customer.last_contact_at}
+                    status="contacting"
+                    createdAt={customer.created_at}
+                    size="sm"
+                  />
+                  <span>· Cliente há {createdRelative}</span>
+                </div>
               </div>
             </div>
-          ) : (
-            <div className="mt-4 space-y-3">
-              {[
-                { label: 'Nome', value: customer.name },
-                { label: 'Telefone', value: customer.phone },
-                { label: 'Produto comprado', value: customer.product_bought },
-                { label: 'Data da compra', value: customer.purchase_date ? format(new Date(customer.purchase_date), 'dd/MM/yyyy', { locale: ptBR }) : null },
-                { label: 'Último contato', value: customer.last_contact_at ? format(new Date(customer.last_contact_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : null },
-                { label: 'Observações', value: customer.notes },
-                { label: 'Cadastro', value: format(new Date(customer.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) },
-              ].map((i) =>
-                i.value ? (
-                  <div key={i.label} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{i.label}</span>
-                    <span className="font-medium text-right max-w-[60%]">{i.value}</span>
-                  </div>
-                ) : null
+
+            {/* AÇÕES RÁPIDAS */}
+            <div className="flex flex-wrap items-center gap-2 mt-4">
+              {customer.phone && (
+                <Button size="sm" onClick={openWhatsApp} className="bg-[#25D366] text-white hover:bg-[#20bd5a]">
+                  <FontAwesomeIcon icon={faWhatsapp} className="h-4 w-4 mr-1.5" />
+                  WhatsApp
+                </Button>
               )}
+              <Button size="sm" variant="outline" onClick={focusInteractionForm}>
+                <FontAwesomeIcon icon={faPlus} className="h-3.5 w-3.5 mr-1.5" />
+                Interação
+              </Button>
+              <Button size="sm" variant="outline" onClick={startEditing} disabled={editing}>
+                <FontAwesomeIcon icon={faPenToSquare} className="h-3.5 w-3.5 mr-1.5" />
+                Editar
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="ghost" className="ml-auto px-2">
+                    <FontAwesomeIcon icon={faEllipsisVertical} className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => setDeleteDialogOpen(true)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <FontAwesomeIcon icon={faTrashCan} className="h-3.5 w-3.5 mr-2" />
+                    Excluir cliente
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </SheetHeader>
+
+          {/* CONTEÚDO */}
+          <div className="px-6 py-5 space-y-5 flex-1">
+            {/* BLOCO 1: Compra */}
+            <section className="rounded-lg border border-border bg-card p-4">
+              <SectionLabel>Compra</SectionLabel>
+              {editing ? (
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Nome</p>
+                    <Input value={editData.name} onChange={(e) => setEditData({ ...editData, name: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Telefone</p>
+                    <Input value={editData.phone} onChange={(e) => setEditData({ ...editData, phone: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Produto comprado</p>
+                    <Input value={editData.product_bought} onChange={(e) => setEditData({ ...editData, product_bought: e.target.value })} />
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                  {customer.product_bought && <Field label="Produto" value={customer.product_bought} />}
+                  {customer.purchase_date && (
+                    <Field
+                      label="Data da compra"
+                      value={format(new Date(customer.purchase_date), 'dd/MM/yyyy', { locale: ptBR })}
+                    />
+                  )}
+                  {customer.last_contact_at && (
+                    <Field
+                      label="Último contato"
+                      value={format(new Date(customer.last_contact_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                    />
+                  )}
+                  <Field
+                    label="Cadastrado em"
+                    value={format(new Date(customer.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                  />
+                </div>
+              )}
+            </section>
+
+            {/* BLOCO 2: Observações */}
+            <section className="rounded-lg border border-border bg-muted/30 p-4">
+              <SectionLabel>
+                <span className="inline-flex items-center gap-1.5">
+                  <FontAwesomeIcon icon={faQuoteLeft} className="h-3 w-3" />
+                  Observações
+                </span>
+              </SectionLabel>
+              {editing ? (
+                <Textarea
+                  placeholder="Observações internas..."
+                  value={editData.notes}
+                  onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
+                  className="min-h-[100px] bg-background"
+                />
+              ) : customer.notes ? (
+                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{customer.notes}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">Sem observações registradas.</p>
+              )}
+            </section>
+
+            {/* BLOCO 3: Histórico de Interações */}
+            <section className="rounded-lg border border-border bg-card p-4">
+              <SectionLabel>Histórico de Interações</SectionLabel>
+              <InteractionTimeline entityId={customer.id} entityType="customer" />
+            </section>
+          </div>
+
+          {/* FOOTER de edição (sticky) */}
+          {editing && (
+            <div className="sticky bottom-0 z-10 border-t border-border bg-card px-6 py-3 flex gap-2 justify-end">
+              <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
+                <FontAwesomeIcon icon={faXmark} className="h-3.5 w-3.5 mr-1.5" />
+                Cancelar
+              </Button>
+              <Button size="sm" onClick={saveEdit}>
+                <FontAwesomeIcon icon={faFloppyDisk} className="h-3.5 w-3.5 mr-1.5" />
+                Salvar alterações
+              </Button>
             </div>
           )}
-
-          {customer.phone && (
-            <Button variant="outline" size="sm" className="mt-4 w-full" onClick={() => {
-              const clean = customer.phone!.replace(/\D/g, '');
-              const num = clean.startsWith('55') ? clean : `55${clean}`;
-              window.open(`https://wa.me/${num}`, '_blank');
-            }}>
-              <FontAwesomeIcon icon={faCommentDots} className="h-4 w-4 mr-2 text-green-600" /> Contato via WhatsApp
-            </Button>
-          )}
-
-          <div className="mt-8">
-            <h4 className="font-semibold mb-3">Histórico de Interações</h4>
-            <InteractionTimeline entityId={customer.id} entityType="customer" />
-          </div>
         </SheetContent>
       </Sheet>
 
@@ -146,7 +294,9 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Excluir cliente</DialogTitle>
-            <DialogDescription>Tem certeza que deseja excluir "{customer.name}"? Esta ação não pode ser desfeita.</DialogDescription>
+            <DialogDescription>
+              Tem certeza que deseja excluir "{customer.name}"? Esta ação não pode ser desfeita.
+            </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setDeleteDialogOpen(false)}>Cancelar</Button>
