@@ -1,71 +1,79 @@
 
 
-## Plano: Aprimorar dashboard com leads recentes e leads que precisam atenção
+## Plano: Revisão final do CRM — ajustes pontuais para gestão comercial
 
-O dashboard atual já cobre quase tudo do pedido (total, novos, em contato, negociação, clientes, perdidos, atenção, atrasados, conversão, distribuição por status, atalhos rápidos, dados em tempo real). **A única lacuna real é "destacar leads mais recentes"** — hoje só há contagem, sem lista. Vou adicionar isso e fazer dois pequenos ajustes para tornar o painel mais acionável, mantendo o mesmo estilo visual orgânico.
+Após revisar toda a área administrativa, **a maior parte da operação já funciona como sistema integrado** (formulário público → leads → pipeline → clientes, com timeline, recência automática, dashboard em tempo real). A revisão identificou **6 pontos de polimento** focados em consistência, robustez e usabilidade real — sem refazer o que já funciona.
 
-### 1. Nova seção: "Leads recentes" (lista clicável)
+### Diagnóstico — o que já está OK
 
-Adicionar bloco entre "Distribuição por status" e "Atalhos rápidos":
+| Área | Status |
+|---|---|
+| Formulário público → tabela `leads` | OK (com rate-limit, validação, deduplicação por telefone) |
+| Cadastro manual (`NewLeadDialog`) | OK (validação Zod, mesma tabela) |
+| Listagem com filtros (status, origem, recência, busca) | OK |
+| Pipeline drag-and-drop sincronizado com banco | OK |
+| Status padronizados (`APP_CONFIG.leadStatuses`) | OK (5 status, fonte única) |
+| Timeline de interações + autor via `profiles` | OK |
+| `last_contact_at` automático via trigger | OK |
+| Dashboard com dados reais + realtime | OK |
+| Conversão lead → cliente | OK (mas perde histórico — ver #4) |
 
-```text
-┌─ LEADS RECENTES ────────────────── Ver todos →┐
-│ ● Maria Silva    WhatsApp · Café   há 2h  [▸] │
-│ ● João Santos    Instagram · Mel   há 5h  [▸] │
-│ ● Ana Costa      Site · Geleia     ontem  [▸] │
-│ ● Pedro Lima     WhatsApp · Café   2 dias [▸] │
-│ ● Lucia Rocha    Indicação · Mel   3 dias [▸] │
-└───────────────────────────────────────────────┘
-```
+### O que ajustar
 
-- Mostra os **5 leads mais recentes** (ordenados por `created_at` desc).
-- Cada linha exibe: nome, origem · interesse, tempo relativo (`há 2h` via `formatDistanceToNow`), badge de status (`LeadStatusBadge`).
-- Clicar na linha leva para `/admin/leads?focus=<id>` (ou simplesmente `/admin/leads` se preferirmos abrir o sheet exigir mais infra). **Decisão: linkar para `/admin/leads`** por simplicidade — usuário vê a listagem completa onde pode abrir o sheet.
-- Empty state discreto: "Nenhum lead ainda. Compartilhe sua landing page!" quando não houver leads.
-- Estilo coerente: `bg-card rounded-xl border border-border p-5 shadow-sm`, linhas com `hover:bg-muted/30 rounded-lg`.
+#### 1. Origens normalizadas (formulário público vs CRM)
 
-Para isso, expandir o `select` do `fetchData` para incluir `name, origin, product_interest` nos leads (já busca `id, status, created_at, last_contact_at`).
+**Inconsistência:** o formulário público grava origem em **lowercase** (`whatsapp`, `instagram`, `indicacao`, `outro`, `direto`), mas `APP_CONFIG.leadOrigins` usa **TitleCase** (`WhatsApp`, `Instagram`, `Indicação`, `Outro`). Resultado: o filtro de origem na listagem **não casa** com leads vindos do site.
 
-### 2. Nova mini-seção: "Precisam de atenção agora" (top 3-5)
+**Fix:** padronizar `LeadFormSection.tsx` para gravar exatamente os mesmos valores de `APP_CONFIG.leadOrigins`. Adicionar `'Site'` à lista de origens (substitui `'direto'`). Backfill via insert tool dos leads existentes para uniformizar.
 
-Junto com a contagem "Atenção" e "Atrasados" que já existem como KPI, adicionar uma **lista compacta dos leads mais críticos** (até 5 leads) ordenados por dias sem contato (descendente), apenas se houver algum.
+#### 2. Página de Clientes — dois pontos faltantes
 
-Exibido em duas colunas no desktop com "Leads recentes":
+- **Sem busca por produto.** Adicionar filtro/busca pelo campo `product_bought` junto com nome/telefone (mesmo input expandido).
+- **`CustomerDetailSheet` está visualmente defasado** vs `LeadDetailSheet` (que foi refeito em blocos). Aplicar a **mesma estrutura de blocos** no detalhe do cliente: header com WhatsApp + recência, ações rápidas, blocos "Compra", "Observações", "Histórico". Reutiliza o `ContactRecencyBadge` (já funciona para customers — trigger sincroniza `last_contact_at`).
 
-```text
-┌─ LEADS RECENTES ──────┐ ┌─ PRECISAM DE ATENÇÃO ─┐
-│ ● Maria · há 2h       │ │ ⚠ João · 12 dias      │
-│ ● João · há 5h        │ │ ⚠ Ana · 9 dias        │
-│ ● Ana · ontem         │ │ ⏰ Pedro · 5 dias      │
-│ ● Pedro · 2 dias      │ │ ⏰ Lucia · 4 dias      │
-│ ● Lucia · 3 dias      │ │                       │
-└────────────────────── ┘ └────────────────────── ┘
-```
+#### 3. Lead → Cliente: levar a timeline junto
 
-- Mostra `ContactRecencyBadge size="sm"` ao lado de cada nome.
-- Apenas leads abertos (não fechados) com nível `attention` ou `overdue`.
-- Clicar leva para `/admin/leads?recency=overdue` (ou attention).
-- Se não houver nenhum: bloco discreto com "Tudo em dia ✓".
+Hoje `clientService.createFromLead` cria um `customers` novo, mas as **interações da timeline ficam órfãs no lead** (que continua existindo em `won`). O usuário não vê o histórico no cliente.
 
-### 3. Card "Clientes" no KPI principal usar `customers` real
+**Fix:** após criar o customer, fazer `UPDATE interactions SET customer_id = <novo_id> WHERE lead_id = <lead_id>` (mantém `lead_id` para rastreabilidade). Trigger `trg_sync_last_contact` re-popula `last_contact_at` do customer automaticamente. Sem perda de dados.
 
-Hoje o card "Conversão" mostra `${stats.sold} clientes de ${stats.total}` mas usa `won` da tabela `leads`, ignorando `customerCount` (que já é buscado mas não usado). Manter `won` para a taxa de conversão (faz sentido: % do funil), e deixar essa informação clara no description: `${stats.sold} fechados · ${customerCount} no cadastro` — assim o usuário vê os dois números reais.
+#### 4. Sidebar — adicionar atalho "Ver site" e indicador visual
 
-### 4. Mudanças mínimas no resto
+A sidebar tem só 4 itens, sem destaque para áreas com pendências. Pequenos polimentos:
+- Mostrar **badge numérico** ao lado de "Leads" quando houver leads atrasados (ex.: `Leads · 3`).
+- Adicionar o item **"Site público"** com ícone (link externo) — hoje só está no navbar (escondido em mobile).
 
-- **Sem mudanças** nos 4 KPIs principais — já cobrem tudo do pedido.
-- **Sem mudanças** na "Distribuição por status" — já tem todos os 5 status pedidos.
-- **Sem mudanças** nos atalhos rápidos — já bem dimensionados.
-- Manter `useRealtimeTable('leads')` — as duas novas listas atualizam sozinhas.
+#### 5. Limpeza: remover tabela legada `clients`
 
-### Arquivo tocado
+A tabela `clients` (singular, com `lead_id`) existe no schema mas está **vazia e não é usada em nenhum lugar do código** (todos usam `customers`). Migration para `DROP TABLE public.clients` — reduz confusão e ruído no schema.
 
-- **Editar:** `src/pages/admin/DashboardPage.tsx` — expandir `LeadLite` com `name/origin/product_interest`, adicionar grid de 2 colunas `Recentes + Atenção` antes dos atalhos, ajustar description do card "Conversão".
+#### 6. Dashboard — pequena melhoria de navegação
 
-### Garantias
+No bloco "Leads recentes" e "Precisam de atenção", o link leva para `/admin/leads` mas **não abre o sheet do lead clicado**. Ajuste mínimo: passar `?focus=<id>` na URL e fazer `LeadsPage` ler esse param para abrir o `LeadDetailSheet` automaticamente. Mesmo padrão já usado para `?recency=`.
 
-- Zero mudança de schema, zero novo componente, zero nova dependência.
-- Mesmos dados reais do CRM via `supabase.from('leads')` em uma única query.
-- Realtime já configurado propaga novos leads para a lista de "recentes" automaticamente.
-- Estilo mantido: `rounded-xl border border-border bg-card`, tokens semânticos, sem sombras pesadas, tipografia consistente. Continua não parecendo dashboard genérico.
+### Garantias de não-regressão
+
+- **Landing page intacta:** o único ajuste em `LeadFormSection` é normalizar valores de origem (não muda visual nem fluxo).
+- **Sem mudança nos componentes UI compartilhados** (`Button`, `Sheet`, `Dialog`, etc.).
+- **Sem mudança nos design tokens** (`tailwind.config`, `index.css`).
+- **Schema:** apenas `DROP TABLE clients` (vazia, sem foreign keys, sem código). Zero impacto.
+- **RLS:** sem alterações — todas as operações continuam protegidas.
+- **Realtime:** já cobre `leads`, `customers`, `interactions` — nada a adicionar.
+
+### Arquivos tocados
+
+- **Editar:** `src/components/landing/LeadFormSection.tsx` — normalizar `<SelectItem value>` e o fallback `'direto'` → `'Site'`.
+- **Editar:** `src/config/app.ts` — adicionar `'Site'` em `leadOrigins`.
+- **Insert tool:** backfill `UPDATE leads SET origin = ...` para uniformizar dados existentes (caso haja).
+- **Editar:** `src/pages/admin/ClientsPage.tsx` — busca por produto.
+- **Reescrever:** `src/components/admin/CustomerDetailSheet.tsx` — adotar layout de blocos do `LeadDetailSheet`, com header + ações rápidas + recência + timeline.
+- **Editar:** `src/services/clientService.ts` — em `createFromLead`, transferir interações para o novo `customer_id`.
+- **Editar:** `src/components/crm/AdminSidebar.tsx` — badge de leads atrasados + item "Site público".
+- **Editar:** `src/pages/admin/DashboardPage.tsx` — links das listas com `?focus=<id>`.
+- **Editar:** `src/pages/admin/LeadsPage.tsx` — ler `?focus=<id>` e abrir o sheet correspondente.
+- **Migration SQL:** `DROP TABLE IF EXISTS public.clients;`
+
+### Resultado esperado
+
+Sistema 100% coerente: o que entra pelo site aparece corretamente filtrado no CRM; cliente convertido mantém histórico; navegação do dashboard leva direto ao contexto certo; visualização de cliente fica no mesmo nível visual do lead; sidebar comunica pendências em tempo real; schema limpo sem tabelas órfãs.
 
