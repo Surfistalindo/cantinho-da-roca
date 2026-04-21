@@ -54,7 +54,9 @@ export default function ClientsPage() {
     if (!search) return customers;
     const q = search.toLowerCase();
     return customers.filter((c) =>
-      c.name.toLowerCase().includes(q) || (c.phone ?? '').includes(q)
+      c.name.toLowerCase().includes(q) ||
+      (c.phone ?? '').includes(q) ||
+      (c.product_bought ?? '').toLowerCase().includes(q)
     );
   }, [customers, search]);
 
@@ -102,7 +104,7 @@ export default function ClientsPage() {
         <div className="relative mb-4">
           <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por nome ou telefone..."
+            placeholder="Buscar por nome, telefone ou produto..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"

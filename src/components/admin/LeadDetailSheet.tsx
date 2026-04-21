@@ -139,6 +139,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
     try {
       await clientService.createFromLead(lead);
       await supabase.from('leads').update({ status: 'won' }).eq('id', lead.id);
+      // Histórico transferido dentro de createFromLead via interactions.customer_id
       toast.success('Lead convertido em cliente!');
       setConvertDialogOpen(false);
       onOpenChange(false);

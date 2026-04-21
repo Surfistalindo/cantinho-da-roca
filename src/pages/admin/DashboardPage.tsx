@@ -194,7 +194,7 @@ export default function DashboardPage() {
                 return (
                   <li key={l.id}>
                     <Link
-                      to="/admin/leads"
+                      to={`/admin/leads?focus=${l.id}`}
                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 transition-colors"
                     >
                       <div className="min-w-0 flex-1">
@@ -243,7 +243,7 @@ export default function DashboardPage() {
                 return (
                   <li key={lead.id}>
                     <Link
-                      to={`/admin/leads?recency=${info.level}`}
+                      to={`/admin/leads?focus=${lead.id}`}
                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 transition-colors"
                     >
                       <div className="min-w-0 flex-1">

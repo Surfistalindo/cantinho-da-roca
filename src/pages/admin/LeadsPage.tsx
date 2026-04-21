@@ -69,6 +69,20 @@ export default function LeadsPage() {
     }
   }, [searchParams]);
 
+  // Abre o sheet automaticamente quando ?focus=<id> está na URL
+  useEffect(() => {
+    const focusId = searchParams.get('focus');
+    if (!focusId || leads.length === 0) return;
+    const target = leads.find((l) => l.id === focusId);
+    if (target) {
+      setSelectedLead(target);
+      setSheetOpen(true);
+      const params = new URLSearchParams(searchParams);
+      params.delete('focus');
+      setSearchParams(params, { replace: true });
+    }
+  }, [searchParams, leads, setSearchParams]);
+
   const updateRecency = (v: RecencyFilter) => {
     setRecencyFilter(v);
     const params = new URLSearchParams(searchParams);

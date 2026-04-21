@@ -27,7 +27,7 @@ export const APP_CONFIG = {
   ] as const,
 
   /** Opções de origem */
-  leadOrigins: ['WhatsApp', 'Instagram', 'Indicação', 'Outro'] as const,
+  leadOrigins: ['Site', 'WhatsApp', 'Instagram', 'Indicação', 'Outro'] as const,
 };
 
 export type LeadStatus = (typeof APP_CONFIG.leadStatuses)[number]['value'];
