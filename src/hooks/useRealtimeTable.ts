@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 export function useRealtimeTable(table: string, onChange: () => void) {
   useEffect(() => {
     const channel = supabase
-      .channel(`realtime-${table}`)
+      .channel(`realtime-${table}-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table },
