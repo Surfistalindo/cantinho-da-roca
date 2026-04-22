@@ -371,15 +371,22 @@ export default function LeadsPage() {
               <div className="md:hidden space-y-2.5">
                 {filtered.map((lead) => {
                   const isNewest = lead.id === newestId;
+                  const score = getLeadScore(lead, { interactionCount: interactionCounts[lead.id] ?? 0 });
                   return (
                     <button
                       key={lead.id}
                       onClick={() => openDetail(lead)}
                       className={cn(
                         'w-full text-left bg-card border border-border rounded-2xl p-4 transition-all duration-150 hover:border-border-strong hover:shadow-card',
-                        isNewest && 'border-primary/40 bg-primary/[0.03]'
+                        isNewest && 'border-primary/40 bg-primary/[0.03]',
+                        score.urgent && 'border-l-2 border-l-destructive',
                       )}
                     >
+                      {score.level !== 'closed' && (
+                        <div className="mb-2">
+                          <LeadScoreBadge lead={lead} interactionCount={interactionCounts[lead.id] ?? 0} size="sm" />
+                        </div>
+                      )}
                       <div className="flex items-start gap-3 mb-3">
                         <InitialsAvatar name={lead.name} size="md" />
                         <div className="min-w-0 flex-1">
