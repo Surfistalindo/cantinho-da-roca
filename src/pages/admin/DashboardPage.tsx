@@ -217,20 +217,32 @@ export default function DashboardPage() {
         <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <FontAwesomeIcon icon={faSeedling} className="w-3.5 h-3.5 text-primary" /> Leads recentes
+              <FontAwesomeIcon icon={faFire} className="w-3.5 h-3.5 text-destructive" /> Top leads quentes
             </h3>
             <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
-              <Link to="/admin/leads">Ver todos <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 ml-1" /></Link>
+              <Link to="/admin/leads?priority=hot">Ver todos <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 ml-1" /></Link>
             </Button>
           </div>
-          {recentLeads.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">
-              Nenhum lead ainda. Compartilhe sua landing page!
-            </p>
+          {hotLeads.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mb-3">
+                <FontAwesomeIcon icon={faSeedling} className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium text-foreground">Nenhum lead quente</p>
+              <p className="text-xs text-muted-foreground mt-1">Os leads mais promissores aparecerão aqui.</p>
+            </div>
           ) : (
             <ul className="divide-y divide-border/60 -mx-2">
-              {recentLeads.map((l) => {
+              {hotLeads.map((l) => {
                 const meta = [l.origin, l.product_interest].filter(Boolean).join(' · ');
+                const openWa = (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!l.phone) return;
+                  const clean = l.phone.replace(/\D/g, '');
+                  const num = clean.startsWith('55') ? clean : `55${clean}`;
+                  window.open(`https://wa.me/${num}`, '_blank');
+                };
                 return (
                   <li key={l.id}>
                     <Link
@@ -241,15 +253,23 @@ export default function DashboardPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-medium text-foreground truncate">{l.name}</p>
-                          <LeadStatusBadge status={l.status} />
+                          <LeadScoreBadge lead={l} interactionCount={interactionCounts[l.id] ?? 0} size="sm" />
                         </div>
                         {meta && (
                           <p className="text-xs text-muted-foreground truncate mt-0.5">{meta}</p>
                         )}
                       </div>
-                      <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                        {formatDistanceToNow(new Date(l.created_at), { addSuffix: true, locale: ptBR })}
-                      </span>
+                      {l.phone && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-success hover:bg-success-soft shrink-0"
+                          onClick={openWa}
+                          aria-label="Abrir WhatsApp"
+                        >
+                          <FontAwesomeIcon icon={faWhatsapp} className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
                     </Link>
                   </li>
                 );
