@@ -15,6 +15,7 @@ import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, Mail, Lock, Copy, Check } 
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import LeafSVG from '@/components/landing/LeafSVG';
+import logoCantinho from '@/assets/logo-cantinho.png';
 
 const SUPPORT_EMAIL = 'contato@voltzagency.com.br';
 
