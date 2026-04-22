@@ -88,6 +88,10 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
 
+  const interactionCounts = useInteractionCounts(lead ? [lead.id] : []);
+  const interactionCount = lead ? (interactionCounts[lead.id] ?? 0) : 0;
+  const scoreInfo = lead ? getLeadScore(lead, { interactionCount }) : null;
+
   useEffect(() => {
     if (lead && open) setEditing(false);
   }, [lead, open]);
@@ -184,6 +188,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
                 <SheetTitle className="text-xl font-semibold tracking-tight flex flex-wrap items-center gap-2">
                   <span className="truncate">{lead.name}</span>
                   <LeadStatusBadge status={lead.status} />
+                  <LeadScoreBadge lead={lead} interactionCount={interactionCount} size="md" />
                 </SheetTitle>
                 <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
                   {lead.phone && (
