@@ -2,7 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, BarChart3, MessageSquare } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faArrowRightFromBracket,
+  faUserGroup,
+  faChartColumn,
+  faCommentDots,
+} from '@fortawesome/free-solid-svg-icons';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -78,9 +84,9 @@ export default function AdminDashboard() {
   };
 
   const cards = [
-    { icon: Users, label: 'Leads', value: String(stats.total), description: 'Total de leads capturados' },
-    { icon: BarChart3, label: 'Negociando', value: String(stats.negotiating), description: 'Em negociação ativa' },
-    { icon: MessageSquare, label: 'Vendidos', value: String(stats.sold), description: 'Convertidos em vendas' },
+    { icon: faUserGroup, label: 'Leads', value: String(stats.total), description: 'Total de leads capturados' },
+    { icon: faChartColumn, label: 'Negociando', value: String(stats.negotiating), description: 'Em negociação ativa' },
+    { icon: faCommentDots, label: 'Vendidos', value: String(stats.sold), description: 'Convertidos em vendas' },
   ];
 
   return (
@@ -91,7 +97,7 @@ export default function AdminDashboard() {
           <p className="text-xs text-muted-foreground">CRM &middot; {user?.email}</p>
         </div>
         <Button variant="ghost" size="sm" onClick={handleSignOut}>
-          <LogOut className="w-4 h-4 mr-2" />
+          <FontAwesomeIcon icon={faArrowRightFromBracket} className="w-4 h-4 mr-2" />
           Sair
         </Button>
       </header>
@@ -103,7 +109,7 @@ export default function AdminDashboard() {
             <div key={c.label} className="bg-card rounded-lg p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <c.icon className="w-5 h-5" />
+                  <FontAwesomeIcon icon={c.icon} className="w-5 h-5" />
                 </div>
                 <span className="font-semibold">{c.label}</span>
               </div>

@@ -11,7 +11,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, Mail, Lock, Copy, Check } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faArrowLeft,
+  faArrowRight,
+  faEye,
+  faEyeSlash,
+  faSpinner,
+  faEnvelope,
+  faLock,
+  faCopy,
+  faCheck,
+} from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import LeafSVG from '@/components/landing/LeafSVG';
@@ -186,7 +197,8 @@ export default function AdminLogin() {
                       : 'focus-within:shadow-[0_0_0_4px_hsl(125_47%_33%/0.10)]'
                   }`}
                 >
-                  <Mail
+                  <FontAwesomeIcon
+                    icon={faEnvelope}
                     className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
                     aria-hidden
                   />
@@ -234,7 +246,8 @@ export default function AdminLogin() {
                   </button>
                 </div>
                 <div className="relative rounded-md transition-all duration-200 focus-within:-translate-y-px focus-within:shadow-[0_0_0_4px_hsl(125_47%_33%/0.10)]">
-                  <Lock
+                  <FontAwesomeIcon
+                    icon={faLock}
                     className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
                     aria-hidden
                   />
@@ -254,7 +267,7 @@ export default function AdminLogin() {
                     aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                     className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? <FontAwesomeIcon icon={faEyeSlash} className="h-4 w-4" /> : <FontAwesomeIcon icon={faEye} className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
@@ -267,13 +280,13 @@ export default function AdminLogin() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <FontAwesomeIcon icon={faSpinner} spin className="h-4 w-4" />
                     Entrando…
                   </>
                 ) : (
                   <>
                     Entrar
-                    <ArrowRight className="h-4 w-4" />
+                    <FontAwesomeIcon icon={faArrowRight} className="h-4 w-4" />
                   </>
                 )}
               </Button>
@@ -282,7 +295,7 @@ export default function AdminLogin() {
             <div className="mt-6 text-center">
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/">
-                  <ArrowLeft className="w-4 h-4 mr-1.5" />
+                  <FontAwesomeIcon icon={faArrowLeft} className="w-4 h-4 mr-1.5" />
                   Voltar para o site
                 </Link>
               </Button>
@@ -317,11 +330,11 @@ export default function AdminLogin() {
               >
                 {copied ? (
                   <>
-                    <Check className="h-3.5 w-3.5" /> Copiado
+                    <FontAwesomeIcon icon={faCheck} className="h-3.5 w-3.5" /> Copiado
                   </>
                 ) : (
                   <>
-                    <Copy className="h-3.5 w-3.5" /> Copiar
+                    <FontAwesomeIcon icon={faCopy} className="h-3.5 w-3.5" /> Copiar
                   </>
                 )}
               </Button>
@@ -334,7 +347,7 @@ export default function AdminLogin() {
             </Button>
             <Button asChild>
               <a href={`mailto:${SUPPORT_EMAIL}?subject=Recupera%C3%A7%C3%A3o%20de%20senha%20-%20Cantinho%20da%20Ro%C3%A7a`}>
-                <Mail className="h-4 w-4" />
+                <FontAwesomeIcon icon={faEnvelope} className="h-4 w-4" />
                 Abrir e-mail
               </a>
             </Button>

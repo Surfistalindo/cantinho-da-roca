@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { APP_CONFIG } from '@/config/app';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faXmark, faFire, faCircleHalfStroke, faSnowflake } from '@fortawesome/free-solid-svg-icons';
 
 export type RecencyFilter = 'all' | 'recent' | 'attention' | 'overdue';
 export type PriorityFilter = 'all' | 'hot' | 'warm' | 'cold';
@@ -86,9 +86,15 @@ export default function LeadFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Toda prioridade</SelectItem>
-            <SelectItem value="hot">🔥 Quentes</SelectItem>
-            <SelectItem value="warm">🌤 Mornos</SelectItem>
-            <SelectItem value="cold">❄ Frios</SelectItem>
+            <SelectItem value="hot">
+              <span className="inline-flex items-center"><FontAwesomeIcon icon={faFire} className="h-3 w-3 mr-2 text-destructive" />Quentes</span>
+            </SelectItem>
+            <SelectItem value="warm">
+              <span className="inline-flex items-center"><FontAwesomeIcon icon={faCircleHalfStroke} className="h-3 w-3 mr-2 text-warning" />Mornos</span>
+            </SelectItem>
+            <SelectItem value="cold">
+              <span className="inline-flex items-center"><FontAwesomeIcon icon={faSnowflake} className="h-3 w-3 mr-2 text-muted-foreground" />Frios</span>
+            </SelectItem>
           </SelectContent>
         </Select>
       )}
