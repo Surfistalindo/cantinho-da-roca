@@ -160,7 +160,7 @@ export default function AdminLogin() {
               <img
                 src={logoCantinho}
                 alt="Cantinho da Roça"
-                className="mx-auto h-14 sm:h-16 w-auto mb-4 motion-safe-anim drop-shadow-[0_6px_20px_hsl(125_47%_33%/0.18)]"
+                className="mx-auto h-24 sm:h-28 w-auto mb-4 motion-safe-anim drop-shadow-[0_8px_24px_hsl(125_47%_33%/0.22)]"
                 style={{ animation: 'float 5s ease-in-out infinite' }}
               />
               <p className="text-sm text-muted-foreground">Área administrativa</p>
