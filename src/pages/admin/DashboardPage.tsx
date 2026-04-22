@@ -4,8 +4,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faUserGroup, faComments, faPhoneSlash, faUserCheck,
   faArrowTrendUp, faClockRotateLeft, faBolt, faTableColumns, faTriangleExclamation,
-  faChevronRight, faSeedling, faCircleCheck, faChartColumn,
+  faChevronRight, faSeedling, faCircleCheck, faChartColumn, faFire,
 } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -16,9 +17,13 @@ import LoadingState from '@/components/admin/LoadingState';
 import LeadStatusBadge from '@/components/admin/LeadStatusBadge';
 import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
 import InitialsAvatar from '@/components/admin/InitialsAvatar';
+import LeadScoreBadge from '@/components/admin/LeadScoreBadge';
 import { Button } from '@/components/ui/button';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { LEAD_STATUS } from '@/lib/leadStatus';
 import { getContactRecency } from '@/lib/contactRecency';
+import { getLeadScore, compareByScore } from '@/lib/leadScore';
+import { useInteractionCounts } from '@/hooks/useInteractionCounts';
 import { cn } from '@/lib/utils';
 
 interface LeadLite {
