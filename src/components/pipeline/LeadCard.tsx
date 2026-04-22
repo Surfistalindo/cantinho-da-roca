@@ -1,14 +1,12 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClockRotateLeft, faTag } from '@fortawesome/free-solid-svg-icons';
-import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
-import { Button } from '@/components/ui/button';
+import { faTag } from '@fortawesome/free-solid-svg-icons';
 import { cn } from '@/lib/utils';
 import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
 import InitialsAvatar from '@/components/admin/InitialsAvatar';
 import LeadScoreBadge from '@/components/admin/LeadScoreBadge';
-import { getContactRecency } from '@/lib/contactRecency';
+import WhatsAppQuickAction from '@/components/admin/WhatsAppQuickAction';
 import { getLeadScore } from '@/lib/leadScore';
 
 interface Lead {
