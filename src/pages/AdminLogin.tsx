@@ -246,7 +246,8 @@ export default function AdminLogin() {
                   </button>
                 </div>
                 <div className="relative rounded-md transition-all duration-200 focus-within:-translate-y-px focus-within:shadow-[0_0_0_4px_hsl(125_47%_33%/0.10)]">
-                  <Lock
+                  <FontAwesomeIcon
+                    icon={faLock}
                     className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
                     aria-hidden
                   />
