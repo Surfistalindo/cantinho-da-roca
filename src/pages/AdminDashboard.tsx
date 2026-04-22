@@ -109,7 +109,7 @@ export default function AdminDashboard() {
             <div key={c.label} className="bg-card rounded-lg p-6 shadow-sm">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <c.icon className="w-5 h-5" />
+                  <FontAwesomeIcon icon={c.icon} className="w-5 h-5" />
                 </div>
                 <span className="font-semibold">{c.label}</span>
               </div>
