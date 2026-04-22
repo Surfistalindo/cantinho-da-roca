@@ -66,11 +66,13 @@ export default function DashboardPage() {
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const total = leads.length;
     const sold = leads.filter((l) => l.status === LEAD_STATUS.WON).length;
-    let attention = 0; let overdue = 0;
+    let attention = 0; let overdue = 0; let hot = 0;
     for (const l of leads) {
       const info = getContactRecency(l.last_contact_at, l.status, l.created_at);
       if (info.level === 'attention') attention++;
       else if (info.level === 'overdue') overdue++;
+      const score = getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 });
+      if (score.level === 'hot' || score.urgent) hot++;
     }
     return {
       total,
@@ -82,11 +84,20 @@ export default function DashboardPage() {
       last7d: leads.filter((l) => new Date(l.created_at).getTime() >= sevenDaysAgo).length,
       attention,
       overdue,
+      hot,
       conversionRate: total > 0 ? Math.round((sold / total) * 100) : 0,
     };
-  }, [leads]);
+  }, [leads, interactionCounts]);
 
   const recentLeads = useMemo(() => leads.slice(0, 5), [leads]);
+
+  const hotLeads = useMemo(() => {
+    return leads
+      .map((l) => ({ ...l, _scoreInfo: getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 }) }))
+      .filter((l) => l._scoreInfo.level === 'hot' || l._scoreInfo.urgent)
+      .sort(compareByScore)
+      .slice(0, 5);
+  }, [leads, interactionCounts]);
 
   const attentionLeads = useMemo(() => {
     return leads
