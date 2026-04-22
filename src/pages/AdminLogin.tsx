@@ -11,7 +11,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader2, Mail, Lock, Copy, Check } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faArrowLeft,
+  faArrowRight,
+  faEye,
+  faEyeSlash,
+  faSpinner,
+  faEnvelope,
+  faLock,
+  faCopy,
+  faCheck,
+} from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import LeafSVG from '@/components/landing/LeafSVG';
