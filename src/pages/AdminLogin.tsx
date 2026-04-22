@@ -295,7 +295,7 @@ export default function AdminLogin() {
             <div className="mt-6 text-center">
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/">
-                  <ArrowLeft className="w-4 h-4 mr-1.5" />
+                  <FontAwesomeIcon icon={faArrowLeft} className="w-4 h-4 mr-1.5" />
                   Voltar para o site
                 </Link>
               </Button>
