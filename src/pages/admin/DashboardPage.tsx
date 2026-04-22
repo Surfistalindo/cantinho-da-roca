@@ -8,12 +8,12 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-import { ptBR } from 'date-fns/locale';
+
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import PageHeader from '@/components/admin/PageHeader';
 import LoadingState from '@/components/admin/LoadingState';
-import LeadStatusBadge from '@/components/admin/LeadStatusBadge';
+
 import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
 import InitialsAvatar from '@/components/admin/InitialsAvatar';
 import LeadScoreBadge from '@/components/admin/LeadScoreBadge';
@@ -88,7 +88,7 @@ export default function DashboardPage() {
     };
   }, [leads, interactionCounts]);
 
-  const recentLeads = useMemo(() => leads.slice(0, 5), [leads]);
+
 
   const hotLeads = useMemo(() => {
     return leads
