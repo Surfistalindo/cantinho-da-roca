@@ -52,17 +52,40 @@
     --info-foreground: 0 0% 100%;
     --info-soft: 210 85% 94%;
 
-    --sidebar-background: 125 30% 12%;
-    --sidebar-foreground: 120 15% 90%;
-    --sidebar-primary: 123 38% 57%;
-    --sidebar-primary-foreground: 125 30% 12%;
-    --sidebar-accent: 125 20% 18%;
-    --sidebar-accent-foreground: 120 15% 90%;
-    --sidebar-border: 125 15% 22%;
-    --sidebar-ring: 123 38% 57%;
+    --sidebar-background: 220 25% 10%;
+    --sidebar-foreground: 220 12% 78%;
+    --sidebar-primary: 123 45% 62%;
+    --sidebar-primary-foreground: 220 25% 10%;
+    --sidebar-accent: 220 22% 16%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 18% 18%;
+    --sidebar-ring: 123 45% 62%;
 
     --font-heading: 'Satisfy', cursive;
     --font-body: 'DM Sans', sans-serif;
+  }
+
+  /* CRM-only surface palette (overrides aplicados via .font-crm) */
+  .font-crm {
+    --background: 220 20% 97%;
+    --foreground: 220 25% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 14%;
+    --muted: 220 15% 95%;
+    --muted-foreground: 220 12% 46%;
+    --accent: 220 18% 94%;
+    --accent-foreground: 220 25% 14%;
+    --border: 220 16% 90%;
+    --input: 220 16% 90%;
+    --radius: 0.875rem;
+
+    --surface-1: 0 0% 100%;
+    --surface-2: 220 22% 96%;
+    --surface-3: 220 20% 93%;
+    --elevated: 0 0% 100%;
+    --border-strong: 220 14% 84%;
   }
 
   .dark {
