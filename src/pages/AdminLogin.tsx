@@ -347,7 +347,7 @@ export default function AdminLogin() {
             </Button>
             <Button asChild>
               <a href={`mailto:${SUPPORT_EMAIL}?subject=Recupera%C3%A7%C3%A3o%20de%20senha%20-%20Cantinho%20da%20Ro%C3%A7a`}>
-                <Mail className="h-4 w-4" />
+                <FontAwesomeIcon icon={faEnvelope} className="h-4 w-4" />
                 Abrir e-mail
               </a>
             </Button>
