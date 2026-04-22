@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,9 +28,13 @@ export default function AdminLogin() {
   const [shake, setShake] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  if (!authLoading && session) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
 
   const validateEmail = (value: string) => {
     if (!value) return null;
@@ -160,7 +164,7 @@ export default function AdminLogin() {
               <img
                 src={logoCantinho}
                 alt="Cantinho da Roça"
-                className="mx-auto h-14 sm:h-16 w-auto mb-4 motion-safe-anim drop-shadow-[0_6px_20px_hsl(125_47%_33%/0.18)]"
+                className="mx-auto h-24 sm:h-28 w-auto mb-4 motion-safe-anim drop-shadow-[0_8px_24px_hsl(125_47%_33%/0.22)]"
                 style={{ animation: 'float 5s ease-in-out infinite' }}
               />
               <p className="text-sm text-muted-foreground">Área administrativa</p>

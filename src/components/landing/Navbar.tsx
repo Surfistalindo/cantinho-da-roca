@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBarsStaggered, faXmark } from '@fortawesome/free-solid-svg-icons';
-import logo from '@/assets/logo-cantim.png';
+import logo from '@/assets/logo-cantinho.png';
 
 const links = [
   { label: 'Início', href: '#inicio' },
@@ -46,8 +46,8 @@ export default function Navbar({ scrollY }: NavbarProps) {
         <div className="flex items-center h-full">
           <img
             src={logo}
-            alt="Cantim da Roça"
-            className="h-10 sm:h-12"
+            alt="Cantinho da Roça"
+            className="h-12 sm:h-14"
             style={{
               opacity: showNavbar ? 1 : 0,
               transform: showNavbar ? 'scale(1)' : 'scale(0.8)',
