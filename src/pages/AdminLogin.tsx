@@ -330,11 +330,11 @@ export default function AdminLogin() {
               >
                 {copied ? (
                   <>
-                    <Check className="h-3.5 w-3.5" /> Copiado
+                    <FontAwesomeIcon icon={faCheck} className="h-3.5 w-3.5" /> Copiado
                   </>
                 ) : (
                   <>
-                    <Copy className="h-3.5 w-3.5" /> Copiar
+                    <FontAwesomeIcon icon={faCopy} className="h-3.5 w-3.5" /> Copiar
                   </>
                 )}
               </Button>
