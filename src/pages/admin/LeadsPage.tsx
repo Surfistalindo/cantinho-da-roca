@@ -47,6 +47,7 @@ interface Lead {
 }
 
 type SortDir = 'desc' | 'asc';
+type SortBy = 'score' | 'created';
 
 export default function LeadsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -58,8 +59,12 @@ export default function LeadsPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [recencyFilter, setRecencyFilter] = useState<RecencyFilter>('all');
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
+  const [sortBy, setSortBy] = useState<SortBy>('score');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [newOpen, setNewOpen] = useState(false);
+
+  const interactionCounts = useInteractionCounts(leads.map((l) => l.id));
 
   useEffect(() => {
     const recency = searchParams.get('recency') as RecencyFilter | null;
