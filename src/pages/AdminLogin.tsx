@@ -280,13 +280,13 @@ export default function AdminLogin() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <FontAwesomeIcon icon={faSpinner} spin className="h-4 w-4" />
                     Entrando…
                   </>
                 ) : (
                   <>
                     Entrar
-                    <ArrowRight className="h-4 w-4" />
+                    <FontAwesomeIcon icon={faArrowRight} className="h-4 w-4" />
                   </>
                 )}
               </Button>
