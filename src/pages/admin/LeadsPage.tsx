@@ -262,13 +262,15 @@ export default function LeadsPage() {
                       <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Origem</TableHead>
                       <TableHead className="hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Interesse</TableHead>
                       <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Status</TableHead>
+                      <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Prioridade</TableHead>
                       <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Recência</TableHead>
                       <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
                         <button
-                          onClick={() => setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'))}
+                          onClick={toggleSort}
                           className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors uppercase"
+                          title={sortBy === 'score' ? 'Ordenado por prioridade' : 'Ordenado por data'}
                         >
-                          Entrada
+                          {sortBy === 'score' ? 'Prioridade' : 'Entrada'}
                           <FontAwesomeIcon
                             icon={sortDir === 'desc' ? faArrowDownShortWide : faArrowUpShortWide}
                             className="h-3 w-3"
@@ -281,6 +283,7 @@ export default function LeadsPage() {
                   <TableBody>
                     {filtered.map((lead, idx) => {
                       const isNewest = lead.id === newestId;
+                      const score = getLeadScore(lead, { interactionCount: interactionCounts[lead.id] ?? 0 });
                       return (
                         <TableRow
                           key={lead.id}
@@ -288,6 +291,7 @@ export default function LeadsPage() {
                             'group cursor-pointer h-14 border-border/60',
                             idx % 2 === 1 && 'bg-muted/30',
                             isNewest && '!bg-primary/5 hover:!bg-primary/10',
+                            score.urgent && 'border-l-2 border-l-destructive',
                           )}
                           onClick={() => openDetail(lead)}
                         >
@@ -311,6 +315,9 @@ export default function LeadsPage() {
                           </TableCell>
                           <TableCell onClick={(e) => e.stopPropagation()}>
                             <LeadStatusSelect leadId={lead.id} currentStatus={lead.status} onUpdated={fetchLeads} />
+                          </TableCell>
+                          <TableCell>
+                            <LeadScoreBadge lead={lead} interactionCount={interactionCounts[lead.id] ?? 0} size="sm" />
                           </TableCell>
                           <TableCell className="hidden lg:table-cell">
                             <ContactRecencyBadge
