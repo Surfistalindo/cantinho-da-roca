@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,9 +28,13 @@ export default function AdminLogin() {
   const [shake, setShake] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  if (!authLoading && session) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
 
   const validateEmail = (value: string) => {
     if (!value) return null;
