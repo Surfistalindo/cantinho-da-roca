@@ -112,8 +112,8 @@ export default function DashboardPage() {
 
   const primaryCards: { icon: IconDefinition; label: string; value: string | number; description: string; accent: string; href?: string }[] = [
     { icon: faUserGroup, label: 'Total de Leads', value: stats.total, description: `${stats.last7d} nos últimos 7 dias`, accent: 'text-primary bg-primary/10' },
+    { icon: faFire, label: 'Leads Quentes', value: stats.hot, description: 'Alta prioridade comercial', accent: 'text-destructive bg-destructive/10', href: '/admin/leads?priority=hot' },
     { icon: faArrowTrendUp, label: 'Conversão', value: `${stats.conversionRate}%`, description: `${stats.sold} fechados · ${customerCount} no cadastro`, accent: 'text-success bg-success-soft' },
-    { icon: faClockRotateLeft, label: 'Atenção', value: stats.attention, description: '3–6 dias sem contato', accent: 'text-warning bg-warning-soft', href: '/admin/leads?recency=attention' },
     { icon: faTriangleExclamation, label: 'Atrasados', value: stats.overdue, description: '7+ dias ou nunca contatado', accent: 'text-destructive bg-destructive/10', href: '/admin/leads?recency=overdue' },
   ];
 
