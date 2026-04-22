@@ -147,19 +147,31 @@ export default function LeadsPage() {
         if (recencyFilter === 'attention' && info.level !== 'attention') return false;
         if (recencyFilter === 'overdue' && info.level !== 'overdue') return false;
       }
+      if (priorityFilter !== 'all') {
+        const info = getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 });
+        if (info.level !== priorityFilter) return false;
+      }
       if (search) {
         const q = search.toLowerCase();
         if (!l.name.toLowerCase().includes(q) && !(l.phone ?? '').includes(q)) return false;
       }
       return true;
     });
+    if (sortBy === 'score') {
+      const enriched = list.map((l) => ({
+        ...l,
+        _scoreInfo: getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 }),
+      }));
+      enriched.sort(compareByScore);
+      return enriched;
+    }
     list.sort((a, b) => {
       const da = new Date(a.created_at).getTime();
       const db = new Date(b.created_at).getTime();
       return sortDir === 'desc' ? db - da : da - db;
     });
     return list;
-  }, [leads, statusFilter, originFilter, search, recencyFilter, sortDir]);
+  }, [leads, statusFilter, originFilter, search, recencyFilter, priorityFilter, sortBy, sortDir, interactionCounts]);
 
   const newestId = useMemo(() => {
     if (leads.length === 0) return null;
