@@ -23,6 +23,7 @@ import LeadStatusBadge from './LeadStatusBadge';
 import LeadStatusSelect from './LeadStatusSelect';
 import InteractionTimeline from './InteractionTimeline';
 import ContactRecencyBadge from './ContactRecencyBadge';
+import InitialsAvatar from './InitialsAvatar';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -63,7 +64,7 @@ interface Props {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+    <h4 className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-3">
       {children}
     </h4>
   );
@@ -72,7 +73,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="space-y-0.5">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className="text-sm font-medium text-foreground break-words">{value}</p>
     </div>
   );
@@ -139,7 +140,6 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
     try {
       await clientService.createFromLead(lead);
       await supabase.from('leads').update({ status: 'won' }).eq('id', lead.id);
-      // Histórico transferido dentro de createFromLead via interactions.customer_id
       toast.success('Lead convertido em cliente!');
       setConvertDialogOpen(false);
       onOpenChange(false);
@@ -172,12 +172,13 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="overflow-y-auto sm:max-w-lg p-0 flex flex-col">
+        <SheetContent className="overflow-y-auto sm:max-w-xl p-0 flex flex-col bg-background">
           {/* HEADER */}
-          <SheetHeader className="px-6 pt-6 pb-4 border-b border-border bg-card sticky top-0 z-10">
-            <div className="flex items-start justify-between gap-3">
+          <SheetHeader className="px-6 pt-6 pb-5 border-b border-border bg-card sticky top-0 z-10 space-y-0">
+            <div className="flex items-start gap-4">
+              <InitialsAvatar name={lead.name} size="lg" />
               <div className="min-w-0 flex-1">
-                <SheetTitle className="font-heading text-xl flex flex-wrap items-center gap-2">
+                <SheetTitle className="text-xl font-semibold tracking-tight flex flex-wrap items-center gap-2">
                   <span className="truncate">{lead.name}</span>
                   <LeadStatusBadge status={lead.status} />
                 </SheetTitle>
@@ -188,7 +189,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
                       className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
                     >
                       <FontAwesomeIcon icon={faPhone} className="h-3 w-3" />
-                      <span className="font-medium">{lead.phone}</span>
+                      <span className="font-medium font-mono">{lead.phone}</span>
                     </button>
                   )}
                   <ContactRecencyBadge
@@ -197,15 +198,15 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
                     createdAt={lead.created_at}
                     size="sm"
                   />
-                  <span>· Lead há {createdRelative}</span>
+                  <span className="text-muted-foreground/70">· Lead há {createdRelative}</span>
                 </div>
               </div>
             </div>
 
             {/* AÇÕES RÁPIDAS */}
-            <div className="flex flex-wrap items-center gap-2 mt-4">
+            <div className="flex flex-wrap items-center gap-2 mt-5">
               {lead.phone && (
-                <Button size="sm" onClick={openWhatsApp} className="bg-[#25D366] text-white hover:bg-[#20bd5a]">
+                <Button size="sm" onClick={openWhatsApp} className="bg-[#25D366] text-white hover:bg-[#20bd5a] shadow-sm">
                   <FontAwesomeIcon icon={faWhatsapp} className="h-4 w-4 mr-1.5" />
                   WhatsApp
                 </Button>
@@ -223,7 +224,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
                   size="sm"
                   variant="outline"
                   onClick={() => setConvertDialogOpen(true)}
-                  className="text-primary"
+                  className="text-primary border-primary/30 hover:bg-primary/5"
                 >
                   <FontAwesomeIcon icon={faUserCheck} className="h-3.5 w-3.5 mr-1.5" />
                   Converter
@@ -231,14 +232,14 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size="sm" variant="ghost" className="ml-auto px-2">
+                  <Button size="sm" variant="ghost" className="ml-auto px-2 h-9">
                     <FontAwesomeIcon icon={faEllipsisVertical} className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="rounded-xl">
                   <DropdownMenuItem
                     onClick={() => setDeleteDialogOpen(true)}
-                    className="text-destructive focus:text-destructive"
+                    className="text-destructive focus:text-destructive text-xs"
                   >
                     <FontAwesomeIcon icon={faTrashCan} className="h-3.5 w-3.5 mr-2" />
                     Excluir lead
@@ -249,17 +250,17 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
           </SheetHeader>
 
           {/* CONTEÚDO */}
-          <div className="px-6 py-5 space-y-5 flex-1">
-            {/* BLOCO 1: Status & Acompanhamento */}
-            <section className="rounded-lg border border-border bg-card p-4">
+          <div className="px-6 py-6 space-y-4 flex-1">
+            {/* Status & Acompanhamento */}
+            <section className="rounded-2xl bg-card border border-border p-5">
               <SectionLabel>Status & Acompanhamento</SectionLabel>
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-muted-foreground">Status atual</span>
+                  <span className="text-xs text-muted-foreground">Status atual</span>
                   <LeadStatusSelect leadId={lead.id} currentStatus={lead.status} onUpdated={() => onUpdated?.()} />
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-muted-foreground">Último contato</span>
+                  <span className="text-xs text-muted-foreground">Último contato</span>
                   <div className="flex items-center gap-2 text-right">
                     <ContactRecencyBadge
                       lastContactAt={lead.last_contact_at}
@@ -275,8 +276,8 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-muted-foreground">Próximo contato</span>
-                  <span className="text-sm font-medium">
+                  <span className="text-xs text-muted-foreground">Próximo contato</span>
+                  <span className="text-xs font-medium">
                     {lead.next_contact_at
                       ? format(new Date(lead.next_contact_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
                       : '—'}
@@ -285,38 +286,27 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
               </div>
             </section>
 
-            {/* BLOCO 2: Dados do contato */}
-            <section className="rounded-lg border border-border bg-card p-4">
+            {/* Dados do contato */}
+            <section className="rounded-2xl bg-card border border-border p-5">
               <SectionLabel>Dados do contato</SectionLabel>
               {editing ? (
                 <div className="space-y-3">
                   <div className="space-y-1">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Nome</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Nome</p>
                     <Input value={editData.name} onChange={(e) => setEditData({ ...editData, name: e.target.value })} />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Telefone</p>
-                    <Input
-                      value={editData.phone}
-                      onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
-                    />
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Telefone</p>
+                    <Input value={editData.phone} onChange={(e) => setEditData({ ...editData, phone: e.target.value })} />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Origem</p>
-                      <Input
-                        value={editData.origin}
-                        onChange={(e) => setEditData({ ...editData, origin: e.target.value })}
-                      />
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Origem</p>
+                      <Input value={editData.origin} onChange={(e) => setEditData({ ...editData, origin: e.target.value })} />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                        Interesse
-                      </p>
-                      <Input
-                        value={editData.product_interest}
-                        onChange={(e) => setEditData({ ...editData, product_interest: e.target.value })}
-                      />
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Interesse</p>
+                      <Input value={editData.product_interest} onChange={(e) => setEditData({ ...editData, product_interest: e.target.value })} />
                     </div>
                   </div>
                 </div>
@@ -338,8 +328,8 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
               )}
             </section>
 
-            {/* BLOCO 3: Mensagem & Observações */}
-            <section className="rounded-lg border border-border bg-muted/30 p-4">
+            {/* Mensagem & Observações */}
+            <section className="rounded-2xl border border-border surface-muted p-5">
               <SectionLabel>
                 <span className="inline-flex items-center gap-1.5">
                   <FontAwesomeIcon icon={faQuoteLeft} className="h-3 w-3" />
@@ -351,7 +341,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
                   placeholder="Mensagem do contato ou observações internas..."
                   value={editData.notes}
                   onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
-                  className="min-h-[100px] bg-background"
+                  className="min-h-[100px] bg-card"
                 />
               ) : lead.notes ? (
                 <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{lead.notes}</p>
@@ -360,21 +350,21 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
               )}
             </section>
 
-            {/* BLOCO 4: Histórico de Interações */}
-            <section className="rounded-lg border border-border bg-card p-4">
+            {/* Histórico de Interações */}
+            <section className="rounded-2xl bg-card border border-border p-5">
               <SectionLabel>Histórico de Interações</SectionLabel>
               <InteractionTimeline entityId={lead.id} entityType="lead" />
             </section>
           </div>
 
-          {/* FOOTER de edição (sticky) */}
+          {/* FOOTER edição */}
           {editing && (
-            <div className="sticky bottom-0 z-10 border-t border-border bg-card px-6 py-3 flex gap-2 justify-end">
+            <div className="sticky bottom-0 z-10 border-t border-border bg-gradient-to-t from-card via-card to-card/90 backdrop-blur px-6 py-3.5 flex gap-2 justify-end">
               <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
                 <FontAwesomeIcon icon={faXmark} className="h-3.5 w-3.5 mr-1.5" />
                 Cancelar
               </Button>
-              <Button size="sm" onClick={saveEdit}>
+              <Button size="sm" onClick={saveEdit} className="shadow-sm">
                 <FontAwesomeIcon icon={faFloppyDisk} className="h-3.5 w-3.5 mr-1.5" />
                 Salvar alterações
               </Button>
@@ -384,7 +374,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
       </Sheet>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl shadow-pop">
           <DialogHeader>
             <DialogTitle>Excluir lead</DialogTitle>
             <DialogDescription>
@@ -392,18 +382,14 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setDeleteDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button variant="destructive" onClick={deleteLead}>
-              Excluir
-            </Button>
+            <Button variant="ghost" onClick={() => setDeleteDialogOpen(false)}>Cancelar</Button>
+            <Button variant="destructive" onClick={deleteLead}>Excluir</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={convertDialogOpen} onOpenChange={setConvertDialogOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl shadow-pop">
           <DialogHeader>
             <DialogTitle>Converter em cliente</DialogTitle>
             <DialogDescription>
@@ -412,9 +398,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setConvertDialogOpen(false)}>
-              Cancelar
-            </Button>
+            <Button variant="ghost" onClick={() => setConvertDialogOpen(false)}>Cancelar</Button>
             <Button onClick={convertToCustomer}>Converter</Button>
           </DialogFooter>
         </DialogContent>
