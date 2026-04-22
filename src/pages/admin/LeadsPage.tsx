@@ -70,9 +70,15 @@ export default function LeadsPage() {
     const recency = searchParams.get('recency') as RecencyFilter | null;
     if (recency && ['recent', 'attention', 'overdue', 'all'].includes(recency)) {
       setRecencyFilter(recency);
-      return;
+    } else if (searchParams.get('followup') === '1') {
+      setRecencyFilter('overdue');
     }
-    if (searchParams.get('followup') === '1') setRecencyFilter('overdue');
+    const sort = searchParams.get('sort');
+    if (sort === 'created' || sort === 'score') setSortBy(sort);
+    const priority = searchParams.get('priority') as PriorityFilter | null;
+    if (priority && ['hot', 'warm', 'cold', 'all'].includes(priority)) {
+      setPriorityFilter(priority);
+    }
   }, [searchParams]);
 
   useEffect(() => {
@@ -94,6 +100,28 @@ export default function LeadsPage() {
     params.delete('followup');
     if (v === 'all') params.delete('recency');
     else params.set('recency', v);
+    setSearchParams(params, { replace: true });
+  };
+
+  const updatePriority = (v: PriorityFilter) => {
+    setPriorityFilter(v);
+    const params = new URLSearchParams(searchParams);
+    if (v === 'all') params.delete('priority');
+    else params.set('priority', v);
+    setSearchParams(params, { replace: true });
+  };
+
+  const toggleSort = () => {
+    if (sortBy === 'score') {
+      setSortBy('created');
+      setSortDir('desc');
+    } else {
+      // ciclo: created desc → created asc → score desc
+      if (sortDir === 'desc') setSortDir('asc');
+      else { setSortBy('score'); setSortDir('desc'); }
+    }
+    const params = new URLSearchParams(searchParams);
+    params.set('sort', sortBy === 'score' ? 'created' : 'score');
     setSearchParams(params, { replace: true });
   };
 
