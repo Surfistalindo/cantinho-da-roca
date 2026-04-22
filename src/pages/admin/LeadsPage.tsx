@@ -239,6 +239,8 @@ export default function LeadsPage() {
             onOriginChange={setOriginFilter}
             recencyFilter={recencyFilter}
             onRecencyChange={updateRecency}
+            priorityFilter={priorityFilter}
+            onPriorityChange={updatePriority}
           />
 
           {loading ? (
