@@ -1,14 +1,12 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClockRotateLeft, faTag } from '@fortawesome/free-solid-svg-icons';
-import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
-import { Button } from '@/components/ui/button';
+import { faTag } from '@fortawesome/free-solid-svg-icons';
 import { cn } from '@/lib/utils';
 import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
 import InitialsAvatar from '@/components/admin/InitialsAvatar';
 import LeadScoreBadge from '@/components/admin/LeadScoreBadge';
-import { getContactRecency } from '@/lib/contactRecency';
+import WhatsAppQuickAction from '@/components/admin/WhatsAppQuickAction';
 import { getLeadScore } from '@/lib/leadScore';
 
 interface Lead {
@@ -34,10 +32,6 @@ export default function LeadCard({ lead, onClick, interactionCount }: Props) {
 
   const style = { transform: CSS.Transform.toString(transform), transition };
 
-  const recency = getContactRecency(lead.last_contact_at, lead.status, lead.created_at);
-  const needsAttention = recency.level === 'attention';
-  const overdue = recency.level === 'overdue';
-
   const score = getLeadScore(lead, { interactionCount });
 
   // Lateral colorida = nível de prioridade
@@ -47,22 +41,6 @@ export default function LeadCard({ lead, onClick, interactionCount }: Props) {
     : score.level === 'warm' ? 'before:bg-warning'
     : score.level === 'cold' ? 'before:bg-muted-foreground/30'
     : 'before:bg-muted-foreground/20';
-
-  const openWhatsApp = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!lead.phone) return;
-    const clean = lead.phone.replace(/\D/g, '');
-    const num = clean.startsWith('55') ? clean : `55${clean}`;
-    window.open(`https://wa.me/${num}?text=${encodeURIComponent('Olá, tudo bem? Estou entrando em contato sobre seu interesse no Cantinho da Roça.')}`, '_blank');
-  };
-
-  const sendFollowUp = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!lead.phone) return;
-    const clean = lead.phone.replace(/\D/g, '');
-    const num = clean.startsWith('55') ? clean : `55${clean}`;
-    window.open(`https://wa.me/${num}?text=${encodeURIComponent('Oi! Passando para saber se ainda tem interesse 😊')}`, '_blank');
-  };
 
   return (
     <div
@@ -110,23 +88,13 @@ export default function LeadCard({ lead, onClick, interactionCount }: Props) {
           createdAt={lead.created_at}
           size="sm"
         />
-        <div className="ml-auto flex gap-0.5">
-          {lead.phone && (
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-success hover:bg-success-soft" onClick={openWhatsApp}>
-              <FontAwesomeIcon icon={faWhatsapp} className="h-3.5 w-3.5" />
-            </Button>
-          )}
-          {(needsAttention || overdue) && lead.phone && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn('h-7 w-7', overdue ? 'text-destructive hover:bg-destructive/10' : 'text-warning hover:bg-warning-soft')}
-              onClick={sendFollowUp}
-              title="Enviar follow-up"
-            >
-              <FontAwesomeIcon icon={faClockRotateLeft} className="h-3.5 w-3.5" />
-            </Button>
-          )}
+        <div className="ml-auto">
+          <WhatsAppQuickAction
+            lead={lead}
+            interactionCount={interactionCount}
+            variant="icon"
+            size="sm"
+          />
         </div>
       </div>
     </div>

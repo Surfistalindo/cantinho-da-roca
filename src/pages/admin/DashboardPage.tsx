@@ -6,7 +6,7 @@ import {
   faArrowTrendUp, faClockRotateLeft, faBolt, faTableColumns, faTriangleExclamation,
   faChevronRight, faSeedling, faCircleCheck, faChartColumn, faFire,
 } from '@fortawesome/free-solid-svg-icons';
-import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
+import WhatsAppQuickAction from '@/components/admin/WhatsAppQuickAction';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 
 import { supabase } from '@/integrations/supabase/client';
@@ -235,14 +235,6 @@ export default function DashboardPage() {
             <ul className="divide-y divide-border/60 -mx-2">
               {hotLeads.map((l) => {
                 const meta = [l.origin, l.product_interest].filter(Boolean).join(' · ');
-                const openWa = (e: React.MouseEvent) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (!l.phone) return;
-                  const clean = l.phone.replace(/\D/g, '');
-                  const num = clean.startsWith('55') ? clean : `55${clean}`;
-                  window.open(`https://wa.me/${num}`, '_blank');
-                };
                 return (
                   <li key={l.id}>
                     <Link
@@ -260,15 +252,15 @@ export default function DashboardPage() {
                         )}
                       </div>
                       {l.phone && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-success hover:bg-success-soft shrink-0"
-                          onClick={openWa}
-                          aria-label="Abrir WhatsApp"
-                        >
-                          <FontAwesomeIcon icon={faWhatsapp} className="w-3.5 h-3.5" />
-                        </Button>
+                        <div className="shrink-0">
+                          <WhatsAppQuickAction
+                            lead={l}
+                            interactionCount={interactionCounts[l.id] ?? 0}
+                            variant="icon"
+                            size="sm"
+                            onSent={fetchData}
+                          />
+                        </div>
                       )}
                     </Link>
                   </li>

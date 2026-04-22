@@ -25,6 +25,7 @@ import InteractionTimeline from './InteractionTimeline';
 import ContactRecencyBadge from './ContactRecencyBadge';
 import InitialsAvatar from './InitialsAvatar';
 import LeadScoreBadge from './LeadScoreBadge';
+import WhatsAppQuickAction from './WhatsAppQuickAction';
 import { useInteractionCounts } from '@/hooks/useInteractionCounts';
 import { getLeadScore } from '@/lib/leadScore';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -157,12 +158,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
     }
   };
 
-  const openWhatsApp = () => {
-    if (!lead?.phone) return;
-    const clean = lead.phone.replace(/\D/g, '');
-    const num = clean.startsWith('55') ? clean : `55${clean}`;
-    window.open(`https://wa.me/${num}`, '_blank');
-  };
+  // openWhatsApp removido — WhatsAppQuickAction cuida do envio + log de interação
 
   const focusInteractionForm = () => {
     const el = document.getElementById('new-interaction-form');
@@ -193,13 +189,10 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
                 </SheetTitle>
                 <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
                   {lead.phone && (
-                    <button
-                      onClick={openWhatsApp}
-                      className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
-                    >
+                    <span className="inline-flex items-center gap-1.5">
                       <FontAwesomeIcon icon={faPhone} className="h-3 w-3" />
                       <span className="font-medium font-mono">{lead.phone}</span>
-                    </button>
+                    </span>
                   )}
                   <ContactRecencyBadge
                     lastContactAt={lead.last_contact_at}
@@ -215,10 +208,13 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
             {/* AÇÕES RÁPIDAS */}
             <div className="flex flex-wrap items-center gap-2 mt-5">
               {lead.phone && (
-                <Button size="sm" onClick={openWhatsApp} className="bg-[#25D366] text-white hover:bg-[#20bd5a] shadow-sm">
-                  <FontAwesomeIcon icon={faWhatsapp} className="h-4 w-4 mr-1.5" />
-                  WhatsApp
-                </Button>
+                <WhatsAppQuickAction
+                  lead={lead}
+                  interactionCount={interactionCount}
+                  variant="primary"
+                  size="md"
+                  onSent={() => onUpdated?.()}
+                />
               )}
               <Button size="sm" variant="outline" onClick={focusInteractionForm}>
                 <FontAwesomeIcon icon={faPlus} className="h-3.5 w-3.5 mr-1.5" />
