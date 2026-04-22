@@ -1,79 +1,111 @@
 
 
-## Plano: Revisão final do CRM — ajustes pontuais para gestão comercial
+## Plano: Login premium fiel à marca Cantinho da Roça
 
-Após revisar toda a área administrativa, **a maior parte da operação já funciona como sistema integrado** (formulário público → leads → pipeline → clientes, com timeline, recência automática, dashboard em tempo real). A revisão identificou **6 pontos de polimento** focados em consistência, robustez e usabilidade real — sem refazer o que já funciona.
+Refazer o `AdminLogin` com profundidade, glassmorphism suave e microinterações — usando a paleta verde/creme/dourado já existente. Sem dark mode, sem neon, sem social login. Foco em hierarquia, feedback claro e sensação artesanal.
 
-### Diagnóstico — o que já está OK
+### 1. Layout (split screen no desktop, empilhado no mobile)
 
-| Área | Status |
-|---|---|
-| Formulário público → tabela `leads` | OK (com rate-limit, validação, deduplicação por telefone) |
-| Cadastro manual (`NewLeadDialog`) | OK (validação Zod, mesma tabela) |
-| Listagem com filtros (status, origem, recência, busca) | OK |
-| Pipeline drag-and-drop sincronizado com banco | OK |
-| Status padronizados (`APP_CONFIG.leadStatuses`) | OK (5 status, fonte única) |
-| Timeline de interações + autor via `profiles` | OK |
-| `last_contact_at` automático via trigger | OK |
-| Dashboard com dados reais + realtime | OK |
-| Conversão lead → cliente | OK (mas perde histórico — ver #4) |
+```text
+┌─────────────────────────┬──────────────────────────────┐
+│ ARTE / BACKGROUND       │  CARD DE LOGIN (glass)       │
+│                         │                              │
+│  blobs verdes/âmbar     │   🌿 Cantinho da Roça        │
+│  animados (float lento) │   Área administrativa        │
+│  folhas SVG flutuantes  │                              │
+│  textura grão sutil     │   ┌────────────────────────┐ │
+│  gradiente creme→verde  │   │ E-mail                 │ │
+│                         │   │ [             ✉ ]      │ │
+│  "Do campo para         │   ├────────────────────────┤ │
+│   sua mesa."            │   │ Senha    Esqueci?      │ │
+│  — citação da marca     │   │ [             👁 ]     │ │
+│                         │   └────────────────────────┘ │
+│                         │                              │
+│                         │   [   Entrar  →   ]          │
+│                         │                              │
+│                         │   ← Voltar para o site       │
+└─────────────────────────┴──────────────────────────────┘
+```
 
-### O que ajustar
+- **Desktop (≥md):** grid 2 colunas, arte à esquerda, card à direita centralizado.
+- **Mobile (<md):** uma coluna, arte vira fundo do card (blobs reduzidos), card ocupa tela com padding.
+- Min-height `100dvh` (não `100vh`) para não cortar em mobile.
 
-#### 1. Origens normalizadas (formulário público vs CRM)
+### 2. Background animado (CSS puro, sem dependências)
 
-**Inconsistência:** o formulário público grava origem em **lowercase** (`whatsapp`, `instagram`, `indicacao`, `outro`, `direto`), mas `APP_CONFIG.leadOrigins` usa **TitleCase** (`WhatsApp`, `Instagram`, `Indicação`, `Outro`). Resultado: o filtro de origem na listagem **não casa** com leads vindos do site.
+- Gradiente base radial: creme (`--background`) → verde claro (`--accent`) → leve âmbar (`--highlight`) nos cantos.
+- 3 **blobs** SVG/divs com `blur-3xl` em verde primário, verde secundário e dourado, animados com `@keyframes float` (já existe) em durações dessincronizadas (12s/16s/20s).
+- 2-3 **folhas** SVG (reaproveitar `LeafSVG.tsx`) flutuando devagar com `opacity-20` e rotação suave.
+- Textura de grão sutil via `bg-[url('data:image/svg+xml...')]` ou pseudo-elemento com noise (mantém a sensação rural/orgânica em vez de neon).
+- Tudo `pointer-events-none` e `aria-hidden`.
 
-**Fix:** padronizar `LeadFormSection.tsx` para gravar exatamente os mesmos valores de `APP_CONFIG.leadOrigins`. Adicionar `'Site'` à lista de origens (substitui `'direto'`). Backfill via insert tool dos leads existentes para uniformizar.
+### 3. Card de login (glassmorphism orgânico)
 
-#### 2. Página de Clientes — dois pontos faltantes
+- `bg-card/70 backdrop-blur-xl border border-white/40` — vidro suave sobre o fundo claro (não dark).
+- `shadow-[0_20px_60px_-15px_hsl(125_47%_33%/0.25)]` — sombra verde difusa, não preta.
+- `rounded-2xl p-8 md:p-10`.
+- Animação de entrada: `animate-fade-in` (já existe no tailwind config) + slight scale.
 
-- **Sem busca por produto.** Adicionar filtro/busca pelo campo `product_bought` junto com nome/telefone (mesmo input expandido).
-- **`CustomerDetailSheet` está visualmente defasado** vs `LeadDetailSheet` (que foi refeito em blocos). Aplicar a **mesma estrutura de blocos** no detalhe do cliente: header com WhatsApp + recência, ações rápidas, blocos "Compra", "Observações", "Histórico". Reutiliza o `ContactRecencyBadge` (já funciona para customers — trigger sincroniza `last_contact_at`).
+### 4. Campos com label flutuante e foco elevado
 
-#### 3. Lead → Cliente: levar a timeline junto
+Substituir `Input` placeholder-only por inputs com label visível acima:
+- Label `text-xs font-semibold uppercase tracking-wide text-muted-foreground`.
+- Wrapper com `relative`: input + ícone à direita (`Mail`, `Lock`/`Eye` toggle).
+- **Foco**: `focus-within:ring-2 focus-within:ring-primary/40 focus-within:shadow-[0_0_0_4px_hsl(125_47%_33%/0.08)]` + leve `-translate-y-px` no wrapper.
+- Toggle de visibilidade da senha (botão `Eye`/`EyeOff` à direita).
+- Validação inline: borda âmbar (`--warning`) + mensagem pequena abaixo se email malformado (HTML5 + check em `onBlur`).
+- `autoComplete="email"` / `autoComplete="current-password"` para acessibilidade.
 
-Hoje `clientService.createFromLead` cria um `customers` novo, mas as **interações da timeline ficam órfãs no lead** (que continua existindo em `won`). O usuário não vê o histórico no cliente.
+### 5. Botão "Entrar" com profundidade
 
-**Fix:** após criar o customer, fazer `UPDATE interactions SET customer_id = <novo_id> WHERE lead_id = <lead_id>` (mantém `lead_id` para rastreabilidade). Trigger `trg_sync_last_contact` re-popula `last_contact_at` do customer automaticamente. Sem perda de dados.
+- Variante existente `default` (verde primário) + classes extras: gradiente sutil (`bg-gradient-to-b from-primary to-primary/90`), `shadow-lg shadow-primary/30`, `hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/40`, `active:translate-y-0` — efeito de profundidade sem trocar tokens.
+- Loading: spinner inline (`Loader2 animate-spin`) + texto "Entrando…", botão `disabled` com `opacity-70`.
+- Sucesso: pequeno toast verde + redirect imediato (já feito).
+- Erro: toast destrutivo (já feito) + shake sutil no card via classe one-shot (`animate-[wiggle_0.4s]` adicionada localmente).
 
-#### 4. Sidebar — adicionar atalho "Ver site" e indicador visual
+### 6. "Esqueci minha senha" → modal de contato
 
-A sidebar tem só 4 itens, sem destaque para áreas com pendências. Pequenos polimentos:
-- Mostrar **badge numérico** ao lado de "Leads" quando houver leads atrasados (ex.: `Leads · 3`).
-- Adicionar o item **"Site público"** com ícone (link externo) — hoje só está no navbar (escondido em mobile).
+- Link discreto à direita do label "Senha" (`text-xs text-primary hover:underline`).
+- Abre `Dialog` (shadcn) com:
+  - Título: "Recuperação de senha"
+  - Texto: "Para redefinir sua senha, entre em contato com nosso suporte."
+  - Email destacado em card: **contato@voltzagency.com.br** com botão "Copiar" (feedback "Copiado ✓") e botão "Abrir email" (`mailto:`).
+  - Botão "Fechar".
+- Sem fluxo de reset real, sem rota `/reset-password`.
 
-#### 5. Limpeza: remover tabela legada `clients`
+### 7. Header do card (logo + título)
 
-A tabela `clients` (singular, com `lead_id`) existe no schema mas está **vazia e não é usada em nenhum lugar do código** (todos usam `customers`). Migration para `DROP TABLE public.clients` — reduz confusão e ruído no schema.
+- Ícone de folha (reaproveitar `LeafSVG`) acima do título, com `animate-[float_4s_ease-in-out_infinite]`.
+- Título "Cantinho da Roça" em `font-heading` (Satisfy) com `hero-title-shimmer` (já existe) — assinatura visual da marca.
+- Subtítulo "Área administrativa" em DM Sans, `text-muted-foreground`.
 
-#### 6. Dashboard — pequena melhoria de navegação
+### 8. Painel lateral (apenas desktop)
 
-No bloco "Leads recentes" e "Precisam de atenção", o link leva para `/admin/leads` mas **não abre o sheet do lead clicado**. Ajuste mínimo: passar `?focus=<id>` na URL e fazer `LeadsPage` ler esse param para abrir o `LeadDetailSheet` automaticamente. Mesmo padrão já usado para `?recency=`.
+- Citação grande em Satisfy: *"Do campo para sua mesa."*
+- Pequeno texto: "Sistema de gestão da família Cantinho da Roça."
+- Marca discreta no rodapé do painel.
+- Fica oculto em `<md` para priorizar o card.
 
-### Garantias de não-regressão
+### 9. Acessibilidade & responsividade
 
-- **Landing page intacta:** o único ajuste em `LeadFormSection` é normalizar valores de origem (não muda visual nem fluxo).
-- **Sem mudança nos componentes UI compartilhados** (`Button`, `Sheet`, `Dialog`, etc.).
-- **Sem mudança nos design tokens** (`tailwind.config`, `index.css`).
-- **Schema:** apenas `DROP TABLE clients` (vazia, sem foreign keys, sem código). Zero impacto.
-- **RLS:** sem alterações — todas as operações continuam protegidas.
-- **Realtime:** já cobre `leads`, `customers`, `interactions` — nada a adicionar.
+- Contraste AA garantido (texto sobre vidro continua legível porque o fundo é claro).
+- Foco visível em todos os interativos (`focus-visible:ring`).
+- `aria-label` nos botões de ícone (toggle senha, copiar email).
+- Form com `aria-invalid` quando há erro.
+- `prefers-reduced-motion`: blobs e float pausam via media query.
+- Mobile-first: testado em 360px, breakpoints `sm/md/lg`.
+- Viewport atual do usuário (860px) cai em `md` — split layout aparece bem.
 
 ### Arquivos tocados
 
-- **Editar:** `src/components/landing/LeadFormSection.tsx` — normalizar `<SelectItem value>` e o fallback `'direto'` → `'Site'`.
-- **Editar:** `src/config/app.ts` — adicionar `'Site'` em `leadOrigins`.
-- **Insert tool:** backfill `UPDATE leads SET origin = ...` para uniformizar dados existentes (caso haja).
-- **Editar:** `src/pages/admin/ClientsPage.tsx` — busca por produto.
-- **Reescrever:** `src/components/admin/CustomerDetailSheet.tsx` — adotar layout de blocos do `LeadDetailSheet`, com header + ações rápidas + recência + timeline.
-- **Editar:** `src/services/clientService.ts` — em `createFromLead`, transferir interações para o novo `customer_id`.
-- **Editar:** `src/components/crm/AdminSidebar.tsx` — badge de leads atrasados + item "Site público".
-- **Editar:** `src/pages/admin/DashboardPage.tsx` — links das listas com `?focus=<id>`.
-- **Editar:** `src/pages/admin/LeadsPage.tsx` — ler `?focus=<id>` e abrir o sheet correspondente.
-- **Migration SQL:** `DROP TABLE IF EXISTS public.clients;`
+- **Reescrever:** `src/pages/AdminLogin.tsx` — todo o novo layout, modal de recuperação, animações inline.
+- **Editar:** `src/index.css` — adicionar `@keyframes wiggle` e classe utilitária para o shake (uma adição pequena, sem mudar tokens).
+- Reutilizar: `LeafSVG`, `Dialog`, `Button`, `Input`, `useToast`, `hero-title-shimmer`, `animate-fade-in`, `@keyframes float`.
 
-### Resultado esperado
+### Garantias
 
-Sistema 100% coerente: o que entra pelo site aparece corretamente filtrado no CRM; cliente convertido mantém histórico; navegação do dashboard leva direto ao contexto certo; visualização de cliente fica no mesmo nível visual do lead; sidebar comunica pendências em tempo real; schema limpo sem tabelas órfãs.
+- Zero mudança de tokens, zero dependência nova, zero impacto em outras páginas.
+- Marca preservada: Satisfy, verde primário, dourado de destaque, folha como ícone.
+- AuthContext intacto: mesmo `signIn(email, password)` → `/admin/dashboard`.
+- Landing page e CRM não tocados.
 
