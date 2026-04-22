@@ -6,7 +6,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import LeadFilters, { type RecencyFilter } from '@/components/admin/LeadFilters';
+import LeadFilters, { type RecencyFilter, type PriorityFilter } from '@/components/admin/LeadFilters';
 import LeadStatusSelect from '@/components/admin/LeadStatusSelect';
 import LeadStatusBadge from '@/components/admin/LeadStatusBadge';
 import LeadDetailSheet from '@/components/admin/LeadDetailSheet';
@@ -16,8 +16,10 @@ import EmptyState from '@/components/admin/EmptyState';
 import LoadingState from '@/components/admin/LoadingState';
 import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
 import InitialsAvatar from '@/components/admin/InitialsAvatar';
+import LeadScoreBadge from '@/components/admin/LeadScoreBadge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
+import { useInteractionCounts } from '@/hooks/useInteractionCounts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -28,6 +30,7 @@ import {
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { toast } from 'sonner';
 import { getContactRecency } from '@/lib/contactRecency';
+import { getLeadScore, compareByScore } from '@/lib/leadScore';
 import { cn } from '@/lib/utils';
 
 interface Lead {
@@ -44,6 +47,7 @@ interface Lead {
 }
 
 type SortDir = 'desc' | 'asc';
+type SortBy = 'score' | 'created';
 
 export default function LeadsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -55,16 +59,26 @@ export default function LeadsPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [recencyFilter, setRecencyFilter] = useState<RecencyFilter>('all');
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
+  const [sortBy, setSortBy] = useState<SortBy>('score');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [newOpen, setNewOpen] = useState(false);
+
+  const interactionCounts = useInteractionCounts(leads.map((l) => l.id));
 
   useEffect(() => {
     const recency = searchParams.get('recency') as RecencyFilter | null;
     if (recency && ['recent', 'attention', 'overdue', 'all'].includes(recency)) {
       setRecencyFilter(recency);
-      return;
+    } else if (searchParams.get('followup') === '1') {
+      setRecencyFilter('overdue');
     }
-    if (searchParams.get('followup') === '1') setRecencyFilter('overdue');
+    const sort = searchParams.get('sort');
+    if (sort === 'created' || sort === 'score') setSortBy(sort);
+    const priority = searchParams.get('priority') as PriorityFilter | null;
+    if (priority && ['hot', 'warm', 'cold', 'all'].includes(priority)) {
+      setPriorityFilter(priority);
+    }
   }, [searchParams]);
 
   useEffect(() => {
@@ -86,6 +100,28 @@ export default function LeadsPage() {
     params.delete('followup');
     if (v === 'all') params.delete('recency');
     else params.set('recency', v);
+    setSearchParams(params, { replace: true });
+  };
+
+  const updatePriority = (v: PriorityFilter) => {
+    setPriorityFilter(v);
+    const params = new URLSearchParams(searchParams);
+    if (v === 'all') params.delete('priority');
+    else params.set('priority', v);
+    setSearchParams(params, { replace: true });
+  };
+
+  const toggleSort = () => {
+    if (sortBy === 'score') {
+      setSortBy('created');
+      setSortDir('desc');
+    } else {
+      // ciclo: created desc → created asc → score desc
+      if (sortDir === 'desc') setSortDir('asc');
+      else { setSortBy('score'); setSortDir('desc'); }
+    }
+    const params = new URLSearchParams(searchParams);
+    params.set('sort', sortBy === 'score' ? 'created' : 'score');
     setSearchParams(params, { replace: true });
   };
 
@@ -111,19 +147,31 @@ export default function LeadsPage() {
         if (recencyFilter === 'attention' && info.level !== 'attention') return false;
         if (recencyFilter === 'overdue' && info.level !== 'overdue') return false;
       }
+      if (priorityFilter !== 'all') {
+        const info = getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 });
+        if (info.level !== priorityFilter) return false;
+      }
       if (search) {
         const q = search.toLowerCase();
         if (!l.name.toLowerCase().includes(q) && !(l.phone ?? '').includes(q)) return false;
       }
       return true;
     });
+    if (sortBy === 'score') {
+      const enriched = list.map((l) => ({
+        ...l,
+        _scoreInfo: getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 }),
+      }));
+      enriched.sort(compareByScore);
+      return enriched;
+    }
     list.sort((a, b) => {
       const da = new Date(a.created_at).getTime();
       const db = new Date(b.created_at).getTime();
       return sortDir === 'desc' ? db - da : da - db;
     });
     return list;
-  }, [leads, statusFilter, originFilter, search, recencyFilter, sortDir]);
+  }, [leads, statusFilter, originFilter, search, recencyFilter, priorityFilter, sortBy, sortDir, interactionCounts]);
 
   const newestId = useMemo(() => {
     if (leads.length === 0) return null;
@@ -191,6 +239,8 @@ export default function LeadsPage() {
             onOriginChange={setOriginFilter}
             recencyFilter={recencyFilter}
             onRecencyChange={updateRecency}
+            priorityFilter={priorityFilter}
+            onPriorityChange={updatePriority}
           />
 
           {loading ? (
@@ -212,13 +262,15 @@ export default function LeadsPage() {
                       <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Origem</TableHead>
                       <TableHead className="hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Interesse</TableHead>
                       <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Status</TableHead>
+                      <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Prioridade</TableHead>
                       <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Recência</TableHead>
                       <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
                         <button
-                          onClick={() => setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'))}
+                          onClick={toggleSort}
                           className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors uppercase"
+                          title={sortBy === 'score' ? 'Ordenado por prioridade' : 'Ordenado por data'}
                         >
-                          Entrada
+                          {sortBy === 'score' ? 'Prioridade' : 'Entrada'}
                           <FontAwesomeIcon
                             icon={sortDir === 'desc' ? faArrowDownShortWide : faArrowUpShortWide}
                             className="h-3 w-3"
@@ -231,6 +283,7 @@ export default function LeadsPage() {
                   <TableBody>
                     {filtered.map((lead, idx) => {
                       const isNewest = lead.id === newestId;
+                      const score = getLeadScore(lead, { interactionCount: interactionCounts[lead.id] ?? 0 });
                       return (
                         <TableRow
                           key={lead.id}
@@ -238,6 +291,7 @@ export default function LeadsPage() {
                             'group cursor-pointer h-14 border-border/60',
                             idx % 2 === 1 && 'bg-muted/30',
                             isNewest && '!bg-primary/5 hover:!bg-primary/10',
+                            score.urgent && 'border-l-2 border-l-destructive',
                           )}
                           onClick={() => openDetail(lead)}
                         >
@@ -261,6 +315,9 @@ export default function LeadsPage() {
                           </TableCell>
                           <TableCell onClick={(e) => e.stopPropagation()}>
                             <LeadStatusSelect leadId={lead.id} currentStatus={lead.status} onUpdated={fetchLeads} />
+                          </TableCell>
+                          <TableCell>
+                            <LeadScoreBadge lead={lead} interactionCount={interactionCounts[lead.id] ?? 0} size="sm" />
                           </TableCell>
                           <TableCell className="hidden lg:table-cell">
                             <ContactRecencyBadge
@@ -314,15 +371,22 @@ export default function LeadsPage() {
               <div className="md:hidden space-y-2.5">
                 {filtered.map((lead) => {
                   const isNewest = lead.id === newestId;
+                  const score = getLeadScore(lead, { interactionCount: interactionCounts[lead.id] ?? 0 });
                   return (
                     <button
                       key={lead.id}
                       onClick={() => openDetail(lead)}
                       className={cn(
                         'w-full text-left bg-card border border-border rounded-2xl p-4 transition-all duration-150 hover:border-border-strong hover:shadow-card',
-                        isNewest && 'border-primary/40 bg-primary/[0.03]'
+                        isNewest && 'border-primary/40 bg-primary/[0.03]',
+                        score.urgent && 'border-l-2 border-l-destructive',
                       )}
                     >
+                      {score.level !== 'closed' && (
+                        <div className="mb-2">
+                          <LeadScoreBadge lead={lead} interactionCount={interactionCounts[lead.id] ?? 0} size="sm" />
+                        </div>
+                      )}
                       <div className="flex items-start gap-3 mb-3">
                         <InitialsAvatar name={lead.name} size="md" />
                         <div className="min-w-0 flex-1">

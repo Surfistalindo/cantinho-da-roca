@@ -1,11 +1,13 @@
+import { useMemo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import LeadCard from './LeadCard';
 import { Button } from '@/components/ui/button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faFire } from '@fortawesome/free-solid-svg-icons';
 import { APP_CONFIG } from '@/config/app';
 import { getLeadStatusConfig } from '@/lib/leadStatus';
+import { compareByScore, getLeadScore } from '@/lib/leadScore';
 import { cn } from '@/lib/utils';
 
 interface Lead {
@@ -17,6 +19,7 @@ interface Lead {
   status: string;
   created_at: string;
   last_contact_at: string | null;
+  next_contact_at?: string | null;
 }
 
 interface Props {
@@ -24,12 +27,23 @@ interface Props {
   leads: Lead[];
   onLeadClick?: (lead: Lead) => void;
   onAddLead?: (status: string) => void;
+  interactionCounts?: Record<string, number>;
 }
 
-export default function PipelineColumn({ status, leads, onLeadClick, onAddLead }: Props) {
+export default function PipelineColumn({ status, leads, onLeadClick, onAddLead, interactionCounts }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
   const cfg = getLeadStatusConfig(status);
   const label = APP_CONFIG.leadStatuses.find((s) => s.value === status)?.label ?? status;
+
+  const { sortedLeads, hotCount } = useMemo(() => {
+    const enriched = leads.map((l) => ({
+      ...l,
+      _scoreInfo: getLeadScore(l, { interactionCount: interactionCounts?.[l.id] ?? 0 }),
+    }));
+    enriched.sort(compareByScore);
+    const hot = enriched.filter((l) => l._scoreInfo.level === 'hot' || l._scoreInfo.urgent).length;
+    return { sortedLeads: enriched, hotCount: hot };
+  }, [leads, interactionCounts]);
 
   return (
     <div
@@ -49,6 +63,15 @@ export default function PipelineColumn({ status, leads, onLeadClick, onAddLead }
           <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-card border border-border text-[10px] font-mono font-semibold text-muted-foreground">
             {leads.length}
           </span>
+          {hotCount > 0 && (
+            <span
+              className="inline-flex items-center gap-1 h-5 px-1.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-mono font-semibold"
+              title={`${hotCount} lead${hotCount === 1 ? '' : 's'} de alta prioridade`}
+            >
+              <FontAwesomeIcon icon={faFire} className="h-2.5 w-2.5" />
+              {hotCount}
+            </span>
+          )}
         </div>
         {onAddLead && (
           <Button
@@ -64,15 +87,20 @@ export default function PipelineColumn({ status, leads, onLeadClick, onAddLead }
         )}
       </div>
 
-      <SortableContext items={leads.map((l) => l.id)} strategy={verticalListSortingStrategy}>
+      <SortableContext items={sortedLeads.map((l) => l.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-2 max-h-[65vh] overflow-y-auto p-2.5">
-          {leads.length === 0 && (
+          {sortedLeads.length === 0 && (
             <div className="text-center py-10">
               <p className="text-xs text-muted-foreground/70">Nenhum lead</p>
             </div>
           )}
-          {leads.map((lead) => (
-            <LeadCard key={lead.id} lead={lead} onClick={() => onLeadClick?.(lead)} />
+          {sortedLeads.map((lead) => (
+            <LeadCard
+              key={lead.id}
+              lead={lead}
+              onClick={() => onLeadClick?.(lead)}
+              interactionCount={interactionCounts?.[lead.id] ?? 0}
+            />
           ))}
         </div>
       </SortableContext>

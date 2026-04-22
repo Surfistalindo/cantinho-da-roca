@@ -4,31 +4,37 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faUserGroup, faComments, faPhoneSlash, faUserCheck,
   faArrowTrendUp, faClockRotateLeft, faBolt, faTableColumns, faTriangleExclamation,
-  faChevronRight, faSeedling, faCircleCheck, faChartColumn,
+  faChevronRight, faSeedling, faCircleCheck, faChartColumn, faFire,
 } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import PageHeader from '@/components/admin/PageHeader';
 import LoadingState from '@/components/admin/LoadingState';
-import LeadStatusBadge from '@/components/admin/LeadStatusBadge';
+
 import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
 import InitialsAvatar from '@/components/admin/InitialsAvatar';
+import LeadScoreBadge from '@/components/admin/LeadScoreBadge';
 import { Button } from '@/components/ui/button';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { LEAD_STATUS } from '@/lib/leadStatus';
 import { getContactRecency } from '@/lib/contactRecency';
+import { getLeadScore, compareByScore } from '@/lib/leadScore';
+import { useInteractionCounts } from '@/hooks/useInteractionCounts';
 import { cn } from '@/lib/utils';
 
 interface LeadLite {
   id: string;
   name: string;
+  phone: string | null;
   origin: string | null;
   product_interest: string | null;
   status: string;
   created_at: string;
   last_contact_at: string | null;
+  next_contact_at: string | null;
 }
 
 export default function DashboardPage() {
@@ -36,11 +42,13 @@ export default function DashboardPage() {
   const [customerCount, setCustomerCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const interactionCounts = useInteractionCounts(leads.map((l) => l.id));
+
   const fetchData = useCallback(async () => {
     const [leadsRes, customersRes] = await Promise.all([
       supabase
         .from('leads')
-        .select('id, name, origin, product_interest, status, created_at, last_contact_at')
+        .select('id, name, phone, origin, product_interest, status, created_at, last_contact_at, next_contact_at')
         .order('created_at', { ascending: false }),
       supabase.from('customers').select('id', { count: 'exact', head: true }),
     ]);
@@ -57,11 +65,13 @@ export default function DashboardPage() {
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const total = leads.length;
     const sold = leads.filter((l) => l.status === LEAD_STATUS.WON).length;
-    let attention = 0; let overdue = 0;
+    let attention = 0; let overdue = 0; let hot = 0;
     for (const l of leads) {
       const info = getContactRecency(l.last_contact_at, l.status, l.created_at);
       if (info.level === 'attention') attention++;
       else if (info.level === 'overdue') overdue++;
+      const score = getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 });
+      if (score.level === 'hot' || score.urgent) hot++;
     }
     return {
       total,
@@ -73,11 +83,20 @@ export default function DashboardPage() {
       last7d: leads.filter((l) => new Date(l.created_at).getTime() >= sevenDaysAgo).length,
       attention,
       overdue,
+      hot,
       conversionRate: total > 0 ? Math.round((sold / total) * 100) : 0,
     };
-  }, [leads]);
+  }, [leads, interactionCounts]);
 
-  const recentLeads = useMemo(() => leads.slice(0, 5), [leads]);
+
+
+  const hotLeads = useMemo(() => {
+    return leads
+      .map((l) => ({ ...l, _scoreInfo: getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 }) }))
+      .filter((l) => l._scoreInfo.level === 'hot' || l._scoreInfo.urgent)
+      .sort(compareByScore)
+      .slice(0, 5);
+  }, [leads, interactionCounts]);
 
   const attentionLeads = useMemo(() => {
     return leads
@@ -92,8 +111,8 @@ export default function DashboardPage() {
 
   const primaryCards: { icon: IconDefinition; label: string; value: string | number; description: string; accent: string; href?: string }[] = [
     { icon: faUserGroup, label: 'Total de Leads', value: stats.total, description: `${stats.last7d} nos últimos 7 dias`, accent: 'text-primary bg-primary/10' },
+    { icon: faFire, label: 'Leads Quentes', value: stats.hot, description: 'Alta prioridade comercial', accent: 'text-destructive bg-destructive/10', href: '/admin/leads?priority=hot' },
     { icon: faArrowTrendUp, label: 'Conversão', value: `${stats.conversionRate}%`, description: `${stats.sold} fechados · ${customerCount} no cadastro`, accent: 'text-success bg-success-soft' },
-    { icon: faClockRotateLeft, label: 'Atenção', value: stats.attention, description: '3–6 dias sem contato', accent: 'text-warning bg-warning-soft', href: '/admin/leads?recency=attention' },
     { icon: faTriangleExclamation, label: 'Atrasados', value: stats.overdue, description: '7+ dias ou nunca contatado', accent: 'text-destructive bg-destructive/10', href: '/admin/leads?recency=overdue' },
   ];
 
@@ -110,6 +129,7 @@ export default function DashboardPage() {
   if (loading) return <LoadingState variant="cards" />;
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="max-w-7xl mx-auto space-y-8">
       <PageHeader
         title="Painel"
@@ -197,20 +217,32 @@ export default function DashboardPage() {
         <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <FontAwesomeIcon icon={faSeedling} className="w-3.5 h-3.5 text-primary" /> Leads recentes
+              <FontAwesomeIcon icon={faFire} className="w-3.5 h-3.5 text-destructive" /> Top leads quentes
             </h3>
             <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
-              <Link to="/admin/leads">Ver todos <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 ml-1" /></Link>
+              <Link to="/admin/leads?priority=hot">Ver todos <FontAwesomeIcon icon={faChevronRight} className="w-2.5 h-2.5 ml-1" /></Link>
             </Button>
           </div>
-          {recentLeads.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-8 text-center">
-              Nenhum lead ainda. Compartilhe sua landing page!
-            </p>
+          {hotLeads.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mb-3">
+                <FontAwesomeIcon icon={faSeedling} className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium text-foreground">Nenhum lead quente</p>
+              <p className="text-xs text-muted-foreground mt-1">Os leads mais promissores aparecerão aqui.</p>
+            </div>
           ) : (
             <ul className="divide-y divide-border/60 -mx-2">
-              {recentLeads.map((l) => {
+              {hotLeads.map((l) => {
                 const meta = [l.origin, l.product_interest].filter(Boolean).join(' · ');
+                const openWa = (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!l.phone) return;
+                  const clean = l.phone.replace(/\D/g, '');
+                  const num = clean.startsWith('55') ? clean : `55${clean}`;
+                  window.open(`https://wa.me/${num}`, '_blank');
+                };
                 return (
                   <li key={l.id}>
                     <Link
@@ -221,15 +253,23 @@ export default function DashboardPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-medium text-foreground truncate">{l.name}</p>
-                          <LeadStatusBadge status={l.status} />
+                          <LeadScoreBadge lead={l} interactionCount={interactionCounts[l.id] ?? 0} size="sm" />
                         </div>
                         {meta && (
                           <p className="text-xs text-muted-foreground truncate mt-0.5">{meta}</p>
                         )}
                       </div>
-                      <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                        {formatDistanceToNow(new Date(l.created_at), { addSuffix: true, locale: ptBR })}
-                      </span>
+                      {l.phone && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-success hover:bg-success-soft shrink-0"
+                          onClick={openWa}
+                          aria-label="Abrir WhatsApp"
+                        >
+                          <FontAwesomeIcon icon={faWhatsapp} className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
                     </Link>
                   </li>
                 );
@@ -315,5 +355,6 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+    </TooltipProvider>
   );
 }
