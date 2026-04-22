@@ -58,6 +58,8 @@ export default function PipelineBoard() {
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
   useRealtimeTable('leads', fetchLeads);
 
+  const interactionCounts = useInteractionCounts(leads.map((l) => l.id));
+
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
   };
@@ -129,6 +131,7 @@ export default function PipelineBoard() {
               leads={leads.filter((l) => l.status === s.value)}
               onLeadClick={openDetail}
               onAddLead={openNewLead}
+              interactionCounts={interactionCounts}
             />
           ))}
         </div>
