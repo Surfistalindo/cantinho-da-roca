@@ -259,6 +259,27 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
 
           {/* CONTEÚDO */}
           <div className="px-6 py-6 space-y-4 flex-1">
+            {/* Por que essa prioridade */}
+            {scoreInfo && scoreInfo.level !== 'closed' && scoreInfo.reasons.length > 0 && (
+              <section className={cn(
+                'rounded-2xl border p-5',
+                scoreInfo.urgent ? 'bg-destructive/5 border-destructive/20' : 'bg-card border-border',
+              )}>
+                <div className="flex items-center justify-between mb-3">
+                  <SectionLabel>Por que essa prioridade</SectionLabel>
+                  <LeadScoreBadge lead={lead} interactionCount={interactionCount} size="lg" />
+                </div>
+                <ul className="space-y-1.5">
+                  {scoreInfo.reasons.map((r, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-foreground/85">
+                      <span className={cn('mt-1.5 h-1.5 w-1.5 rounded-full shrink-0', scoreInfo.dotClass)} />
+                      <span>{r}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
             {/* Status & Acompanhamento */}
             <section className="rounded-2xl bg-card border border-border p-5">
               <SectionLabel>Status & Acompanhamento</SectionLabel>
