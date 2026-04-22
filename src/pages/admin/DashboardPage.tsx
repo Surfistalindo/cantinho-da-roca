@@ -129,6 +129,7 @@ export default function DashboardPage() {
   if (loading) return <LoadingState variant="cards" />;
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="max-w-7xl mx-auto space-y-8">
       <PageHeader
         title="Painel"
