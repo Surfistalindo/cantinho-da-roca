@@ -84,9 +84,9 @@ export default function AdminDashboard() {
   };
 
   const cards = [
-    { icon: Users, label: 'Leads', value: String(stats.total), description: 'Total de leads capturados' },
-    { icon: BarChart3, label: 'Negociando', value: String(stats.negotiating), description: 'Em negociação ativa' },
-    { icon: MessageSquare, label: 'Vendidos', value: String(stats.sold), description: 'Convertidos em vendas' },
+    { icon: faUserGroup, label: 'Leads', value: String(stats.total), description: 'Total de leads capturados' },
+    { icon: faChartColumn, label: 'Negociando', value: String(stats.negotiating), description: 'Em negociação ativa' },
+    { icon: faCommentDots, label: 'Vendidos', value: String(stats.sold), description: 'Convertidos em vendas' },
   ];
 
   return (
