@@ -1,147 +1,120 @@
 
 
-## Plano: Inteligência Comercial — Lead Score com priorização automática
+## Plano: Integração WhatsApp ativa com templates + auto-registro
 
-Adicionar uma camada de **scoring** que classifica leads em **🔥 Quente · 🌤 Morno · ❄ Frio**, exibida em todo o CRM e usável para ordenação. **100% client-side e calculado em tempo real** — zero migração de banco, zero quebra de contratos.
+Transformar os botões de WhatsApp existentes em uma ação 1-clique que abre o WhatsApp com mensagem pré-preenchida **e** registra automaticamente uma interação do tipo `mensagem`. O trigger do banco (`sync_last_contact_from_interaction`) já atualiza `last_contact_at` automaticamente — zero migração.
 
 ---
 
-### 1. Núcleo: `src/lib/leadScore.ts` (novo)
+### 1. Núcleo: `src/lib/whatsappTemplates.ts` (novo)
 
-Função pura que recebe um lead + contagem de interações e devolve:
+Biblioteca pura com templates e utilitários:
 
 ```ts
-interface LeadScoreInfo {
-  score: number;           // 0–100
-  level: 'hot' | 'warm' | 'cold' | 'closed';
-  label: string;           // "Quente" | "Morno" | "Frio" | "Encerrado"
-  reasons: string[];       // ["Em negociação", "5 dias sem contato", ...]
-  toneClass: string;       // tokens semânticos (success/warning/destructive)
-  dotClass: string;        // bg-success / bg-warning / bg-destructive
+type TemplateKey = 'first_contact' | 'follow_up' | 'reengagement';
+
+interface Template {
+  key: TemplateKey;
+  label: string;            // "Primeiro contato"
+  icon: IconDefinition;     // faHandshake / faClockRotateLeft / faRotateRight
+  description: string;      // tooltip curto
+  build: (lead) => string;  // gera a mensagem com nome + interesse
 }
 
-getLeadScore(lead, opts?: { interactionCount?: number }): LeadScoreInfo
+export const WHATSAPP_TEMPLATES: Template[]
+export function buildWhatsAppUrl(phone: string, message: string): string | null
+export function pickSuggestedTemplate(lead, score): TemplateKey  // baseado em status/recência
 ```
 
-**Fórmula (soma ponderada, 0–100):**
+**Templates (pt-BR, com primeiro nome do lead):**
 
-| Fator | Peso | Lógica |
-|---|---|---|
-| **Status** | até 35 | `negotiating`=35 · `contacting`=22 · `new`=15 · `won`/`lost`=neutro (level=`closed`) |
-| **Recência (sem contato)** | até 25 | 0d=0 · 3–6d=15 · 7–13d=22 · ≥14d=25 (urgência crescente) |
-| **Interações** | até 20 | clamp(count×5, 0, 20) — engajamento histórico |
-| **Origem** | até 10 | Indicação=10 · WhatsApp=8 · Site=6 · Instagram=5 · Outro=3 |
-| **Próximo contato agendado** | até 10 | atrasado=10 · hoje=8 · ≤3d=5 · futuro=2 · sem agenda=0 |
+- **Primeiro contato** (lead `new` ou sem interações)
+  > "Olá {firstName}! Aqui é do Cantinho da Roça 🌿 Vi seu interesse{interest} e queria entender melhor como podemos te ajudar. Posso te passar mais detalhes por aqui?"
 
-Classificação:
-- **score ≥ 65** → `hot` (verde→urgente: vermelho se overdue ≥7d)
-- **35–64** → `warm` (amarelo)
-- **< 35** → `cold` (cinza/azul claro)
-- status fechado → `closed` (neutro, fora da priorização)
+- **Follow-up** (lead em `contacting`/`negotiating`, recência atenção)
+  > "Oi {firstName}! Tudo certo? Passando para retomar nossa conversa{interest}. Ainda tem interesse? Fico no aguardo 😊"
 
-**Override de cor semântica conforme regra do usuário:**
-- `verde` → ativo recente (hot + recência boa)
-- `amarelo` → atenção (warm OU hot com 3–6d sem contato)
-- `vermelho` → urgente (hot com ≥7d sem contato OU next_contact_at atrasado)
+- **Reengajamento** (recência overdue ou ≥14d)
+  > "Olá {firstName}! Faz um tempinho que não conversamos. Estamos com novidades por aqui e lembrei de você — ainda posso te ajudar com{interest}? 🌱"
 
-Função auxiliar `compareByScore(a, b)` para ordenação desc.
+`{interest}` é substituído por `" no(a) {product_interest}"` quando existir, ou string vazia.
 
-### 2. Componente visual: `src/components/admin/LeadScoreBadge.tsx` (novo)
+### 2. Componente: `src/components/admin/WhatsAppQuickAction.tsx` (novo)
 
-Badge compacto com 3 tamanhos (`sm` / `md` / `lg`):
+Botão dropdown reutilizável — uma única fonte de verdade para a ação.
 
-```
-[🔥 Quente · 87]   ← level=hot, urgente=vermelho
-[● Morno · 52]
-[● Frio · 18]
+```tsx
+<WhatsAppQuickAction
+  lead={lead}
+  variant="primary" | "icon" | "ghost"
+  size="sm" | "md"
+  onSent?: () => void
+/>
 ```
 
-- Ícone: `faFire` (hot urgente), `faBolt` (hot ativo), `faCircleHalfStroke` (warm), `faSnowflake` (cold).
-- Tooltip on-hover lista os `reasons` ("Em negociação · 8 dias sem contato · 4 interações").
-- Variante `dot` (somente bolinha colorida) para uso em cards densos.
+Comportamento:
+- **Click principal**: abre WhatsApp com o template **sugerido** (1 clique real).
+- **Caret/seta lateral** (ou long-press no mobile): abre `DropdownMenu` listando os 3 templates + opção "Ver/editar antes de enviar".
+- "Editar antes" abre um `Dialog` compacto com `Textarea` pré-preenchido + botão "Abrir WhatsApp".
+- Ao confirmar envio (em qualquer fluxo):
+  1. `window.open(buildWhatsAppUrl(...), '_blank')`
+  2. `interactionService.create({ lead_id, contact_type: 'mensagem', description: '[Template: {label}] {primeiras 80 chars}…', created_by: user.id })`
+  3. Trigger do banco atualiza `last_contact_at` automaticamente.
+  4. `toast.success('Mensagem registrada')` + ícone verde animado.
+  5. `onSent?.()` para o pai dar refetch.
+- Sem telefone → botão fica desabilitado com tooltip "Sem telefone cadastrado".
+- Falha no registro de interação **não** bloqueia o WhatsApp (best-effort) — toast de aviso discreto.
 
-### 3. Hook de contagem: `src/hooks/useInteractionCounts.ts` (novo)
+Usa `useAuth()` para pegar `user.id`. Se não autenticado, só abre o WhatsApp sem registrar.
 
-Como `interactions` não tem contagem agregada, fazemos **uma única query** por página:
+### 3. Integração no `LeadCard.tsx` (Pipeline)
 
-```ts
-useInteractionCounts(leadIds: string[]) → Record<string, number>
-```
+Substituir os dois `<Button>` atuais (`openWhatsApp` e `sendFollowUp`) por **um único** `<WhatsAppQuickAction lead={lead} variant="icon" size="sm" onSent={refetch}>`. O componente decide internamente o template sugerido (follow-up se atenção/overdue, primeiro contato caso contrário). Remove as funções inline duplicadas.
 
-Internamente: `supabase.from('interactions').select('lead_id').in('lead_id', leadIds)` e agrupa client-side. Refetch via `useRealtimeTable('interactions', ...)`. Cache local por sessão.
+### 4. Integração no `LeadDetailSheet.tsx`
 
-### 4. Integração nas páginas
+- Trocar o botão "WhatsApp" verde da toolbar por `<WhatsAppQuickAction lead={lead} variant="primary" size="md" onSent={onUpdated} />` — vira um split-button (ação principal + caret).
+- Trocar também o atalho `openWhatsApp` no telefone do header pela mesma ação (1 clique → template sugerido).
+- O painel "Histórico de Interações" abaixo já reflete o novo registro automaticamente via `useRealtimeTable('interactions', ...)`.
 
-**`LeadCard.tsx` (Pipeline)**
-- Adicionar `LeadScoreBadge size="sm"` no topo do card (acima do nome).
-- Cards `hot+overdue` ganham anel sutil `ring-1 ring-destructive/40` + leve glow.
-- Lateral colorida (`before:`) passa a refletir o **level do score** (não mais só recência) — mantém a hierarquia visual já existente.
+### 5. Integração no `DashboardPage.tsx`
 
-**`PipelineColumn.tsx`**
-- Ordenar leads da coluna por score desc (mais quentes no topo).
-- Header da coluna mostra contador de hot leads: `Em contato · 12 · 🔥 3`.
+O card "Top Leads Quentes" já tem botão WhatsApp inline — substituir pelo `<WhatsAppQuickAction variant="icon" size="sm" onSent={refetch} />` para também registrar a interação.
 
-**`LeadsPage.tsx` (Tabela)**
-- Nova coluna **Prioridade** (entre Status e Recência) com `LeadScoreBadge size="sm"`.
-- Header da coluna é clicável: alterna ordenação entre **Score desc** (padrão novo) e **Entrada**.
-- Linha de lead `hot urgente` ganha barra lateral vermelha (`border-l-2 border-destructive`).
-- Card mobile mostra o badge acima do nome.
+### 6. UX e feedback
 
-**`LeadDetailSheet.tsx`**
-- No header, ao lado do `LeadStatusBadge`, exibir `LeadScoreBadge size="lg"`.
-- Bloco novo "Por que essa prioridade" listando os `reasons` em bullets.
+- Botão usa cor `#25D366` no variant `primary`, ghost verde no `icon`.
+- Após disparo: ícone troca momentaneamente para `faCheck` por 1.2s + toast `"Mensagem enviada e registrada"`.
+- Dropdown usa `rounded-xl` + `shadow-pop` (consistente com o design system).
+- Tooltip em cada template no dropdown explica quando usar.
+- Acessível: `aria-label`, foco visível, navegação por teclado no dropdown.
 
-**`DashboardPage.tsx`**
-- Novo card **"Top 5 leads quentes"** (substitui ou complementa "Leads recentes"): lista ordenada por score desc, filtrando `level === 'hot'`, com avatar + nome + badge + botão WhatsApp inline.
-- KPI extra: contagem de leads quentes.
+### 7. Configuração
 
-**`LeadFilters.tsx`**
-- Novo select **Prioridade**: Todos · 🔥 Quentes · 🌤 Mornos · ❄ Frios. Aplica filtro por `level`.
-
-### 5. Ordenação automática
-
-- **Pipeline:** ordem padrão = score desc dentro de cada coluna.
-- **LeadsPage:** ordem padrão muda para score desc; toggle no header restaura "Entrada".
-- Estado `sortBy: 'score' | 'created'` persistido em `?sort=` na URL.
-
-### 6. UX e cores semânticas
-
-| Level | Tokens | Uso |
-|---|---|---|
-| hot (ativo) | `success` / `bg-success-soft` | verde — engajamento bom |
-| warm | `warning` / `bg-warning-soft` | amarelo — atenção |
-| hot (overdue) ou next_contact atrasado | `destructive` / `bg-destructive/10` | vermelho — urgente |
-| cold | `muted-foreground` | cinza — baixa prioridade |
-| closed | `muted` neutro | fora do funil |
-
-Microinterações: badge `hot urgente` com pulso suave (`animate-pulse` no dot, 2s). Transições já globais (`duration-150`).
+- Templates ficam centralizados em `whatsappTemplates.ts` — fácil editar/adicionar.
+- Sem novas chaves no `APP_CONFIG`. Se quiser personalizar saudação no futuro, adiciona-se `APP_CONFIG.brandName` (já implícito como "Cantinho da Roça" nos templates).
 
 ---
 
 ### Arquivos tocados
 
 **Novos**
-- `src/lib/leadScore.ts`
-- `src/components/admin/LeadScoreBadge.tsx`
-- `src/hooks/useInteractionCounts.ts`
+- `src/lib/whatsappTemplates.ts` — templates + builder de URL + sugestão automática
+- `src/components/admin/WhatsAppQuickAction.tsx` — split-button reutilizável
 
-**Modificados (apenas markup/lógica de ordenação)**
-- `src/components/pipeline/LeadCard.tsx`
-- `src/components/pipeline/PipelineColumn.tsx`
-- `src/components/pipeline/PipelineBoard.tsx` (passar interactionCounts via prop)
-- `src/components/admin/LeadDetailSheet.tsx`
-- `src/components/admin/LeadFilters.tsx`
-- `src/pages/admin/LeadsPage.tsx`
-- `src/pages/admin/PipelinePage.tsx`
-- `src/pages/admin/DashboardPage.tsx`
+**Modificados (só substituem o handler antigo)**
+- `src/components/pipeline/LeadCard.tsx` — usa `WhatsAppQuickAction`
+- `src/components/admin/LeadDetailSheet.tsx` — usa `WhatsAppQuickAction` (toolbar + telefone do header)
+- `src/pages/admin/DashboardPage.tsx` — usa `WhatsAppQuickAction` no Top Leads Quentes
 
-**Não tocados:** rotas, AuthContext, ProtectedRoute, services, schema do banco, RLS, migrations, types Supabase, landing page, login.
+**Não tocados:** `interactionService` (já tem `create`), `leadService`, schema do banco, RLS, triggers, AuthContext, rotas, landing, `WhatsAppFloat` (botão público da landing — escopo diferente), login.
 
 ### Garantias
 
-- **Sem migração de banco** — score é derivado em runtime a partir dos campos já existentes (`status`, `last_contact_at`, `created_at`, `next_contact_at`, `origin`) + count agregado de `interactions`.
-- Mesmas props públicas em todos os componentes existentes (apenas adições opcionais).
-- Realtime continua funcionando — score recalcula automaticamente a cada refetch.
-- Função `getLeadScore` é pura e testável.
-- Respeita o design system (Josefin Sans + tokens HSL + sombras já criadas).
+- **Sem migração** — usa `interactions` + trigger `sync_last_contact_from_interaction` já existente.
+- **1 clique real** para o caso comum (template sugerido); 2 cliques para escolher template; 3 cliques para editar antes.
+- Best-effort: falha ao registrar não impede o WhatsApp abrir.
+- Realtime do histórico já existente reflete a nova interação na hora.
+- Score de prioridade recalcula automaticamente (interação +5 pts, recência reseta).
+- Respeita design system (Josefin Sans, tokens HSL, shadows, rounded-xl/2xl).
 
