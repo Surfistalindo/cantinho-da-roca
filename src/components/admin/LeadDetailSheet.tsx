@@ -43,6 +43,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { clientService } from '@/services/clientService';
+import { cn } from '@/lib/utils';
 
 interface Lead {
   id: string;
