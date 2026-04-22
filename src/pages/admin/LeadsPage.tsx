@@ -6,7 +6,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import LeadFilters, { type RecencyFilter } from '@/components/admin/LeadFilters';
+import LeadFilters, { type RecencyFilter, type PriorityFilter } from '@/components/admin/LeadFilters';
 import LeadStatusSelect from '@/components/admin/LeadStatusSelect';
 import LeadStatusBadge from '@/components/admin/LeadStatusBadge';
 import LeadDetailSheet from '@/components/admin/LeadDetailSheet';
@@ -16,8 +16,10 @@ import EmptyState from '@/components/admin/EmptyState';
 import LoadingState from '@/components/admin/LoadingState';
 import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
 import InitialsAvatar from '@/components/admin/InitialsAvatar';
+import LeadScoreBadge from '@/components/admin/LeadScoreBadge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
+import { useInteractionCounts } from '@/hooks/useInteractionCounts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -28,6 +30,7 @@ import {
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { toast } from 'sonner';
 import { getContactRecency } from '@/lib/contactRecency';
+import { getLeadScore, compareByScore } from '@/lib/leadScore';
 import { cn } from '@/lib/utils';
 
 interface Lead {
