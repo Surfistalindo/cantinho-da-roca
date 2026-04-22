@@ -157,21 +157,13 @@ export default function AdminLogin() {
           >
             {/* Header */}
             <div className="text-center mb-7">
-              <div className="inline-flex items-center justify-center mb-3">
-                <LeafSVG
-                  id="loginBrandLeaf"
-                  size={44}
-                  className="motion-safe-anim"
-                  style={{ animation: 'float 4s ease-in-out infinite' }}
-                />
-              </div>
-              <h1
-                className="hero-title-shimmer text-4xl sm:text-5xl leading-none"
-                style={{ fontFamily: 'var(--font-heading)' }}
-              >
-                Cantinho da Roça
-              </h1>
-              <p className="mt-2 text-sm text-muted-foreground">Área administrativa</p>
+              <img
+                src={logoCantinho}
+                alt="Cantinho da Roça"
+                className="mx-auto h-14 sm:h-16 w-auto mb-4 motion-safe-anim drop-shadow-[0_6px_20px_hsl(125_47%_33%/0.18)]"
+                style={{ animation: 'float 5s ease-in-out infinite' }}
+              />
+              <p className="text-sm text-muted-foreground">Área administrativa</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5" noValidate>
