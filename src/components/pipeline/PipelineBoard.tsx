@@ -17,6 +17,7 @@ import LeadDetailSheet from '@/components/admin/LeadDetailSheet';
 import NewLeadDialog from '@/components/admin/NewLeadDialog';
 import LoadingState from '@/components/admin/LoadingState';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
+import { useInteractionCounts } from '@/hooks/useInteractionCounts';
 import { toast } from 'sonner';
 
 interface Lead {
