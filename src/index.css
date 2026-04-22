@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Satisfy&family=Oswald:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Satisfy&family=Oswald:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Josefin+Sans:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -120,6 +120,16 @@
 @layer components {
   .section-container {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .font-crm,
+  .font-crm h1,
+  .font-crm h2,
+  .font-crm h3,
+  .font-crm h4,
+  .font-crm h5,
+  .font-crm h6 {
+    font-family: 'Josefin Sans', sans-serif;
   }
 }
 
