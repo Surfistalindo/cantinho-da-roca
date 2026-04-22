@@ -2,7 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, BarChart3, MessageSquare } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faArrowRightFromBracket,
+  faUserGroup,
+  faChartColumn,
+  faCommentDots,
+} from '@fortawesome/free-solid-svg-icons';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
