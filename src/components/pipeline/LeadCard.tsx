@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
 import InitialsAvatar from '@/components/admin/InitialsAvatar';
+import LeadScoreBadge from '@/components/admin/LeadScoreBadge';
 import { getContactRecency } from '@/lib/contactRecency';
+import { getLeadScore } from '@/lib/leadScore';
 
 interface Lead {
   id: string;
@@ -18,14 +20,16 @@ interface Lead {
   status: string;
   created_at: string;
   last_contact_at: string | null;
+  next_contact_at?: string | null;
 }
 
 interface Props {
   lead: Lead;
   onClick?: () => void;
+  interactionCount?: number;
 }
 
-export default function LeadCard({ lead, onClick }: Props) {
+export default function LeadCard({ lead, onClick, interactionCount }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: lead.id });
 
   const style = { transform: CSS.Transform.toString(transform), transition };
@@ -34,14 +38,15 @@ export default function LeadCard({ lead, onClick }: Props) {
   const needsAttention = recency.level === 'attention';
   const overdue = recency.level === 'overdue';
 
+  const score = getLeadScore(lead, { interactionCount });
+
+  // Lateral colorida = nível de prioridade
   const sideTone =
-    overdue ? 'before:bg-destructive'
-    : needsAttention ? 'before:bg-warning'
-    : lead.status === 'new' ? 'before:bg-info'
-    : lead.status === 'contacting' ? 'before:bg-primary/70'
-    : lead.status === 'negotiating' ? 'before:bg-warning/60'
-    : lead.status === 'won' ? 'before:bg-success'
-    : 'before:bg-muted-foreground/30';
+    score.urgent ? 'before:bg-destructive'
+    : score.level === 'hot' ? 'before:bg-success'
+    : score.level === 'warm' ? 'before:bg-warning'
+    : score.level === 'cold' ? 'before:bg-muted-foreground/30'
+    : 'before:bg-muted-foreground/20';
 
   const openWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -71,9 +76,16 @@ export default function LeadCard({ lead, onClick }: Props) {
         'hover:shadow-card hover:border-border-strong hover:-translate-y-px',
         'before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-[3px] before:rounded-full',
         sideTone,
+        score.urgent && 'ring-1 ring-destructive/40',
         isDragging && 'opacity-50 shadow-pop ring-2 ring-primary/30',
       )}
     >
+      {score.level !== 'closed' && (
+        <div className="mb-2">
+          <LeadScoreBadge lead={lead} interactionCount={interactionCount} size="sm" />
+        </div>
+      )}
+
       <div className="flex items-start gap-2.5">
         <InitialsAvatar name={lead.name} size="sm" />
         <div className="min-w-0 flex-1">
