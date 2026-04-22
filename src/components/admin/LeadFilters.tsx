@@ -86,9 +86,15 @@ export default function LeadFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Toda prioridade</SelectItem>
-            <SelectItem value="hot">🔥 Quentes</SelectItem>
-            <SelectItem value="warm">🌤 Mornos</SelectItem>
-            <SelectItem value="cold">❄ Frios</SelectItem>
+            <SelectItem value="hot">
+              <span className="inline-flex items-center"><FontAwesomeIcon icon={faFire} className="h-3 w-3 mr-2 text-destructive" />Quentes</span>
+            </SelectItem>
+            <SelectItem value="warm">
+              <span className="inline-flex items-center"><FontAwesomeIcon icon={faCircleHalfStroke} className="h-3 w-3 mr-2 text-warning" />Mornos</span>
+            </SelectItem>
+            <SelectItem value="cold">
+              <span className="inline-flex items-center"><FontAwesomeIcon icon={faSnowflake} className="h-3 w-3 mr-2 text-muted-foreground" />Frios</span>
+            </SelectItem>
           </SelectContent>
         </Select>
       )}
