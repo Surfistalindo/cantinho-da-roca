@@ -22,7 +22,7 @@ export default function LeadStatusSelect({ leadId, currentStatus, onUpdated }: P
 
   return (
     <Select value={currentStatus} onValueChange={handleChange}>
-      <SelectTrigger className="h-8 w-[140px] text-xs">
+      <SelectTrigger className="h-8 w-[140px] text-xs bg-transparent border-transparent hover:bg-muted/60 transition-colors">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
