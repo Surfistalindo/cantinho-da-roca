@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { APP_CONFIG } from '@/config/app';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faXmark, faFire, faCircleHalfStroke, faSnowflake } from '@fortawesome/free-solid-svg-icons';
 
 export type RecencyFilter = 'all' | 'recent' | 'attention' | 'overdue';
 export type PriorityFilter = 'all' | 'hot' | 'warm' | 'cold';
