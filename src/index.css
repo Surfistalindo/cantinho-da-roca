@@ -153,6 +153,34 @@
   .font-crm h5,
   .font-crm h6 {
     font-family: 'Josefin Sans', sans-serif;
+    letter-spacing: -0.005em;
+  }
+
+  /* CRM-only premium surfaces */
+  .font-crm .surface-card {
+    @apply bg-card border border-border rounded-2xl shadow-soft;
+  }
+  .font-crm .surface-muted {
+    background-color: hsl(var(--surface-2));
+  }
+  .font-crm .surface-elevated {
+    background-color: hsl(var(--elevated));
+  }
+
+  /* Default visual upgrades inside CRM (no logic changes) */
+  .font-crm input,
+  .font-crm textarea,
+  .font-crm [role="combobox"],
+  .font-crm button[role="combobox"] {
+    border-radius: 0.625rem;
+  }
+  .font-crm button:not([role]):not(.no-crm-radius) {
+    border-radius: 0.625rem;
+  }
+
+  /* Smooth row hover */
+  .font-crm table tr {
+    transition: background-color 150ms ease;
   }
 }
 
