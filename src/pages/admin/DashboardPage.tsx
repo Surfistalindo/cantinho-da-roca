@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faUserGroup, faChartColumn, faComments, faPhoneSlash, faUserCheck,
+  faUserGroup, faComments, faPhoneSlash, faUserCheck,
   faArrowTrendUp, faClockRotateLeft, faBolt, faTableColumns, faTriangleExclamation,
-  faChevronRight, faSeedling, faCircleCheck,
+  faChevronRight, faSeedling, faCircleCheck, faChartColumn,
 } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { formatDistanceToNow } from 'date-fns';
@@ -15,9 +15,11 @@ import PageHeader from '@/components/admin/PageHeader';
 import LoadingState from '@/components/admin/LoadingState';
 import LeadStatusBadge from '@/components/admin/LeadStatusBadge';
 import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
+import InitialsAvatar from '@/components/admin/InitialsAvatar';
 import { Button } from '@/components/ui/button';
 import { LEAD_STATUS } from '@/lib/leadStatus';
 import { getContactRecency } from '@/lib/contactRecency';
+import { cn } from '@/lib/utils';
 
 interface LeadLite {
   id: string;
@@ -55,15 +57,12 @@ export default function DashboardPage() {
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const total = leads.length;
     const sold = leads.filter((l) => l.status === LEAD_STATUS.WON).length;
-
-    let attention = 0;
-    let overdue = 0;
+    let attention = 0; let overdue = 0;
     for (const l of leads) {
       const info = getContactRecency(l.last_contact_at, l.status, l.created_at);
       if (info.level === 'attention') attention++;
       else if (info.level === 'overdue') overdue++;
     }
-
     return {
       total,
       newLeads: leads.filter((l) => l.status === LEAD_STATUS.NEW).length,
@@ -86,9 +85,7 @@ export default function DashboardPage() {
       .filter((x) => x.info.level === 'attention' || x.info.level === 'overdue')
       .sort((a, b) => {
         if (a.info.level !== b.info.level) return a.info.level === 'overdue' ? -1 : 1;
-        const da = a.info.days ?? 9999;
-        const db = b.info.days ?? 9999;
-        return db - da;
+        return (b.info.days ?? 9999) - (a.info.days ?? 9999);
       })
       .slice(0, 5);
   }, [leads]);
@@ -100,83 +97,106 @@ export default function DashboardPage() {
     { icon: faTriangleExclamation, label: 'Atrasados', value: stats.overdue, description: '7+ dias ou nunca contatado', accent: 'text-destructive bg-destructive/10', href: '/admin/leads?recency=overdue' },
   ];
 
-  const statusCards: { icon: IconDefinition; label: string; value: number; accent: string }[] = [
-    { icon: faUserGroup, label: 'Novos', value: stats.newLeads, accent: 'text-info bg-info-soft' },
-    { icon: faComments, label: 'Em contato', value: stats.contacting, accent: 'text-primary bg-primary/10' },
-    { icon: faChartColumn, label: 'Negociação', value: stats.negotiating, accent: 'text-warning bg-warning-soft' },
-    { icon: faUserCheck, label: 'Clientes', value: stats.sold, accent: 'text-success bg-success-soft' },
-    { icon: faPhoneSlash, label: 'Perdidos', value: stats.noResponse, accent: 'text-muted-foreground bg-muted' },
+  // Distribuição: barra segmentada
+  const segments = [
+    { label: 'Novos', value: stats.newLeads, className: 'bg-info', icon: faUserGroup },
+    { label: 'Em contato', value: stats.contacting, className: 'bg-primary', icon: faComments },
+    { label: 'Negociação', value: stats.negotiating, className: 'bg-warning', icon: faChartColumn },
+    { label: 'Clientes', value: stats.sold, className: 'bg-success', icon: faUserCheck },
+    { label: 'Perdidos', value: stats.noResponse, className: 'bg-muted-foreground/40', icon: faPhoneSlash },
   ];
+  const distTotal = segments.reduce((a, s) => a + s.value, 0) || 1;
 
-  if (loading) return <LoadingState />;
+  if (loading) return <LoadingState variant="cards" />;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-8">
       <PageHeader
         title="Painel"
         description="Visão geral da operação comercial em tempo real."
       />
 
-      {/* KPIs principais */}
+      {/* KPIs */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {primaryCards.map((c) => {
+        {primaryCards.map((c, idx) => {
           const inner = (
             <>
-              <div className="flex items-center gap-3 mb-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${c.accent}`}>
-                  <FontAwesomeIcon icon={c.icon} className="w-5 h-5" />
+              <div className="flex items-center justify-between mb-4">
+                <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center', c.accent)}>
+                  <FontAwesomeIcon icon={c.icon} className="w-[18px] h-[18px]" />
                 </div>
-                <span className="text-sm font-medium text-muted-foreground">{c.label}</span>
+                {c.href && (
+                  <FontAwesomeIcon icon={faChevronRight} className="w-3 h-3 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
+                )}
               </div>
-              <p className="text-3xl font-bold text-foreground">{c.value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{c.description}</p>
+              <p className="text-[10px] uppercase tracking-[0.14em] font-semibold text-muted-foreground">{c.label}</p>
+              <p className="text-[28px] font-semibold text-foreground tabular-nums leading-tight mt-1">{c.value}</p>
+              <p className="text-xs text-muted-foreground mt-1.5">{c.description}</p>
             </>
           );
+          const baseClass = 'group bg-card rounded-2xl border border-border p-5 shadow-soft hover:shadow-card transition-all duration-150';
           return c.href ? (
             <Link
               key={c.label}
               to={c.href}
-              className="bg-card rounded-xl border border-border p-5 shadow-sm hover:shadow-md hover:border-primary/30 transition-all block"
+              className={cn(baseClass, 'hover:border-border-strong hover:-translate-y-px block')}
+              style={{ animationDelay: `${idx * 60}ms` }}
             >
               {inner}
             </Link>
           ) : (
-            <div key={c.label} className="bg-card rounded-xl border border-border p-5 shadow-sm hover:shadow-md transition-shadow">
+            <div key={c.label} className={baseClass} style={{ animationDelay: `${idx * 60}ms` }}>
               {inner}
             </div>
           );
         })}
       </div>
 
-      {/* Distribuição por status */}
-      <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Distribuição por status</h3>
-          <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
-            <Link to="/admin/pipeline"><FontAwesomeIcon icon={faTableColumns} className="w-3 h-3 mr-1.5" /> Ver pipeline</Link>
+      {/* Distribuição segmentada */}
+      <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">Distribuição por status</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Visão proporcional do funil</p>
+          </div>
+          <Button asChild variant="ghost" size="sm" className="h-8 text-xs">
+            <Link to="/admin/pipeline">
+              <FontAwesomeIcon icon={faTableColumns} className="w-3 h-3 mr-1.5" /> Ver pipeline
+            </Link>
           </Button>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {statusCards.map((c) => (
-            <div key={c.label} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${c.accent}`}>
-                <FontAwesomeIcon icon={c.icon} className="w-4 h-4" />
-              </div>
+
+        <div className="flex h-2.5 w-full rounded-full overflow-hidden bg-muted">
+          {segments.map((s) => (
+            s.value > 0 && (
+              <div
+                key={s.label}
+                className={cn('h-full transition-all duration-300', s.className)}
+                style={{ width: `${(s.value / distTotal) * 100}%` }}
+                title={`${s.label}: ${s.value}`}
+              />
+            )
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-5">
+          {segments.map((s) => (
+            <div key={s.label} className="flex items-center gap-2.5 p-3 rounded-xl bg-muted/40">
+              <span className={cn('w-2.5 h-2.5 rounded-full', s.className)} />
               <div className="min-w-0">
-                <p className="text-xl font-bold text-foreground leading-none">{c.value}</p>
-                <p className="text-xs text-muted-foreground mt-1 truncate">{c.label}</p>
+                <p className="text-[18px] font-semibold tabular-nums leading-none text-foreground">{s.value}</p>
+                <p className="text-[11px] text-muted-foreground mt-1 truncate">{s.label}</p>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Leads recentes + Precisam de atenção */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Leads recentes */}
-        <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+      {/* Recentes + Atenção */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
               <FontAwesomeIcon icon={faSeedling} className="w-3.5 h-3.5 text-primary" /> Leads recentes
             </h3>
             <Button asChild variant="ghost" size="sm" className="h-7 text-xs">
@@ -184,19 +204,20 @@ export default function DashboardPage() {
             </Button>
           </div>
           {recentLeads.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">
+            <p className="text-sm text-muted-foreground py-8 text-center">
               Nenhum lead ainda. Compartilhe sua landing page!
             </p>
           ) : (
-            <ul className="space-y-1">
+            <ul className="divide-y divide-border/60 -mx-2">
               {recentLeads.map((l) => {
                 const meta = [l.origin, l.product_interest].filter(Boolean).join(' · ');
                 return (
                   <li key={l.id}>
                     <Link
                       to={`/admin/leads?focus=${l.id}`}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 transition-colors"
+                      className="flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-muted/50 transition-colors"
                     >
+                      <InitialsAvatar name={l.name} size="md" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-medium text-foreground truncate">{l.name}</p>
@@ -206,10 +227,9 @@ export default function DashboardPage() {
                           <p className="text-xs text-muted-foreground truncate mt-0.5">{meta}</p>
                         )}
                       </div>
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      <span className="text-[11px] text-muted-foreground whitespace-nowrap">
                         {formatDistanceToNow(new Date(l.created_at), { addSuffix: true, locale: ptBR })}
                       </span>
-                      <FontAwesomeIcon icon={faChevronRight} className="w-3 h-3 text-muted-foreground/50" />
                     </Link>
                   </li>
                 );
@@ -218,10 +238,9 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Precisam de atenção */}
-        <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+        <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
               <FontAwesomeIcon icon={faTriangleExclamation} className="w-3.5 h-3.5 text-warning" /> Precisam de atenção
             </h3>
             {attentionLeads.length > 0 && (
@@ -231,21 +250,24 @@ export default function DashboardPage() {
             )}
           </div>
           {attentionLeads.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-6 text-center">
-              <FontAwesomeIcon icon={faCircleCheck} className="w-6 h-6 text-success mb-2" />
-              <p className="text-sm text-muted-foreground">Tudo em dia</p>
-              <p className="text-xs text-muted-foreground/70 mt-1">Nenhum lead precisando de retorno.</p>
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-success-soft flex items-center justify-center mb-3">
+                <FontAwesomeIcon icon={faCircleCheck} className="w-5 h-5 text-success" />
+              </div>
+              <p className="text-sm font-medium text-foreground">Tudo em dia</p>
+              <p className="text-xs text-muted-foreground mt-1">Nenhum lead precisando de retorno.</p>
             </div>
           ) : (
-            <ul className="space-y-1">
+            <ul className="divide-y divide-border/60 -mx-2">
               {attentionLeads.map(({ lead, info }) => {
                 const meta = [lead.origin, lead.product_interest].filter(Boolean).join(' · ');
                 return (
                   <li key={lead.id}>
                     <Link
                       to={`/admin/leads?focus=${lead.id}`}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 transition-colors"
+                      className="flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-muted/50 transition-colors"
                     >
+                      <InitialsAvatar name={lead.name} size="md" />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-foreground truncate">{lead.name}</p>
                         {meta && (
@@ -267,41 +289,29 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Atalhos rápidos */}
-      <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
-        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
-          <FontAwesomeIcon icon={faBolt} className="w-3.5 h-3.5 text-primary" /> Atalhos rápidos
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild size="sm" variant="outline">
-            <Link to="/admin/leads">
-              <FontAwesomeIcon icon={faUserGroup} className="w-3.5 h-3.5 mr-1.5" /> Ver leads
-            </Link>
-          </Button>
-          {stats.attention > 0 && (
-            <Button asChild size="sm" variant="outline" className="text-warning border-warning/30 hover:bg-warning-soft hover:text-warning">
-              <Link to="/admin/leads?recency=attention">
-                <FontAwesomeIcon icon={faClockRotateLeft} className="w-3.5 h-3.5 mr-1.5" /> {stats.attention} em atenção
+      {/* Atalhos */}
+      <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+            <FontAwesomeIcon icon={faBolt} className="w-3 h-3 text-primary" /> Atalhos rápidos
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild size="sm" variant="outline" className="h-8 text-xs">
+              <Link to="/admin/leads">
+                <FontAwesomeIcon icon={faUserGroup} className="w-3 h-3 mr-1.5" /> Leads
               </Link>
             </Button>
-          )}
-          {stats.overdue > 0 && (
-            <Button asChild size="sm" variant="outline" className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive">
-              <Link to="/admin/leads?recency=overdue">
-                <FontAwesomeIcon icon={faTriangleExclamation} className="w-3.5 h-3.5 mr-1.5" /> {stats.overdue} atrasado{stats.overdue > 1 ? 's' : ''}
+            <Button asChild size="sm" variant="outline" className="h-8 text-xs">
+              <Link to="/admin/pipeline">
+                <FontAwesomeIcon icon={faTableColumns} className="w-3 h-3 mr-1.5" /> Pipeline
               </Link>
             </Button>
-          )}
-          <Button asChild size="sm" variant="outline">
-            <Link to="/admin/pipeline">
-              <FontAwesomeIcon icon={faTableColumns} className="w-3.5 h-3.5 mr-1.5" /> Pipeline kanban
-            </Link>
-          </Button>
-          <Button asChild size="sm" variant="outline">
-            <Link to="/admin/clients">
-              <FontAwesomeIcon icon={faUserCheck} className="w-3.5 h-3.5 mr-1.5" /> Clientes
-            </Link>
-          </Button>
+            <Button asChild size="sm" variant="outline" className="h-8 text-xs">
+              <Link to="/admin/clients">
+                <FontAwesomeIcon icon={faUserCheck} className="w-3 h-3 mr-1.5" /> Clientes
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     </div>

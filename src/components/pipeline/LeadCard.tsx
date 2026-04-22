@@ -6,6 +6,7 @@ import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
+import InitialsAvatar from '@/components/admin/InitialsAvatar';
 import { getContactRecency } from '@/lib/contactRecency';
 
 interface Lead {
@@ -27,24 +28,27 @@ interface Props {
 export default function LeadCard({ lead, onClick }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: lead.id });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
+  const style = { transform: CSS.Transform.toString(transform), transition };
 
   const recency = getContactRecency(lead.last_contact_at, lead.status, lead.created_at);
   const needsAttention = recency.level === 'attention';
   const overdue = recency.level === 'overdue';
+
+  const sideTone =
+    overdue ? 'before:bg-destructive'
+    : needsAttention ? 'before:bg-warning'
+    : lead.status === 'new' ? 'before:bg-info'
+    : lead.status === 'contacting' ? 'before:bg-primary/70'
+    : lead.status === 'negotiating' ? 'before:bg-warning/60'
+    : lead.status === 'won' ? 'before:bg-success'
+    : 'before:bg-muted-foreground/30';
 
   const openWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!lead.phone) return;
     const clean = lead.phone.replace(/\D/g, '');
     const num = clean.startsWith('55') ? clean : `55${clean}`;
-    window.open(
-      `https://wa.me/${num}?text=${encodeURIComponent('Olá, tudo bem? Estou entrando em contato sobre seu interesse no Cantinho da Roça.')}`,
-      '_blank'
-    );
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent('Olá, tudo bem? Estou entrando em contato sobre seu interesse no Cantinho da Roça.')}`, '_blank');
   };
 
   const sendFollowUp = (e: React.MouseEvent) => {
@@ -52,10 +56,7 @@ export default function LeadCard({ lead, onClick }: Props) {
     if (!lead.phone) return;
     const clean = lead.phone.replace(/\D/g, '');
     const num = clean.startsWith('55') ? clean : `55${clean}`;
-    window.open(
-      `https://wa.me/${num}?text=${encodeURIComponent('Oi! Passando para saber se ainda tem interesse 😊')}`,
-      '_blank'
-    );
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent('Oi! Passando para saber se ainda tem interesse 😊')}`, '_blank');
   };
 
   return (
@@ -66,29 +67,31 @@ export default function LeadCard({ lead, onClick }: Props) {
       {...listeners}
       onClick={onClick}
       className={cn(
-        'bg-card border border-border rounded-lg p-3 cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow',
-        isDragging && 'opacity-50 shadow-lg ring-2 ring-primary/30',
-        // Borda lateral: recência tem prioridade sobre cor de status
-        overdue && 'border-l-4 border-l-destructive',
-        !overdue && needsAttention && 'border-l-4 border-l-warning',
-        !overdue && !needsAttention && lead.status === 'new' && 'border-l-4 border-l-info',
-        !overdue && !needsAttention && lead.status === 'contacting' && 'border-l-4 border-l-primary/60',
-        !overdue && !needsAttention && lead.status === 'negotiating' && 'border-l-4 border-l-warning/60',
-        !overdue && !needsAttention && lead.status === 'won' && 'border-l-4 border-l-success',
-        !overdue && !needsAttention && lead.status === 'lost' && 'border-l-4 border-l-muted-foreground/40',
+        'relative bg-card border border-border rounded-xl p-3 pl-3.5 cursor-grab active:cursor-grabbing shadow-soft transition-all duration-150',
+        'hover:shadow-card hover:border-border-strong hover:-translate-y-px',
+        'before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-[3px] before:rounded-full',
+        sideTone,
+        isDragging && 'opacity-50 shadow-pop ring-2 ring-primary/30',
       )}
     >
-      <p className="font-medium text-sm truncate">{lead.name}</p>
-      <p className="text-xs text-muted-foreground mt-0.5 font-mono">{lead.phone ?? 'Sem telefone'}</p>
+      <div className="flex items-start gap-2.5">
+        <InitialsAvatar name={lead.name} size="sm" />
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-[13px] text-foreground truncate leading-tight">{lead.name}</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5 font-mono truncate">
+            {lead.phone ?? 'Sem telefone'}
+          </p>
+        </div>
+      </div>
 
       {lead.product_interest && (
-        <p className="text-xs text-foreground/70 mt-1.5 flex items-center gap-1 truncate">
+        <p className="text-[11px] text-foreground/70 mt-2 flex items-center gap-1 truncate">
           <FontAwesomeIcon icon={faTag} className="h-2.5 w-2.5 text-primary/70 shrink-0" />
           <span className="truncate">{lead.product_interest}</span>
         </p>
       )}
 
-      <div className="flex items-center gap-1 mt-2">
+      <div className="flex items-center gap-1 mt-2.5 pt-2 border-t border-border/60">
         <ContactRecencyBadge
           lastContactAt={lead.last_contact_at}
           status={lead.status}
@@ -97,19 +100,19 @@ export default function LeadCard({ lead, onClick }: Props) {
         />
         <div className="ml-auto flex gap-0.5">
           {lead.phone && (
-            <Button variant="ghost" size="icon" className="h-6 w-6 text-success" onClick={openWhatsApp}>
-              <FontAwesomeIcon icon={faWhatsapp} className="h-3 w-3" />
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-success hover:bg-success-soft" onClick={openWhatsApp}>
+              <FontAwesomeIcon icon={faWhatsapp} className="h-3.5 w-3.5" />
             </Button>
           )}
           {(needsAttention || overdue) && lead.phone && (
             <Button
               variant="ghost"
               size="icon"
-              className={cn('h-6 w-6', overdue ? 'text-destructive' : 'text-warning')}
+              className={cn('h-7 w-7', overdue ? 'text-destructive hover:bg-destructive/10' : 'text-warning hover:bg-warning-soft')}
               onClick={sendFollowUp}
               title="Enviar follow-up"
             >
-              <FontAwesomeIcon icon={faClockRotateLeft} className="h-3 w-3" />
+              <FontAwesomeIcon icon={faClockRotateLeft} className="h-3.5 w-3.5" />
             </Button>
           )}
         </div>
