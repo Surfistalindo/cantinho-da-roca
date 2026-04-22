@@ -90,6 +90,12 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      boxShadow: {
+        soft: "0 1px 2px 0 hsl(220 25% 14% / 0.04), 0 1px 3px 0 hsl(220 25% 14% / 0.04)",
+        card: "0 4px 12px -2px hsl(220 25% 14% / 0.06), 0 2px 6px -2px hsl(220 25% 14% / 0.04)",
+        pop: "0 24px 48px -12px hsl(220 25% 14% / 0.18), 0 8px 16px -8px hsl(220 25% 14% / 0.12)",
+        ringed: "0 0 0 4px hsl(var(--ring) / 0.12)",
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },

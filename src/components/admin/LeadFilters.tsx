@@ -1,8 +1,9 @@
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { APP_CONFIG } from '@/config/app';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faXmark } from '@fortawesome/free-solid-svg-icons';
 
 export type RecencyFilter = 'all' | 'recent' | 'attention' | 'overdue';
 
@@ -23,19 +24,35 @@ export default function LeadFilters({
   originFilter, onOriginChange,
   recencyFilter, onRecencyChange,
 }: Props) {
+  const hasFilters =
+    search.length > 0 ||
+    statusFilter !== 'all' ||
+    originFilter !== 'all' ||
+    (recencyFilter && recencyFilter !== 'all');
+
+  const clearAll = () => {
+    onSearchChange('');
+    onStatusChange('all');
+    onOriginChange('all');
+    onRecencyChange?.('all');
+  };
+
   return (
-    <div className="flex flex-wrap gap-3 mb-6">
-      <div className="relative flex-1 min-w-[200px]">
-        <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div className="flex flex-wrap items-center gap-2.5 mb-5">
+      <div className="relative flex-1 min-w-[220px]">
+        <FontAwesomeIcon
+          icon={faMagnifyingGlass}
+          className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
+        />
         <Input
           placeholder="Buscar por nome ou telefone..."
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-9"
+          className="pl-9 h-10 bg-muted/40 border-transparent focus-visible:bg-card focus-visible:border-input"
         />
       </div>
       <Select value={statusFilter} onValueChange={onStatusChange}>
-        <SelectTrigger className="w-[160px]">
+        <SelectTrigger className="w-[150px] h-10 text-xs bg-muted/40 border-transparent">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
@@ -46,7 +63,7 @@ export default function LeadFilters({
         </SelectContent>
       </Select>
       <Select value={originFilter} onValueChange={onOriginChange}>
-        <SelectTrigger className="w-[160px]">
+        <SelectTrigger className="w-[150px] h-10 text-xs bg-muted/40 border-transparent">
           <SelectValue placeholder="Origem" />
         </SelectTrigger>
         <SelectContent>
@@ -58,16 +75,27 @@ export default function LeadFilters({
       </Select>
       {onRecencyChange && (
         <Select value={recencyFilter ?? 'all'} onValueChange={(v) => onRecencyChange(v as RecencyFilter)}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-[180px] h-10 text-xs bg-muted/40 border-transparent">
             <SelectValue placeholder="Recência" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Toda recência</SelectItem>
             <SelectItem value="recent">Recentes (≤ 2 dias)</SelectItem>
             <SelectItem value="attention">Atenção (3–6 dias)</SelectItem>
-            <SelectItem value="overdue">Atrasados (7+ dias / nunca)</SelectItem>
+            <SelectItem value="overdue">Atrasados (7+ dias)</SelectItem>
           </SelectContent>
         </Select>
+      )}
+      {hasFilters && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={clearAll}
+          className="h-10 text-xs text-muted-foreground hover:text-foreground"
+        >
+          <FontAwesomeIcon icon={faXmark} className="h-3 w-3 mr-1.5" />
+          Limpar
+        </Button>
       )}
     </div>
   );

@@ -27,7 +27,6 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated?: () => void;
-  /** Pré-seleciona o status (útil ao criar lead a partir de uma coluna do pipeline) */
   defaultStatus?: string;
 }
 
@@ -40,7 +39,6 @@ export default function NewLeadDialog({ open, onOpenChange, onCreated, defaultSt
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
-  // Sincroniza status quando defaultStatus muda ou dialog abre
   useEffect(() => {
     if (open) {
       setData((d) => ({ ...d, status: defaultStatus ?? d.status ?? 'new' }));
@@ -62,7 +60,6 @@ export default function NewLeadDialog({ open, onOpenChange, onCreated, defaultSt
     setSaving(true);
 
     const phoneClean = parsed.data.phone.replace(/\D/g, '');
-    // Combine message + notes internally
     const combinedNotes = [
       parsed.data.message ? `Mensagem: ${parsed.data.message}` : null,
       parsed.data.notes ? `Obs: ${parsed.data.notes}` : null,
@@ -98,28 +95,30 @@ export default function NewLeadDialog({ open, onOpenChange, onCreated, defaultSt
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-heading">Novo contato</DialogTitle>
-          <DialogDescription>Cadastre manualmente um lead no CRM. Ele entra na mesma base dos leads do site.</DialogDescription>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl shadow-pop p-6">
+        <DialogHeader className="space-y-1.5">
+          <DialogTitle className="text-xl font-semibold tracking-tight">Novo contato</DialogTitle>
+          <DialogDescription className="text-xs">
+            Cadastre manualmente um lead no CRM. Ele entra na mesma base dos leads do site.
+          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
           <div className="grid gap-1.5">
-            <Label htmlFor="nl-name">Nome <span className="text-destructive">*</span></Label>
+            <Label htmlFor="nl-name" className="text-xs font-medium">Nome <span className="text-destructive">*</span></Label>
             <Input id="nl-name" value={data.name} onChange={(e) => setData({ ...data, name: e.target.value })} maxLength={100} />
             {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
           </div>
 
           <div className="grid gap-1.5">
-            <Label htmlFor="nl-phone">WhatsApp <span className="text-destructive">*</span></Label>
+            <Label htmlFor="nl-phone" className="text-xs font-medium">WhatsApp <span className="text-destructive">*</span></Label>
             <Input id="nl-phone" placeholder="(71) 99999-9999" value={data.phone} onChange={(e) => setData({ ...data, phone: e.target.value })} maxLength={20} />
             {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-1.5">
-              <Label htmlFor="nl-origin">Origem</Label>
+              <Label htmlFor="nl-origin" className="text-xs font-medium">Origem</Label>
               <Select value={data.origin} onValueChange={(v) => setData({ ...data, origin: v })}>
                 <SelectTrigger id="nl-origin"><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
@@ -129,7 +128,7 @@ export default function NewLeadDialog({ open, onOpenChange, onCreated, defaultSt
               </Select>
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="nl-status">Status inicial</Label>
+              <Label htmlFor="nl-status" className="text-xs font-medium">Status inicial</Label>
               <Select value={data.status} onValueChange={(v) => setData({ ...data, status: v })}>
                 <SelectTrigger id="nl-status"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -140,21 +139,21 @@ export default function NewLeadDialog({ open, onOpenChange, onCreated, defaultSt
           </div>
 
           <div className="grid gap-1.5">
-            <Label htmlFor="nl-interest">Interesse</Label>
+            <Label htmlFor="nl-interest" className="text-xs font-medium">Interesse</Label>
             <Input id="nl-interest" placeholder="Ex: Queijos, doces, cesta..." value={data.product_interest} onChange={(e) => setData({ ...data, product_interest: e.target.value })} maxLength={200} />
           </div>
 
           <div className="grid gap-1.5">
-            <Label htmlFor="nl-message">Mensagem do contato</Label>
+            <Label htmlFor="nl-message" className="text-xs font-medium">Mensagem do contato</Label>
             <Textarea id="nl-message" placeholder="O que ele disse / pediu..." value={data.message} onChange={(e) => setData({ ...data, message: e.target.value })} maxLength={500} rows={2} />
           </div>
 
           <div className="grid gap-1.5">
-            <Label htmlFor="nl-notes">Observações internas</Label>
+            <Label htmlFor="nl-notes" className="text-xs font-medium">Observações internas</Label>
             <Textarea id="nl-notes" placeholder="Notas privadas da equipe..." value={data.notes} onChange={(e) => setData({ ...data, notes: e.target.value })} maxLength={1000} rows={2} />
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-2">
+          <DialogFooter className="gap-2 sm:gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={() => handleClose(false)} disabled={saving}>Cancelar</Button>
             <Button type="submit" disabled={saving}>
               <FontAwesomeIcon icon={faFloppyDisk} className="h-3.5 w-3.5 mr-1.5" />

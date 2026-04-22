@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faClockRotateLeft } from '@fortawesome/free-solid-svg-icons';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -45,7 +45,6 @@ export default function InteractionTimeline({ entityId, entityType }: Props) {
 
     const rows = (data as InteractionRow[]) ?? [];
 
-    // Resolve nomes via profiles em uma única query
     const userIds = Array.from(new Set(rows.map((r) => r.created_by).filter(Boolean)));
     let nameMap: Record<string, string> = {};
     if (userIds.length > 0) {
@@ -80,70 +79,78 @@ export default function InteractionTimeline({ entityId, entityType }: Props) {
     }
     setNewContent('');
     toast.success('Interação registrada');
-    // last_contact_at é atualizado automaticamente pelo trigger trg_sync_last_contact no banco.
   };
 
   return (
     <div className="space-y-5">
-      {/* Form de nova interação */}
-      <div id="new-interaction-form" className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
-        <Select value={newType} onValueChange={setNewType}>
-          <SelectTrigger className="h-9 text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {INTERACTION_TYPES.map((t) => (
-              <SelectItem key={t.value} value={t.value}>
-                <span className="flex items-center gap-2">
-                  <FontAwesomeIcon icon={t.icon} className="h-3.5 w-3.5" />
-                  {t.label}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div
+        id="new-interaction-form"
+        className="rounded-xl border border-border bg-muted/30 p-3 space-y-2.5"
+      >
+        <div className="flex gap-2">
+          <Select value={newType} onValueChange={setNewType}>
+            <SelectTrigger className="h-9 w-[170px] text-xs bg-card">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {INTERACTION_TYPES.map((t) => (
+                <SelectItem key={t.value} value={t.value}>
+                  <span className="flex items-center gap-2">
+                    <FontAwesomeIcon icon={t.icon} className="h-3.5 w-3.5" />
+                    {t.label}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <Textarea
           id="new-interaction-textarea"
           placeholder="Descreva a interação..."
           value={newContent}
           onChange={(e) => setNewContent(e.target.value)}
-          className="min-h-[70px] resize-none"
+          className="min-h-[80px] resize-none bg-card text-sm"
         />
-        <Button onClick={addInteraction} disabled={sending || !newContent.trim()} className="w-full" size="sm">
+        <Button
+          onClick={addInteraction}
+          disabled={sending || !newContent.trim()}
+          className="w-full h-9"
+          size="sm"
+        >
           <FontAwesomeIcon icon={faPlus} className="h-3.5 w-3.5 mr-1.5" />
           Registrar interação
         </Button>
       </div>
 
-      {/* Timeline */}
       {interactions.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border py-8 text-center">
+        <div className="rounded-xl border border-dashed border-border py-8 text-center">
+          <FontAwesomeIcon icon={faClockRotateLeft} className="h-5 w-5 text-muted-foreground/60 mb-2" />
           <p className="text-sm text-muted-foreground">Nenhuma interação registrada ainda.</p>
-          <p className="text-xs text-muted-foreground mt-1">Registre o primeiro contato acima.</p>
+          <p className="text-xs text-muted-foreground/70 mt-1">Registre o primeiro contato acima.</p>
         </div>
       ) : (
         <TooltipProvider delayDuration={200}>
-          <ol className="relative ml-3 border-l border-border space-y-5 pl-6 pt-1">
+          <ol className="relative ml-3 border-l border-border space-y-4 pl-6 pt-1">
             {interactions.map((item) => {
               const cfg = getInteractionTypeConfig(item.contact_type);
               return (
                 <li key={item.id} className="relative">
                   <span
                     className={cn(
-                      'absolute -left-[33px] flex h-6 w-6 items-center justify-center rounded-full ring-4 ring-background',
+                      'absolute -left-[34px] flex h-7 w-7 items-center justify-center rounded-full ring-4 ring-card shadow-soft',
                       cfg.dotClass,
                     )}
                   >
                     <FontAwesomeIcon icon={cfg.icon} className="h-3 w-3" />
                   </span>
-                  <div className="rounded-lg bg-muted/40 p-3">
+                  <div className="rounded-xl bg-muted/40 p-3.5">
                     <div className="flex items-center justify-between gap-2 mb-1.5">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-foreground">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
                         {cfg.label}
                       </span>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span className="text-xs text-muted-foreground cursor-default">
+                          <span className="text-[11px] text-muted-foreground cursor-default">
                             {formatDistanceToNow(new Date(item.interaction_date), { locale: ptBR, addSuffix: true })}
                           </span>
                         </TooltipTrigger>
@@ -152,9 +159,9 @@ export default function InteractionTimeline({ entityId, entityType }: Props) {
                         </TooltipContent>
                       </Tooltip>
                     </div>
-                    <p className="text-sm text-foreground whitespace-pre-wrap">{item.description}</p>
-                    <p className="text-xs text-muted-foreground mt-1.5">
-                      por <span className="font-medium">{item.authorName || 'Sistema'}</span>
+                    <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{item.description}</p>
+                    <p className="text-[11px] text-muted-foreground mt-1.5">
+                      por <span className="font-medium text-foreground/80">{item.authorName || 'Sistema'}</span>
                     </p>
                   </div>
                 </li>

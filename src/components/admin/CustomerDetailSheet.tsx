@@ -21,6 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import InteractionTimeline from './InteractionTimeline';
 import ContactRecencyBadge from './ContactRecencyBadge';
+import InitialsAvatar from './InitialsAvatar';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -56,7 +57,7 @@ interface Props {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+    <h4 className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-3">
       {children}
     </h4>
   );
@@ -65,7 +66,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="space-y-0.5">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className="text-sm font-medium text-foreground break-words">{value}</p>
     </div>
   );
@@ -138,13 +139,17 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="overflow-y-auto sm:max-w-lg p-0 flex flex-col">
-          {/* HEADER */}
-          <SheetHeader className="px-6 pt-6 pb-4 border-b border-border bg-card sticky top-0 z-10">
-            <div className="flex items-start justify-between gap-3">
+        <SheetContent className="overflow-y-auto sm:max-w-xl p-0 flex flex-col bg-background">
+          <SheetHeader className="px-6 pt-6 pb-5 border-b border-border bg-card sticky top-0 z-10 space-y-0">
+            <div className="flex items-start gap-4">
+              <InitialsAvatar name={customer.name} size="lg" />
               <div className="min-w-0 flex-1">
-                <SheetTitle className="font-heading text-xl">
+                <SheetTitle className="text-xl font-semibold tracking-tight flex items-center gap-2">
                   <span className="truncate">{customer.name}</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium bg-success-soft text-success">
+                    <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
+                    Cliente
+                  </span>
                 </SheetTitle>
                 <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
                   {customer.phone && (
@@ -153,7 +158,7 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
                       className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
                     >
                       <FontAwesomeIcon icon={faPhone} className="h-3 w-3" />
-                      <span className="font-medium">{customer.phone}</span>
+                      <span className="font-medium font-mono">{customer.phone}</span>
                     </button>
                   )}
                   <ContactRecencyBadge
@@ -162,15 +167,14 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
                     createdAt={customer.created_at}
                     size="sm"
                   />
-                  <span>· Cliente há {createdRelative}</span>
+                  <span className="text-muted-foreground/70">· Cliente há {createdRelative}</span>
                 </div>
               </div>
             </div>
 
-            {/* AÇÕES RÁPIDAS */}
-            <div className="flex flex-wrap items-center gap-2 mt-4">
+            <div className="flex flex-wrap items-center gap-2 mt-5">
               {customer.phone && (
-                <Button size="sm" onClick={openWhatsApp} className="bg-[#25D366] text-white hover:bg-[#20bd5a]">
+                <Button size="sm" onClick={openWhatsApp} className="bg-[#25D366] text-white hover:bg-[#20bd5a] shadow-sm">
                   <FontAwesomeIcon icon={faWhatsapp} className="h-4 w-4 mr-1.5" />
                   WhatsApp
                 </Button>
@@ -185,14 +189,14 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button size="sm" variant="ghost" className="ml-auto px-2">
+                  <Button size="sm" variant="ghost" className="ml-auto px-2 h-9">
                     <FontAwesomeIcon icon={faEllipsisVertical} className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="rounded-xl">
                   <DropdownMenuItem
                     onClick={() => setDeleteDialogOpen(true)}
-                    className="text-destructive focus:text-destructive"
+                    className="text-destructive focus:text-destructive text-xs"
                   >
                     <FontAwesomeIcon icon={faTrashCan} className="h-3.5 w-3.5 mr-2" />
                     Excluir cliente
@@ -202,23 +206,21 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
             </div>
           </SheetHeader>
 
-          {/* CONTEÚDO */}
-          <div className="px-6 py-5 space-y-5 flex-1">
-            {/* BLOCO 1: Compra */}
-            <section className="rounded-lg border border-border bg-card p-4">
+          <div className="px-6 py-6 space-y-4 flex-1">
+            <section className="rounded-2xl bg-card border border-border p-5">
               <SectionLabel>Compra</SectionLabel>
               {editing ? (
                 <div className="space-y-3">
                   <div className="space-y-1">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Nome</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Nome</p>
                     <Input value={editData.name} onChange={(e) => setEditData({ ...editData, name: e.target.value })} />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Telefone</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Telefone</p>
                     <Input value={editData.phone} onChange={(e) => setEditData({ ...editData, phone: e.target.value })} />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Produto comprado</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Produto comprado</p>
                     <Input value={editData.product_bought} onChange={(e) => setEditData({ ...editData, product_bought: e.target.value })} />
                   </div>
                 </div>
@@ -245,8 +247,7 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
               )}
             </section>
 
-            {/* BLOCO 2: Observações */}
-            <section className="rounded-lg border border-border bg-muted/30 p-4">
+            <section className="rounded-2xl border border-border surface-muted p-5">
               <SectionLabel>
                 <span className="inline-flex items-center gap-1.5">
                   <FontAwesomeIcon icon={faQuoteLeft} className="h-3 w-3" />
@@ -258,7 +259,7 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
                   placeholder="Observações internas..."
                   value={editData.notes}
                   onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
-                  className="min-h-[100px] bg-background"
+                  className="min-h-[100px] bg-card"
                 />
               ) : customer.notes ? (
                 <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{customer.notes}</p>
@@ -267,21 +268,19 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
               )}
             </section>
 
-            {/* BLOCO 3: Histórico de Interações */}
-            <section className="rounded-lg border border-border bg-card p-4">
+            <section className="rounded-2xl bg-card border border-border p-5">
               <SectionLabel>Histórico de Interações</SectionLabel>
               <InteractionTimeline entityId={customer.id} entityType="customer" />
             </section>
           </div>
 
-          {/* FOOTER de edição (sticky) */}
           {editing && (
-            <div className="sticky bottom-0 z-10 border-t border-border bg-card px-6 py-3 flex gap-2 justify-end">
+            <div className="sticky bottom-0 z-10 border-t border-border bg-gradient-to-t from-card via-card to-card/90 backdrop-blur px-6 py-3.5 flex gap-2 justify-end">
               <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
                 <FontAwesomeIcon icon={faXmark} className="h-3.5 w-3.5 mr-1.5" />
                 Cancelar
               </Button>
-              <Button size="sm" onClick={saveEdit}>
+              <Button size="sm" onClick={saveEdit} className="shadow-sm">
                 <FontAwesomeIcon icon={faFloppyDisk} className="h-3.5 w-3.5 mr-1.5" />
                 Salvar alterações
               </Button>
@@ -291,7 +290,7 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
       </Sheet>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl shadow-pop">
           <DialogHeader>
             <DialogTitle>Excluir cliente</DialogTitle>
             <DialogDescription>
