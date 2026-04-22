@@ -29,11 +29,13 @@ import { cn } from '@/lib/utils';
 interface LeadLite {
   id: string;
   name: string;
+  phone: string | null;
   origin: string | null;
   product_interest: string | null;
   status: string;
   created_at: string;
   last_contact_at: string | null;
+  next_contact_at: string | null;
 }
 
 export default function DashboardPage() {
@@ -41,11 +43,13 @@ export default function DashboardPage() {
   const [customerCount, setCustomerCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const interactionCounts = useInteractionCounts(leads.map((l) => l.id));
+
   const fetchData = useCallback(async () => {
     const [leadsRes, customersRes] = await Promise.all([
       supabase
         .from('leads')
-        .select('id, name, origin, product_interest, status, created_at, last_contact_at')
+        .select('id, name, phone, origin, product_interest, status, created_at, last_contact_at, next_contact_at')
         .order('created_at', { ascending: false }),
       supabase.from('customers').select('id', { count: 'exact', head: true }),
     ]);
