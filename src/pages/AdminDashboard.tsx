@@ -97,7 +97,7 @@ export default function AdminDashboard() {
           <p className="text-xs text-muted-foreground">CRM &middot; {user?.email}</p>
         </div>
         <Button variant="ghost" size="sm" onClick={handleSignOut}>
-          <LogOut className="w-4 h-4 mr-2" />
+          <FontAwesomeIcon icon={faArrowRightFromBracket} className="w-4 h-4 mr-2" />
           Sair
         </Button>
       </header>
