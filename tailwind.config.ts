@@ -18,6 +18,7 @@ export default {
         sans: ['"DM Sans"', 'sans-serif'],
         heading: ['"Satisfy"', 'cursive'],
         body: ['"DM Sans"', 'sans-serif'],
+        crm: ['"Josefin Sans"', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
