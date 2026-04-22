@@ -1,147 +1,147 @@
 
 
-## Plano: Refinar UI do CRM para nível SaaS premium
+## Plano: Inteligência Comercial — Lead Score com priorização automática
 
-Reformulação **puramente visual** das rotas `/admin/*`. Zero mudança em rotas, lógica, serviços, queries, dnd-kit, AuthContext ou backend. Mantém Josefin Sans no CRM e a identidade de marca (verde primário + creme).
+Adicionar uma camada de **scoring** que classifica leads em **🔥 Quente · 🌤 Morno · ❄ Frio**, exibida em todo o CRM e usável para ordenação. **100% client-side e calculado em tempo real** — zero migração de banco, zero quebra de contratos.
 
 ---
 
-### 1. Tokens & superfícies (`src/index.css`)
+### 1. Núcleo: `src/lib/leadScore.ts` (novo)
 
-Introduzir uma paleta de superfícies em camadas (estilo Linear/Stripe) **sem trocar a marca**:
+Função pura que recebe um lead + contagem de interações e devolve:
 
-- `--background` → cinza-creme mais neutro (`220 20% 97%`) para dar contraste com cards brancos.
-- Novos tokens: `--surface-1` (card), `--surface-2` (subtle/zebra), `--elevated` (popovers/sheets).
-- `--border` mais suave (`220 15% 92%`) + `--border-strong` para divisores explícitos.
-- `--ring` mantém verde primário (foco visível e on-brand).
-- `--radius` para `0.875rem` (xl) como base do sistema.
-- Sombras utilitárias customizadas: `shadow-soft` (1px 2px), `shadow-card` (4px 12px com 4% alpha), `shadow-pop` para sheets/dialogs.
-- Sidebar: tom **mais escuro e neutro** (`220 25% 10%`) com acento verde — visual mais "produto" e menos "rústico".
+```ts
+interface LeadScoreInfo {
+  score: number;           // 0–100
+  level: 'hot' | 'warm' | 'cold' | 'closed';
+  label: string;           // "Quente" | "Morno" | "Frio" | "Encerrado"
+  reasons: string[];       // ["Em negociação", "5 dias sem contato", ...]
+  toneClass: string;       // tokens semânticos (success/warning/destructive)
+  dotClass: string;        // bg-success / bg-warning / bg-destructive
+}
 
-Adicionar utilitários:
-```css
-.surface-card  /* bg + border + shadow-soft + rounded-2xl */
-.surface-muted /* zebra para linhas alternadas */
-.kbd, .chip    /* badges discretos */
+getLeadScore(lead, opts?: { interactionCount?: number }): LeadScoreInfo
 ```
 
-### 2. Sistema de cards e seções
+**Fórmula (soma ponderada, 0–100):**
 
-Padrão único reaplicado em todas as páginas:
+| Fator | Peso | Lógica |
+|---|---|---|
+| **Status** | até 35 | `negotiating`=35 · `contacting`=22 · `new`=15 · `won`/`lost`=neutro (level=`closed`) |
+| **Recência (sem contato)** | até 25 | 0d=0 · 3–6d=15 · 7–13d=22 · ≥14d=25 (urgência crescente) |
+| **Interações** | até 20 | clamp(count×5, 0, 20) — engajamento histórico |
+| **Origem** | até 10 | Indicação=10 · WhatsApp=8 · Site=6 · Instagram=5 · Outro=3 |
+| **Próximo contato agendado** | até 10 | atrasado=10 · hoje=8 · ≤3d=5 · futuro=2 · sem agenda=0 |
 
-- `rounded-2xl` (cards) / `rounded-xl` (inputs, botões pequenos).
-- Padding interno `p-6` em cards principais, `p-5` em sub-cards.
-- Espaçamento vertical entre blocos: `space-y-8` nas páginas (hoje `space-y-5`).
-- Header de card padronizado: título `text-sm font-semibold` + descrição `text-xs text-muted-foreground` + ação à direita.
+Classificação:
+- **score ≥ 65** → `hot` (verde→urgente: vermelho se overdue ≥7d)
+- **35–64** → `warm` (amarelo)
+- **< 35** → `cold` (cinza/azul claro)
+- status fechado → `closed` (neutro, fora da priorização)
 
-### 3. Sidebar (`AdminSidebar.tsx`)
+**Override de cor semântica conforme regra do usuário:**
+- `verde` → ativo recente (hot + recência boa)
+- `amarelo` → atenção (warm OU hot com 3–6d sem contato)
+- `vermelho` → urgente (hot com ≥7d sem contato OU next_contact_at atrasado)
 
-- Largura ligeiramente maior (`w-60`) com padding mais generoso.
-- Logo + wordmark "Cantinho da Roça / CRM" no topo da própria sidebar (mover do navbar).
-- Item ativo: pill verde sutil (`bg-sidebar-accent` + barra lateral de 2px verde claro), em vez do destaque atual mais pesado.
-- Hover: transição `bg-white/5` em 150ms.
-- Badge de "Atrasados" alinhado à direita, redondo, contagem em monospace.
-- Seção "Outros" vira footer fixo no rodapé da sidebar (com avatar/email do usuário + sair).
+Função auxiliar `compareByScore(a, b)` para ordenação desc.
 
-### 4. Navbar (`AdminNavbar.tsx`)
+### 2. Componente visual: `src/components/admin/LeadScoreBadge.tsx` (novo)
 
-- Mais leve: remove logo (agora vive na sidebar) e fica com **breadcrumb dinâmico** (Painel · Leads · etc) à esquerda, derivado da rota.
-- À direita: botão "Ver site" como ícone + tooltip, avatar do usuário com dropdown (email · sair).
-- Altura reduzida para `h-14`, fundo `bg-card/80 backdrop-blur` + borda inferior fina.
+Badge compacto com 3 tamanhos (`sm` / `md` / `lg`):
 
-### 5. Dashboard (`DashboardPage.tsx`)
+```
+[🔥 Quente · 87]   ← level=hot, urgente=vermelho
+[● Morno · 52]
+[● Frio · 18]
+```
 
-- Grid 12-col responsivo. KPIs em 4 cards `rounded-2xl` com:
-  - Ícone em quadrado `rounded-xl` 11×11 com fundo soft.
-  - Label `text-[11px] uppercase tracking-wider`.
-  - Número `text-3xl font-semibold tabular-nums`.
-  - Delta/descrição com seta sutil.
-- "Distribuição por status" vira **barra horizontal segmentada** (proporcional) + legenda abaixo, em vez de 5 pílulas.
-- "Leads recentes" e "Precisam de atenção" em cards lado a lado com avatar circular gerado pelas iniciais.
-- "Atalhos rápidos" reduzido a um rodapé de chips discretos.
+- Ícone: `faFire` (hot urgente), `faBolt` (hot ativo), `faCircleHalfStroke` (warm), `faSnowflake` (cold).
+- Tooltip on-hover lista os `reasons` ("Em negociação · 8 dias sem contato · 4 interações").
+- Variante `dot` (somente bolinha colorida) para uso em cards densos.
 
-### 6. Leads (`LeadsPage.tsx` + `LeadFilters.tsx`)
+### 3. Hook de contagem: `src/hooks/useInteractionCounts.ts` (novo)
 
-- Filtros agrupados em uma **toolbar única** dentro do card: busca cresce, selects compactos com ícones, botão "Limpar filtros" aparece quando há algo aplicado.
-- Tabela:
-  - Linhas mais altas (`h-14`), zebra suave em `surface-muted`.
-  - Coluna "Nome" com avatar circular de iniciais + sub-linha do telefone (remove coluna duplicada).
-  - Status como badge clicável que abre o select (sem trigger separado).
-  - Ações sempre visíveis em desktop (sem `opacity-0`), com tooltips.
-- Cards mobile com mesmo padrão visual da tabela (avatar + título + meta + ação).
+Como `interactions` não tem contagem agregada, fazemos **uma única query** por página:
 
-### 7. Pipeline (`PipelineColumn.tsx` + `LeadCard.tsx`)
+```ts
+useInteractionCounts(leadIds: string[]) → Record<string, number>
+```
 
-- Colunas com header sticky, contador em pill, fundo `bg-muted/60` + borda discreta.
-- Cards: `rounded-xl`, sombra suave, indicador de recência como **dot colorido** + barra lateral de 3px (em vez de 4px); status passa a ser tag pequena no topo.
-- Hover do card: leve `translate-y-[-1px]` + sombra `shadow-card`.
-- Drop zone destaca com ring `ring-2 ring-primary/20` + fundo `bg-primary/5`.
+Internamente: `supabase.from('interactions').select('lead_id').in('lead_id', leadIds)` e agrupa client-side. Refetch via `useRealtimeTable('interactions', ...)`. Cache local por sessão.
 
-### 8. Sheets e Dialogs (`LeadDetailSheet.tsx`, `CustomerDetailSheet.tsx`, `NewLeadDialog.tsx`)
+### 4. Integração nas páginas
 
-- Sheet: largura `sm:max-w-xl`, header com avatar grande de iniciais + nome + status. Subheader com chips de telefone, recência e "Lead há X dias".
-- Ações rápidas viram **toolbar segmentada** (WhatsApp em destaque verde, demais em ghost).
-- Blocos internos: cards com fundo `bg-surface-2`, sem borda dupla, separados por `space-y-4`.
-- Modo edição: footer sticky com gradient suave de fundo, botões alinhados à direita.
-- Dialogs com `rounded-2xl`, sombra `shadow-pop`, padding `p-6`.
+**`LeadCard.tsx` (Pipeline)**
+- Adicionar `LeadScoreBadge size="sm"` no topo do card (acima do nome).
+- Cards `hot+overdue` ganham anel sutil `ring-1 ring-destructive/40` + leve glow.
+- Lateral colorida (`before:`) passa a refletir o **level do score** (não mais só recência) — mantém a hierarquia visual já existente.
 
-### 9. Inputs, botões e badges
+**`PipelineColumn.tsx`**
+- Ordenar leads da coluna por score desc (mais quentes no topo).
+- Header da coluna mostra contador de hot leads: `Em contato · 12 · 🔥 3`.
 
-- Inputs: `h-10 rounded-xl`, foco com ring verde + shadow sutil, ícone interno alinhado.
-- Selects (shadcn): mesma altura/raio dos inputs.
-- Botão `default` ganha leve `shadow-sm` + transição `bg` 150ms; `outline` com border 1.5px.
-- Badges: padding `px-2.5 py-0.5`, weight 500, variantes soft já existentes (success-soft, warning-soft etc) padronizadas em todos os usos.
+**`LeadsPage.tsx` (Tabela)**
+- Nova coluna **Prioridade** (entre Status e Recência) com `LeadScoreBadge size="sm"`.
+- Header da coluna é clicável: alterna ordenação entre **Score desc** (padrão novo) e **Entrada**.
+- Linha de lead `hot urgente` ganha barra lateral vermelha (`border-l-2 border-destructive`).
+- Card mobile mostra o badge acima do nome.
 
-### 10. Microinterações e feedback
+**`LeadDetailSheet.tsx`**
+- No header, ao lado do `LeadStatusBadge`, exibir `LeadScoreBadge size="lg"`.
+- Bloco novo "Por que essa prioridade" listando os `reasons` em bullets.
 
-- Transições globais `transition-colors duration-150` em hovers.
-- `LoadingState`: skeleton shimmer (em vez do spinner atual) com layout do conteúdo.
-- `EmptyState`: ilustração-ícone maior em círculo soft + CTA mais proeminente.
-- Toasts (sonner): tema customizado para combinar com cards (rounded-xl, sombra-pop).
-- `animate-fade-in-up` aplicado a páginas (ao montar) com stagger leve em cards de KPI.
+**`DashboardPage.tsx`**
+- Novo card **"Top 5 leads quentes"** (substitui ou complementa "Leads recentes"): lista ordenada por score desc, filtrando `level === 'hot'`, com avatar + nome + badge + botão WhatsApp inline.
+- KPI extra: contagem de leads quentes.
+
+**`LeadFilters.tsx`**
+- Novo select **Prioridade**: Todos · 🔥 Quentes · 🌤 Mornos · ❄ Frios. Aplica filtro por `level`.
+
+### 5. Ordenação automática
+
+- **Pipeline:** ordem padrão = score desc dentro de cada coluna.
+- **LeadsPage:** ordem padrão muda para score desc; toggle no header restaura "Entrada".
+- Estado `sortBy: 'score' | 'created'` persistido em `?sort=` na URL.
+
+### 6. UX e cores semânticas
+
+| Level | Tokens | Uso |
+|---|---|---|
+| hot (ativo) | `success` / `bg-success-soft` | verde — engajamento bom |
+| warm | `warning` / `bg-warning-soft` | amarelo — atenção |
+| hot (overdue) ou next_contact atrasado | `destructive` / `bg-destructive/10` | vermelho — urgente |
+| cold | `muted-foreground` | cinza — baixa prioridade |
+| closed | `muted` neutro | fora do funil |
+
+Microinterações: badge `hot urgente` com pulso suave (`animate-pulse` no dot, 2s). Transições já globais (`duration-150`).
 
 ---
 
 ### Arquivos tocados
 
-**Tokens e base**
-- `src/index.css` — paleta de superfícies, sombras, utilitários.
-- `tailwind.config.ts` — `boxShadow.soft/card/pop`, `borderRadius.2xl`.
+**Novos**
+- `src/lib/leadScore.ts`
+- `src/components/admin/LeadScoreBadge.tsx`
+- `src/hooks/useInteractionCounts.ts`
 
-**Layout do CRM**
-- `src/components/crm/CrmLayout.tsx`
-- `src/components/crm/AdminSidebar.tsx`
-- `src/components/crm/AdminNavbar.tsx`
-
-**Componentes compartilhados**
-- `src/components/admin/PageHeader.tsx`
-- `src/components/admin/EmptyState.tsx`
-- `src/components/admin/LoadingState.tsx`
-- `src/components/admin/LeadStatusBadge.tsx`
-- `src/components/admin/ContactRecencyBadge.tsx`
-- `src/components/admin/LeadFilters.tsx`
-- `src/components/admin/LeadDetailSheet.tsx`
-- `src/components/admin/CustomerDetailSheet.tsx`
-- `src/components/admin/NewLeadDialog.tsx`
-- `src/components/admin/InteractionTimeline.tsx`
-
-**Pipeline**
-- `src/components/pipeline/PipelineBoard.tsx`
-- `src/components/pipeline/PipelineColumn.tsx`
+**Modificados (apenas markup/lógica de ordenação)**
 - `src/components/pipeline/LeadCard.tsx`
-
-**Páginas**
-- `src/pages/admin/DashboardPage.tsx`
+- `src/components/pipeline/PipelineColumn.tsx`
+- `src/components/pipeline/PipelineBoard.tsx` (passar interactionCounts via prop)
+- `src/components/admin/LeadDetailSheet.tsx`
+- `src/components/admin/LeadFilters.tsx`
 - `src/pages/admin/LeadsPage.tsx`
-- `src/pages/admin/ClientsPage.tsx`
 - `src/pages/admin/PipelinePage.tsx`
+- `src/pages/admin/DashboardPage.tsx`
 
-**Não tocados:** `AdminLogin`, landing, serviços, hooks, AuthContext, ProtectedRoute, integrações Supabase, migrations, types.
+**Não tocados:** rotas, AuthContext, ProtectedRoute, services, schema do banco, RLS, migrations, types Supabase, landing page, login.
 
 ### Garantias
 
-- 100% das funcionalidades preservadas (drag-and-drop, realtime, filtros por URL `?recency`/`?focus`, conversão lead→cliente, edição inline, WhatsApp deep link).
-- Mesmas props/contratos em todos os componentes — apenas markup e classes mudam.
-- Sem novas dependências.
-- Respeita `font-crm` (Josefin Sans) e o design system existente em HSL.
+- **Sem migração de banco** — score é derivado em runtime a partir dos campos já existentes (`status`, `last_contact_at`, `created_at`, `next_contact_at`, `origin`) + count agregado de `interactions`.
+- Mesmas props públicas em todos os componentes existentes (apenas adições opcionais).
+- Realtime continua funcionando — score recalcula automaticamente a cada refetch.
+- Função `getLeadScore` é pura e testável.
+- Respeita o design system (Josefin Sans + tokens HSL + sombras já criadas).
 
