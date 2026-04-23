@@ -82,11 +82,16 @@ export default function DashboardPage() {
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const total = leads.length;
     const sold = leads.filter((l) => l.status === LEAD_STATUS.WON).length;
-    let attention = 0; let overdue = 0; let hot = 0;
+    let attention = 0; let overdue = 0; let hot = 0; let noResponse = 0;
     for (const l of leads) {
       const info = getContactRecency(l.last_contact_at, l.status, l.created_at);
       if (info.level === 'attention') attention++;
-      else if (info.level === 'overdue') overdue++;
+      else if (info.level === 'overdue') {
+        overdue++;
+        if (l.status === LEAD_STATUS.CONTACTING || l.status === LEAD_STATUS.NEGOTIATING) {
+          noResponse++;
+        }
+      }
       const score = getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 });
       if (score.level === 'hot' || score.urgent) hot++;
     }
@@ -96,7 +101,8 @@ export default function DashboardPage() {
       contacting: leads.filter((l) => l.status === LEAD_STATUS.CONTACTING).length,
       negotiating: leads.filter((l) => l.status === LEAD_STATUS.NEGOTIATING).length,
       sold,
-      noResponse: leads.filter((l) => l.status === LEAD_STATUS.LOST).length,
+      lostCount: leads.filter((l) => l.status === LEAD_STATUS.LOST).length,
+      noResponse,
       last7d: leads.filter((l) => new Date(l.created_at).getTime() >= sevenDaysAgo).length,
       attention,
       overdue,
@@ -104,6 +110,11 @@ export default function DashboardPage() {
       conversionRate: total > 0 ? Math.round((sold / total) * 100) : 0,
     };
   }, [leads, interactionCounts]);
+
+  const reengagementCandidates = useMemo(
+    () => getReengagementCandidates(leads, customers),
+    [leads, customers],
+  );
 
 
 
