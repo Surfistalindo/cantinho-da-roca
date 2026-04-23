@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLightbulb } from '@fortawesome/free-solid-svg-icons';
 
@@ -15,9 +16,9 @@ interface Props {
   disabled?: boolean;
 }
 
-export default function SuggestedQuestions({ onPick, disabled }: Props) {
+const SuggestedQuestions = forwardRef<HTMLDivElement, Props>(function SuggestedQuestions({ onPick, disabled }, ref) {
   return (
-    <div className="space-y-3">
+    <div ref={ref} className="space-y-3">
       <div className="flex items-center gap-2 text-[11.5px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
         <FontAwesomeIcon icon={faLightbulb} className="h-3 w-3 text-primary" />
         Sugestões para começar
@@ -37,4 +38,6 @@ export default function SuggestedQuestions({ onPick, disabled }: Props) {
       </div>
     </div>
   );
-}
+});
+
+export default SuggestedQuestions;

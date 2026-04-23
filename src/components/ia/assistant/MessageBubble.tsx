@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { forwardRef, memo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRobot, faUser } from '@fortawesome/free-solid-svg-icons';
@@ -10,10 +10,10 @@ interface Props {
   turn: ChatTurn;
 }
 
-function MessageBubbleBase({ turn }: Props) {
+const MessageBubbleBase = forwardRef<HTMLDivElement, Props>(function MessageBubbleBase({ turn }, ref) {
   const isUser = turn.role === 'user';
   return (
-    <div className={cn('flex gap-3', isUser ? 'flex-row-reverse' : 'flex-row')}>
+    <div ref={ref} className={cn('flex gap-3', isUser ? 'flex-row-reverse' : 'flex-row')}>
       <div
         className={cn(
           'h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5',
@@ -53,7 +53,7 @@ function MessageBubbleBase({ turn }: Props) {
       </div>
     </div>
   );
-}
+});
 
 const MessageBubble = memo(MessageBubbleBase);
 export default MessageBubble;

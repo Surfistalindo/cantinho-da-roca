@@ -215,6 +215,7 @@ Deno.serve(async (req) => {
     ];
 
     const toolTrace: Array<{ name: string; args: Record<string, unknown> }> = [];
+    let directFinalContent: string | null = null;
 
     // Loop de tool calling — não-streaming até o modelo decidir parar de chamar tools.
     for (let loop = 0; loop < MAX_TOOL_LOOPS; loop++) {
@@ -224,19 +225,25 @@ Deno.serve(async (req) => {
         tools: TOOLS,
       });
       const errResp = mapAIGatewayError(resp);
-      if (errResp) return errResp;
+      if (errResp) {
+        console.error("ai_gateway_error", { loop, status: resp.status });
+        return errResp;
+      }
 
       const data = await resp.json();
       const choice = data?.choices?.[0];
       const message = choice?.message;
       if (!message) {
+        console.error("ai_empty_response", { loop });
         return jsonResponseFor(req, { error: "ai_empty_response" }, 500);
       }
 
       const toolCalls = message.tool_calls;
       if (!Array.isArray(toolCalls) || toolCalls.length === 0) {
-        // Sem mais tool calls — agora chamamos novamente com stream=true para a resposta final.
-        // (Re-incluímos a mensagem que veio para preservar contexto, mas usamos stream)
+        // Modelo respondeu direto — captura o conteúdo, evita 2ª chamada
+        if (typeof message.content === "string" && message.content.trim()) {
+          directFinalContent = message.content;
+        }
         break;
       }
 
@@ -256,8 +263,6 @@ Deno.serve(async (req) => {
             : (tc?.function?.arguments ?? {});
         } catch { /* ignore */ }
         toolTrace.push({ name: fnName, args: parsedArgs });
-        // Usa supabaseAdmin (service role) — RLS já está OK para authenticated, mas service role
-        // garante consistência mesmo se RLS futura mudar.
         const result = await execTool(fnName, parsedArgs, auth.supabaseAdmin);
         convo.push({
           role: "tool",
@@ -267,6 +272,41 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Atalho: se o modelo já deu uma resposta final sem tools, sintetiza SSE direto.
+    if (directFinalContent !== null) {
+      const encoder = new TextEncoder();
+      const tracePayload = `data: ${JSON.stringify({ __trace: toolTrace })}\n\n`;
+      const contentChunk = `data: ${JSON.stringify({ choices: [{ delta: { content: directFinalContent } }] })}\n\n`;
+      const doneChunk = `data: [DONE]\n\n`;
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode(tracePayload));
+          controller.enqueue(encoder.encode(contentChunk));
+          controller.enqueue(encoder.encode(doneChunk));
+          controller.close();
+        },
+      });
+      return new Response(stream, {
+        headers: {
+          ...getCorsHeaders(req),
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
+    }
+
+    // Se o último item de convo for assistant com tool_calls pendentes (loop esgotado),
+    // adiciona instrução para forçar resposta final coerente.
+    const last = convo[convo.length - 1];
+    if (last?.role === "assistant" && Array.isArray((last as { tool_calls?: unknown[] }).tool_calls)) {
+      console.error("tool_loop_exhausted");
+      convo.push({
+        role: "user",
+        content: "Forneça agora a melhor resposta possível usando os dados já coletados, sem chamar mais ferramentas.",
+      });
+    }
+
     // Chamada final em streaming — sem tools, força resposta natural
     const finalResp = await callAIGateway({
       model: MODEL,
@@ -274,8 +314,12 @@ Deno.serve(async (req) => {
       stream: true,
     });
     const finalErr = mapAIGatewayError(finalResp);
-    if (finalErr) return finalErr;
+    if (finalErr) {
+      console.error("final_stream_error", { status: finalResp.status });
+      return finalErr;
+    }
     if (!finalResp.body) {
+      console.error("final_stream_no_body");
       return jsonResponseFor(req, { error: "no_stream_body" }, 500);
     }
 
