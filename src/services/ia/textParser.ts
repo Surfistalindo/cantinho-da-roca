@@ -52,5 +52,6 @@ export function leadsToParsedSheet(leads: ExtractedLead[]): ParsedSheet {
     rawRows,
     sheetName: 'texto-colado',
     totalRows: rows.length,
+    sheets: [{ name: 'texto-colado', rows: rows.length }],
   };
 }

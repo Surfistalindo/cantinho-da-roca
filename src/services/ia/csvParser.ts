@@ -106,6 +106,7 @@ export async function parseCsvFile(
     rawRows: limited,
     sheetName: file.name.replace(/\.csv$/i, ''),
     totalRows: dataRows.length,
+    sheets: [{ name: file.name.replace(/\.csv$/i, ''), rows: dataRows.length }],
     detection: {
       delimiter,
       encoding,
