@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           created_at: string
@@ -171,6 +198,14 @@ export type Database = {
       }
       leads: {
         Row: {
+          ai_priority: string | null
+          ai_score: number | null
+          ai_score_reason: string | null
+          ai_score_updated_at: string | null
+          ai_status_confidence: number | null
+          ai_suggested_status: string | null
+          ai_summary: string | null
+          ai_summary_updated_at: string | null
           created_at: string
           id: string
           last_contact_at: string | null
@@ -184,6 +219,14 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_priority?: string | null
+          ai_score?: number | null
+          ai_score_reason?: string | null
+          ai_score_updated_at?: string | null
+          ai_status_confidence?: number | null
+          ai_suggested_status?: string | null
+          ai_summary?: string | null
+          ai_summary_updated_at?: string | null
           created_at?: string
           id?: string
           last_contact_at?: string | null
@@ -197,6 +240,14 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_priority?: string | null
+          ai_score?: number | null
+          ai_score_reason?: string | null
+          ai_score_updated_at?: string | null
+          ai_status_confidence?: number | null
+          ai_suggested_status?: string | null
+          ai_summary?: string | null
+          ai_summary_updated_at?: string | null
           created_at?: string
           id?: string
           last_contact_at?: string | null
