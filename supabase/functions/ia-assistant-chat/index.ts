@@ -7,9 +7,10 @@
 import {
   authenticate,
   callAIGateway,
-  corsHeaders,
+  checkRateLimit,
+  getCorsHeaders,
   handlePreflight,
-  jsonResponse,
+  jsonResponseFor,
   mapAIGatewayError,
 } from "../_shared/aiGateway.ts";
 
@@ -197,10 +198,13 @@ Deno.serve(async (req) => {
     const auth = await authenticate(req);
     if (auth instanceof Response) return auth;
 
+    const limited = checkRateLimit(req, auth.userId);
+    if (limited) return limited;
+
     const body = await req.json().catch(() => ({}));
     const incoming: IncomingMsg[] = Array.isArray(body?.messages) ? body.messages : [];
     if (incoming.length === 0) {
-      return jsonResponse({ error: "messages_required" }, 400);
+      return jsonResponseFor(req, { error: "messages_required" }, 400);
     }
 
     // Conversa enviada para o LLM (acumulada com tool_calls e tool results)
