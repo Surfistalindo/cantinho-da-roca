@@ -36,16 +36,27 @@ export default function ImportResultView({ result, filename, onRestart }: Import
   const [showDetails, setShowDetails] = useState(false);
   const meta = { filename, finishedAt: new Date().toISOString() };
 
+  const errorRows = (result.details ?? []).filter((d) => d.outcome === 'error');
+  const errorGroups = groupErrors(errorRows);
+  const hasErrors = errorRows.length > 0;
+
   return (
     <div className="space-y-4">
       {/* Hero */}
       <div className="rounded-2xl border bg-card p-6 sm:p-8 text-center">
-        <div className="mx-auto h-14 w-14 rounded-full bg-success-soft text-success flex items-center justify-center mb-3">
-          <FontAwesomeIcon icon={faCircleCheck} className="h-7 w-7" />
+        <div className={cn(
+          'mx-auto h-14 w-14 rounded-full flex items-center justify-center mb-3',
+          hasErrors ? 'bg-destructive/10 text-destructive' : 'bg-success-soft text-success',
+        )}>
+          <FontAwesomeIcon icon={hasErrors ? faTriangleExclamation : faCircleCheck} className="h-7 w-7" />
         </div>
-        <h3 className="text-[18px] font-semibold text-foreground mb-1">Importação concluída</h3>
+        <h3 className="text-[18px] font-semibold text-foreground mb-1">
+          {hasErrors ? 'Importação concluída com erros' : 'Importação concluída'}
+        </h3>
         <p className="text-[13px] text-muted-foreground">
-          Sua planilha foi processada com sucesso.
+          {hasErrors
+            ? `${errorRows.length} ${errorRows.length === 1 ? 'linha não foi importada' : 'linhas não foram importadas'}. Veja abaixo o que aconteceu e como corrigir.`
+            : 'Sua planilha foi processada com sucesso.'}
         </p>
       </div>
 
@@ -56,6 +67,47 @@ export default function ImportResultView({ result, filename, onRestart }: Import
         <Kpi icon={faXmark} label="Ignorados" value={result.skipped} accent="text-muted-foreground bg-muted" />
         <Kpi icon={faTriangleExclamation} label="Erros" value={result.errors} accent="text-destructive bg-destructive/10" />
       </div>
+
+      {/* Resumo de erros com instruções */}
+      {hasErrors && (
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 overflow-hidden">
+          <div className="px-4 py-3 border-b border-destructive/20 bg-destructive/10">
+            <div className="flex items-center gap-2">
+              <FontAwesomeIcon icon={faTriangleExclamation} className="h-3.5 w-3.5 text-destructive" />
+              <span className="text-[13px] font-semibold text-destructive">
+                {errorGroups.length} {errorGroups.length === 1 ? 'tipo de erro encontrado' : 'tipos de erro encontrados'}
+              </span>
+            </div>
+          </div>
+          <div className="divide-y divide-destructive/10">
+            {errorGroups.map((g, i) => (
+              <div key={i} className="px-4 py-3">
+                <div className="flex items-start justify-between gap-3 mb-1.5">
+                  <div className="text-[13px] font-semibold text-foreground">{g.title}</div>
+                  <span className="text-[11px] font-mono text-destructive bg-destructive/10 px-2 py-0.5 rounded-md whitespace-nowrap">
+                    {g.rows.length} {g.rows.length === 1 ? 'linha' : 'linhas'}
+                  </span>
+                </div>
+                <p className="text-[12px] text-muted-foreground mb-2">
+                  <span className="font-semibold text-foreground">Como corrigir: </span>{g.fix}
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {g.rows.slice(0, 8).map((r, ri) => (
+                    <span key={ri} className="text-[10.5px] font-mono text-muted-foreground bg-background border rounded px-1.5 py-0.5">
+                      Linha {r.rowIndex + 2}{r.name ? ` · ${r.name}` : ''}
+                    </span>
+                  ))}
+                  {g.rows.length > 8 && (
+                    <span className="text-[10.5px] text-muted-foreground px-1.5 py-0.5">
+                      +{g.rows.length - 8} mais
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Detalhamento */}
       {result.details && result.details.length > 0 && (
@@ -148,4 +200,37 @@ function Kpi({ icon, label, value, accent }: { icon: IconDefinition; label: stri
       <div className="text-[11.5px] text-muted-foreground mt-1 uppercase tracking-wider">{label}</div>
     </div>
   );
+}
+
+interface ErrorGroup {
+  title: string;
+  fix: string;
+  rows: Array<{ rowIndex: number; name?: string | null }>;
+}
+
+function groupErrors(rows: ImportResult['details']): ErrorGroup[] {
+  const groups = new Map<string, ErrorGroup>();
+  const add = (key: string, title: string, fix: string, row: { rowIndex: number; name?: string | null }) => {
+    const g = groups.get(key) ?? { title, fix, rows: [] };
+    g.rows.push(row);
+    groups.set(key, g);
+  };
+  for (const d of rows ?? []) {
+    const msg = (d.message ?? '').toLowerCase();
+    const row = { rowIndex: d.rowIndex, name: d.name };
+    if (msg.includes('nome')) {
+      add('name', 'Nome obrigatório ausente', 'Preencha a coluna mapeada como "Nome" — linhas sem nome não podem virar leads.', row);
+    } else if (msg.includes('telefone') || msg.includes('phone')) {
+      add('phone', 'Telefone inválido', 'Use formato com DDD (ex: 11 99999-9999) ou +55 11 99999-9999. Remova letras e símbolos extras.', row);
+    } else if (msg.includes('data') || msg.includes('date')) {
+      add('date', 'Data inválida', 'Use formatos como dd/mm/aaaa, aaaa-mm-dd ou deixe a célula como data no Excel. Remova textos extras.', row);
+    } else if (msg.includes('duplic')) {
+      add('dup', 'Lead duplicado', 'Já existe um lead com este telefone. Use a estratégia "Atualizar" ou remova a duplicata da planilha.', row);
+    } else if (msg.includes('rls') || msg.includes('permiss') || msg.includes('policy')) {
+      add('rls', 'Permissão negada', 'Faça login novamente. Se o erro persistir, sua sessão pode ter expirado.', row);
+    } else {
+      add('other:' + (d.message ?? 'desconhecido'), d.message ?? 'Erro desconhecido', 'Verifique os dados desta linha na planilha original e tente reimportar.', row);
+    }
+  }
+  return Array.from(groups.values()).sort((a, b) => b.rows.length - a.rows.length);
 }
