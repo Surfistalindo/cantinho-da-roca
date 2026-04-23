@@ -34,6 +34,7 @@ export async function executeImport(
   duplicates: DuplicateMatch[],
   filename: string | undefined,
   onProgress?: (p: ImportProgress) => void,
+  source: string = 'excel',
 ): Promise<ImportResult> {
   const result: ImportResult = {
     created: 0, updated: 0, skipped: 0, errors: 0,
@@ -63,7 +64,7 @@ export async function executeImport(
 
   // Cria log inicial (status "em andamento") — UI pode listar enquanto roda
   const logId = await startImportLog({
-    source: 'excel',
+    source,
     filename: filename ?? null,
     total_rows: total,
   });
