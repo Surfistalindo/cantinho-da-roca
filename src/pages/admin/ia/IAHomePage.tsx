@@ -2,13 +2,183 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faFileExcel, faFileCsv, faClipboard, faClone, faTag, faChartSimple,
   faRobot, faComments, faLightbulb, faUpload, faWandMagicSparkles, faCircleCheck,
-  faArrowRight, faBolt, faShieldHalved, faLayerGroup,
+  faArrowRight, faBolt, faShieldHalved, faLayerGroup, faBroom, faSitemap,
 } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { Link } from 'react-router-dom';
 import IAFeatureCard from '@/components/ia/IAFeatureCard';
 import IAPageShell from '@/components/ia/IAPageShell';
+import ImportHistoryCard from '@/components/ia/excel/ImportHistoryCard';
 import { Button } from '@/components/ui/button';
+
+interface CapabilitySection {
+  id: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  icon: IconDefinition;
+  features: Array<{
+    icon: IconDefinition;
+    title: string;
+    description: string;
+    status: 'available' | 'soon';
+    to?: string;
+    accentClass?: string;
+    tag?: string;
+  }>;
+}
+
+const CAPABILITIES: CapabilitySection[] = [
+  {
+    id: 'importacao',
+    eyebrow: '01 · Capacidade',
+    title: 'Importação Inteligente',
+    description: 'Diferentes origens, mesmo fluxo guiado. A IA entende o formato e prepara tudo.',
+    icon: faUpload,
+    features: [
+      {
+        icon: faFileExcel,
+        title: 'Excel',
+        description: 'Envie planilhas .xlsx ou .xls. A IA mapeia colunas, normaliza dados e detecta duplicados antes de importar.',
+        status: 'available',
+        to: '/admin/ia/excel',
+        accentClass: 'from-success/20 to-success/5 text-success',
+        tag: 'Inteligente',
+      },
+      {
+        icon: faFileCsv,
+        title: 'CSV avançado',
+        description: 'Importação otimizada de arquivos CSV grandes com detecção automática de delimitador e codificação.',
+        status: 'soon',
+        accentClass: 'from-info/20 to-info/5 text-info',
+      },
+      {
+        icon: faClipboard,
+        title: 'Texto colado',
+        description: 'Cole uma lista de contatos direto do bloco de notas e a IA extrai os leads automaticamente.',
+        status: 'soon',
+      },
+      {
+        icon: faWhatsapp,
+        title: 'Lista do WhatsApp',
+        description: 'Importe contatos copiados de conversas e grupos do WhatsApp diretamente para o CRM.',
+        status: 'soon',
+        accentClass: 'from-success/20 to-success/5 text-success',
+      },
+    ],
+  },
+  {
+    id: 'tratamento',
+    eyebrow: '02 · Capacidade',
+    title: 'Tratamento de Dados',
+    description: 'Limpeza e padronização automática para que sua base entre no CRM já organizada.',
+    icon: faBroom,
+    features: [
+      {
+        icon: faLayerGroup,
+        title: 'Normalização de campos',
+        description: 'Telefone, datas, status e texto padronizados em formato consistente, sem ruído.',
+        status: 'available',
+        to: '/admin/ia/excel',
+        accentClass: 'from-primary/20 to-primary/5 text-primary',
+        tag: 'Ativo',
+      },
+      {
+        icon: faShieldHalved,
+        title: 'Validação preventiva',
+        description: 'A IA destaca linhas com problemas antes de salvar — você decide o que fazer com cada uma.',
+        status: 'available',
+        to: '/admin/ia/excel',
+        accentClass: 'from-warning/20 to-warning/5 text-warning',
+      },
+    ],
+  },
+  {
+    id: 'duplicados',
+    eyebrow: '03 · Capacidade',
+    title: 'Duplicados',
+    description: 'Identifique e resolva sobreposições entre planilha e base existente.',
+    icon: faClone,
+    features: [
+      {
+        icon: faClone,
+        title: 'Detecção por telefone e nome',
+        description: 'A IA confronta cada linha com a base atual e propõe ignorar, atualizar ou mesclar.',
+        status: 'available',
+        to: '/admin/ia/excel',
+        accentClass: 'from-warning/20 to-warning/5 text-warning',
+        tag: 'Ativo',
+      },
+      {
+        icon: faSitemap,
+        title: 'Duplicados em todo o CRM',
+        description: 'Varredura completa da base para encontrar e mesclar leads duplicados existentes.',
+        status: 'soon',
+      },
+    ],
+  },
+  {
+    id: 'classificacao',
+    eyebrow: '04 · Capacidade',
+    title: 'Classificação Assistida',
+    description: 'A IA interpreta intenção, estágio e prioridade do lead.',
+    icon: faTag,
+    features: [
+      {
+        icon: faTag,
+        title: 'Sugestão de status',
+        description: 'A IA analisa o histórico do lead e sugere automaticamente o estágio correto no funil.',
+        status: 'soon',
+      },
+      {
+        icon: faChartSimple,
+        title: 'Score automático',
+        description: 'Pontuação dinâmica baseada em interações, recência e padrões reais de conversão da base.',
+        status: 'soon',
+        accentClass: 'from-warning/20 to-warning/5 text-warning',
+      },
+    ],
+  },
+  {
+    id: 'automacao',
+    eyebrow: '05 · Capacidade',
+    title: 'Automação Comercial',
+    description: 'Ações sugeridas e mensagens prontas para você só revisar e enviar.',
+    icon: faRobot,
+    features: [
+      {
+        icon: faRobot,
+        title: 'Follow-up automático',
+        description: 'Mensagens personalizadas geradas com IA para reengajar leads parados no funil.',
+        status: 'soon',
+        accentClass: 'from-info/20 to-info/5 text-info',
+      },
+      {
+        icon: faComments,
+        title: 'Assistente comercial',
+        description: 'Chat com IA para responder dúvidas sobre seus leads, sugerir abordagens e revisar mensagens.',
+        status: 'soon',
+      },
+    ],
+  },
+  {
+    id: 'insights',
+    eyebrow: '06 · Capacidade',
+    title: 'Insights Futuros',
+    description: 'Resumos, padrões e descobertas geradas a partir da sua própria base.',
+    icon: faLightbulb,
+    features: [
+      {
+        icon: faLightbulb,
+        title: 'Resumos de leads',
+        description: 'Resumos automáticos do histórico de cada lead e sugestão dos próximos passos comerciais.',
+        status: 'soon',
+        accentClass: 'from-warning/20 to-warning/5 text-warning',
+      },
+    ],
+  },
+];
 
 export default function IAHomePage() {
   return (
@@ -91,94 +261,35 @@ export default function IAHomePage() {
           </div>
         </section>
 
-        {/* ============== IMPORTAÇÃO ============== */}
-        <section>
-          <SectionHeader
-            eyebrow="01 · Importação"
-            title="Traga seus dados para dentro"
-            description="Diferentes origens, mesmo fluxo inteligente. A IA entende o formato e prepara tudo."
-          />
-          <div className="ia-stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            <IAFeatureCard
-              icon={faFileExcel}
-              title="Excel"
-              description="Envie planilhas .xlsx ou .xls. A IA mapeia colunas, normaliza dados e detecta duplicados antes de importar."
-              status="available"
-              to="/admin/ia/excel"
-              accentClass="from-success/20 to-success/5 text-success"
-              tag="Inteligente"
-            />
-            <IAFeatureCard
-              icon={faFileCsv}
-              title="CSV avançado"
-              description="Importação otimizada de arquivos CSV grandes com detecção automática de delimitador e codificação."
-              status="soon"
-              accentClass="from-info/20 to-info/5 text-info"
-            />
-            <IAFeatureCard
-              icon={faClipboard}
-              title="Texto colado"
-              description="Cole uma lista de contatos direto do bloco de notas e a IA extrai os leads automaticamente."
-              status="soon"
-            />
-            <IAFeatureCard
-              icon={faWhatsapp}
-              title="Lista do WhatsApp"
-              description="Importe contatos copiados de conversas e grupos do WhatsApp diretamente para o CRM."
-              status="soon"
-              accentClass="from-success/20 to-success/5 text-success"
-            />
-          </div>
-        </section>
+        {/* ============== CAPACIDADES ============== */}
+        {CAPABILITIES.map((cap) => (
+          <section key={cap.id}>
+            <SectionHeader eyebrow={cap.eyebrow} title={cap.title} description={cap.description} icon={cap.icon} />
+            <div className="ia-stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {cap.features.map((f) => (
+                <IAFeatureCard
+                  key={f.title}
+                  icon={f.icon}
+                  title={f.title}
+                  description={f.description}
+                  status={f.status}
+                  to={f.to}
+                  accentClass={f.accentClass}
+                  tag={f.tag}
+                />
+              ))}
+            </div>
+          </section>
+        ))}
 
-        {/* ============== INTELIGÊNCIA ============== */}
+        {/* ============== HISTÓRICO ============== */}
         <section>
           <SectionHeader
-            eyebrow="02 · Inteligência comercial"
-            title="A IA trabalhando no seu funil"
-            description="Camadas de automação que vão entrar em ação assim que estiverem prontas."
+            eyebrow="Atividade recente"
+            title="Histórico de operações"
+            description="Tudo que a Central de IA executou aparece aqui — auditável e rastreável."
           />
-          <div className="ia-stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <IAFeatureCard
-              icon={faClone}
-              title="Duplicados inteligentes"
-              description="Identifique e mescle leads duplicados em todo o CRM com critérios fuzzy (nome + telefone + e-mail)."
-              status="soon"
-            />
-            <IAFeatureCard
-              icon={faTag}
-              title="Sugestão de status"
-              description="A IA analisa o histórico do lead e sugere automaticamente o estágio correto no funil."
-              status="soon"
-            />
-            <IAFeatureCard
-              icon={faChartSimple}
-              title="Score automático"
-              description="Pontuação dinâmica baseada em interações, recência e padrões reais de conversão da sua base."
-              status="soon"
-              accentClass="from-warning/20 to-warning/5 text-warning"
-            />
-            <IAFeatureCard
-              icon={faRobot}
-              title="Follow-up automático"
-              description="Mensagens personalizadas geradas com IA para reengajar leads parados no funil."
-              status="soon"
-              accentClass="from-info/20 to-info/5 text-info"
-            />
-            <IAFeatureCard
-              icon={faComments}
-              title="Assistente comercial"
-              description="Chat com IA para responder dúvidas sobre seus leads, sugerir abordagens e revisar mensagens."
-              status="soon"
-            />
-            <IAFeatureCard
-              icon={faLightbulb}
-              title="Insights de leads"
-              description="Resumos automáticos do histórico de cada lead e sugestão dos próximos passos comerciais."
-              status="soon"
-              accentClass="from-warning/20 to-warning/5 text-warning"
-            />
-          </div>
+          <ImportHistoryCard limit={5} />
         </section>
 
         {/* ============== COMO FUNCIONA ============== */}
@@ -197,44 +308,6 @@ export default function IAHomePage() {
             </div>
           </div>
         </section>
-
-        {/* ============== ROADMAP ============== */}
-        <section className="rounded-3xl border bg-card p-6 md:p-8">
-          <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
-            <div>
-              <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-1.5">
-                Roadmap
-              </p>
-              <h3 className="text-[18px] font-semibold tracking-tight text-foreground">Para onde a Central vai</h3>
-              <p className="text-[12.5px] text-muted-foreground mt-1 max-w-xl">
-                A IA do CRM evolui em ondas. Cada release adiciona uma nova camada de automação ao seu funil.
-              </p>
-            </div>
-          </div>
-
-          <ol className="relative border-l-2 border-dashed border-border/80 ml-2 space-y-5 pl-6">
-            <RoadmapItem
-              status="now"
-              title="Importação Excel + IA"
-              desc="Mapeamento automático, normalização e dedup com fluxo revisável."
-            />
-            <RoadmapItem
-              status="next"
-              title="CSV avançado e texto colado"
-              desc="Mais origens com a mesma camada de inteligência."
-            />
-            <RoadmapItem
-              status="planned"
-              title="Sugestões automáticas no funil"
-              desc="Status, score e próximos passos sugeridos por IA, lead a lead."
-            />
-            <RoadmapItem
-              status="planned"
-              title="Assistente comercial conversacional"
-              desc="Chat IA para revisar abordagens, gerar follow-ups e analisar a base."
-            />
-          </ol>
-        </section>
       </div>
     </IAPageShell>
   );
@@ -242,21 +315,30 @@ export default function IAHomePage() {
 
 /* ----------- helpers ----------- */
 
-function SectionHeader({ eyebrow, title, description }: { eyebrow: string; title: string; description?: string }) {
+function SectionHeader({
+  eyebrow, title, description, icon,
+}: { eyebrow: string; title: string; description?: string; icon?: IconDefinition }) {
   return (
-    <div className="mb-5">
-      <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-primary/80 mb-1.5">
-        {eyebrow}
-      </p>
-      <h2 className="text-[18px] sm:text-[19px] font-semibold tracking-tight text-foreground">{title}</h2>
-      {description && (
-        <p className="text-[12.5px] text-muted-foreground mt-1 max-w-2xl leading-relaxed">{description}</p>
+    <div className="mb-5 flex items-start gap-3">
+      {icon && (
+        <span className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+          <FontAwesomeIcon icon={icon} className="h-4 w-4" />
+        </span>
       )}
+      <div className="min-w-0">
+        <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-primary/80 mb-1">
+          {eyebrow}
+        </p>
+        <h2 className="text-[18px] sm:text-[19px] font-semibold tracking-tight text-foreground">{title}</h2>
+        {description && (
+          <p className="text-[12.5px] text-muted-foreground mt-1 max-w-2xl leading-relaxed">{description}</p>
+        )}
+      </div>
     </div>
   );
 }
 
-function Step({ n, icon, title, desc }: { n: number; icon: typeof faUpload; title: string; desc: string }) {
+function Step({ n, icon, title, desc }: { n: number; icon: IconDefinition; title: string; desc: string }) {
   return (
     <div className="relative rounded-2xl border bg-card p-5 ia-card-lift">
       <div className="flex items-center justify-between mb-3">
@@ -270,38 +352,5 @@ function Step({ n, icon, title, desc }: { n: number; icon: typeof faUpload; titl
       <h4 className="text-[14px] font-semibold text-foreground mb-1">{title}</h4>
       <p className="text-[12px] text-muted-foreground leading-relaxed">{desc}</p>
     </div>
-  );
-}
-
-function RoadmapItem({
-  status,
-  title,
-  desc,
-}: {
-  status: 'now' | 'next' | 'planned';
-  title: string;
-  desc: string;
-}) {
-  const styles = {
-    now: { dot: 'bg-success ring-success/30', label: 'Agora', cls: 'bg-success-soft text-success' },
-    next: { dot: 'bg-info ring-info/30', label: 'Próximo', cls: 'bg-info-soft text-info' },
-    planned: { dot: 'bg-muted-foreground/40 ring-border', label: 'Planejado', cls: 'bg-muted text-muted-foreground' },
-  }[status];
-
-  return (
-    <li className="relative">
-      <span
-        className={`absolute -left-[33px] top-1.5 h-3 w-3 rounded-full ring-4 ${styles.dot} ${
-          status === 'now' ? 'ia-dot-live' : ''
-        }`}
-      />
-      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-        <h4 className="text-[13.5px] font-semibold text-foreground">{title}</h4>
-        <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md text-[9.5px] font-semibold uppercase tracking-wider ${styles.cls}`}>
-          {styles.label}
-        </span>
-      </div>
-      <p className="text-[12px] text-muted-foreground leading-relaxed">{desc}</p>
-    </li>
   );
 }
