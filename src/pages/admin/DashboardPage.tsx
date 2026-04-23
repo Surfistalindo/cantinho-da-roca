@@ -346,6 +346,7 @@ export default function DashboardPage() {
               })}
             </ul>
           )}
+        </div>
       </div>
 
       {/* Fila de reengajamento */}
