@@ -16,7 +16,7 @@ export const clientService = {
 
   async create(customer: { name: string; phone?: string; product_bought?: string; purchase_date?: string; notes?: string }) {
     const parsed = customerCreateSchema.parse(customer);
-    const { data, error } = await supabase.from('customers').insert(parsed).select().single();
+    const { data, error } = await supabase.from('customers').insert({ ...parsed, name: parsed.name }).select().single();
     if (error) throw error;
     return data;
   },
@@ -28,7 +28,7 @@ export const clientService = {
       product_bought: lead.product_interest ?? undefined,
       purchase_date: new Date().toISOString().split('T')[0],
     });
-    const { data, error } = await supabase.from('customers').insert(parsed).select().single();
+    const { data, error } = await supabase.from('customers').insert({ ...parsed, name: parsed.name }).select().single();
     if (error) throw error;
 
     if (lead.id && data?.id) {
