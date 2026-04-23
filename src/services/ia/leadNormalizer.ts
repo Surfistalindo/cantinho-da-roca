@@ -25,24 +25,98 @@ function cleanText(v: unknown): string | null {
   return s.length ? s : null;
 }
 
+function isPlausible(d: Date): boolean {
+  const y = d.getFullYear();
+  const max = new Date().getFullYear() + 5;
+  return y >= 2000 && y <= max;
+}
+
+function excelSerialToDate(n: number): Date | null {
+  // Excel serial date: dias desde 1899-12-30 (compat Lotus)
+  if (!isFinite(n) || n <= 0 || n > 80000) return null;
+  const ms = Math.round(n * 86400 * 1000);
+  const d = new Date(Date.UTC(1899, 11, 30) + ms);
+  return isValid(d) ? d : null;
+}
+
+function tryParseAmbiguous(a: number, b: number, year: number): Date | null {
+  // Tenta dd/MM e MM/dd, escolhe o mais plausível
+  const candidates: Date[] = [];
+  // dd/MM (BR)
+  if (a >= 1 && a <= 31 && b >= 1 && b <= 12) {
+    const d = new Date(year, b - 1, a);
+    if (isValid(d) && isPlausible(d)) candidates.push(d);
+  }
+  // MM/dd (US)
+  if (b >= 1 && b <= 31 && a >= 1 && a <= 12) {
+    const d = new Date(year, a - 1, b);
+    if (isValid(d) && isPlausible(d)) candidates.push(d);
+  }
+  if (!candidates.length) return null;
+  // Se primeiro token > 12, só pode ser dd/MM (já único)
+  // Caso contrário, prioriza BR (primeiro candidato)
+  return candidates[0];
+}
+
+function normalizeYear(yy: number): number {
+  if (yy >= 100) return yy;
+  return yy < 50 ? 2000 + yy : 1900 + yy;
+}
+
 function parseDate(raw: unknown): string | null {
   if (raw == null || raw === '') return null;
   if (raw instanceof Date && isValid(raw)) return raw.toISOString();
+
+  // Número serial do Excel
+  if (typeof raw === 'number') {
+    const d = excelSerialToDate(raw);
+    if (d && isPlausible(d)) return d.toISOString();
+  }
+
   const s = String(raw).trim();
   if (!s) return null;
 
+  // String numérica → tentar serial Excel
+  if (/^\d+(\.\d+)?$/.test(s)) {
+    const d = excelSerialToDate(Number(s));
+    if (d && isPlausible(d)) return d.toISOString();
+  }
+
   // ISO
   const iso = parseISO(s);
-  if (isValid(iso)) return iso.toISOString();
+  if (isValid(iso) && isPlausible(iso)) return iso.toISOString();
 
-  const formats = ['dd/MM/yyyy', 'd/M/yyyy', 'dd-MM-yyyy', 'yyyy-MM-dd', 'dd/MM/yy', 'dd/MM'];
+  // Formatos com separador / - . — tokens numéricos
+  const m = s.match(/^(\d{1,4})[\/\-.](\d{1,2})[\/\-.](\d{1,4})$/);
+  if (m) {
+    const t1 = Number(m[1]);
+    const t2 = Number(m[2]);
+    const t3 = Number(m[3]);
+    // yyyy-MM-dd / yyyy/MM/dd
+    if (m[1].length === 4) {
+      const d = new Date(t1, t2 - 1, t3);
+      if (isValid(d) && isPlausible(d)) return d.toISOString();
+    }
+    // dd/MM/yyyy ou MM/dd/yyyy ou yy
+    const year = m[3].length === 4 ? t3 : normalizeYear(t3);
+    const d = tryParseAmbiguous(t1, t2, year);
+    if (d) return d.toISOString();
+  }
+
+  // dd/MM sem ano
+  const m2 = s.match(/^(\d{1,2})[\/\-.](\d{1,2})$/);
+  if (m2) {
+    const a = Number(m2[1]);
+    const b = Number(m2[2]);
+    const d = tryParseAmbiguous(a, b, new Date().getFullYear());
+    if (d) return d.toISOString();
+  }
+
+  // Fallback formats da biblioteca
+  const formats = ['dd/MM/yyyy', 'd/M/yyyy', 'MM/dd/yyyy', 'M/d/yyyy', 'dd-MM-yyyy', 'yyyy-MM-dd', 'dd.MM.yyyy', 'd.M.yyyy'];
   for (const fmt of formats) {
     const d = parse(s, fmt, new Date());
-    if (isValid(d)) {
-      // Para dd/MM, assumimos ano corrente
-      if (fmt === 'dd/MM') d.setFullYear(new Date().getFullYear());
-      return d.toISOString();
-    }
+    if (isValid(d) && isPlausible(d)) return d.toISOString();
   }
   return null;
 }
