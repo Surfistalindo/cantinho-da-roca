@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { logger } from '@/lib/logger';
-import { parseExcelFile, type ParsedSheet } from '@/services/ia/excelParser';
-import { aiAssistMap, heuristicMap, type ColumnMapping } from '@/services/ia/columnMapper';
+import { parseExcelFile, type ParsedSheet, type PerSheetData } from '@/services/ia/excelParser';
+import { aiAssistMap, buildSamplesByHeader, heuristicMap, type ColumnMapping } from '@/services/ia/columnMapper';
 import { normalizeAll, normalizeRow, type NormalizedLeadRow } from '@/services/ia/leadNormalizer';
 import { detectDuplicates, loadExistingLeads, type DuplicateMatch, type DuplicateStrategy } from '@/services/ia/duplicateDetector';
 import { executeImport, type ImportProgress, type ImportResult } from '@/services/ia/importExecutor';
@@ -37,7 +37,10 @@ export interface UseExcelImportState {
   step: ImportStep;
   file: File | null;
   parsed: ParsedSheet | null;
+  /** Mapeamento global (união por header) — exibido na UI. */
   mappings: ColumnMapping[];
+  /** Mapeamento por aba (usado internamente para normalizar). */
+  mappingsBySheet: Record<string, ColumnMapping[]>;
   defaultStrategy: DuplicateStrategy;
   normalized: NormalizedLeadRow[];
   duplicates: DuplicateMatch[];
@@ -48,17 +51,71 @@ export interface UseExcelImportState {
 }
 
 const INITIAL: UseExcelImportState = {
-  step: 'idle', file: null, parsed: null, mappings: [],
+  step: 'idle', file: null, parsed: null, mappings: [], mappingsBySheet: {},
   defaultStrategy: 'skip',
   normalized: [], duplicates: [], progress: null, result: null, error: null,
   detectedTemplate: null,
 };
 
 export interface UseExcelImportOptions {
-  /** Identificador da origem para logs (default: 'excel'). */
   source?: string;
-  /** Parser customizado (default: parseExcelFile). Use para CSV/etc. */
   parseFile?: (file: File) => Promise<ParsedSheet>;
+}
+
+/** Constrói o mapeamento global (união por header) a partir dos mapeamentos por aba. */
+function unifyMappings(parsed: ParsedSheet, bySheet: Record<string, ColumnMapping[]>): ColumnMapping[] {
+  const seen = new Map<string, ColumnMapping>();
+  for (const h of parsed.headers) {
+    // Procura nas abas qualquer mapeamento p/ esse header
+    for (const sheetName of Object.keys(bySheet)) {
+      const m = bySheet[sheetName].find((x) => x.source === h);
+      if (m && m.target !== 'ignore') { seen.set(h, m); break; }
+      if (m && !seen.has(h)) seen.set(h, m);
+    }
+    if (!seen.has(h)) {
+      seen.set(h, { source: h, target: 'ignore', confidence: 0, suggestedBy: 'none' });
+    }
+  }
+  return parsed.headers.map((h) => seen.get(h)!);
+}
+
+/** Aplica um override de target em todos os mapeamentos por aba que contenham esse header. */
+function overrideInAllSheets(
+  bySheet: Record<string, ColumnMapping[]>,
+  source: string,
+  target: CrmFieldKey,
+): Record<string, ColumnMapping[]> {
+  const out: Record<string, ColumnMapping[]> = {};
+  for (const [sheet, mappings] of Object.entries(bySheet)) {
+    out[sheet] = mappings.map((m) =>
+      m.source === source
+        ? { ...m, target, suggestedBy: 'manual' as const, confidence: 1 }
+        : m,
+    );
+  }
+  return out;
+}
+
+/** Normaliza todas as abas, concatenando os resultados (rowIndex global contínuo). */
+function normalizeAcrossSheets(
+  parsed: ParsedSheet,
+  bySheet: Record<string, ColumnMapping[]>,
+): NormalizedLeadRow[] {
+  if (!parsed.perSheet || parsed.perSheet.length === 0) {
+    // Compat: única aba virtual
+    const first = Object.values(bySheet)[0] ?? [];
+    return normalizeAll(parsed.rows, first);
+  }
+  const out: NormalizedLeadRow[] = [];
+  let cursor = 0;
+  for (const sheet of parsed.perSheet) {
+    const mp = bySheet[sheet.name] ?? [];
+    const norm = normalizeAll(sheet.rows, mp);
+    for (const n of norm) {
+      out.push({ ...n, rowIndex: cursor++ });
+    }
+  }
+  return out;
 }
 
 export function useExcelImport(options: UseExcelImportOptions = {}) {
@@ -70,7 +127,6 @@ export function useExcelImport(options: UseExcelImportOptions = {}) {
     defaultStrategy: loadDefaultStrategy(),
   }));
 
-  // Persist default strategy
   useEffect(() => {
     try { localStorage.setItem(DEFAULT_STRATEGY_KEY, state.defaultStrategy); } catch { /* ignore */ }
   }, [state.defaultStrategy]);
@@ -81,17 +137,31 @@ export function useExcelImport(options: UseExcelImportOptions = {}) {
     setState((s) => ({ ...s, step: 'parsing', file, error: null }));
     try {
       const parsed = await parseFile(file);
-      let mappings = heuristicMap(parsed.headers);
-      // Detecta template salvo
-      const match = detectMatchingTemplate(parsed.headers);
-      // Tenta IA em background — se falhar, segue com heurística
-      try {
-        mappings = await aiAssistMap(parsed.headers, parsed.rawRows.slice(0, 3), mappings);
-      } catch (e) {
-        logger.warn('IA mapping skipped', e);
+      const sheets: PerSheetData[] = parsed.perSheet ?? [{
+        name: parsed.sheetName,
+        headers: parsed.headers,
+        rows: parsed.rows,
+        rawRows: parsed.rawRows,
+        totalRows: parsed.totalRows,
+      }];
+
+      const bySheet: Record<string, ColumnMapping[]> = {};
+      for (const sheet of sheets) {
+        const samples = buildSamplesByHeader(sheet.headers, sheet.rows, 8);
+        let m = heuristicMap(sheet.headers, samples);
+        try {
+          m = await aiAssistMap(sheet.headers, sheet.rawRows.slice(0, 3), m);
+        } catch (e) {
+          logger.warn(`IA mapping skipped for sheet "${sheet.name}"`, e);
+        }
+        bySheet[sheet.name] = m;
       }
+
+      const mappings = unifyMappings(parsed, bySheet);
+      const match = detectMatchingTemplate(parsed.headers);
+
       setState((s) => ({
-        ...s, step: 'mapping', parsed, mappings,
+        ...s, step: 'mapping', parsed, mappings, mappingsBySheet: bySheet,
         detectedTemplate: match?.template ?? null,
       }));
     } catch (e) {
@@ -101,44 +171,46 @@ export function useExcelImport(options: UseExcelImportOptions = {}) {
     }
   }, [parseFile]);
 
-  const updateMapping = useCallback((source: string, target: ColumnMapping['target']) => {
-    setState((s) => ({
-      ...s,
-      mappings: s.mappings.map((m) =>
-        m.source === source ? { ...m, target, suggestedBy: 'manual' as const, confidence: 1 } : m,
-      ),
-    }));
-  }, []);
-
-  /** Aplica novo mapeamento e re-normaliza todas as linhas (usado no painel inline). */
-  const remapAndRevalidate = useCallback((newMappings: ColumnMapping[]) => {
+  const updateMapping = useCallback((src: string, target: ColumnMapping['target']) => {
     setState((s) => {
-      if (!s.parsed) return s;
-      const normalized = normalizeAll(s.parsed.rows, newMappings);
-      return { ...s, mappings: newMappings, normalized };
+      const bySheet = overrideInAllSheets(s.mappingsBySheet, src, target);
+      const mappings = s.parsed ? unifyMappings(s.parsed, bySheet) : s.mappings;
+      return { ...s, mappings, mappingsBySheet: bySheet };
     });
   }, []);
 
-  /** Edita um campo de uma linha já normalizada e revalida só ela. */
+  const remapAndRevalidate = useCallback((newMappings: ColumnMapping[]) => {
+    setState((s) => {
+      if (!s.parsed) return s;
+      // Aplica diff (qualquer source com target diferente vira override em todas as abas)
+      let bySheet = s.mappingsBySheet;
+      for (const m of newMappings) {
+        const current = s.mappings.find((x) => x.source === m.source);
+        if (!current || current.target !== m.target) {
+          bySheet = overrideInAllSheets(bySheet, m.source, m.target);
+        }
+      }
+      const unified = unifyMappings(s.parsed, bySheet);
+      const normalized = normalizeAcrossSheets(s.parsed, bySheet);
+      return { ...s, mappings: unified, mappingsBySheet: bySheet, normalized };
+    });
+  }, []);
+
   const updateRowField = useCallback((rowIndex: number, field: keyof NormalizedLeadRow['data'], value: unknown) => {
     setState((s) => {
       const target = s.normalized.find((r) => r.rowIndex === rowIndex);
       if (!target || !s.parsed) return s;
-      // Reconstrói a linha bruta a partir da edição: usa data atual + override.
-      // Aqui aplicamos overwrite direto no objeto data (não passa por normalizeRow porque
-      // o usuário já está digitando o valor final desejado).
       const next = s.normalized.map((r) => {
         if (r.rowIndex !== rowIndex) return r;
         const newData = { ...r.data, [field]: value === '' ? null : value } as NormalizedLeadRow['data'];
-        // Recalcula erros: nome obrigatório
-        const errors = newData.name ? r.errors.filter((e) => e !== 'Nome obrigatório ausente') : (
-          r.errors.includes('Nome obrigatório ausente') ? r.errors : [...r.errors, 'Nome obrigatório ausente']
-        );
-        // Limpa warnings ligados ao campo editado
+        const errors = newData.name
+          ? r.errors.filter((e) => !e.toLowerCase().includes('nome'))
+          : (r.errors.some((e) => e.toLowerCase().includes('nome')) ? r.errors : [...r.errors, 'Linha sem nome, telefone ou produto identificável']);
         const warnings = r.warnings.filter((w) => {
           if (field === 'phone') return !w.toLowerCase().startsWith('telefone');
           if (field === 'next_contact_at') return !w.toLowerCase().startsWith('data');
           if (field === 'status') return !w.toLowerCase().startsWith('status');
+          if (field === 'name') return !w.toLowerCase().includes('nome ausente');
           return true;
         });
         return { ...r, data: newData, errors, warnings };
@@ -147,7 +219,6 @@ export function useExcelImport(options: UseExcelImportOptions = {}) {
     });
   }, []);
 
-  // Strategy
   const setDefaultStrategy = useCallback((strategy: DuplicateStrategy) => {
     setState((s) => ({ ...s, defaultStrategy: strategy }));
   }, []);
@@ -161,10 +232,9 @@ export function useExcelImport(options: UseExcelImportOptions = {}) {
     setState((s) => {
       strategy = s.defaultStrategy;
       if (!s.parsed) return s;
-      const normalized = normalizeAll(s.parsed.rows, s.mappings);
+      const normalized = normalizeAcrossSheets(s.parsed, s.mappingsBySheet);
       return { ...s, step: 'reviewing', normalized };
     });
-    // Carrega existentes em background para detectar duplicados
     try {
       const existing = await loadExistingLeads();
       setState((s) => {
@@ -226,7 +296,6 @@ export function useExcelImport(options: UseExcelImportOptions = {}) {
     });
   }, []);
 
-  // Templates
   const saveMappingTemplate = useCallback((name: string) => {
     const tpl = saveTemplate(name, state.mappings.map((m) => ({ source: m.source, target: m.target })));
     toast.success(`Template "${tpl.name}" salvo`);
@@ -235,15 +304,16 @@ export function useExcelImport(options: UseExcelImportOptions = {}) {
   const applyMappingTemplate = useCallback((tplId: string) => {
     setState((s) => {
       const tpl = listTemplates().find((t) => t.id === tplId);
-      if (!tpl) return s;
+      if (!tpl || !s.parsed) return s;
       const tplMap = new Map(tpl.mappings.map((m) => [m.source.toLowerCase(), m.target]));
-      const next = s.mappings.map((m) => {
-        const target = tplMap.get(m.source.toLowerCase());
-        if (!target) return m;
-        return { ...m, target, suggestedBy: 'manual' as const, confidence: 1 };
-      });
+      let bySheet = s.mappingsBySheet;
+      for (const h of s.parsed.headers) {
+        const target = tplMap.get(h.toLowerCase());
+        if (target) bySheet = overrideInAllSheets(bySheet, h, target);
+      }
+      const unified = unifyMappings(s.parsed, bySheet);
       toast.success(`Template "${tpl.name}" aplicado`);
-      return { ...s, mappings: next, detectedTemplate: null };
+      return { ...s, mappings: unified, mappingsBySheet: bySheet, detectedTemplate: null };
     });
   }, []);
 
@@ -255,7 +325,6 @@ export function useExcelImport(options: UseExcelImportOptions = {}) {
     setState((s) => ({ ...s, detectedTemplate: null }));
   }, []);
 
-  // (referência usada pelo normalizer caso seja necessário)
   void normalizeRow;
 
   return {
