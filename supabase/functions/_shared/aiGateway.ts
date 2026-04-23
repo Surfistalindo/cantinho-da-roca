@@ -54,15 +54,15 @@ export async function authenticate(req: Request): Promise<AuthContext | Response
   });
 
   const token = authHeader.replace("Bearer ", "");
-  const { data, error } = await supabase.auth.getClaims(token);
-  if (error || !data?.claims?.sub) {
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data?.user?.id) {
     return jsonResponse({ error: "unauthorized" }, 401);
   }
 
   const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   return {
-    userId: data.claims.sub as string,
+    userId: data.user.id as string,
     authHeader,
     supabase,
     supabaseAdmin,
