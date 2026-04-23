@@ -50,7 +50,7 @@ export default function InlineMappingPanel({ open, onOpenChange, mappings, onApp
         </SheetHeader>
 
         <div className="mt-4 space-y-2">
-          {draft.map((m) => {
+          {draft.filter((m) => m.source !== '__sheet').map((m) => {
             const isIgnored = m.target === 'ignore';
             return (
               <div

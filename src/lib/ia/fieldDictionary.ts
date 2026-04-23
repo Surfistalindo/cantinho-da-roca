@@ -25,13 +25,37 @@ export const CRM_FIELD_LABELS: Record<CrmFieldKey, string> = {
 };
 
 export const FIELD_DICTIONARY: Record<Exclude<CrmFieldKey, 'ignore'>, string[]> = {
-  name: ['nome', 'cliente', 'contato', 'lead', 'razaosocial', 'comprador', 'pessoa', 'fullname', 'name'],
-  phone: ['telefone', 'celular', 'whatsapp', 'whats', 'fone', 'tel', 'phone', 'numero', 'mobile'],
-  origin: ['origem', 'fonte', 'canal', 'campanha', 'origemdolead', 'source', 'midia'],
-  product_interest: ['produto', 'interesse', 'item', 'servico', 'oquequer', 'desejo', 'pedido'],
-  status: ['status', 'etapa', 'situacao', 'fase', 'estagio', 'stage'],
-  next_contact_at: ['retorno', 'followup', 'proximocontato', 'proximadata', 'agendamento', 'data', 'datadoretorno'],
-  notes: ['observacoes', 'observacao', 'notas', 'nota', 'obs', 'comentarios', 'comentario', 'historico', 'descricao'],
+  name: [
+    'nome', 'cliente', 'clientes', 'lead', 'razaosocial', 'comprador', 'pessoa',
+    'fullname', 'name', 'responsavel', 'nomedocliente', 'nomecompleto',
+  ],
+  phone: [
+    'telefone', 'celular', 'whatsapp', 'whats', 'fone', 'tel', 'phone',
+    'numero', 'mobile', 'contato', 'numerodecontato', 'numerodetelefone',
+    'numerodewhatsapp', 'numerodecelular',
+  ],
+  origin: [
+    'origem', 'fonte', 'canal', 'campanha', 'origemdolead', 'source', 'midia',
+    'loja', 'veiculo', 'marca',
+  ],
+  product_interest: [
+    'produto', 'produtos', 'interesse', 'item', 'servico', 'oquequer',
+    'desejo', 'pedido', 'nicho', 'ticket',
+  ],
+  status: [
+    'status', 'etapa', 'situacao', 'fase', 'estagio', 'stage',
+    'processodevenda', 'processo', 'situacaodavenda', 'situacaodecompra',
+  ],
+  next_contact_at: [
+    'retorno', 'followup', 'proximocontato', 'proximacontato', 'proximacontata',
+    'proximocontata', 'proximadata', 'agendamento', 'data', 'datadoretorno',
+    'retornoem', 'retornar',
+  ],
+  notes: [
+    'observacoes', 'observacao', 'notas', 'nota', 'obs', 'comentarios',
+    'comentario', 'historico', 'descricao', 'vendedor', 'observacoesvendedor',
+    'ultimocontato',
+  ],
 };
 
 export function normalizeHeader(raw: string): string {

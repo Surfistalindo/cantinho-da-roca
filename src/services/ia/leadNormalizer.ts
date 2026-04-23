@@ -32,7 +32,6 @@ function isPlausible(d: Date): boolean {
 }
 
 function excelSerialToDate(n: number): Date | null {
-  // Excel serial date: dias desde 1899-12-30 (compat Lotus)
   if (!isFinite(n) || n <= 0 || n > 80000) return null;
   const ms = Math.round(n * 86400 * 1000);
   const d = new Date(Date.UTC(1899, 11, 30) + ms);
@@ -40,21 +39,16 @@ function excelSerialToDate(n: number): Date | null {
 }
 
 function tryParseAmbiguous(a: number, b: number, year: number): Date | null {
-  // Tenta dd/MM e MM/dd, escolhe o mais plausível
   const candidates: Date[] = [];
-  // dd/MM (BR)
   if (a >= 1 && a <= 31 && b >= 1 && b <= 12) {
     const d = new Date(year, b - 1, a);
     if (isValid(d) && isPlausible(d)) candidates.push(d);
   }
-  // MM/dd (US)
   if (b >= 1 && b <= 31 && a >= 1 && a <= 12) {
     const d = new Date(year, a - 1, b);
     if (isValid(d) && isPlausible(d)) candidates.push(d);
   }
   if (!candidates.length) return null;
-  // Se primeiro token > 12, só pode ser dd/MM (já único)
-  // Caso contrário, prioriza BR (primeiro candidato)
   return candidates[0];
 }
 
@@ -63,47 +57,52 @@ function normalizeYear(yy: number): number {
   return yy < 50 ? 2000 + yy : 1900 + yy;
 }
 
+/** Pré-limpa string de data: barras duplas, espaços, separadores misturados. */
+function cleanDateString(s: string): string {
+  return s
+    .trim()
+    .replace(/\s+/g, '')
+    .replace(/\/{2,}/g, '/')   // 04/11//25 -> 04/11/25
+    .replace(/-{2,}/g, '-')
+    .replace(/\.{2,}/g, '.');
+}
+
 function parseDate(raw: unknown): string | null {
   if (raw == null || raw === '') return null;
   if (raw instanceof Date && isValid(raw)) return raw.toISOString();
 
-  // Número serial do Excel
   if (typeof raw === 'number') {
     const d = excelSerialToDate(raw);
     if (d && isPlausible(d)) return d.toISOString();
   }
 
-  const s = String(raw).trim();
-  if (!s) return null;
+  const original = String(raw).trim();
+  if (!original) return null;
+  const s = cleanDateString(original);
 
-  // String numérica → tentar serial Excel
   if (/^\d+(\.\d+)?$/.test(s)) {
     const d = excelSerialToDate(Number(s));
     if (d && isPlausible(d)) return d.toISOString();
   }
 
-  // ISO
   const iso = parseISO(s);
   if (isValid(iso) && isPlausible(iso)) return iso.toISOString();
 
-  // Formatos com separador / - . — tokens numéricos
+  // Padrão tokens com / - .
   const m = s.match(/^(\d{1,4})[\/\-.](\d{1,2})[\/\-.](\d{1,4})$/);
   if (m) {
     const t1 = Number(m[1]);
     const t2 = Number(m[2]);
     const t3 = Number(m[3]);
-    // yyyy-MM-dd / yyyy/MM/dd
     if (m[1].length === 4) {
       const d = new Date(t1, t2 - 1, t3);
       if (isValid(d) && isPlausible(d)) return d.toISOString();
     }
-    // dd/MM/yyyy ou MM/dd/yyyy ou yy
     const year = m[3].length === 4 ? t3 : normalizeYear(t3);
     const d = tryParseAmbiguous(t1, t2, year);
     if (d) return d.toISOString();
   }
 
-  // dd/MM sem ano
   const m2 = s.match(/^(\d{1,2})[\/\-.](\d{1,2})$/);
   if (m2) {
     const a = Number(m2[1]);
@@ -112,11 +111,29 @@ function parseDate(raw: unknown): string | null {
     if (d) return d.toISOString();
   }
 
-  // Fallback formats da biblioteca
-  const formats = ['dd/MM/yyyy', 'd/M/yyyy', 'MM/dd/yyyy', 'M/d/yyyy', 'dd-MM-yyyy', 'yyyy-MM-dd', 'dd.MM.yyyy', 'd.M.yyyy'];
+  const formats = [
+    'dd/MM/yyyy', 'd/M/yyyy', 'MM/dd/yyyy', 'M/d/yyyy',
+    'dd-MM-yyyy', 'yyyy-MM-dd',
+    'dd.MM.yyyy', 'd.M.yyyy', 'dd.MM.yy', 'd.M.yy',
+    'dd/MM/yy', 'd/M/yy',
+  ];
   for (const fmt of formats) {
     const d = parse(s, fmt, new Date());
     if (isValid(d) && isPlausible(d)) return d.toISOString();
+  }
+  return null;
+}
+
+function makeSyntheticName(phone: string | null, productInterest: string | null): string | null {
+  if (productInterest) {
+    const trimmed = productInterest.length > 40 ? `${productInterest.slice(0, 40)}…` : productInterest;
+    return `Lead — ${trimmed}`;
+  }
+  if (phone) {
+    const digits = phone.replace(/\D/g, '');
+    const last4 = digits.slice(-4);
+    const ddd = digits.length >= 11 ? digits.slice(-11, -9) : '';
+    return ddd ? `Lead s/ nome (${ddd} ${last4})` : `Lead s/ nome (${last4})`;
   }
   return null;
 }
@@ -163,7 +180,24 @@ export function normalizeRow(
     }
   }
 
-  if (!data.name) errors.push('Nome obrigatório ausente');
+  // Fallback: origem = nome da aba quando não veio mapeada e __sheet existe
+  if (!data.origin) {
+    const sheetMeta = row['__sheet'];
+    if (typeof sheetMeta === 'string' && sheetMeta.trim()) {
+      data.origin = sheetMeta.trim();
+    }
+  }
+
+  // Nome sintético quando há telefone OU produto, mas sem nome
+  if (!data.name) {
+    const synthetic = makeSyntheticName(data.phone, data.product_interest);
+    if (synthetic) {
+      data.name = synthetic;
+      warnings.push('Nome ausente — gerado automaticamente a partir do contato/produto');
+    } else {
+      errors.push('Linha sem nome, telefone ou produto identificável');
+    }
+  }
 
   return { rowIndex, data, errors, warnings };
 }
