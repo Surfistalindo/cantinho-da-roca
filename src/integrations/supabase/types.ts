@@ -47,6 +47,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ia_import_logs: {
+        Row: {
+          created_count: number
+          error_count: number
+          filename: string | null
+          finished_at: string | null
+          id: string
+          skipped_count: number
+          source: string
+          started_at: string
+          total_rows: number
+          updated_count: number
+          user_id: string
+        }
+        Insert: {
+          created_count?: number
+          error_count?: number
+          filename?: string | null
+          finished_at?: string | null
+          id?: string
+          skipped_count?: number
+          source: string
+          started_at?: string
+          total_rows?: number
+          updated_count?: number
+          user_id: string
+        }
+        Update: {
+          created_count?: number
+          error_count?: number
+          filename?: string | null
+          finished_at?: string | null
+          id?: string
+          skipped_count?: number
+          source?: string
+          started_at?: string
+          total_rows?: number
+          updated_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       interactions: {
         Row: {
           contact_type: string

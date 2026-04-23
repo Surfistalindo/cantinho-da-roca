@@ -5,6 +5,7 @@ import {
   faUserGroup,
   faTableColumns,
   faUserCheck,
+  faWandMagicSparkles,
   faUpRightFromSquare,
   faArrowRightFromBracket,
 } from '@fortawesome/free-solid-svg-icons';
@@ -37,6 +38,7 @@ const menuItems: { title: string; url: string; icon: IconDefinition; key: string
   { title: 'Leads', url: '/admin/leads', icon: faUserGroup, key: 'leads' },
   { title: 'Pipeline', url: '/admin/pipeline', icon: faTableColumns, key: 'pipeline' },
   { title: 'Clientes', url: '/admin/clients', icon: faUserCheck, key: 'clients' },
+  { title: 'IA', url: '/admin/ia', icon: faWandMagicSparkles, key: 'ia' },
 ];
 
 export default function AdminSidebar() {
