@@ -100,15 +100,18 @@ export function useExcelImport() {
   }, []);
 
   const runImport = useCallback(async () => {
-    setState((s) => ({ ...s, step: 'importing', progress: { processed: 0, total: s.normalized.length } }));
+    let snapshot: UseExcelImportState | null = null;
+    setState((s) => {
+      snapshot = s;
+      return { ...s, step: 'importing', progress: { processed: 0, total: s.normalized.length } };
+    });
+    if (!snapshot) return;
     try {
-      const current = await new Promise<UseExcelImportState>((resolve) => {
-        setState((s) => { resolve(s); return s; });
-      });
+      const snap: UseExcelImportState = snapshot;
       const result = await executeImport(
-        current.normalized,
-        current.duplicates,
-        current.file?.name,
+        snap.normalized,
+        snap.duplicates,
+        snap.file?.name,
         (p) => setState((s) => ({ ...s, progress: p })),
       );
       setState((s) => ({ ...s, step: 'done', result }));
