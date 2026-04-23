@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { logger } from '@/lib/logger';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { faCaretDown, faCheck, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
@@ -74,7 +75,7 @@ export default function WhatsAppQuickAction({
         created_by: user.id,
       });
     } catch (e) {
-      console.warn('Falha ao registrar interação WhatsApp:', e);
+      logger.warn('Falha ao registrar interação WhatsApp:', e);
       toast.warning('Mensagem aberta, mas não foi possível registrar a interação.');
     }
   }

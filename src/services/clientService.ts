@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { customerCreateSchema, customerUpdateSchema } from '@/lib/validation/schemas';
 
 export const clientService = {
   async list() {
@@ -14,21 +15,22 @@ export const clientService = {
   },
 
   async create(customer: { name: string; phone?: string; product_bought?: string; purchase_date?: string; notes?: string }) {
-    const { data, error } = await supabase.from('customers').insert(customer).select().single();
+    const parsed = customerCreateSchema.parse(customer);
+    const { data, error } = await supabase.from('customers').insert({ ...parsed, name: parsed.name }).select().single();
     if (error) throw error;
     return data;
   },
 
   async createFromLead(lead: { id?: string; name: string; phone?: string | null; product_interest?: string | null }) {
-    const { data, error } = await supabase.from('customers').insert({
+    const parsed = customerCreateSchema.parse({
       name: lead.name,
       phone: lead.phone ?? undefined,
       product_bought: lead.product_interest ?? undefined,
       purchase_date: new Date().toISOString().split('T')[0],
-    }).select().single();
+    });
+    const { data, error } = await supabase.from('customers').insert({ ...parsed, name: parsed.name }).select().single();
     if (error) throw error;
 
-    // Transfere histórico de interações do lead para o cliente, mantendo lead_id para rastreabilidade.
     if (lead.id && data?.id) {
       await supabase
         .from('interactions')
@@ -40,7 +42,8 @@ export const clientService = {
   },
 
   async update(id: string, updates: { name?: string; phone?: string; product_bought?: string; purchase_date?: string; last_contact_at?: string; notes?: string }) {
-    const { error } = await supabase.from('customers').update(updates).eq('id', id);
+    const parsed = customerUpdateSchema.parse(updates);
+    const { error } = await supabase.from('customers').update(parsed).eq('id', id);
     if (error) throw error;
   },
 

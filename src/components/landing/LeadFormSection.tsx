@@ -41,6 +41,7 @@ export default function LeadFormSection() {
   const [origin, setOrigin] = useState('');
   const [productInterest, setProductInterest] = useState('');
   const [message, setMessage] = useState('');
+  const [website, setWebsite] = useState(''); // honeypot — bots tendem a preencher
   const [loading, setLoading] = useState(false);
   const [showOptional, setShowOptional] = useState(false);
   const lastSubmitRef = useRef<number>(0);
@@ -53,6 +54,13 @@ export default function LeadFormSection() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Honeypot: humanos não veem nem preenchem este campo.
+    if (website.trim().length > 0) {
+      // Finge sucesso silencioso para não dar pista ao bot.
+      toast.success('Cadastro realizado! 🎉');
+      return;
+    }
 
     const trimmedName = name.trim();
     if (trimmedName.length < 2) {
@@ -177,7 +185,21 @@ export default function LeadFormSection() {
               }}
             />
             <div className="relative bg-card rounded-2xl p-6 sm:p-8 shadow-xl border border-border/30">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" autoComplete="on">
+                {/* Honeypot anti-bot — invisível para humanos */}
+                <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}>
+                  <label>
+                    Não preencha este campo
+                    <input
+                      type="text"
+                      name="website"
+                      tabIndex={-1}
+                      autoComplete="off"
+                      value={website}
+                      onChange={(e) => setWebsite(e.target.value)}
+                    />
+                  </label>
+                </div>
                 <Input placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} required minLength={2} maxLength={100} className="bg-background/50" />
                 <Input type="tel" placeholder="(00) 00000-0000" value={phone} onChange={handlePhoneChange} required className="bg-background/50" />
 

@@ -1,21 +1,19 @@
 // ========================================
 // Configuração centralizada do sistema
-// Altere os valores abaixo conforme necessário
 // ========================================
+//
+// SEGURANÇA: este arquivo é compilado para o bundle do cliente.
+// NUNCA armazene aqui senhas, tokens, chaves privadas ou qualquer
+// segredo. Use Lovable Cloud → Secrets para credenciais sensíveis.
+//
+// O cadastro do administrador é feito diretamente em Lovable Cloud →
+// Users (criação manual). Senhas são gerenciadas pelo Supabase Auth
+// e podem ser redefinidas via fluxo "Esqueci minha senha" na tela de
+// login (envia link de recuperação para o e-mail cadastrado).
 
 export const APP_CONFIG = {
   /** Número do WhatsApp para contato (com código do país) */
   whatsappNumber: '5571991026884',
-
-  /** Credenciais padrão do administrador
-   *  Use estas credenciais no primeiro acesso.
-   *  Após o login, altere a senha nas configurações do sistema.
-   *
-   *  Email: admin@cantinhodaroca.com
-   *  Senha: Admin@Roca2024!
-   */
-  adminEmail: 'admin@cantinhodaroca.com',
-  adminDefaultPassword: 'Admin@Roca2024!',
 
   /** Opções de status dos leads — funil comercial */
   leadStatuses: [

@@ -1,4 +1,5 @@
 import { FIELD_DICTIONARY, normalizeHeader, type CrmFieldKey } from '@/lib/ia/fieldDictionary';
+import { logger } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ColumnMapping {
@@ -64,7 +65,7 @@ export async function aiAssistMap(
       return { source: c.source, target: ai.target, confidence: ai.confidence, suggestedBy: 'ai' as const };
     });
   } catch (e) {
-    console.warn('aiAssistMap failed', e);
+    logger.warn('aiAssistMap failed', e);
     return current;
   }
 }

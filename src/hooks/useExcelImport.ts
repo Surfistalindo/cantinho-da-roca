@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { logger } from '@/lib/logger';
 import { parseExcelFile, type ParsedSheet } from '@/services/ia/excelParser';
 import { aiAssistMap, heuristicMap, type ColumnMapping } from '@/services/ia/columnMapper';
 import { normalizeAll, normalizeRow, type NormalizedLeadRow } from '@/services/ia/leadNormalizer';
@@ -87,7 +88,7 @@ export function useExcelImport(options: UseExcelImportOptions = {}) {
       try {
         mappings = await aiAssistMap(parsed.headers, parsed.rawRows.slice(0, 3), mappings);
       } catch (e) {
-        console.warn('IA mapping skipped', e);
+        logger.warn('IA mapping skipped', e);
       }
       setState((s) => ({
         ...s, step: 'mapping', parsed, mappings,
@@ -171,7 +172,7 @@ export function useExcelImport(options: UseExcelImportOptions = {}) {
         return { ...s, duplicates: dups };
       });
     } catch (e) {
-      console.warn('Failed to load existing leads', e);
+      logger.warn('Failed to load existing leads', e);
     }
   }, []);
 

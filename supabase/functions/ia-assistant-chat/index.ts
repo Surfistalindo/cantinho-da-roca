@@ -7,9 +7,10 @@
 import {
   authenticate,
   callAIGateway,
-  corsHeaders,
+  checkRateLimit,
+  getCorsHeaders,
   handlePreflight,
-  jsonResponse,
+  jsonResponseFor,
   mapAIGatewayError,
 } from "../_shared/aiGateway.ts";
 
@@ -197,10 +198,13 @@ Deno.serve(async (req) => {
     const auth = await authenticate(req);
     if (auth instanceof Response) return auth;
 
+    const limited = checkRateLimit(req, auth.userId);
+    if (limited) return limited;
+
     const body = await req.json().catch(() => ({}));
     const incoming: IncomingMsg[] = Array.isArray(body?.messages) ? body.messages : [];
     if (incoming.length === 0) {
-      return jsonResponse({ error: "messages_required" }, 400);
+      return jsonResponseFor(req, { error: "messages_required" }, 400);
     }
 
     // Conversa enviada para o LLM (acumulada com tool_calls e tool results)
@@ -226,7 +230,7 @@ Deno.serve(async (req) => {
       const choice = data?.choices?.[0];
       const message = choice?.message;
       if (!message) {
-        return jsonResponse({ error: "ai_empty_response" }, 500);
+        return jsonResponseFor(req, { error: "ai_empty_response" }, 500);
       }
 
       const toolCalls = message.tool_calls;
@@ -272,7 +276,7 @@ Deno.serve(async (req) => {
     const finalErr = mapAIGatewayError(finalResp);
     if (finalErr) return finalErr;
     if (!finalResp.body) {
-      return jsonResponse({ error: "no_stream_body" }, 500);
+      return jsonResponseFor(req, { error: "no_stream_body" }, 500);
     }
 
     // Prepende um evento custom com o trace das tools (linha SSE do tipo "data: {trace:...}")
@@ -290,8 +294,8 @@ Deno.serve(async (req) => {
             if (done) break;
             controller.enqueue(value);
           }
-        } catch (e) {
-          console.error("upstream stream error", e);
+        } catch {
+          // upstream stream error — silenciado em prod
         } finally {
           controller.close();
         }
@@ -300,14 +304,13 @@ Deno.serve(async (req) => {
 
     return new Response(stream, {
       headers: {
-        ...corsHeaders,
+        ...getCorsHeaders(req),
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
         Connection: "keep-alive",
       },
     });
   } catch (e) {
-    console.error("ia-assistant-chat error", e);
-    return jsonResponse({ error: e instanceof Error ? e.message : "unknown" }, 500);
+    return jsonResponseFor(req, { error: e instanceof Error ? e.message : "unknown" }, 500);
   }
 });

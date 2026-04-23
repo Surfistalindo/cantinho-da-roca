@@ -20,15 +20,11 @@ import {
   faSpinner,
   faEnvelope,
   faLock,
-  faCopy,
-  faCheck,
 } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import LeafSVG from '@/components/landing/LeafSVG';
 import logoCantinho from '@/assets/logo-cantinho.png';
-
-const SUPPORT_EMAIL = 'contato@voltzagency.com.br';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -38,8 +34,10 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const [shake, setShake] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const { signIn, session, loading: authLoading } = useAuth();
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+  const { signIn, session, loading: authLoading, resetPassword } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -76,13 +74,21 @@ export default function AdminLogin() {
     }
   };
 
-  const copyEmail = async () => {
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forgotEmail)) {
+      toast({ title: 'E-mail inválido', variant: 'destructive' });
+      return;
+    }
+    setForgotLoading(true);
     try {
-      await navigator.clipboard.writeText(SUPPORT_EMAIL);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
+      await resetPassword(forgotEmail);
+      setForgotSent(true);
     } catch {
-      toast({ title: 'Não foi possível copiar', variant: 'destructive' });
+      // Mensagem genérica para não vazar quais e-mails existem.
+      setForgotSent(true);
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -304,54 +310,55 @@ export default function AdminLogin() {
         </main>
       </div>
 
-      {/* Forgot password modal */}
-      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+      {/* Forgot password modal — fluxo real de reset por e-mail */}
+      <Dialog open={forgotOpen} onOpenChange={(open) => { setForgotOpen(open); if (!open) { setForgotSent(false); setForgotEmail(''); } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Recuperação de senha</DialogTitle>
+            <DialogTitle>Recuperar senha</DialogTitle>
             <DialogDescription>
-              Para redefinir sua senha, entre em contato com nosso suporte. Responderemos o mais rápido
-              possível.
+              Informe seu e-mail e enviaremos um link para você criar uma nova senha.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="rounded-lg border border-border bg-muted/60 p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-              E-mail de suporte
-            </p>
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-medium text-foreground break-all">{SUPPORT_EMAIL}</span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={copyEmail}
-                aria-label="Copiar e-mail de suporte"
-              >
-                {copied ? (
-                  <>
-                    <FontAwesomeIcon icon={faCheck} className="h-3.5 w-3.5" /> Copiado
-                  </>
-                ) : (
-                  <>
-                    <FontAwesomeIcon icon={faCopy} className="h-3.5 w-3.5" /> Copiar
-                  </>
-                )}
-              </Button>
+          {!forgotSent ? (
+            <form onSubmit={handleForgot} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="forgot-email" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  E-mail
+                </Label>
+                <div className="relative">
+                  <FontAwesomeIcon icon={faEnvelope} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="forgot-email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                    className="pl-10 h-11"
+                  />
+                </div>
+              </div>
+              <DialogFooter className="gap-2 sm:gap-2">
+                <Button type="button" variant="ghost" onClick={() => setForgotOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={forgotLoading}>
+                  {forgotLoading ? <><FontAwesomeIcon icon={faSpinner} spin className="h-4 w-4 mr-2" />Enviando…</> : 'Enviar link'}
+                </Button>
+              </DialogFooter>
+            </form>
+          ) : (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-border bg-muted/60 p-4 text-sm text-foreground">
+                Se este e-mail estiver cadastrado, você receberá um link para redefinir sua senha em alguns instantes. Verifique também a caixa de spam.
+              </div>
+              <DialogFooter>
+                <Button onClick={() => setForgotOpen(false)} className="w-full">Entendi</Button>
+              </DialogFooter>
             </div>
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button variant="ghost" onClick={() => setForgotOpen(false)}>
-              Fechar
-            </Button>
-            <Button asChild>
-              <a href={`mailto:${SUPPORT_EMAIL}?subject=Recupera%C3%A7%C3%A3o%20de%20senha%20-%20Cantinho%20da%20Ro%C3%A7a`}>
-                <FontAwesomeIcon icon={faEnvelope} className="h-4 w-4" />
-                Abrir e-mail
-              </a>
-            </Button>
-          </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
     </div>

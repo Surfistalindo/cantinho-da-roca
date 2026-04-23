@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export interface ImportLog {
   id: string;
@@ -45,7 +46,7 @@ export async function startImportLog(params: {
     .select('id')
     .single();
   if (error) {
-    console.warn('startImportLog failed', error);
+    logger.warn('startImportLog failed', error);
     return null;
   }
   return data?.id ?? null;
@@ -57,7 +58,7 @@ export async function updateImportLog(
   patch: Partial<Pick<ImportLog, 'created_count' | 'updated_count' | 'skipped_count' | 'error_count'>>,
 ): Promise<void> {
   const { error } = await supabase.from('ia_import_logs').update(patch).eq('id', id);
-  if (error) console.warn('updateImportLog failed', error);
+  if (error) logger.warn('updateImportLog failed', error);
 }
 
 /** Atualiza um log com o resultado final. */
@@ -75,5 +76,5 @@ export async function finishImportLog(
       finished_at: new Date().toISOString(),
     })
     .eq('id', id);
-  if (error) console.warn('finishImportLog failed', error);
+  if (error) logger.warn('finishImportLog failed', error);
 }

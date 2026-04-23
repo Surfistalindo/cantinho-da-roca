@@ -1,5 +1,5 @@
 // ia-parse-text — extrai leads estruturados de texto livre via Lovable AI Gateway.
-import { authenticate, callAIGateway, handlePreflight, jsonResponse, mapAIGatewayError } from "../_shared/aiGateway.ts";
+import { authenticate, callAIGateway, checkRateLimit, handlePreflight, jsonResponseFor, mapAIGatewayError } from "../_shared/aiGateway.ts";
 
 const MAX_INPUT_CHARS = 20_000;
 
@@ -11,10 +11,13 @@ Deno.serve(async (req) => {
     const auth = await authenticate(req);
     if (auth instanceof Response) return auth;
 
+    const limited = checkRateLimit(req, auth.userId);
+    if (limited) return limited;
+
     const body = await req.json().catch(() => ({}));
     const text: string = typeof body?.text === "string" ? body.text.slice(0, MAX_INPUT_CHARS) : "";
     if (!text.trim()) {
-      return jsonResponse({ error: "text_required", message: "Cole algum texto antes de extrair." }, 400);
+      return jsonResponseFor(req, { error: "text_required", message: "Cole algum texto antes de extrair." }, 400);
     }
 
     const systemPrompt = `Você é um extrator especialista de leads de CRM brasileiro. Receberá um texto livre (lista, e-mail, conversa, anotação) e deve extrair TODOS os possíveis leads mencionados.
@@ -25,7 +28,7 @@ Para cada lead identifique:
 - product_interest (produto/interesse mencionado; null se não claro)
 - notes (resumo de 1 frase com qualquer contexto extra relevante; null se nada)
 
-Não invente. Não duplique. Ignore linhas em branco.`;
+Datas em português podem aparecer em formatos BR (28/06/2025), US (6/28/25) ou ISO (2025-06-28). Não invente. Não duplique. Ignore linhas em branco.`;
 
     const aiResp = await callAIGateway({
       messages: [
@@ -72,9 +75,8 @@ Não invente. Não duplique. Ignore linhas em branco.`;
     const parsed = typeof args === "string" ? JSON.parse(args) : args;
     const leads = Array.isArray(parsed?.leads) ? parsed.leads : [];
 
-    return jsonResponse({ leads, count: leads.length });
+    return jsonResponseFor(req, { leads, count: leads.length });
   } catch (e) {
-    console.error("ia-parse-text error", e);
-    return jsonResponse({ error: e instanceof Error ? e.message : "unknown" }, 500);
+    return jsonResponseFor(req, { error: e instanceof Error ? e.message : "unknown" }, 500);
   }
 });
