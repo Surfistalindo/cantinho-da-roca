@@ -12,6 +12,8 @@ import DashboardPage from "./pages/admin/DashboardPage";
 import LeadsPage from "./pages/admin/LeadsPage";
 import PipelinePage from "./pages/admin/PipelinePage";
 import ClientsPage from "./pages/admin/ClientsPage";
+import IAHomePage from "./pages/admin/ia/IAHomePage";
+import IAExcelImportPage from "./pages/admin/ia/IAExcelImportPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +41,8 @@ const App = () => (
               <Route path="leads" element={<LeadsPage />} />
               <Route path="pipeline" element={<PipelinePage />} />
               <Route path="clients" element={<ClientsPage />} />
+              <Route path="ia" element={<IAHomePage />} />
+              <Route path="ia/excel" element={<IAExcelImportPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
