@@ -53,7 +53,17 @@ const INITIAL: UseExcelImportState = {
   detectedTemplate: null,
 };
 
-export function useExcelImport() {
+export interface UseExcelImportOptions {
+  /** Identificador da origem para logs (default: 'excel'). */
+  source?: string;
+  /** Parser customizado (default: parseExcelFile). Use para CSV/etc. */
+  parseFile?: (file: File) => Promise<ParsedSheet>;
+}
+
+export function useExcelImport(options: UseExcelImportOptions = {}) {
+  const source = options.source ?? 'excel';
+  const parseFile = options.parseFile ?? parseExcelFile;
+
   const [state, setState] = useState<UseExcelImportState>(() => ({
     ...INITIAL,
     defaultStrategy: loadDefaultStrategy(),
@@ -69,7 +79,7 @@ export function useExcelImport() {
   const handleFile = useCallback(async (file: File) => {
     setState((s) => ({ ...s, step: 'parsing', file, error: null }));
     try {
-      const parsed = await parseExcelFile(file);
+      const parsed = await parseFile(file);
       let mappings = heuristicMap(parsed.headers);
       // Detecta template salvo
       const match = detectMatchingTemplate(parsed.headers);
@@ -88,7 +98,7 @@ export function useExcelImport() {
       toast.error(msg);
       setState((s) => ({ ...s, step: 'error', error: msg }));
     }
-  }, []);
+  }, [parseFile]);
 
   const updateMapping = useCallback((source: string, target: ColumnMapping['target']) => {
     setState((s) => ({
@@ -194,6 +204,7 @@ export function useExcelImport() {
         snap.duplicates,
         snap.file?.name,
         (p) => setState((s) => ({ ...s, progress: p })),
+        source,
       );
       setState((s) => ({ ...s, step: 'done', result }));
       toast.success(`Importação concluída — ${result.created} criados`);
@@ -202,7 +213,7 @@ export function useExcelImport() {
       toast.error(msg);
       setState((s) => ({ ...s, step: 'error', error: msg }));
     }
-  }, []);
+  }, [source]);
 
   const back = useCallback(() => {
     setState((s) => {
