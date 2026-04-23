@@ -89,6 +89,12 @@ export function buildWhatsAppUrl(phone: string | null | undefined, message: stri
 
 export function pickSuggestedTemplate(lead: TemplateLead, opts?: { interactionCount?: number }): TemplateKey {
   const interactions = opts?.interactionCount ?? 0;
+
+  // Clientes (já compraram) → template de reativação.
+  if (lead.status === 'customer' || lead.product_bought) {
+    return 'customer_reactivation';
+  }
+
   const recency = getContactRecency(lead.last_contact_at ?? null, lead.status ?? 'new', lead.created_at ?? new Date().toISOString());
 
   if (recency.level === 'overdue') return 'reengagement';
