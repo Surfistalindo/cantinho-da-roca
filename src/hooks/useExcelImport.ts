@@ -98,7 +98,7 @@ export function useExcelImport(options: UseExcelImportOptions = {}) {
       toast.error(msg);
       setState((s) => ({ ...s, step: 'error', error: msg }));
     }
-  }, []);
+  }, [parseFile]);
 
   const updateMapping = useCallback((source: string, target: ColumnMapping['target']) => {
     setState((s) => ({
@@ -107,7 +107,7 @@ export function useExcelImport(options: UseExcelImportOptions = {}) {
         m.source === source ? { ...m, target, suggestedBy: 'manual' as const, confidence: 1 } : m,
       ),
     }));
-  }, [parseFile]);
+  }, []);
 
   /** Aplica novo mapeamento e re-normaliza todas as linhas (usado no painel inline). */
   const remapAndRevalidate = useCallback((newMappings: ColumnMapping[]) => {
