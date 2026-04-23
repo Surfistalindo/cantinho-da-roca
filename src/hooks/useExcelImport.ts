@@ -53,7 +53,17 @@ const INITIAL: UseExcelImportState = {
   detectedTemplate: null,
 };
 
-export function useExcelImport() {
+export interface UseExcelImportOptions {
+  /** Identificador da origem para logs (default: 'excel'). */
+  source?: string;
+  /** Parser customizado (default: parseExcelFile). Use para CSV/etc. */
+  parseFile?: (file: File) => Promise<ParsedSheet>;
+}
+
+export function useExcelImport(options: UseExcelImportOptions = {}) {
+  const source = options.source ?? 'excel';
+  const parseFile = options.parseFile ?? parseExcelFile;
+
   const [state, setState] = useState<UseExcelImportState>(() => ({
     ...INITIAL,
     defaultStrategy: loadDefaultStrategy(),
@@ -69,7 +79,7 @@ export function useExcelImport() {
   const handleFile = useCallback(async (file: File) => {
     setState((s) => ({ ...s, step: 'parsing', file, error: null }));
     try {
-      const parsed = await parseExcelFile(file);
+      const parsed = await parseFile(file);
       let mappings = heuristicMap(parsed.headers);
       // Detecta template salvo
       const match = detectMatchingTemplate(parsed.headers);
@@ -97,7 +107,7 @@ export function useExcelImport() {
         m.source === source ? { ...m, target, suggestedBy: 'manual' as const, confidence: 1 } : m,
       ),
     }));
-  }, []);
+  }, [parseFile]);
 
   /** Aplica novo mapeamento e re-normaliza todas as linhas (usado no painel inline). */
   const remapAndRevalidate = useCallback((newMappings: ColumnMapping[]) => {
