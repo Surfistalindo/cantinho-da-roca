@@ -141,7 +141,7 @@ export default function DashboardPage() {
     { icon: faUserGroup, label: 'Total de Leads', value: stats.total, description: `${stats.last7d} nos últimos 7 dias`, accent: 'text-primary bg-primary/10' },
     { icon: faFire, label: 'Leads Quentes', value: stats.hot, description: 'Alta prioridade comercial', accent: 'text-destructive bg-destructive/10', href: '/admin/leads?priority=hot' },
     { icon: faArrowTrendUp, label: 'Conversão', value: `${stats.conversionRate}%`, description: `${stats.sold} fechados · ${customerCount} no cadastro`, accent: 'text-success bg-success-soft' },
-    { icon: faTriangleExclamation, label: 'Atrasados', value: stats.overdue, description: '7+ dias ou nunca contatado', accent: 'text-destructive bg-destructive/10', href: '/admin/leads?recency=overdue' },
+    { icon: faPhoneSlash, label: 'Sem resposta', value: stats.noResponse, description: `${stats.overdue} atrasados no total`, accent: 'text-destructive bg-destructive/10', href: '/admin/leads?recency=overdue&status=contacting' },
   ];
 
   // Distribuição: barra segmentada
@@ -150,7 +150,7 @@ export default function DashboardPage() {
     { label: 'Em contato', value: stats.contacting, className: 'bg-primary', icon: faComments },
     { label: 'Negociação', value: stats.negotiating, className: 'bg-warning', icon: faChartColumn },
     { label: 'Clientes', value: stats.sold, className: 'bg-success', icon: faUserCheck },
-    { label: 'Perdidos', value: stats.noResponse, className: 'bg-muted-foreground/40', icon: faPhoneSlash },
+    { label: 'Perdidos', value: stats.lostCount, className: 'bg-muted-foreground/40', icon: faPhoneSlash },
   ];
   const distTotal = segments.reduce((a, s) => a + s.value, 0) || 1;
 
