@@ -2,15 +2,17 @@ import {
   faHandshake,
   faClockRotateLeft,
   faRotateRight,
+  faHeart,
 } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { getContactRecency } from '@/lib/contactRecency';
 
-export type TemplateKey = 'first_contact' | 'follow_up' | 'reengagement';
+export type TemplateKey = 'first_contact' | 'follow_up' | 'reengagement' | 'customer_reactivation';
 
 export interface TemplateLead {
   name: string;
   product_interest?: string | null;
+  product_bought?: string | null;
   status?: string;
   last_contact_at?: string | null;
   created_at?: string;
@@ -31,6 +33,11 @@ function firstName(name: string) {
 function interestPart(lead: TemplateLead) {
   const i = lead.product_interest?.trim();
   return i ? ` no(a) ${i}` : '';
+}
+
+function boughtPart(lead: TemplateLead) {
+  const i = lead.product_bought?.trim();
+  return i ? ` o(a) ${i}` : ' nossos produtos';
 }
 
 export const WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
@@ -57,6 +64,14 @@ export const WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
     description: 'Lead frio, sem contato há muito tempo.',
     build: (lead) =>
       `Olá ${firstName(lead.name)}! Faz um tempinho que não conversamos. Estamos com novidades por aqui e lembrei de você — ainda posso te ajudar com${interestPart(lead) || ' o que precisar'}? 🌱`,
+  },
+  {
+    key: 'customer_reactivation',
+    label: 'Reativar cliente',
+    icon: faHeart,
+    description: 'Para clientes inativos — convite carinhoso para voltar.',
+    build: (lead) =>
+      `Oi ${firstName(lead.name)}! 🌿 Faz um tempo que você não passa por aqui. Queria saber se ainda está gostando${boughtPart(lead)} e te avisar que temos novidades fresquinhas que podem te interessar. Posso te mostrar?`,
   },
 ];
 
