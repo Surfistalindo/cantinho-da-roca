@@ -308,6 +308,7 @@ export function useExcelImport(options: UseExcelImportOptions = {}) {
       const tplMap = new Map(tpl.mappings.map((m) => [m.source.toLowerCase(), m.target]));
       let bySheet = s.mappingsBySheet;
       for (const h of s.parsed.headers) {
+        if (h === '__sheet') continue;
         const target = tplMap.get(h.toLowerCase());
         if (target) bySheet = overrideInAllSheets(bySheet, h, target);
       }
