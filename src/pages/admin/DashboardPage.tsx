@@ -346,10 +346,12 @@ export default function DashboardPage() {
               })}
             </ul>
           )}
-        </div>
       </div>
 
-      {/* Atalhos */}
+      {/* Fila de reengajamento */}
+      <ReengagementQueue candidates={reengagementCandidates} onSent={fetchData} />
+
+
       <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
