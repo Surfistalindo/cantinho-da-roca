@@ -1,8 +1,9 @@
+import { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faFileExcel, faFileCsv, faClipboard, faClone, faTag, faChartSimple,
   faRobot, faComments, faLightbulb, faUpload, faWandMagicSparkles, faCircleCheck,
-  faArrowRight, faBolt, faShieldHalved, faLayerGroup, faBroom, faSitemap,
+  faArrowRight, faBolt, faShieldHalved, faLayerGroup, faBroom, faSitemap, faFire,
 } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
@@ -11,6 +12,7 @@ import IAFeatureCard from '@/components/ia/IAFeatureCard';
 import IAPageShell from '@/components/ia/IAPageShell';
 import ImportHistoryCard from '@/components/ia/excel/ImportHistoryCard';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CapabilitySection {
   id: string;
@@ -49,21 +51,24 @@ const CAPABILITIES: CapabilitySection[] = [
       {
         icon: faFileCsv,
         title: 'CSV avançado',
-        description: 'Importação otimizada de arquivos CSV grandes com detecção automática de delimitador e codificação.',
-        status: 'soon',
+        description: 'Importação otimizada de arquivos CSV com detecção automática de delimitador e codificação.',
+        status: 'available',
+        to: '/admin/ia/csv',
         accentClass: 'from-info/20 to-info/5 text-info',
       },
       {
         icon: faClipboard,
         title: 'Texto colado',
         description: 'Cole uma lista de contatos direto do bloco de notas e a IA extrai os leads automaticamente.',
-        status: 'soon',
+        status: 'available',
+        to: '/admin/ia/paste',
       },
       {
         icon: faWhatsapp,
         title: 'Lista do WhatsApp',
         description: 'Importe contatos copiados de conversas e grupos do WhatsApp diretamente para o CRM.',
-        status: 'soon',
+        status: 'available',
+        to: '/admin/ia/whatsapp',
         accentClass: 'from-success/20 to-success/5 text-success',
       },
     ],
@@ -103,7 +108,7 @@ const CAPABILITIES: CapabilitySection[] = [
     features: [
       {
         icon: faClone,
-        title: 'Detecção por telefone e nome',
+        title: 'Na importação',
         description: 'A IA confronta cada linha com a base atual e propõe ignorar, atualizar ou mesclar.',
         status: 'available',
         to: '/admin/ia/excel',
@@ -114,7 +119,8 @@ const CAPABILITIES: CapabilitySection[] = [
         icon: faSitemap,
         title: 'Duplicados em todo o CRM',
         description: 'Varredura completa da base para encontrar e mesclar leads duplicados existentes.',
-        status: 'soon',
+        status: 'available',
+        to: '/admin/ia/duplicates',
       },
     ],
   },
@@ -129,13 +135,15 @@ const CAPABILITIES: CapabilitySection[] = [
         icon: faTag,
         title: 'Sugestão de status',
         description: 'A IA analisa o histórico do lead e sugere automaticamente o estágio correto no funil.',
-        status: 'soon',
+        status: 'available',
+        to: '/admin/ia/classify',
       },
       {
         icon: faChartSimple,
         title: 'Score automático',
         description: 'Pontuação dinâmica baseada em interações, recência e padrões reais de conversão da base.',
-        status: 'soon',
+        status: 'available',
+        to: '/admin/ia/score',
         accentClass: 'from-warning/20 to-warning/5 text-warning',
       },
     ],
@@ -149,23 +157,26 @@ const CAPABILITIES: CapabilitySection[] = [
     features: [
       {
         icon: faRobot,
-        title: 'Follow-up automático',
+        title: 'Follow-up sugerido',
         description: 'Mensagens personalizadas geradas com IA para reengajar leads parados no funil.',
-        status: 'soon',
+        status: 'available',
+        to: '/admin/ia/insights',
         accentClass: 'from-info/20 to-info/5 text-info',
       },
       {
         icon: faComments,
         title: 'Assistente comercial',
-        description: 'Chat com IA para responder dúvidas sobre seus leads, sugerir abordagens e revisar mensagens.',
-        status: 'soon',
+        description: 'Chat com IA com acesso aos seus leads e interações para responder, sugerir e analisar.',
+        status: 'available',
+        to: '/admin/ia/assistant',
+        tag: 'RAG',
       },
     ],
   },
   {
     id: 'insights',
     eyebrow: '06 · Capacidade',
-    title: 'Insights Futuros',
+    title: 'Insights da Base',
     description: 'Resumos, padrões e descobertas geradas a partir da sua própria base.',
     icon: faLightbulb,
     features: [
@@ -173,89 +184,134 @@ const CAPABILITIES: CapabilitySection[] = [
         icon: faLightbulb,
         title: 'Resumos de leads',
         description: 'Resumos automáticos do histórico de cada lead e sugestão dos próximos passos comerciais.',
-        status: 'soon',
+        status: 'available',
+        to: '/admin/ia/insights',
         accentClass: 'from-warning/20 to-warning/5 text-warning',
       },
     ],
   },
 ];
 
+interface AIHealthStats {
+  total: number;
+  withScore: number;
+  withSummary: number;
+  hot: number;
+}
+
 export default function IAHomePage() {
+  const [stats, setStats] = useState<AIHealthStats | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('leads')
+        .select('id, ai_score, ai_summary');
+      if (!data) return;
+      const total = data.length;
+      const withScore = data.filter((l: any) => l.ai_score != null).length;
+      const withSummary = data.filter((l: any) => l.ai_summary != null && l.ai_summary !== '').length;
+      const hot = data.filter((l: any) => (l.ai_score ?? 0) >= 80).length;
+      setStats({ total, withScore, withSummary, hot });
+    })();
+  }, []);
+
   return (
     <IAPageShell
       title="Central de Inteligência"
-      subtitle="A camada inteligente do CRM. Importe, normalize, deduplique e descubra insights — com a IA fazendo o trabalho pesado por você."
+      subtitle="A camada inteligente do CRM. Importe, normalize, deduplique, pontue e converse com sua base — com a IA fazendo o trabalho pesado."
       actions={
         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ia-chip-shimmer text-primary text-[10.5px] font-bold uppercase tracking-[0.12em]">
           <FontAwesomeIcon icon={faWandMagicSparkles} className="h-2.5 w-2.5" />
-          IA · Beta
+          IA · Suite
         </span>
       }
     >
       <div className="space-y-10">
-        {/* ============== HERO / SPOTLIGHT ============== */}
+        {/* ============== HERO ============== */}
         <section className="relative overflow-hidden rounded-3xl ia-hero-card p-6 sm:p-8 md:p-10">
           <div className="absolute inset-0 ia-grid-bg pointer-events-none" aria-hidden />
           <div className="relative grid gap-8 md:grid-cols-[1.4fr_1fr] items-center">
             <div className="space-y-5">
               <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-success-soft text-success text-[10.5px] font-semibold uppercase tracking-[0.1em]">
                 <span className="h-1.5 w-1.5 rounded-full bg-success ia-dot-live" />
-                Recurso ativo
+                Suíte de IA · 9 módulos
               </span>
               <div className="space-y-3">
                 <h2 className="text-[26px] sm:text-[30px] md:text-[34px] font-semibold tracking-tight text-foreground leading-[1.1]">
-                  Importação inteligente de planilhas com{' '}
+                  Sua base, agora com{' '}
                   <span className="bg-gradient-to-r from-primary via-primary to-info bg-clip-text text-transparent">
-                    Excel + IA
+                    inteligência embutida
                   </span>
                 </h2>
                 <p className="text-[13.5px] sm:text-[14px] text-muted-foreground leading-relaxed max-w-xl">
-                  Envie um arquivo, deixe a IA mapear as colunas, normalizar telefones, detectar duplicados
-                  e preparar tudo. Você só confirma.
+                  Importe de qualquer origem, deixe a IA classificar, pontuar e resumir cada lead. Converse
+                  com seu CRM como se fosse um analista comercial.
                 </p>
               </div>
               <div className="flex items-center gap-3 flex-wrap pt-1">
                 <Button asChild size="lg" className="group h-11 px-5 rounded-xl">
                   <Link to="/admin/ia/excel">
                     <FontAwesomeIcon icon={faFileExcel} className="h-4 w-4 mr-2" />
-                    Abrir Importação Excel
+                    Importar planilha
                     <FontAwesomeIcon icon={faArrowRight} className="h-3.5 w-3.5 ml-2 group-hover:translate-x-0.5 transition-transform" />
                   </Link>
                 </Button>
-                <span className="text-[11.5px] text-muted-foreground inline-flex items-center gap-1.5">
-                  <FontAwesomeIcon icon={faShieldHalved} className="h-3 w-3" />
-                  Seus dados nunca saem do CRM
-                </span>
+                <Button asChild size="lg" variant="outline" className="h-11 px-5 rounded-xl">
+                  <Link to="/admin/ia/assistant">
+                    <FontAwesomeIcon icon={faComments} className="h-4 w-4 mr-2" />
+                    Abrir Assistente IA
+                  </Link>
+                </Button>
               </div>
             </div>
 
-            {/* Spotlight panel */}
+            {/* Saúde da base */}
             <div className="relative">
               <div className="rounded-2xl border bg-card/80 backdrop-blur-sm p-5 shadow-card">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-success/20 to-success/5 text-success flex items-center justify-center ring-1 ring-success/20">
-                    <FontAwesomeIcon icon={faFileExcel} className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-[13.5px] font-semibold text-foreground">Excel · CSV</p>
-                    <p className="text-[11px] text-muted-foreground">Pronto para usar agora</p>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 text-primary flex items-center justify-center ring-1 ring-primary/20">
+                      <FontAwesomeIcon icon={faChartSimple} className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-semibold text-foreground">Saúde da base</p>
+                      <p className="text-[10.5px] text-muted-foreground">Cobertura de IA</p>
+                    </div>
                   </div>
                 </div>
-                <ul className="space-y-2.5">
-                  {[
-                    { icon: faBolt, label: 'Mapeamento automático de colunas' },
-                    { icon: faLayerGroup, label: 'Normalização de telefone, datas e status' },
-                    { icon: faClone, label: 'Detecção e fusão de duplicados' },
-                    { icon: faCircleCheck, label: 'Importação revisável em 1 clique' },
-                  ].map((f) => (
-                    <li key={f.label} className="flex items-center gap-2.5 text-[12.5px] text-foreground/85">
-                      <span className="h-6 w-6 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                        <FontAwesomeIcon icon={f.icon} className="h-3 w-3" />
+                <div className="grid grid-cols-3 gap-2">
+                  <HealthKPI
+                    icon={faChartSimple}
+                    label="Com score"
+                    value={stats ? `${pct(stats.withScore, stats.total)}%` : '—'}
+                    sub={stats ? `${stats.withScore}/${stats.total}` : ''}
+                  />
+                  <HealthKPI
+                    icon={faLightbulb}
+                    label="Com resumo"
+                    value={stats ? `${pct(stats.withSummary, stats.total)}%` : '—'}
+                    sub={stats ? `${stats.withSummary}/${stats.total}` : ''}
+                  />
+                  <HealthKPI
+                    icon={faFire}
+                    label="Quentes ≥80"
+                    value={stats ? String(stats.hot) : '—'}
+                    sub={stats ? `de ${stats.total}` : ''}
+                    accent="text-warning"
+                  />
+                </div>
+                <div className="mt-3 pt-3 border-t border-border/60">
+                  <Button asChild size="sm" variant="ghost" className="w-full justify-between h-8 text-[12px]">
+                    <Link to="/admin/ia/score">
+                      <span className="inline-flex items-center gap-1.5">
+                        <FontAwesomeIcon icon={faBolt} className="h-3 w-3" />
+                        Atualizar tudo agora
                       </span>
-                      {f.label}
-                    </li>
-                  ))}
-                </ul>
+                      <FontAwesomeIcon icon={faArrowRight} className="h-3 w-3" />
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -302,9 +358,9 @@ export default function IAHomePage() {
               description="Do upload à confirmação, o fluxo foi desenhado para ser previsível e rápido."
             />
             <div className="grid gap-5 md:grid-cols-3 mt-2">
-              <Step n={1} icon={faUpload} title="Você envia" desc="Faça upload da planilha ou cole uma lista. Aceitamos .xlsx, .xls e .csv." />
-              <Step n={2} icon={faWandMagicSparkles} title="A IA interpreta" desc="Colunas mapeadas, dados normalizados, duplicados detectados — automaticamente." />
-              <Step n={3} icon={faCircleCheck} title="Você confirma" desc="Revise o resumo, ajuste o que precisar e importe tudo com 1 clique." />
+              <Step n={1} icon={faUpload} title="Você envia" desc="Faça upload da planilha ou cole uma lista. Aceitamos .xlsx, .xls, .csv e texto livre." />
+              <Step n={2} icon={faWandMagicSparkles} title="A IA interpreta" desc="Colunas mapeadas, dados normalizados, duplicados detectados, score e resumo gerados." />
+              <Step n={3} icon={faCircleCheck} title="Você confirma" desc="Revise, converse com o Assistente, ajuste o que precisar e ative tudo com 1 clique." />
             </div>
           </div>
         </section>
@@ -314,6 +370,24 @@ export default function IAHomePage() {
 }
 
 /* ----------- helpers ----------- */
+
+function pct(part: number, total: number) {
+  if (!total) return 0;
+  return Math.round((part / total) * 100);
+}
+
+function HealthKPI({
+  icon, label, value, sub, accent = 'text-foreground',
+}: { icon: IconDefinition; label: string; value: string; sub?: string; accent?: string }) {
+  return (
+    <div className="rounded-lg border bg-card/60 p-2.5 text-center">
+      <FontAwesomeIcon icon={icon} className={`h-3 w-3 ${accent} opacity-70 mb-1`} />
+      <p className={`text-[16px] font-semibold tabular-nums ${accent}`}>{value}</p>
+      <p className="text-[9.5px] uppercase tracking-wider text-muted-foreground/80 mt-0.5 truncate">{label}</p>
+      {sub && <p className="text-[9px] text-muted-foreground/60 font-mono mt-0.5">{sub}</p>}
+    </div>
+  );
+}
 
 function SectionHeader({
   eyebrow, title, description, icon,
