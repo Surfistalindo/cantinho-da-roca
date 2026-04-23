@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowRight, faLock, faSparkles } from '@fortawesome/free-solid-svg-icons';
+import { faArrowRight, faLock, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -67,7 +67,7 @@ export default function IAFeatureCard({
         <h3 className="text-[15.5px] font-semibold text-foreground tracking-tight">{title}</h3>
         {tag && (
           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/8 text-primary text-[9.5px] font-medium uppercase tracking-wider">
-            <FontAwesomeIcon icon={faSparkles} className="h-2 w-2" />
+            <FontAwesomeIcon icon={faWandMagicSparkles} className="h-2 w-2" />
             {tag}
           </span>
         )}
