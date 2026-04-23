@@ -204,6 +204,7 @@ export function useExcelImport(options: UseExcelImportOptions = {}) {
         snap.duplicates,
         snap.file?.name,
         (p) => setState((s) => ({ ...s, progress: p })),
+        source,
       );
       setState((s) => ({ ...s, step: 'done', result }));
       toast.success(`Importação concluída — ${result.created} criados`);
@@ -212,7 +213,7 @@ export function useExcelImport(options: UseExcelImportOptions = {}) {
       toast.error(msg);
       setState((s) => ({ ...s, step: 'error', error: msg }));
     }
-  }, []);
+  }, [source]);
 
   const back = useCallback(() => {
     setState((s) => {
