@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { NormalizedLeadRow } from './leadNormalizer';
 import type { DuplicateMatch } from './duplicateDetector';
+import { startImportLog, finishImportLog } from './importLogService';
 
 export interface ImportProgress {
   processed: number;
@@ -35,6 +36,13 @@ export async function executeImport(
 
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
+
+  // Cria log inicial (status "em andamento") — UI pode listar enquanto roda
+  const logId = await startImportLog({
+    source: 'excel',
+    filename: filename ?? null,
+    total_rows: total,
+  });
 
   for (let i = 0; i < validRows.length; i += BATCH_SIZE) {
     const batch = validRows.slice(i, i + BATCH_SIZE);
@@ -125,18 +133,13 @@ export async function executeImport(
     }));
   }
 
-  // Log de importação
-  if (userId) {
-    await supabase.from('ia_import_logs').insert({
-      user_id: userId,
-      source: 'excel',
-      filename: filename ?? null,
-      total_rows: total,
-      created_count: result.created,
-      updated_count: result.updated,
-      skipped_count: result.skipped,
-      error_count: result.errors,
-      finished_at: new Date().toISOString(),
+  // Finaliza log de importação (atualiza linha existente)
+  if (logId) {
+    await finishImportLog(logId, {
+      created: result.created,
+      updated: result.updated,
+      skipped: result.skipped,
+      errors: result.errors,
     });
   }
 

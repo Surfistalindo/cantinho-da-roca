@@ -1,5 +1,10 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSpinner, faArrowRight, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+import {
+  faSpinner, faArrowRight, faTriangleExclamation, faArrowLeft,
+  faCloudArrowUp, faTableList, faWandMagicSparkles, faShieldHalved,
+  faClone, faCircleCheck,
+} from '@fortawesome/free-solid-svg-icons';
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import IAPageShell from '@/components/ia/IAPageShell';
 import ExcelDropzone from '@/components/ia/excel/ExcelDropzone';
 import ExcelPreviewTable from '@/components/ia/excel/ExcelPreviewTable';
@@ -8,22 +13,35 @@ import ImportSummary from '@/components/ia/excel/ImportSummary';
 import DuplicateResolver from '@/components/ia/excel/DuplicateResolver';
 import ImportProgress from '@/components/ia/excel/ImportProgress';
 import ImportResultView from '@/components/ia/excel/ImportResult';
+import ImportHistoryCard from '@/components/ia/excel/ImportHistoryCard';
 import { Button } from '@/components/ui/button';
 import { useExcelImport } from '@/hooks/useExcelImport';
 import { cn } from '@/lib/utils';
 
-const STEPS = [
-  { key: 'upload', label: 'Upload' },
-  { key: 'mapping', label: 'Mapeamento' },
-  { key: 'review', label: 'Revisão' },
-  { key: 'import', label: 'Confirmação' },
+interface StepDef {
+  key: string;
+  label: string;
+  short: string;
+  icon: IconDefinition;
+}
+
+const STEPS: StepDef[] = [
+  { key: 'upload',    label: 'Upload do arquivo',         short: 'Upload',     icon: faCloudArrowUp },
+  { key: 'preview',   label: 'Leitura e preview',         short: 'Preview',    icon: faTableList },
+  { key: 'mapping',   label: 'Mapeamento inteligente',    short: 'Mapeamento', icon: faWandMagicSparkles },
+  { key: 'review',    label: 'Validação e normalização',  short: 'Revisão',    icon: faShieldHalved },
+  { key: 'duplicate', label: 'Análise de duplicados',     short: 'Duplicados', icon: faClone },
+  { key: 'confirm',   label: 'Confirmação e relatório',   short: 'Resultado',  icon: faCircleCheck },
 ];
 
 function stepIndex(s: string): number {
-  if (s === 'idle' || s === 'parsing') return 0;
-  if (s === 'mapping') return 1;
-  if (s === 'reviewing' || s === 'resolving_duplicates') return 2;
-  return 3;
+  if (s === 'idle') return 0;
+  if (s === 'parsing') return 1;
+  if (s === 'mapping') return 2;
+  if (s === 'reviewing') return 3;
+  if (s === 'resolving_duplicates') return 4;
+  // importing | done | error
+  return 5;
 }
 
 export default function IAExcelImportPage() {
@@ -31,51 +49,100 @@ export default function IAExcelImportPage() {
   const { state } = im;
   const idx = stepIndex(state.step);
   const hasNameMapping = state.mappings.some((m) => m.target === 'name');
+  const currentStep = STEPS[idx];
 
   return (
     <IAPageShell
       title="Importação inteligente — Excel"
-      subtitle="Envie sua planilha. A IA interpreta as colunas, valida e prepara a importação."
+      subtitle="Envie sua planilha. A IA interpreta as colunas, normaliza dados, detecta duplicados e prepara a importação."
       breadcrumbs={[{ label: 'Excel' }]}
       backTo="/admin/ia"
+      actions={
+        state.step !== 'idle' && state.step !== 'done' && state.step !== 'error' ? (
+          <Button variant="ghost" size="sm" onClick={im.reset} className="text-muted-foreground hover:text-foreground">
+            <FontAwesomeIcon icon={faArrowLeft} className="h-3 w-3 mr-1.5" />
+            Cancelar
+          </Button>
+        ) : null
+      }
     >
-      {/* Stepper */}
-      <div className="mb-6 rounded-xl border bg-card p-4">
-        <ol className="flex items-center justify-between gap-2">
+      {/* ============= STEPPER ============= */}
+      <div className="mb-6 rounded-2xl border bg-card p-4 sm:p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <FontAwesomeIcon icon={currentStep.icon} className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <div className="text-[10px] uppercase tracking-[0.14em] font-semibold text-muted-foreground">
+                Etapa {idx + 1} de {STEPS.length}
+              </div>
+              <div className="text-[14px] font-semibold text-foreground truncate">{currentStep.label}</div>
+            </div>
+          </div>
+          <div className="text-[11px] font-mono text-muted-foreground hidden sm:block">
+            {Math.round(((idx + 1) / STEPS.length) * 100)}%
+          </div>
+        </div>
+
+        <ol className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
           {STEPS.map((s, i) => {
             const active = i === idx;
             const done = i < idx;
             return (
-              <li key={s.key} className="flex-1 flex items-center gap-2 min-w-0">
-                <span className={cn(
-                  'h-7 w-7 rounded-full flex items-center justify-center text-[11px] font-mono font-semibold shrink-0 border',
-                  active && 'bg-primary text-primary-foreground border-primary',
-                  done && 'bg-success text-success-foreground border-success',
-                  !active && !done && 'bg-muted text-muted-foreground border-border',
-                )}>{i + 1}</span>
-                <span className={cn(
-                  'text-[12.5px] font-medium truncate',
-                  active ? 'text-foreground' : 'text-muted-foreground',
-                )}>{s.label}</span>
-                {i < STEPS.length - 1 && (
-                  <span className="flex-1 h-px bg-border ml-2 hidden sm:block" />
+              <li
+                key={s.key}
+                className={cn(
+                  'flex items-center gap-2 rounded-lg px-2.5 py-2 border transition-colors',
+                  active && 'border-primary/40 bg-primary/5',
+                  done && 'border-success/30 bg-success-soft/40',
+                  !active && !done && 'border-border bg-muted/20',
                 )}
+              >
+                <span
+                  className={cn(
+                    'h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-mono font-semibold shrink-0',
+                    active && 'bg-primary text-primary-foreground',
+                    done && 'bg-success text-success-foreground',
+                    !active && !done && 'bg-muted text-muted-foreground',
+                  )}
+                >
+                  {done ? <FontAwesomeIcon icon={faCircleCheck} className="h-2.5 w-2.5" /> : i + 1}
+                </span>
+                <span
+                  className={cn(
+                    'text-[11px] font-medium truncate',
+                    active ? 'text-foreground' : done ? 'text-success' : 'text-muted-foreground',
+                  )}
+                >
+                  {s.short}
+                </span>
               </li>
             );
           })}
         </ol>
       </div>
 
-      {state.step === 'idle' && <ExcelDropzone onFile={im.handleFile} />}
-
-      {state.step === 'parsing' && (
-        <div className="rounded-xl border bg-card p-12 text-center">
-          <FontAwesomeIcon icon={faSpinner} spin className="h-7 w-7 text-primary mb-3" />
-          <p className="text-[13.5px] text-foreground font-medium">Lendo e interpretando planilha…</p>
-          <p className="text-[12px] text-muted-foreground mt-1">A IA está sugerindo o mapeamento de colunas.</p>
+      {/* ============= ETAPA 1 — UPLOAD ============= */}
+      {state.step === 'idle' && (
+        <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
+          <ExcelDropzone onFile={im.handleFile} />
+          <ImportHistoryCard limit={5} compact />
         </div>
       )}
 
+      {/* ============= ETAPA 2 — PARSING ============= */}
+      {state.step === 'parsing' && (
+        <div className="rounded-2xl border bg-card p-12 text-center">
+          <FontAwesomeIcon icon={faSpinner} spin className="h-7 w-7 text-primary mb-3" />
+          <p className="text-[13.5px] text-foreground font-medium">Lendo e interpretando planilha…</p>
+          <p className="text-[12px] text-muted-foreground mt-1">
+            A IA está sugerindo o mapeamento de colunas.
+          </p>
+        </div>
+      )}
+
+      {/* ============= ETAPA 3 — MAPEAMENTO ============= */}
       {state.step === 'mapping' && state.parsed && (
         <div className="space-y-4">
           <div className="grid gap-4 lg:grid-cols-[1fr_400px]">
@@ -88,29 +155,30 @@ export default function IAExcelImportPage() {
               Você precisa mapear ao menos uma coluna como <strong>Nome</strong> para continuar.
             </div>
           )}
-          <div className="flex items-center justify-between gap-3">
-            <Button variant="ghost" onClick={im.back}>Trocar arquivo</Button>
-            <Button onClick={im.goToReview} disabled={!hasNameMapping}>
-              Revisar dados
-              <FontAwesomeIcon icon={faArrowRight} className="h-3.5 w-3.5 ml-2" />
-            </Button>
-          </div>
+          <FlowActions
+            backLabel="Trocar arquivo"
+            onBack={im.back}
+            nextLabel="Validar e revisar"
+            onNext={im.goToReview}
+            nextDisabled={!hasNameMapping}
+          />
         </div>
       )}
 
+      {/* ============= ETAPA 4 — REVISÃO ============= */}
       {state.step === 'reviewing' && (
         <div className="space-y-4">
           <ImportSummary rows={state.normalized} duplicates={state.duplicates} />
-          <div className="flex items-center justify-between gap-3">
-            <Button variant="ghost" onClick={im.back}>Voltar</Button>
-            <Button onClick={state.duplicates.length > 0 ? im.goToDuplicates : im.runImport}>
-              {state.duplicates.length > 0 ? 'Resolver duplicados' : 'Confirmar importação'}
-              <FontAwesomeIcon icon={faArrowRight} className="h-3.5 w-3.5 ml-2" />
-            </Button>
-          </div>
+          <FlowActions
+            backLabel="Voltar ao mapeamento"
+            onBack={im.back}
+            nextLabel={state.duplicates.length > 0 ? 'Resolver duplicados' : 'Confirmar importação'}
+            onNext={state.duplicates.length > 0 ? im.goToDuplicates : im.runImport}
+          />
         </div>
       )}
 
+      {/* ============= ETAPA 5 — DUPLICADOS ============= */}
       {state.step === 'resolving_duplicates' && (
         <div className="space-y-4">
           <DuplicateResolver
@@ -119,24 +187,26 @@ export default function IAExcelImportPage() {
             onChange={im.updateDuplicateStrategy}
             onApplyAll={im.applyAllDuplicateStrategy}
           />
-          <div className="flex items-center justify-between gap-3">
-            <Button variant="ghost" onClick={im.back}>Voltar</Button>
-            <Button onClick={im.runImport}>
-              Confirmar importação
-              <FontAwesomeIcon icon={faArrowRight} className="h-3.5 w-3.5 ml-2" />
-            </Button>
-          </div>
+          <FlowActions
+            backLabel="Voltar à revisão"
+            onBack={im.back}
+            nextLabel="Confirmar importação"
+            onNext={im.runImport}
+          />
         </div>
       )}
 
+      {/* ============= ETAPA 6a — IMPORTING ============= */}
       {state.step === 'importing' && <ImportProgress progress={state.progress} />}
 
+      {/* ============= ETAPA 6b — DONE ============= */}
       {state.step === 'done' && state.result && (
         <ImportResultView result={state.result} onRestart={im.reset} />
       )}
 
+      {/* ============= ERRO ============= */}
       {state.step === 'error' && (
-        <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-6 text-center">
+        <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 text-center">
           <FontAwesomeIcon icon={faTriangleExclamation} className="h-6 w-6 text-destructive mb-2" />
           <h3 className="text-[15px] font-semibold text-foreground mb-1">Algo deu errado</h3>
           <p className="text-[12.5px] text-muted-foreground mb-4">{state.error ?? 'Erro desconhecido'}</p>
@@ -144,5 +214,28 @@ export default function IAExcelImportPage() {
         </div>
       )}
     </IAPageShell>
+  );
+}
+
+function FlowActions({
+  backLabel, onBack, nextLabel, onNext, nextDisabled,
+}: {
+  backLabel: string;
+  onBack: () => void;
+  nextLabel: string;
+  onNext: () => void;
+  nextDisabled?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 pt-1">
+      <Button variant="ghost" onClick={onBack} className="gap-2">
+        <FontAwesomeIcon icon={faArrowLeft} className="h-3 w-3" />
+        {backLabel}
+      </Button>
+      <Button onClick={onNext} disabled={nextDisabled} className="gap-2">
+        {nextLabel}
+        <FontAwesomeIcon icon={faArrowRight} className="h-3.5 w-3.5" />
+      </Button>
+    </div>
   );
 }
