@@ -8,8 +8,19 @@ import {
   faWandMagicSparkles,
   faUpRightFromSquare,
   faArrowRightFromBracket,
+  faChevronDown,
+  faFileExcel,
+  faFileCsv,
+  faClipboard,
+  faClone,
+  faTag,
+  faChartSimple,
+  faComments,
+  faLightbulb,
 } from '@fortawesome/free-solid-svg-icons';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { NavLink } from '@/components/NavLink';
+import { useLocation } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
@@ -38,7 +49,19 @@ const menuItems: { title: string; url: string; icon: IconDefinition; key: string
   { title: 'Leads', url: '/admin/leads', icon: faUserGroup, key: 'leads' },
   { title: 'Pipeline', url: '/admin/pipeline', icon: faTableColumns, key: 'pipeline' },
   { title: 'Clientes', url: '/admin/clients', icon: faUserCheck, key: 'clients' },
-  { title: 'IA', url: '/admin/ia', icon: faWandMagicSparkles, key: 'ia' },
+];
+
+const iaSubItems: { title: string; url: string; icon: IconDefinition }[] = [
+  { title: 'Visão geral', url: '/admin/ia', icon: faWandMagicSparkles },
+  { title: 'Excel', url: '/admin/ia/excel', icon: faFileExcel },
+  { title: 'CSV', url: '/admin/ia/csv', icon: faFileCsv },
+  { title: 'Texto colado', url: '/admin/ia/paste', icon: faClipboard },
+  { title: 'WhatsApp', url: '/admin/ia/whatsapp', icon: faWhatsapp },
+  { title: 'Duplicados', url: '/admin/ia/duplicates', icon: faClone },
+  { title: 'Sugestão de status', url: '/admin/ia/classify', icon: faTag },
+  { title: 'Score automático', url: '/admin/ia/score', icon: faChartSimple },
+  { title: 'Insights', url: '/admin/ia/insights', icon: faLightbulb },
+  { title: 'Assistente', url: '/admin/ia/assistant', icon: faComments },
 ];
 
 export default function AdminSidebar() {
@@ -47,6 +70,10 @@ export default function AdminSidebar() {
   const [overdueCount, setOverdueCount] = useState(0);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isOnIA = location.pathname.startsWith('/admin/ia');
+  const [iaOpen, setIaOpen] = useState(isOnIA);
+  useEffect(() => { if (isOnIA) setIaOpen(true); }, [isOnIA]);
 
   const fetchOverdue = useCallback(async () => {
     const { data } = await supabase.from('leads').select('status, last_contact_at, created_at');
@@ -121,6 +148,57 @@ export default function AdminSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* IA com subitens colapsáveis */}
+              <SidebarMenuItem>
+                {collapsed ? (
+                  <SidebarMenuButton asChild className="h-9 rounded-lg px-2.5 text-[13px] font-medium text-sidebar-foreground/75 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground transition-colors">
+                    <NavLink
+                      to="/admin/ia"
+                      activeClassName="!bg-sidebar-accent !text-sidebar-foreground relative before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[2px] before:rounded-full before:bg-sidebar-primary"
+                    >
+                      <FontAwesomeIcon icon={faWandMagicSparkles} className="h-4 w-4 shrink-0" />
+                    </NavLink>
+                  </SidebarMenuButton>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIaOpen((v) => !v)}
+                    className={cn(
+                      'flex items-center w-full h-9 rounded-lg px-2.5 text-[13px] font-medium gap-2 transition-colors',
+                      isOnIA
+                        ? 'bg-sidebar-accent text-sidebar-foreground relative before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[2px] before:rounded-full before:bg-sidebar-primary'
+                        : 'text-sidebar-foreground/75 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground',
+                    )}
+                  >
+                    <FontAwesomeIcon icon={faWandMagicSparkles} className="h-4 w-4 shrink-0" />
+                    <span className="flex-1 text-left">IA</span>
+                    <FontAwesomeIcon
+                      icon={faChevronDown}
+                      className={cn('h-3 w-3 transition-transform', iaOpen && 'rotate-180')}
+                    />
+                  </button>
+                )}
+              </SidebarMenuItem>
+
+              {!collapsed && iaOpen && (
+                <div className="ml-3 mt-0.5 mb-1 pl-3 border-l border-sidebar-border/60 space-y-0.5">
+                  {iaSubItems.map((sub) => (
+                    <SidebarMenuItem key={sub.url}>
+                      <SidebarMenuButton asChild className="h-8 rounded-md px-2 text-[12px] text-sidebar-foreground/65 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
+                        <NavLink
+                          to={sub.url}
+                          end
+                          activeClassName="!bg-sidebar-accent !text-sidebar-foreground"
+                        >
+                          <FontAwesomeIcon icon={sub.icon} className="h-3 w-3 shrink-0 opacity-80" />
+                          <span>{sub.title}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </div>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
