@@ -39,8 +39,18 @@ interface LeadLite {
   next_contact_at: string | null;
 }
 
+interface CustomerLite {
+  id: string;
+  name: string;
+  phone: string | null;
+  product_bought: string | null;
+  purchase_date: string | null;
+  last_contact_at: string | null;
+}
+
 export default function DashboardPage() {
   const [leads, setLeads] = useState<LeadLite[]>([]);
+  const [customers, setCustomers] = useState<CustomerLite[]>([]);
   const [customerCount, setCustomerCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -52,10 +62,15 @@ export default function DashboardPage() {
         .from('leads')
         .select('id, name, phone, origin, product_interest, status, created_at, last_contact_at, next_contact_at')
         .order('created_at', { ascending: false }),
-      supabase.from('customers').select('id', { count: 'exact', head: true }),
+      supabase
+        .from('customers')
+        .select('id, name, phone, product_bought, purchase_date, last_contact_at')
+        .order('created_at', { ascending: false }),
     ]);
     setLeads((leadsRes.data as LeadLite[]) ?? []);
-    setCustomerCount(customersRes.count ?? 0);
+    const cs = (customersRes.data as CustomerLite[]) ?? [];
+    setCustomers(cs);
+    setCustomerCount(cs.length);
     setLoading(false);
   }, []);
 
