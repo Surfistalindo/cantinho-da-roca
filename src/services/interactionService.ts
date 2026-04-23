@@ -26,7 +26,8 @@ export const interactionService = {
 
   async create(interaction: { lead_id?: string; customer_id?: string; contact_type: string; description: string; created_by: string; interaction_date?: string }) {
     const parsed = interactionCreateSchema.parse(interaction);
-    const { data, error } = await supabase.from('interactions').insert(parsed).select().single();
+    const payload = { ...parsed, description: parsed.description.replace(/<[^>]*>/g, '').trim() };
+    const { data, error } = await supabase.from('interactions').insert(payload).select().single();
     if (error) throw error;
     return data;
   },

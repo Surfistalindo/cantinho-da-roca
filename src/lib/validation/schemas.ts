@@ -63,7 +63,7 @@ export const interactionCreateSchema = z.object({
   lead_id: z.string().uuid().optional(),
   customer_id: z.string().uuid().optional(),
   contact_type: z.string().min(1).max(40),
-  description: z.string().min(1, 'Descrição obrigatória').max(2000).transform(stripHtml),
+  description: z.string().min(1, 'Descrição obrigatória').max(2000),
   created_by: z.string().uuid(),
   interaction_date: z.string().datetime().optional(),
 });
