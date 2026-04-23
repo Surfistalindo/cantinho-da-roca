@@ -4,10 +4,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CRM_FIELD_LABELS, type CrmFieldKey } from '@/lib/ia/fieldDictionary';
 import type { ColumnMapping } from '@/services/ia/columnMapper';
 import { cn } from '@/lib/utils';
+import MappingTemplateManager from './MappingTemplateManager';
+import type { MappingTemplate } from '@/services/ia/mappingTemplates';
 
 interface ColumnMapperProps {
   mappings: ColumnMapping[];
   onChange: (source: string, target: CrmFieldKey) => void;
+  onSaveTemplate?: (name: string) => void;
+  onApplyTemplate?: (id: string) => void;
+  onDeleteTemplate?: (id: string) => void;
+  detectedTemplate?: MappingTemplate | null;
+  onDismissDetected?: () => void;
 }
 
 const FIELD_KEYS: CrmFieldKey[] = ['name', 'phone', 'origin', 'product_interest', 'status', 'next_contact_at', 'notes', 'ignore'];
