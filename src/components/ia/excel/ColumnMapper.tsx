@@ -4,10 +4,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CRM_FIELD_LABELS, type CrmFieldKey } from '@/lib/ia/fieldDictionary';
 import type { ColumnMapping } from '@/services/ia/columnMapper';
 import { cn } from '@/lib/utils';
+import MappingTemplateManager from './MappingTemplateManager';
+import type { MappingTemplate } from '@/services/ia/mappingTemplates';
 
 interface ColumnMapperProps {
   mappings: ColumnMapping[];
   onChange: (source: string, target: CrmFieldKey) => void;
+  onSaveTemplate?: (name: string) => void;
+  onApplyTemplate?: (id: string) => void;
+  onDeleteTemplate?: (id: string) => void;
+  detectedTemplate?: MappingTemplate | null;
+  onDismissDetected?: () => void;
 }
 
 const FIELD_KEYS: CrmFieldKey[] = ['name', 'phone', 'origin', 'product_interest', 'status', 'next_contact_at', 'notes', 'ignore'];
@@ -39,15 +46,33 @@ function ConfidencePill({ confidence, source }: { confidence: number; source: Co
   );
 }
 
-export default function ColumnMapper({ mappings, onChange }: ColumnMapperProps) {
+export default function ColumnMapper({
+  mappings, onChange,
+  onSaveTemplate, onApplyTemplate, onDeleteTemplate,
+  detectedTemplate = null, onDismissDetected,
+}: ColumnMapperProps) {
   const used = new Set(mappings.filter((m) => m.target !== 'ignore').map((m) => m.target));
 
   const mappedCount = mappings.filter((m) => m.target !== 'ignore').length;
   const ignoredCount = mappings.length - mappedCount;
   const missingRequired = REQUIRED_FIELDS.filter((f) => !used.has(f));
 
+  const showTemplateUi = !!(onSaveTemplate && onApplyTemplate && onDeleteTemplate && onDismissDetected);
+
   return (
     <div className="rounded-2xl border bg-card overflow-hidden">
+      {showTemplateUi && (
+        <div className="px-4 py-3 border-b bg-card">
+          <MappingTemplateManager
+            mappings={mappings}
+            onSave={onSaveTemplate!}
+            onApply={onApplyTemplate!}
+            onDelete={onDeleteTemplate!}
+            detectedTemplate={detectedTemplate}
+            onDismissDetected={onDismissDetected!}
+          />
+        </div>
+      )}
       <div className="px-4 py-3 border-b bg-muted/20">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">

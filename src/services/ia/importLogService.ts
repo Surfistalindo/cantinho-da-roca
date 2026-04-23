@@ -51,6 +51,15 @@ export async function startImportLog(params: {
   return data?.id ?? null;
 }
 
+/** Atualização parcial (progresso em tempo real). */
+export async function updateImportLog(
+  id: string,
+  patch: Partial<Pick<ImportLog, 'created_count' | 'updated_count' | 'skipped_count' | 'error_count'>>,
+): Promise<void> {
+  const { error } = await supabase.from('ia_import_logs').update(patch).eq('id', id);
+  if (error) console.warn('updateImportLog failed', error);
+}
+
 /** Atualiza um log com o resultado final. */
 export async function finishImportLog(
   id: string,

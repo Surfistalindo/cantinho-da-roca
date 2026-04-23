@@ -33,6 +33,7 @@ export async function loadExistingLeads(): Promise<ExistingLead[]> {
 export function detectDuplicates(
   rows: NormalizedLeadRow[],
   existing: ExistingLead[],
+  defaultStrategy: DuplicateStrategy = 'skip',
 ): DuplicateMatch[] {
   const byPhone = new Map<string, ExistingLead>();
   const byName = new Map<string, ExistingLead>();
@@ -51,7 +52,7 @@ export function detectDuplicates(
       const cand = byName.get(k);
       if (cand && !cand.phone) match = cand;
     }
-    if (match) matches.push({ rowIndex: row.rowIndex, existing: match, strategy: 'skip' });
+    if (match) matches.push({ rowIndex: row.rowIndex, existing: match, strategy: defaultStrategy });
   }
   return matches;
 }

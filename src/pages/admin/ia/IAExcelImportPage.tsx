@@ -2,18 +2,19 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faSpinner, faArrowRight, faTriangleExclamation, faArrowLeft,
   faCloudArrowUp, faTableList, faWandMagicSparkles, faShieldHalved,
-  faClone, faCircleCheck,
+  faClone, faCircleCheck, faSitemap,
 } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import IAPageShell from '@/components/ia/IAPageShell';
 import ExcelDropzone from '@/components/ia/excel/ExcelDropzone';
 import ExcelPreviewTable from '@/components/ia/excel/ExcelPreviewTable';
 import ColumnMapper from '@/components/ia/excel/ColumnMapper';
-import ImportSummary from '@/components/ia/excel/ImportSummary';
+import DefaultStrategyPicker from '@/components/ia/excel/DefaultStrategyPicker';
+import RowReviewTable from '@/components/ia/excel/RowReviewTable';
 import DuplicateResolver from '@/components/ia/excel/DuplicateResolver';
 import ImportProgress from '@/components/ia/excel/ImportProgress';
 import ImportResultView from '@/components/ia/excel/ImportResult';
-import ImportHistoryCard from '@/components/ia/excel/ImportHistoryCard';
+import ImportHistoryBanner from '@/components/ia/excel/ImportHistoryBanner';
 import { Button } from '@/components/ui/button';
 import { useExcelImport } from '@/hooks/useExcelImport';
 import { cn } from '@/lib/utils';
@@ -29,7 +30,8 @@ const STEPS: StepDef[] = [
   { key: 'upload',    label: 'Upload do arquivo',         short: 'Upload',     icon: faCloudArrowUp },
   { key: 'preview',   label: 'Leitura e preview',         short: 'Preview',    icon: faTableList },
   { key: 'mapping',   label: 'Mapeamento inteligente',    short: 'Mapeamento', icon: faWandMagicSparkles },
-  { key: 'review',    label: 'Validação e normalização',  short: 'Revisão',    icon: faShieldHalved },
+  { key: 'strategy',  label: 'Estratégia de duplicados',  short: 'Estratégia', icon: faSitemap },
+  { key: 'review',    label: 'Revisão linha-a-linha',     short: 'Revisão',    icon: faShieldHalved },
   { key: 'duplicate', label: 'Análise de duplicados',     short: 'Duplicados', icon: faClone },
   { key: 'confirm',   label: 'Confirmação e relatório',   short: 'Resultado',  icon: faCircleCheck },
 ];
@@ -38,10 +40,11 @@ function stepIndex(s: string): number {
   if (s === 'idle') return 0;
   if (s === 'parsing') return 1;
   if (s === 'mapping') return 2;
-  if (s === 'reviewing') return 3;
-  if (s === 'resolving_duplicates') return 4;
+  if (s === 'strategy') return 3;
+  if (s === 'reviewing') return 4;
+  if (s === 'resolving_duplicates') return 5;
   // importing | done | error
-  return 5;
+  return 6;
 }
 
 export default function IAExcelImportPage() {
@@ -66,6 +69,9 @@ export default function IAExcelImportPage() {
         ) : null
       }
     >
+      {/* ============= BANNER PERSISTENTE DE HISTÓRICO ============= */}
+      <ImportHistoryBanner />
+
       {/* ============= STEPPER ============= */}
       <div className="mb-6 rounded-2xl border bg-card p-4 sm:p-5">
         <div className="flex items-center justify-between mb-3">
@@ -85,7 +91,7 @@ export default function IAExcelImportPage() {
           </div>
         </div>
 
-        <ol className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
+        <ol className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
           {STEPS.map((s, i) => {
             const active = i === idx;
             const done = i < idx;
@@ -125,10 +131,7 @@ export default function IAExcelImportPage() {
 
       {/* ============= ETAPA 1 — UPLOAD ============= */}
       {state.step === 'idle' && (
-        <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
-          <ExcelDropzone onFile={im.handleFile} />
-          <ImportHistoryCard limit={5} compact />
-        </div>
+        <ExcelDropzone onFile={im.handleFile} />
       )}
 
       {/* ============= ETAPA 2 — PARSING ============= */}
@@ -147,7 +150,15 @@ export default function IAExcelImportPage() {
         <div className="space-y-4">
           <div className="grid gap-4 lg:grid-cols-[1fr_400px]">
             <ExcelPreviewTable parsed={state.parsed} />
-            <ColumnMapper mappings={state.mappings} onChange={im.updateMapping} />
+            <ColumnMapper
+              mappings={state.mappings}
+              onChange={im.updateMapping}
+              onSaveTemplate={im.saveMappingTemplate}
+              onApplyTemplate={im.applyMappingTemplate}
+              onDeleteTemplate={im.removeMappingTemplate}
+              detectedTemplate={state.detectedTemplate}
+              onDismissDetected={im.dismissDetectedTemplate}
+            />
           </div>
           {!hasNameMapping && (
             <div className="rounded-lg border border-warning/40 bg-warning-soft px-4 py-3 text-[12.5px] text-warning flex items-center gap-2">
@@ -158,19 +169,38 @@ export default function IAExcelImportPage() {
           <FlowActions
             backLabel="Trocar arquivo"
             onBack={im.back}
-            nextLabel="Validar e revisar"
-            onNext={im.goToReview}
+            nextLabel="Definir estratégia"
+            onNext={im.goToStrategy}
             nextDisabled={!hasNameMapping}
           />
         </div>
       )}
 
-      {/* ============= ETAPA 4 — REVISÃO ============= */}
-      {state.step === 'reviewing' && (
+      {/* ============= ETAPA 4 — ESTRATÉGIA PADRÃO ============= */}
+      {state.step === 'strategy' && (
         <div className="space-y-4">
-          <ImportSummary rows={state.normalized} duplicates={state.duplicates} />
+          <DefaultStrategyPicker value={state.defaultStrategy} onChange={im.setDefaultStrategy} />
           <FlowActions
             backLabel="Voltar ao mapeamento"
+            onBack={im.back}
+            nextLabel="Validar e revisar linhas"
+            onNext={im.goToReview}
+          />
+        </div>
+      )}
+
+      {/* ============= ETAPA 5 — REVISÃO LINHA-A-LINHA ============= */}
+      {state.step === 'reviewing' && (
+        <div className="space-y-4">
+          <RowReviewTable
+            rows={state.normalized}
+            duplicates={state.duplicates}
+            mappings={state.mappings}
+            onUpdateField={im.updateRowField}
+            onRemap={im.remapAndRevalidate}
+          />
+          <FlowActions
+            backLabel="Voltar à estratégia"
             onBack={im.back}
             nextLabel={state.duplicates.length > 0 ? 'Resolver duplicados' : 'Confirmar importação'}
             onNext={state.duplicates.length > 0 ? im.goToDuplicates : im.runImport}
@@ -178,7 +208,7 @@ export default function IAExcelImportPage() {
         </div>
       )}
 
-      {/* ============= ETAPA 5 — DUPLICADOS ============= */}
+      {/* ============= ETAPA 6 — DUPLICADOS ============= */}
       {state.step === 'resolving_duplicates' && (
         <div className="space-y-4">
           <DuplicateResolver
@@ -196,12 +226,16 @@ export default function IAExcelImportPage() {
         </div>
       )}
 
-      {/* ============= ETAPA 6a — IMPORTING ============= */}
+      {/* ============= ETAPA 7a — IMPORTING ============= */}
       {state.step === 'importing' && <ImportProgress progress={state.progress} />}
 
-      {/* ============= ETAPA 6b — DONE ============= */}
+      {/* ============= ETAPA 7b — DONE ============= */}
       {state.step === 'done' && state.result && (
-        <ImportResultView result={state.result} onRestart={im.reset} />
+        <ImportResultView
+          result={state.result}
+          filename={state.file?.name}
+          onRestart={im.reset}
+        />
       )}
 
       {/* ============= ERRO ============= */}
