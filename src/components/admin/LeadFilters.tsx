@@ -3,7 +3,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { APP_CONFIG } from '@/config/app';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass, faXmark, faFire, faCircleHalfStroke, faSnowflake } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faXmark, faFire, faCircleHalfStroke, faSnowflake, faPhoneSlash } from '@fortawesome/free-solid-svg-icons';
+import { cn } from '@/lib/utils';
 
 export type RecencyFilter = 'all' | 'recent' | 'attention' | 'overdue';
 export type PriorityFilter = 'all' | 'hot' | 'warm' | 'cold';
@@ -43,8 +44,35 @@ export default function LeadFilters({
     onPriorityChange?.('all');
   };
 
+  const noResponseActive =
+    recencyFilter === 'overdue' && (statusFilter === 'contacting' || statusFilter === 'negotiating');
+
+  const applyNoResponse = () => {
+    if (noResponseActive) {
+      onStatusChange('all');
+      onRecencyChange?.('all');
+    } else {
+      onStatusChange('contacting');
+      onRecencyChange?.('overdue');
+    }
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-2.5 mb-5">
+      {onRecencyChange && (
+        <Button
+          variant={noResponseActive ? 'default' : 'outline'}
+          size="sm"
+          onClick={applyNoResponse}
+          className={cn(
+            'h-10 text-xs',
+            noResponseActive && 'bg-destructive hover:bg-destructive/90 text-destructive-foreground border-destructive',
+          )}
+        >
+          <FontAwesomeIcon icon={faPhoneSlash} className="h-3 w-3 mr-1.5" />
+          Sem resposta
+        </Button>
+      )}
       <div className="relative flex-1 min-w-[220px]">
         <FontAwesomeIcon
           icon={faMagnifyingGlass}

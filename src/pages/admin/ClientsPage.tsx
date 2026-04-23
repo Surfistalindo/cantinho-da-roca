@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -12,14 +13,21 @@ import PageHeader from '@/components/admin/PageHeader';
 import EmptyState from '@/components/admin/EmptyState';
 import LoadingState from '@/components/admin/LoadingState';
 import InitialsAvatar from '@/components/admin/InitialsAvatar';
+import CustomerLifecycleBadge from '@/components/admin/CustomerLifecycleBadge';
+import ClientFilters, {
+  type ClientPurchaseFilter,
+  type ClientRecencyFilter,
+  type ClientStageFilter,
+} from '@/components/admin/ClientFilters';
+import WhatsAppQuickAction from '@/components/admin/WhatsAppQuickAction';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faUserCheck, faPlus, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
-import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
+import { faEye, faUserCheck, faPlus, faCircleCheck, faClock, faTriangleExclamation, faMoon } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { getCustomerLifecycle, purchaseRecencyLabel } from '@/lib/customerLifecycle';
 
 interface Customer {
   id: string;
@@ -32,14 +40,39 @@ interface Customer {
   created_at: string;
 }
 
+const DAY_MS = 1000 * 60 * 60 * 24;
+function daysSince(iso: string | null | undefined): number | null {
+  if (!iso) return null;
+  return Math.floor((Date.now() - new Date(iso).getTime()) / DAY_MS);
+}
+
 export default function ClientsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [recencyFilter, setRecencyFilter] = useState<ClientRecencyFilter>('all');
+  const [purchaseFilter, setPurchaseFilter] = useState<ClientPurchaseFilter>('all');
+  const [stageFilter, setStageFilter] = useState<ClientStageFilter>('all');
+  const [reactivationMode, setReactivationMode] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', product_bought: '' });
+
+  // Suporte a ?view=reactivation
+  useEffect(() => {
+    if (searchParams.get('view') === 'reactivation') {
+      setReactivationMode(true);
+    }
+  }, [searchParams]);
+
+  const setReactivationModeWrapped = (v: boolean) => {
+    setReactivationMode(v);
+    const next = new URLSearchParams(searchParams);
+    if (v) next.set('view', 'reactivation'); else next.delete('view');
+    setSearchParams(next, { replace: true });
+  };
 
   const fetchCustomers = useCallback(async () => {
     const { data } = await supabase
@@ -53,24 +86,75 @@ export default function ClientsPage() {
   useEffect(() => { fetchCustomers(); }, [fetchCustomers]);
   useRealtimeTable('customers', fetchCustomers);
 
+  // Stats globais (todos clientes — sem filtro aplicado)
+  const stats = useMemo(() => {
+    const counts = { active: 0, watch: 0, inactive: 0, dormant: 0 };
+    for (const c of customers) {
+      const s = getCustomerLifecycle(c.last_contact_at, c.purchase_date).stage;
+      counts[s]++;
+    }
+    const total = customers.length || 1;
+    return {
+      total: customers.length,
+      ...counts,
+      activePct: Math.round((counts.active / total) * 100),
+      watchPct: Math.round((counts.watch / total) * 100),
+      inactivePct: Math.round((counts.inactive / total) * 100),
+      dormantPct: Math.round((counts.dormant / total) * 100),
+    };
+  }, [customers]);
+
   const filtered = useMemo(() => {
-    if (!search) return customers;
-    const q = search.toLowerCase();
-    return customers.filter((c) =>
-      c.name.toLowerCase().includes(q) ||
-      (c.phone ?? '').includes(q) ||
-      (c.product_bought ?? '').toLowerCase().includes(q)
-    );
-  }, [customers, search]);
+    let list = customers;
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter((c) =>
+        c.name.toLowerCase().includes(q) ||
+        (c.phone ?? '').includes(q) ||
+        (c.product_bought ?? '').toLowerCase().includes(q)
+      );
+    }
+
+    if (stageFilter !== 'all') {
+      list = list.filter((c) => getCustomerLifecycle(c.last_contact_at, c.purchase_date).stage === stageFilter);
+    }
+
+    if (recencyFilter !== 'all') {
+      list = list.filter((c) => {
+        const d = daysSince(c.last_contact_at);
+        if (recencyFilter === 'recent') return d !== null && d <= 7;
+        if (recencyFilter === 'attention') return d !== null && d > 7 && d <= 30;
+        if (recencyFilter === 'inactive30') return d === null || d > 30;
+        if (recencyFilter === 'inactive90') return d === null || d > 90;
+        return true;
+      });
+    }
+
+    if (purchaseFilter !== 'all') {
+      list = list.filter((c) => {
+        const d = daysSince(c.purchase_date);
+        if (d === null) return false;
+        if (purchaseFilter === 'p30') return d <= 30;
+        if (purchaseFilter === 'p90') return d > 30 && d <= 90;
+        if (purchaseFilter === 'p180') return d > 90 && d <= 180;
+        if (purchaseFilter === 'p180plus') return d > 180;
+        return true;
+      });
+    }
+
+    if (reactivationMode) {
+      list = list
+        .filter((c) => {
+          const d = daysSince(c.purchase_date);
+          return c.phone && d !== null && d >= 90;
+        })
+        .sort((a, b) => (daysSince(b.purchase_date) ?? 0) - (daysSince(a.purchase_date) ?? 0));
+    }
+
+    return list;
+  }, [customers, search, stageFilter, recencyFilter, purchaseFilter, reactivationMode]);
 
   const openDetail = (c: Customer) => { setSelectedCustomer(c); setSheetOpen(true); };
-
-  const openWhatsApp = (phone: string | null) => {
-    if (!phone) return;
-    const clean = phone.replace(/\D/g, '');
-    const num = clean.startsWith('55') ? clean : `55${clean}`;
-    window.open(`https://wa.me/${num}?text=Olá! Aqui é da equipe Cantinho da Roça.`, '_blank');
-  };
 
   const addCustomer = async () => {
     if (!newCustomer.name.trim()) { toast.error('Nome é obrigatório'); return; }
@@ -87,15 +171,27 @@ export default function ClientsPage() {
     fetchCustomers();
   };
 
+  const kpiCards = [
+    { label: 'Ativos', value: stats.active, pct: stats.activePct, icon: faCircleCheck, accent: 'text-success bg-success-soft' },
+    { label: 'Em atenção', value: stats.watch, pct: stats.watchPct, icon: faClock, accent: 'text-warning bg-warning-soft' },
+    { label: 'Inativos', value: stats.inactive, pct: stats.inactivePct, icon: faTriangleExclamation, accent: 'text-destructive bg-destructive/10' },
+    { label: 'Adormecidos', value: stats.dormant, pct: stats.dormantPct, icon: faMoon, accent: 'text-muted-foreground bg-muted' },
+  ];
+
   return (
     <TooltipProvider delayDuration={200}>
       <div className="max-w-7xl mx-auto space-y-7">
         <PageHeader
-          title="Clientes"
-          description="Base de clientes convertidos a partir de leads ou cadastros manuais."
+          title={reactivationMode ? 'Painel de reativação' : 'Clientes'}
+          description={
+            reactivationMode
+              ? 'Clientes inativos há 90+ dias com telefone — prontos para reativar.'
+              : 'Base de clientes convertidos a partir de leads ou cadastros manuais.'
+          }
           meta={
             <span className="text-xs text-muted-foreground">
-              <span className="font-medium tabular-nums">{filtered.length}</span> cliente{filtered.length === 1 ? '' : 's'}
+              <span className="font-medium tabular-nums">{filtered.length}</span> de{' '}
+              <span className="font-medium tabular-nums">{customers.length}</span> cliente{customers.length === 1 ? '' : 's'}
             </span>
           }
           actions={
@@ -105,16 +201,40 @@ export default function ClientsPage() {
           }
         />
 
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
-          <div className="relative mb-5 max-w-md">
-            <FontAwesomeIcon icon={faMagnifyingGlass} className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome, telefone ou produto..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-10 bg-muted/40 border-transparent focus-visible:bg-card focus-visible:border-input"
-            />
+        {/* KPIs de ciclo de vida */}
+        {customers.length > 0 && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {kpiCards.map((c) => (
+              <div key={c.label} className="bg-card rounded-2xl border border-border p-4 shadow-soft">
+                <div className="flex items-center gap-3">
+                  <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', c.accent)}>
+                    <FontAwesomeIcon icon={c.icon} className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{c.label}</p>
+                    <p className="text-xl font-semibold tabular-nums leading-tight">
+                      {c.value} <span className="text-xs font-normal text-muted-foreground">({c.pct}%)</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
+        )}
+
+        <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
+          <ClientFilters
+            search={search}
+            onSearchChange={setSearch}
+            recencyFilter={recencyFilter}
+            onRecencyChange={setRecencyFilter}
+            purchaseFilter={purchaseFilter}
+            onPurchaseChange={setPurchaseFilter}
+            stageFilter={stageFilter}
+            onStageChange={setStageFilter}
+            reactivationMode={reactivationMode}
+            onReactivationToggle={setReactivationModeWrapped}
+          />
 
           {loading ? (
             <LoadingState />
@@ -122,7 +242,9 @@ export default function ClientsPage() {
             <EmptyState
               icon={faUserCheck}
               title="Nenhum cliente encontrado"
-              description="Cadastre manualmente ou converta leads em clientes."
+              description={reactivationMode
+                ? 'Não há clientes para reativar com os critérios atuais.'
+                : 'Cadastre manualmente ou converta leads em clientes.'}
             />
           ) : (
             <div className="overflow-x-auto -mx-5">
@@ -131,54 +253,76 @@ export default function ClientsPage() {
                   <TableRow className="hover:bg-transparent border-border">
                     <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Cliente</TableHead>
                     <TableHead className="hidden md:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Produto</TableHead>
-                    <TableHead className="hidden sm:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Data compra</TableHead>
+                    <TableHead className="hidden sm:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Última compra</TableHead>
+                    <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Status</TableHead>
                     <TableHead className="w-[100px] text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((c, idx) => (
-                    <TableRow
-                      key={c.id}
-                      className={cn('group cursor-pointer h-14 border-border/60', idx % 2 === 1 && 'bg-muted/30')}
-                      onClick={() => openDetail(c)}
-                    >
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-3">
-                          <InitialsAvatar name={c.name} size="md" />
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold truncate">{c.name}</p>
-                            <p className="text-[11px] text-muted-foreground font-mono">{c.phone ?? '—'}</p>
+                  {filtered.map((c, idx) => {
+                    const purchaseDays = daysSince(c.purchase_date);
+                    return (
+                      <TableRow
+                        key={c.id}
+                        className={cn('group cursor-pointer h-14 border-border/60', idx % 2 === 1 && 'bg-muted/30')}
+                        onClick={() => openDetail(c)}
+                      >
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-3">
+                            <InitialsAvatar name={c.name} size="md" />
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold truncate">{c.name}</p>
+                              <p className="text-[11px] text-muted-foreground font-mono">{c.phone ?? '—'}</p>
+                            </div>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{c.product_bought ?? '—'}</TableCell>
-                      <TableCell className="hidden sm:table-cell text-[11px] text-muted-foreground font-mono">
-                        {c.purchase_date ? format(new Date(c.purchase_date), 'dd/MM/yy', { locale: ptBR }) : '—'}
-                      </TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <div className="flex justify-end gap-0.5">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openDetail(c)}>
-                                <FontAwesomeIcon icon={faEye} className="h-3.5 w-3.5" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Ver detalhes</TooltipContent>
-                          </Tooltip>
-                          {c.phone && (
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{c.product_bought ?? '—'}</TableCell>
+                        <TableCell className="hidden sm:table-cell text-[11px] text-muted-foreground">
+                          {c.purchase_date ? (
+                            <div>
+                              <div className="font-mono">{format(new Date(c.purchase_date), 'dd/MM/yy', { locale: ptBR })}</div>
+                              <div className="text-[10px] mt-0.5">{purchaseRecencyLabel(purchaseDays)}</div>
+                            </div>
+                          ) : '—'}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          <CustomerLifecycleBadge
+                            lastContactAt={c.last_contact_at}
+                            purchaseDate={c.purchase_date}
+                            size="sm"
+                          />
+                        </TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <div className="flex justify-end gap-0.5 items-center">
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:bg-success-soft" onClick={() => openWhatsApp(c.phone)}>
-                                  <FontAwesomeIcon icon={faWhatsapp} className="h-3.5 w-3.5" />
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openDetail(c)}>
+                                  <FontAwesomeIcon icon={faEye} className="h-3.5 w-3.5" />
                                 </Button>
                               </TooltipTrigger>
-                              <TooltipContent>WhatsApp</TooltipContent>
+                              <TooltipContent>Ver detalhes</TooltipContent>
                             </Tooltip>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            {c.phone && (
+                              <WhatsAppQuickAction
+                                lead={{
+                                  id: c.id,
+                                  name: c.name,
+                                  phone: c.phone,
+                                  product_bought: c.product_bought,
+                                  status: 'customer',
+                                  last_contact_at: c.last_contact_at,
+                                  created_at: c.purchase_date ?? c.created_at,
+                                }}
+                                variant="icon"
+                                size="sm"
+                                onSent={fetchCustomers}
+                              />
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

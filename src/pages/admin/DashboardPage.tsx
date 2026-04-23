@@ -22,6 +22,8 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { LEAD_STATUS } from '@/lib/leadStatus';
 import { getContactRecency } from '@/lib/contactRecency';
 import { getLeadScore, compareByScore } from '@/lib/leadScore';
+import { getReengagementCandidates } from '@/lib/reengagement';
+import ReengagementQueue from '@/components/admin/ReengagementQueue';
 import { useInteractionCounts } from '@/hooks/useInteractionCounts';
 import { cn } from '@/lib/utils';
 
@@ -37,8 +39,18 @@ interface LeadLite {
   next_contact_at: string | null;
 }
 
+interface CustomerLite {
+  id: string;
+  name: string;
+  phone: string | null;
+  product_bought: string | null;
+  purchase_date: string | null;
+  last_contact_at: string | null;
+}
+
 export default function DashboardPage() {
   const [leads, setLeads] = useState<LeadLite[]>([]);
+  const [customers, setCustomers] = useState<CustomerLite[]>([]);
   const [customerCount, setCustomerCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
@@ -50,10 +62,15 @@ export default function DashboardPage() {
         .from('leads')
         .select('id, name, phone, origin, product_interest, status, created_at, last_contact_at, next_contact_at')
         .order('created_at', { ascending: false }),
-      supabase.from('customers').select('id', { count: 'exact', head: true }),
+      supabase
+        .from('customers')
+        .select('id, name, phone, product_bought, purchase_date, last_contact_at')
+        .order('created_at', { ascending: false }),
     ]);
     setLeads((leadsRes.data as LeadLite[]) ?? []);
-    setCustomerCount(customersRes.count ?? 0);
+    const cs = (customersRes.data as CustomerLite[]) ?? [];
+    setCustomers(cs);
+    setCustomerCount(cs.length);
     setLoading(false);
   }, []);
 
@@ -65,11 +82,16 @@ export default function DashboardPage() {
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const total = leads.length;
     const sold = leads.filter((l) => l.status === LEAD_STATUS.WON).length;
-    let attention = 0; let overdue = 0; let hot = 0;
+    let attention = 0; let overdue = 0; let hot = 0; let noResponse = 0;
     for (const l of leads) {
       const info = getContactRecency(l.last_contact_at, l.status, l.created_at);
       if (info.level === 'attention') attention++;
-      else if (info.level === 'overdue') overdue++;
+      else if (info.level === 'overdue') {
+        overdue++;
+        if (l.status === LEAD_STATUS.CONTACTING || l.status === LEAD_STATUS.NEGOTIATING) {
+          noResponse++;
+        }
+      }
       const score = getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 });
       if (score.level === 'hot' || score.urgent) hot++;
     }
@@ -79,7 +101,8 @@ export default function DashboardPage() {
       contacting: leads.filter((l) => l.status === LEAD_STATUS.CONTACTING).length,
       negotiating: leads.filter((l) => l.status === LEAD_STATUS.NEGOTIATING).length,
       sold,
-      noResponse: leads.filter((l) => l.status === LEAD_STATUS.LOST).length,
+      lostCount: leads.filter((l) => l.status === LEAD_STATUS.LOST).length,
+      noResponse,
       last7d: leads.filter((l) => new Date(l.created_at).getTime() >= sevenDaysAgo).length,
       attention,
       overdue,
@@ -87,6 +110,11 @@ export default function DashboardPage() {
       conversionRate: total > 0 ? Math.round((sold / total) * 100) : 0,
     };
   }, [leads, interactionCounts]);
+
+  const reengagementCandidates = useMemo(
+    () => getReengagementCandidates(leads, customers),
+    [leads, customers],
+  );
 
 
 
@@ -113,7 +141,7 @@ export default function DashboardPage() {
     { icon: faUserGroup, label: 'Total de Leads', value: stats.total, description: `${stats.last7d} nos últimos 7 dias`, accent: 'text-primary bg-primary/10' },
     { icon: faFire, label: 'Leads Quentes', value: stats.hot, description: 'Alta prioridade comercial', accent: 'text-destructive bg-destructive/10', href: '/admin/leads?priority=hot' },
     { icon: faArrowTrendUp, label: 'Conversão', value: `${stats.conversionRate}%`, description: `${stats.sold} fechados · ${customerCount} no cadastro`, accent: 'text-success bg-success-soft' },
-    { icon: faTriangleExclamation, label: 'Atrasados', value: stats.overdue, description: '7+ dias ou nunca contatado', accent: 'text-destructive bg-destructive/10', href: '/admin/leads?recency=overdue' },
+    { icon: faPhoneSlash, label: 'Sem resposta', value: stats.noResponse, description: `${stats.overdue} atrasados no total`, accent: 'text-destructive bg-destructive/10', href: '/admin/leads?recency=overdue&status=contacting' },
   ];
 
   // Distribuição: barra segmentada
@@ -122,7 +150,7 @@ export default function DashboardPage() {
     { label: 'Em contato', value: stats.contacting, className: 'bg-primary', icon: faComments },
     { label: 'Negociação', value: stats.negotiating, className: 'bg-warning', icon: faChartColumn },
     { label: 'Clientes', value: stats.sold, className: 'bg-success', icon: faUserCheck },
-    { label: 'Perdidos', value: stats.noResponse, className: 'bg-muted-foreground/40', icon: faPhoneSlash },
+    { label: 'Perdidos', value: stats.lostCount, className: 'bg-muted-foreground/40', icon: faPhoneSlash },
   ];
   const distTotal = segments.reduce((a, s) => a + s.value, 0) || 1;
 
@@ -321,7 +349,10 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Atalhos */}
+      {/* Fila de reengajamento */}
+      <ReengagementQueue candidates={reengagementCandidates} onSent={fetchData} />
+
+
       <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">

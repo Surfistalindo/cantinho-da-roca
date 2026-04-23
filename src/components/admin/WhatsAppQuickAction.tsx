@@ -41,6 +41,8 @@ interface Props {
   interactionCount?: number;
   onSent?: () => void;
   className?: string;
+  /** Quando true, registra interação como customer_id ao invés de lead_id. */
+  asCustomer?: boolean;
 }
 
 export default function WhatsAppQuickAction({
@@ -50,6 +52,7 @@ export default function WhatsAppQuickAction({
   interactionCount,
   onSent,
   className,
+  asCustomer,
 }: Props) {
   const { user } = useAuth();
   const [editOpen, setEditOpen] = useState(false);
@@ -59,12 +62,13 @@ export default function WhatsAppQuickAction({
 
   const disabled = !lead.phone;
   const suggestedKey = pickSuggestedTemplate(lead, { interactionCount });
+  const isCustomer = asCustomer ?? lead.status === 'customer';
 
   async function logInteraction(label: string, message: string) {
     if (!user?.id) return;
     try {
       await interactionService.create({
-        lead_id: lead.id,
+        ...(isCustomer ? { customer_id: lead.id } : { lead_id: lead.id }),
         contact_type: 'mensagem',
         description: `[Template: ${label}] ${message.slice(0, 80)}${message.length > 80 ? '…' : ''}`,
         created_by: user.id,
