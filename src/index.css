@@ -249,3 +249,132 @@ html {
   .motion-safe-anim { animation: none !important; }
 }
 
+/* ============================================ */
+/* IA Module — Premium SaaS visual layer       */
+/* ============================================ */
+
+/* Subtle animated grid background for hero */
+.ia-grid-bg {
+  background-image:
+    linear-gradient(hsl(var(--border) / 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--border) / 0.5) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: -1px -1px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 75%);
+}
+
+/* Iridescent gradient border for premium hero card */
+.ia-hero-card {
+  position: relative;
+  background:
+    radial-gradient(ellipse 120% 80% at 0% 0%, hsl(var(--primary) / 0.08), transparent 50%),
+    radial-gradient(ellipse 80% 60% at 100% 100%, hsl(210 85% 50% / 0.06), transparent 50%),
+    hsl(var(--card));
+}
+.ia-hero-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg,
+    hsl(var(--primary) / 0.4) 0%,
+    hsl(var(--border)) 35%,
+    hsl(var(--border)) 65%,
+    hsl(210 85% 50% / 0.3) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Soft conic glow for the active feature card */
+.ia-active-glow {
+  position: relative;
+}
+.ia-active-glow::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: conic-gradient(from 180deg at 50% 50%,
+    hsl(var(--primary) / 0.0) 0deg,
+    hsl(var(--primary) / 0.35) 90deg,
+    hsl(var(--primary) / 0.0) 180deg,
+    hsl(var(--primary) / 0.25) 270deg,
+    hsl(var(--primary) / 0.0) 360deg);
+  filter: blur(14px);
+  opacity: 0;
+  transition: opacity 400ms ease;
+  z-index: -1;
+}
+.ia-active-glow:hover::after {
+  opacity: 1;
+}
+
+/* Lifting card hover used across IA cards */
+.ia-card-lift {
+  transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 240ms cubic-bezier(0.2, 0.8, 0.2, 1),
+              border-color 240ms ease;
+}
+.ia-card-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 32px -16px hsl(220 25% 14% / 0.18),
+              0 4px 12px -4px hsl(220 25% 14% / 0.08);
+}
+
+/* Pulsing dot for "live" / available indicator */
+@keyframes ia-pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--success) / 0.45); }
+  50%      { box-shadow: 0 0 0 6px hsl(var(--success) / 0); }
+}
+.ia-dot-live {
+  animation: ia-pulse-dot 2.4s ease-out infinite;
+}
+
+/* Staggered entrance for grids */
+@keyframes ia-fade-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ia-stagger > * {
+  opacity: 0;
+  animation: ia-fade-rise 460ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+.ia-stagger > *:nth-child(1) { animation-delay: 40ms; }
+.ia-stagger > *:nth-child(2) { animation-delay: 90ms; }
+.ia-stagger > *:nth-child(3) { animation-delay: 140ms; }
+.ia-stagger > *:nth-child(4) { animation-delay: 190ms; }
+.ia-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.ia-stagger > *:nth-child(6) { animation-delay: 290ms; }
+.ia-stagger > *:nth-child(7) { animation-delay: 340ms; }
+.ia-stagger > *:nth-child(8) { animation-delay: 390ms; }
+.ia-stagger > *:nth-child(9) { animation-delay: 440ms; }
+.ia-stagger > *:nth-child(10) { animation-delay: 490ms; }
+
+/* Shimmering "Beta" / "IA" chip */
+@keyframes ia-chip-shimmer {
+  0%   { background-position: -120% center; }
+  100% { background-position: 220% center; }
+}
+.ia-chip-shimmer {
+  background: linear-gradient(90deg,
+    hsl(var(--primary) / 0.10) 0%,
+    hsl(var(--primary) / 0.22) 45%,
+    hsl(210 85% 50% / 0.22) 55%,
+    hsl(var(--primary) / 0.10) 100%);
+  background-size: 220% auto;
+  animation: ia-chip-shimmer 5.5s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ia-card-lift,
+  .ia-stagger > *,
+  .ia-dot-live,
+  .ia-chip-shimmer,
+  .ia-active-glow::after { animation: none !important; transition: none !important; }
+  .ia-stagger > * { opacity: 1; transform: none; }
+}
+
