@@ -1,244 +1,142 @@
 
 
-## Plano: Módulo "IA" — Central Inteligente do CRM (com submódulo Excel)
+## Plano: 5 melhorias avançadas no fluxo de importação Excel
 
-Criar uma **área nova e independente** dentro do CRM, arquitetada como produto premium com espaço para crescer. Primeira feature funcional: **importação inteligente de planilhas Excel/CSV** com IA.
+Adições focadas no `/admin/ia/excel`, mantendo arquitetura modular existente. Zero impacto em leads, pipeline, dashboard ou clientes.
 
 ---
 
-### 1. Rotas e estrutura de navegação
+### 1. Estratégia padrão de deduplicação (pré-revisão)
 
-Adicionar 2 rotas em `src/App.tsx` (sem mexer nas existentes):
+**Nova etapa** entre `mapping` e `reviewing`: **`strategy`**.
 
-```
-/admin/ia            → IAHomePage         (central / hub)
-/admin/ia/excel      → IAExcelImportPage  (feature ativa)
-```
+- Tela compacta com 4 cards selecionáveis (radio): **Criar novo / Atualizar / Mesclar / Ignorar**.
+- Cada card mostra ícone FA + descrição curta + cenário típico.
+- Estratégia escolhida vira **default aplicado a todos os duplicados detectados** — usuário ainda pode trocar individualmente na etapa de duplicados.
+- Preferência salva em `localStorage` (`ia.excel.defaultDupStrategy`) para reuso automático.
+- Stepper passa a ter 5 passos: Upload → Mapeamento → Estratégia → Revisão → Confirmação.
 
-Adicionar item **"IA"** na sidebar (`AdminSidebar.tsx`) com ícone `faWandMagicSparkles`, posicionado depois de "Clientes". Usa `NavLink` com `end={false}` para destacar tanto a home quanto subrotas.
+**Arquivos:**
+- Novo `src/components/ia/excel/DefaultStrategyPicker.tsx`
+- `useExcelImport.ts`: adiciona estado `defaultStrategy` + step `strategy` + ação `setDefaultStrategy`
+- `IAExcelImportPage.tsx`: renderiza nova etapa entre mapping e review
+- `duplicateDetector.ts`: aplica `defaultStrategy` em vez de hardcoded `'skip'`
 
-### 2. Estrutura de arquivos (modular e escalável)
+---
 
-```text
-src/
-├── pages/admin/ia/
-│   ├── IAHomePage.tsx            ← hub com cards de features
-│   └── IAExcelImportPage.tsx     ← orquestrador do fluxo Excel
-│
-├── components/ia/
-│   ├── IAFeatureCard.tsx         ← card reutilizável (ativo / em breve)
-│   ├── IAPageShell.tsx           ← header + breadcrumb da área IA
-│   └── excel/
-│       ├── ExcelDropzone.tsx     ← upload drag-and-drop
-│       ├── ExcelPreviewTable.tsx ← preview das primeiras N linhas
-│       ├── ColumnMapper.tsx      ← mapeamento coluna→campo CRM
-│       ├── ImportSummary.tsx     ← resumo pré-confirmação
-│       ├── DuplicateResolver.tsx ← decidir ignorar/atualizar/mesclar
-│       ├── ImportProgress.tsx    ← barra + estado de processamento
-│       └── ImportResult.tsx      ← feedback final
-│
-├── hooks/
-│   └── useExcelImport.ts         ← state machine do fluxo (idle→parsing→mapping→preview→importing→done)
-│
-├── services/ia/
-│   ├── excelParser.ts            ← lê .xlsx/.xls/.csv via SheetJS (xlsx)
-│   ├── columnMapper.ts           ← heurística + chamada IA p/ sugerir mapeamento
-│   ├── leadNormalizer.ts         ← normaliza telefone/data/status/texto
-│   ├── duplicateDetector.ts      ← detecta duplicados por phone/name+phone
-│   └── importExecutor.ts         ← executa INSERT/UPDATE/MERGE no Supabase
-│
-├── lib/ia/
-│   ├── fieldDictionary.ts        ← sinônimos por campo (nome/cliente/contato…)
-│   ├── statusInference.ts        ← mapeia "fechado","novo","aguardando" → LeadStatus
-│   └── phoneFormat.ts            ← normaliza para padrão BR
-│
-└── supabase/functions/ia-suggest-mapping/index.ts
-                                  ← edge function: usa Lovable AI Gateway
-                                    para sugerir mapeamento quando heurística falhar
-```
+### 2. Revisão com validação por linha + correção inline
 
-### 3. Tela hub `/admin/ia` — IAHomePage
+Substituir a tela atual de `reviewing` (resumo agregado) por uma **tabela de revisão linha-a-linha** com:
 
-Layout premium com:
+- Coluna por campo CRM mapeado (name, phone, status, next_contact_at, origin, product_interest, notes).
+- **Células com erro** ficam destacadas (borda vermelha + ícone `faTriangleExclamation` + tooltip com motivo).
+- **Células com warning** (telefone normalizado, status inferido, data ajustada) ficam em amarelo com ícone `faWandMagicSparkles`.
+- **Edição inline**: clicar na célula abre input/select para corrigir o valor diretamente — revalida ao sair (blur).
+- Filtros no topo: "Todas / Com erro / Com warning / Válidas".
+- Painel lateral colapsável **"Ajustar mapeamento"** — permite trocar o mapeamento sem voltar à etapa anterior; ao salvar, re-normaliza todas as linhas.
+- Resumo agregado vira um header compacto (X válidas · Y warnings · Z erros).
 
-- **Hero compacto**: título "Central de Inteligência", subtítulo explicando o módulo, badge "Beta" sutil.
-- **Grid de FeatureCards** (3 colunas no desktop, 1 no mobile):
-  - **Excel** — ícone `faFileExcel`, status `disponível`, CTA "Abrir" → `/admin/ia/excel`
-  - **CSV** — ícone `faFileCsv`, status `em breve`
-  - **Texto colado** — ícone `faClipboard`, status `em breve`
-  - **Lista do WhatsApp** — ícone `faWhatsapp` (brands), status `em breve`
-  - **Duplicados inteligentes** — ícone `faClone`, status `em breve`
-  - **Sugestão de status** — ícone `faTag`, status `em breve`
-  - **Score automático** — ícone `faChartSimple`, status `em breve`
-  - **Follow-up automático** — ícone `faRobot`, status `em breve`
-  - **Assistente comercial** — ícone `faComments`, status `em breve`
-  - **Insights de leads** — ícone `faLightbulb`, status `em breve`
-- Cards "em breve" ficam com opacity reduzida + badge "Em breve" — não clicáveis.
-- Card ativo tem hover sutil, borda de destaque e CTA visível.
-- Seção inferior **"Como funciona"** com 3 passos curtos (Envie → IA interpreta → Você confirma).
+**Arquivos:**
+- Novo `src/components/ia/excel/RowReviewTable.tsx` (tabela editável)
+- Novo `src/components/ia/excel/RowEditCell.tsx` (célula com input/select + validação)
+- Novo `src/components/ia/excel/InlineMappingPanel.tsx` (painel lateral)
+- `leadNormalizer.ts`: expor `normalizeRow(rawRow, mappings)` para re-normalizar uma linha individual após edição
+- `useExcelImport.ts`: ações `updateRowField(rowIndex, field, value)` e `remapAndRevalidate(mappings)`
+- `ImportSummary.tsx` vira `ReviewHeader.tsx` (apenas badges de contagem)
 
-### 4. Tela `/admin/ia/excel` — fluxo de importação (state machine)
+---
 
-Estados sequenciais controlados por `useExcelImport`:
+### 3. Templates de mapeamento salvos
 
-```text
-idle ──▶ parsing ──▶ mapping ──▶ reviewing ──▶ resolving_duplicates ──▶ importing ──▶ done
-                                       │
-                                       └──▶ error
-```
+Permitir salvar o conjunto `{ source → target }` por nome amigável e reaproveitar.
 
-**Layout:**
-- `IAPageShell` com breadcrumb `IA › Excel` + botão "voltar".
-- Stepper visual no topo (4 passos: Upload · Mapeamento · Revisão · Confirmação).
-- Conteúdo principal troca conforme estado.
+**Persistência:** `localStorage` chave `ia.excel.mappingTemplates` (array de `{ id, name, createdAt, mappings: Array<{source, target}> }`). Não requer migração — totalmente client-side, simples e suficiente para 1 usuário operacional.
 
-**Estado `idle`:** `ExcelDropzone` ocupando área central — drag-and-drop + botão "Selecionar arquivo". Aceita `.xlsx`, `.xls`, `.csv`. Mostra dicas: tamanho máximo, formatos aceitos, link para baixar template-exemplo.
+**UI na etapa `mapping`:**
+- Header da etapa ganha 3 botões: **"Salvar template"**, **"Carregar template"**, **"Aplicar automaticamente"**.
+- Ao carregar arquivo: se houver template cujo conjunto de `source` casa ≥80% com headers atuais, oferece banner sutil "Template detectado: 'Planilha de Vendas' — aplicar?".
+- Dialog de salvar: nome + preview dos mapeamentos.
+- Dialog de carregar: lista de templates com data + qtd de campos + ações (aplicar/excluir).
 
-**Estado `parsing`:** loading com `faSpinner` + mensagem "Lendo planilha…".
+**Arquivos:**
+- Novo `src/services/ia/mappingTemplates.ts` (CRUD em localStorage)
+- Novo `src/components/ia/excel/MappingTemplateManager.tsx` (dialogs)
+- `ColumnMapper.tsx`: integra os 3 botões no header
+- `useExcelImport.ts`: ações `saveMappingTemplate(name)`, `applyMappingTemplate(id)`, detecção automática em `handleFile`
 
-**Estado `mapping`:** 2 colunas:
-- Esquerda: `ExcelPreviewTable` (primeiras 10 linhas, colunas detectadas).
-- Direita: `ColumnMapper` — lista cada coluna da planilha com `Select` para mapear ao campo CRM (`name`, `phone`, `origin`, `product_interest`, `status`, `next_contact_at`, `notes`, `ignore`). Mapeamento sugerido pré-preenchido (heurística + IA). Badge "🪄 Sugerido pela IA" nos auto-mapeados.
+---
 
-**Estado `reviewing`:** `ImportSummary` mostrando:
-- Total de linhas válidas / inválidas / a ignorar
-- Total novos vs. possíveis duplicados
-- Contagem por status inferido
-- Tabela colapsável com erros de validação por linha.
+### 4. Relatório final com download PDF/CSV
 
-**Estado `resolving_duplicates`:** `DuplicateResolver` — para cada duplicado detectado, escolher **ignorar / atualizar / mesclar**. Ação em lote: "Aplicar a todos".
+Tela `done` (`ImportResult.tsx`) ganha:
 
-**Estado `importing`:** `ImportProgress` — barra com `X de Y processados`.
+- Cabeçalho expandido com **4 KPIs**: Criados / Atualizados / Ignorados / Erros (cards com ícones).
+- Seção **"Detalhamento por linha"** colapsável: tabela com `linha · nome · telefone · resultado · mensagem`.
+- 2 botões de download:
+  - **"Baixar relatório (CSV)"** — gerado client-side com `xlsx` (já instalado, faz CSV nativo) ou string manual. Inclui todas as linhas processadas + resultado.
+  - **"Baixar relatório (PDF)"** — usa `jsPDF` + `jspdf-autotable` (deps novas, ~150KB total). PDF com header (logo textual + nome arquivo + data + usuário), tabela de KPIs e tabela de linhas.
+- CTAs existentes mantidos ("Ver leads", "Importar outra").
 
-**Estado `done`:** `ImportResult` — cartão de sucesso com `faCircleCheck`, números (criados / atualizados / ignorados / erros), CTAs "Ver leads importados" (vai para `/admin/leads`) e "Importar outra planilha" (reseta).
+**Arquivos:**
+- Novo `src/services/ia/reportExporter.ts` (`exportToCsv(result)`, `exportToPdf(result, meta)`)
+- `importExecutor.ts`: já retorna `errorDetails` — estender `ImportResult` para incluir `details: Array<{rowIndex, name, phone, outcome: 'created'|'updated'|'skipped'|'error', message?}>`
+- `ImportResult.tsx`: refator visual + botões de export
+- Adiciona deps: `jspdf` e `jspdf-autotable`
 
-### 5. Camada de IA — interpretação de colunas
+---
 
-**Heurística primeiro (`columnMapper.ts`):**
-- Normaliza header (lowercase, sem acentos, sem espaços).
-- Match direto via `fieldDictionary.ts`:
+### 5. Histórico no topo da tela do Excel + realtime
 
-```ts
-{
-  name:             ['nome','cliente','contato','lead','razao social'],
-  phone:            ['telefone','celular','whatsapp','fone','tel','contato'],
-  origin:           ['origem','fonte','canal','campanha','origem do lead'],
-  product_interest: ['produto','interesse','item','servico','o que quer'],
-  status:           ['status','etapa','situacao','fase'],
-  next_contact_at:  ['retorno','follow up','followup','proximo contato','proxima data'],
-  notes:            ['observacoes','notas','obs','comentarios','historico'],
-}
-```
+Hoje há `ImportHistoryCard` mas isolado. Movê-lo para **banner persistente no topo de `IAExcelImportPage`**:
 
-**Fallback IA (`ia-suggest-mapping` edge function):**
-- Quando ≥1 coluna não casa por heurística, manda os headers + 3 linhas de amostra para Lovable AI Gateway (`google/gemini-3-flash-preview`).
-- Usa **tool calling** com schema estruturado retornando `{ mappings: [{ source: string, target: FieldKey | 'ignore', confidence: number }] }`.
-- Prompt no backend (nunca client-side).
-- Edge function pública (sem JWT) por simplicidade — apenas processamento de strings, sem leitura de DB.
+- Visível em **todos os steps** (não apenas `idle`), de forma compacta.
+- Mostra **última importação em andamento** (se houver) com barra de progresso animada + contador "X de Y".
+- Mostra **3 últimas concluídas** em chips horizontais clicáveis (data · arquivo · resultado).
+- **Realtime via Supabase channel** em `ia_import_logs` — atualiza ao vivo conforme `importExecutor` grava progresso.
+- Para suportar progresso ao vivo, `importExecutor` passa a fazer `update` periódico (a cada lote de 50) no log com contadores parciais — não só no início/fim.
+- Hook `useImportHistory` já existe; estender para subscribe via `supabase.channel('ia_import_logs')`.
 
-### 6. Normalização inteligente (`leadNormalizer.ts` + helpers)
+**Arquivos:**
+- Novo `src/components/ia/excel/ImportHistoryBanner.tsx` (versão compacta, sticky)
+- `useImportHistory.ts`: adicionar realtime subscription + retornar `inProgress` separado de `recent`
+- `importExecutor.ts`: novo helper `updateImportLogProgress(logId, partial)` chamado a cada batch
+- `importLogService.ts`: adicionar `updateImportLog(id, patch)`
+- `IAExcelImportPage.tsx`: renderiza banner sempre no topo
+- Migração: habilitar realtime em `ia_import_logs` (`ALTER PUBLICATION supabase_realtime ADD TABLE public.ia_import_logs`)
 
-- **Telefone**: remove tudo que não é dígito; adiciona `55` se BR sem DDI; rejeita se < 10 dígitos.
-- **Data** (`next_contact_at`): tenta `dd/mm/yyyy`, `yyyy-mm-dd`, `dd/mm`, ISO; usa `date-fns`.
-- **Status** (`statusInference.ts`):
-  - "novo", "lead novo", "recebido" → `new`
-  - "em contato", "contatando", "abordagem" → `contacting`
-  - "negociação", "aguardando", "proposta", "orçamento" → `negotiating`
-  - "cliente", "fechado", "comprou", "ganho", "vendido" → `won`
-  - "perdido", "não respondeu", "sem resposta", "desistiu" → `lost`
-  - Desconhecido → `new` + flag de aviso.
-- **Texto**: trim, colapsa espaços múltiplos, remove caracteres invisíveis.
-- **Vazios**: convertidos para `null`, exceto campos obrigatórios (gera erro de validação).
+---
 
-### 7. Deduplicação (`duplicateDetector.ts`)
+### Resumo técnico
 
-- Carrega leads existentes (apenas `id`, `name`, `phone`) **uma vez** antes da importação.
-- Match: telefone normalizado **idêntico** OU nome normalizado idêntico + telefone vazio em um dos lados.
-- Para cada match, retorna `{ row, existingLead, strategy: 'skip' | 'update' | 'merge' }` (default `skip`).
-- **Merge** = atualiza apenas campos vazios no lead existente + cria `lead_note` com payload da planilha.
-- **Update** = sobrescreve campos não-vazios da planilha.
-
-### 8. Execução da importação (`importExecutor.ts`)
-
-- Processa em lotes de 50 com `Promise.allSettled`.
-- Para cada linha válida:
-  - **Novo** → `INSERT INTO leads`
-  - **Update** → `UPDATE leads`
-  - **Merge** → `UPDATE leads` (campos vazios) + `INSERT INTO lead_notes`
-- Se `next_contact_at` presente → grava no lead.
-- Se houver coluna mapeada como `notes` com conteúdo → cria `lead_note` adicional.
-- Conta criados / atualizados / ignorados / erros e devolve `ImportResult`.
-- **Não cria** nenhuma `interaction` automática (evita poluir histórico). `last_contact_at` permanece intocado.
-
-### 9. Histórico de importações (preparado, ainda não implementado)
-
-Migração nova (apenas estrutura, **não** consumida agora — reservada para evolução futura):
-
+**Migração SQL (1 linha):**
 ```sql
-create table public.ia_import_logs (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null,
-  source text not null,             -- 'excel' | 'csv' | …
-  filename text,
-  total_rows int not null default 0,
-  created_count int not null default 0,
-  updated_count int not null default 0,
-  skipped_count int not null default 0,
-  error_count int not null default 0,
-  started_at timestamptz not null default now(),
-  finished_at timestamptz
-);
-alter table public.ia_import_logs enable row level security;
-create policy "auth read own logs"   on public.ia_import_logs for select to authenticated using (auth.uid() = user_id);
-create policy "auth insert own logs" on public.ia_import_logs for insert to authenticated with check (auth.uid() = user_id);
+ALTER PUBLICATION supabase_realtime ADD TABLE public.ia_import_logs;
 ```
 
-Após cada importação Excel, gravar 1 registro nesta tabela. Tela de histórico fica para uma próxima iteração — a base já estará pronta.
+**Novas dependências:** `jspdf`, `jspdf-autotable` (para o item 4).
 
-### 10. Dependências novas
+**Novo step na máquina de estados:**
+```
+idle → parsing → mapping → strategy → reviewing → resolving_duplicates → importing → done
+```
 
-- **`xlsx`** (SheetJS, ~600KB) — parser robusto de `.xlsx/.xls/.csv` no client. Já é o padrão da indústria, sem alternativa equivalente leve.
+**Persistência client-side (localStorage):**
+- `ia.excel.defaultDupStrategy` — preferência de estratégia padrão
+- `ia.excel.mappingTemplates` — lista de templates salvos
 
-Nenhuma outra dependência (Font Awesome, dnd-kit, sonner, date-fns já existem).
+**Garantias:**
+- Zero alteração em leads, pipeline, dashboard, clientes, auth, landing.
+- Zero alteração nos services `leadService`, `interactionService`, `clientService`.
+- Schema do banco intocado (apenas habilita realtime numa tabela já existente).
+- Todos os ícones permanecem 100% Font Awesome.
+- Mobile: tabela de revisão vira accordion por linha; banner de histórico colapsa.
 
-### 11. Edge function — `supabase/functions/ia-suggest-mapping/index.ts`
+### Ordem de implementação
 
-- POST: `{ headers: string[], samples: string[][] }` (3 linhas).
-- Chama Lovable AI Gateway com `LOVABLE_API_KEY` (já provisionado).
-- Tool calling para garantir JSON estruturado.
-- Retorna `{ mappings: [...] }`.
-- CORS aberto, validação Zod do body.
-- Erros 429/402 propagados com toast amigável no front.
-
-### 12. Design system & UX
-
-- Tipografia `font-crm` (Josefin Sans) consistente com restante do CRM.
-- Cards usam `rounded-xl`, `border`, `shadow-sm`, hover com `shadow-md`.
-- Cores semânticas existentes (`success`, `warning`, `info`, `destructive`).
-- **100% Font Awesome** para todos os ícones do módulo.
-- Animações sutis (`animate-fade-in-up` já existente).
-- Mobile-first: dropzone full-width, mapper vira accordion no mobile.
-- Acessibilidade: labels nos selects, aria-live no progresso, foco visível.
-
-### 13. Garantias
-
-- **Zero alteração** em rotas/páginas/serviços existentes (Pipeline, Leads, Dashboard, Clientes, Auth, Landing).
-- **Zero migração destrutiva** — apenas 1 tabela nova (`ia_import_logs`) sem FK em tabelas existentes.
-- RLS estrito (logs só do próprio usuário; leads usam policies já existentes).
-- IA é **opcional**: se a edge function falhar, heurística + mapeamento manual cobrem 100% do fluxo.
-- Importação é **transacional por linha**: erro em uma linha não derruba o lote.
-- Estrutura de pastas modular já abre espaço para CSV / Texto / WhatsApp sem refator.
-
-### 14. Ordem de execução (1 mensagem, em sequência)
-
-1. Migração `ia_import_logs` + RLS.
-2. Edge function `ia-suggest-mapping`.
-3. Instalar `xlsx`.
-4. Libs e helpers (`fieldDictionary`, `statusInference`, `phoneFormat`).
-5. Services (`excelParser`, `columnMapper`, `leadNormalizer`, `duplicateDetector`, `importExecutor`).
-6. Hook `useExcelImport`.
-7. Componentes Excel (Dropzone, Preview, Mapper, Summary, Duplicates, Progress, Result).
-8. `IAPageShell` + `IAFeatureCard`.
-9. `IAHomePage` + `IAExcelImportPage`.
-10. Adicionar rotas em `App.tsx` e item na `AdminSidebar`.
+1. Migração realtime + estender `importLogService` e `useImportHistory` com subscribe.
+2. `ImportHistoryBanner` no topo + progresso parcial em `importExecutor`.
+3. Step `strategy` + `DefaultStrategyPicker` + persistência.
+4. `mappingTemplates` service + `MappingTemplateManager` + integração no `ColumnMapper`.
+5. `RowReviewTable` editável + `InlineMappingPanel` + `normalizeRow` exposto.
+6. `reportExporter` (CSV + PDF) + refator de `ImportResult` com KPIs e detalhamento.
 
