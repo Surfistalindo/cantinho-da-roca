@@ -3,8 +3,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTriangleExclamation, faWandMagicSparkles, faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LEAD_STATUSES, type LeadStatus } from '@/config/app';
-import { getLeadStatusConfig } from '@/lib/leadStatus';
+import { type LeadStatus } from '@/config/app';
+import { LEAD_STATUS_VALUES, getLeadStatusConfig } from '@/lib/leadStatus';
 import { formatPhoneDisplay } from '@/lib/ia/phoneFormat';
 import { cn } from '@/lib/utils';
 
@@ -56,7 +56,7 @@ export default function RowEditCell({ value, field, state, message, onCommit }: 
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {LEAD_STATUSES.map((s) => (
+            {LEAD_STATUS_VALUES.map((s) => (
               <SelectItem key={s} value={s}>{getLeadStatusConfig(s).label}</SelectItem>
             ))}
           </SelectContent>
