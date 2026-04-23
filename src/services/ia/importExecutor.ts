@@ -133,18 +133,13 @@ export async function executeImport(
     }));
   }
 
-  // Log de importação
-  if (userId) {
-    await supabase.from('ia_import_logs').insert({
-      user_id: userId,
-      source: 'excel',
-      filename: filename ?? null,
-      total_rows: total,
-      created_count: result.created,
-      updated_count: result.updated,
-      skipped_count: result.skipped,
-      error_count: result.errors,
-      finished_at: new Date().toISOString(),
+  // Finaliza log de importação (atualiza linha existente)
+  if (logId) {
+    await finishImportLog(logId, {
+      created: result.created,
+      updated: result.updated,
+      skipped: result.skipped,
+      errors: result.errors,
     });
   }
 
