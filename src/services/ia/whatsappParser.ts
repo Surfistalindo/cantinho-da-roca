@@ -234,5 +234,6 @@ export function whatsappLeadsToParsedSheet(leads: WhatsAppLead[]): ParsedSheet {
     rawRows,
     sheetName: 'whatsapp-import',
     totalRows: rows.length,
+    sheets: [{ name: 'whatsapp-import', rows: rows.length }],
   };
 }
