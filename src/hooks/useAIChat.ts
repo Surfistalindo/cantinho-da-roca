@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { logger } from '@/lib/logger';
 import {
   streamAssistant, saveMessage, loadConversation, listConversations,
   deleteConversation as svcDelete,
@@ -30,7 +31,7 @@ export function useAIChat(initialConversationId?: string) {
       const list = await listConversations();
       setConversations(list);
     } catch (e) {
-      console.warn('listConversations failed', e);
+      logger.warn('listConversations failed', e);
     }
   }, []);
 
@@ -47,7 +48,7 @@ export function useAIChat(initialConversationId?: string) {
             .map((m) => ({ id: m.id, role: m.role as 'user' | 'assistant', content: m.content })),
         );
       } catch (e) {
-        console.warn('loadConversation failed', e);
+        logger.warn('loadConversation failed', e);
       }
     })();
     return () => { cancelled = true; };
@@ -65,7 +66,7 @@ export function useAIChat(initialConversationId?: string) {
     setStreaming(true);
 
     // Persiste msg do usuário em paralelo
-    saveMessage(conversationId, 'user', text).catch((e) => console.warn('save user msg failed', e));
+    saveMessage(conversationId, 'user', text).catch((e) => logger.warn('save user msg failed', e));
 
     // Monta payload com TODA a conversa anterior (sem o assistant pendente)
     const payload: ChatMsg[] = [...turns, userTurn].map((t) => ({ role: t.role, content: t.content }));
@@ -89,7 +90,7 @@ export function useAIChat(initialConversationId?: string) {
           if (acc) {
             saveMessage(conversationId, 'assistant', acc)
               .then(() => refreshConversations())
-              .catch((e) => console.warn('save assistant msg failed', e));
+              .catch((e) => logger.warn('save assistant msg failed', e));
           }
         },
         onError: (err) => {
