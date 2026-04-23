@@ -65,8 +65,8 @@ export interface UseExcelImportOptions {
 /** Constrói o mapeamento global (união por header) a partir dos mapeamentos por aba. */
 function unifyMappings(parsed: ParsedSheet, bySheet: Record<string, ColumnMapping[]>): ColumnMapping[] {
   const seen = new Map<string, ColumnMapping>();
-  for (const h of parsed.headers) {
-    // Procura nas abas qualquer mapeamento p/ esse header
+  const visibleHeaders = parsed.headers.filter((h) => h !== '__sheet');
+  for (const h of visibleHeaders) {
     for (const sheetName of Object.keys(bySheet)) {
       const m = bySheet[sheetName].find((x) => x.source === h);
       if (m && m.target !== 'ignore') { seen.set(h, m); break; }
@@ -76,7 +76,7 @@ function unifyMappings(parsed: ParsedSheet, bySheet: Record<string, ColumnMappin
       seen.set(h, { source: h, target: 'ignore', confidence: 0, suggestedBy: 'none' });
     }
   }
-  return parsed.headers.map((h) => seen.get(h)!);
+  return visibleHeaders.map((h) => seen.get(h)!);
 }
 
 /** Aplica um override de target em todos os mapeamentos por aba que contenham esse header. */
