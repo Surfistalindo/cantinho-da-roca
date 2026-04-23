@@ -65,7 +65,14 @@ export async function executeImport(
           const { data: existing } = await supabase.from('leads')
             .select('*').eq('id', dup.existing.id).maybeSingle();
           if (existing) {
-            const patch: Record<string, unknown> = {};
+            const patch: {
+              phone?: string | null;
+              origin?: string | null;
+              product_interest?: string | null;
+              next_contact_at?: string | null;
+              notes?: string | null;
+              updated_at?: string;
+            } = {};
             if (!existing.phone && row.data.phone) patch.phone = row.data.phone;
             if (!existing.origin && row.data.origin) patch.origin = row.data.origin;
             if (!existing.product_interest && row.data.product_interest) patch.product_interest = row.data.product_interest;
