@@ -311,7 +311,6 @@ Deno.serve(async (req) => {
       },
     });
   } catch (e) {
-  } catch (e) {
     return jsonResponseFor(req, { error: e instanceof Error ? e.message : "unknown" }, 500);
   }
 });
