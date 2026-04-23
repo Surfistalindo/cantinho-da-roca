@@ -3,23 +3,50 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileArrowUp, faFileExcel, faCloudArrowUp } from '@fortawesome/free-solid-svg-icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface ExcelDropzoneProps {
   onFile: (file: File) => void;
 }
 
-const ACCEPT = '.xlsx,.xls,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv';
+const ACCEPT = '.xlsx,.xls,.xlsm,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel.sheet.macroenabled.12,text/csv';
+const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+const ALLOWED_EXTS = ['xlsx', 'xls', 'xlsm', 'csv'];
+
+function validateFile(file: File): string | null {
+  // Path traversal / nome suspeito
+  if (/[\\/]|\.\./.test(file.name)) return 'Nome de arquivo inválido.';
+  if (file.name.length > 200) return 'Nome de arquivo muito longo.';
+  // Tamanho
+  if (file.size === 0) return 'Arquivo vazio.';
+  if (file.size > MAX_SIZE_BYTES) return 'Arquivo maior que 10 MB.';
+  // Extensão
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  if (!ext || !ALLOWED_EXTS.includes(ext)) {
+    return 'Formato não permitido. Use .xlsx, .xls, .xlsm ou .csv.';
+  }
+  return null;
+}
 
 export default function ExcelDropzone({ onFile }: ExcelDropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
 
+  const handleFile = useCallback((file: File) => {
+    const err = validateFile(file);
+    if (err) {
+      toast.error('Arquivo rejeitado', { description: err });
+      return;
+    }
+    onFile(file);
+  }, [onFile]);
+
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
     const f = e.dataTransfer.files?.[0];
-    if (f) onFile(f);
-  }, [onFile]);
+    if (f) handleFile(f);
+  }, [handleFile]);
 
   return (
     <div
@@ -45,7 +72,7 @@ export default function ExcelDropzone({ onFile }: ExcelDropzoneProps) {
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];
-          if (f) onFile(f);
+          if (f) handleFile(f);
           e.target.value = '';
         }}
       />
@@ -56,10 +83,10 @@ export default function ExcelDropzone({ onFile }: ExcelDropzoneProps) {
       <div className="mt-6 flex items-center justify-center gap-4 text-[11px] text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
           <FontAwesomeIcon icon={faFileExcel} className="h-3 w-3 text-success" />
-          .xlsx, .xls, .csv
+          .xlsx, .xls, .xlsm, .csv
         </span>
         <span>•</span>
-        <span>Até 5.000 linhas</span>
+        <span>Até 10 MB · 5.000 linhas</span>
       </div>
     </div>
   );

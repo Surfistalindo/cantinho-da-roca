@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import CrmLayout from "@/components/crm/CrmLayout";
 import Index from "./pages/Index";
 import AdminLogin from "./pages/AdminLogin";
+import ResetPassword from "./pages/ResetPassword";
 import DashboardPage from "./pages/admin/DashboardPage";
 import LeadsPage from "./pages/admin/LeadsPage";
 import PipelinePage from "./pages/admin/PipelinePage";
@@ -36,6 +37,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route
               path="/admin"
               element={
