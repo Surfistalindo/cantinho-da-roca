@@ -20,6 +20,7 @@ import { getContactRecency } from '@/lib/contactRecency';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { MSym } from './MSym';
 import { cn } from '@/lib/utils';
+import cantimLogo from '@/assets/cantim-logo.png';
 
 interface NavItem {
   title: string;
@@ -135,13 +136,13 @@ export default function AdminSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
       <SidebarHeader className="px-4 pt-5 pb-4">
         <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
-          <div className="h-10 w-10 shrink-0 rounded-xl bg-sidebar-primary/15 text-sidebar-primary flex items-center justify-center">
-            <MSym name="hub" size={22} filled />
+          <div className="h-10 w-10 shrink-0 rounded-xl bg-white/95 ring-1 ring-sidebar-border flex items-center justify-center overflow-hidden p-1">
+            <img src={cantimLogo} alt="Cantim da Roça" className="h-full w-full object-contain" />
           </div>
           {!collapsed && (
             <div className="min-w-0 leading-tight">
-              <p className="text-[15px] font-bold text-sidebar-accent-foreground truncate">Cantim CRM</p>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-sidebar-primary font-semibold">Enterprise</p>
+              <p className="text-[15px] font-bold text-sidebar-accent-foreground truncate">Cantim da Roça</p>
+              <p className="text-[10px] uppercase tracking-[0.18em] text-sidebar-primary font-semibold">CRM Enterprise</p>
             </div>
           )}
         </div>
