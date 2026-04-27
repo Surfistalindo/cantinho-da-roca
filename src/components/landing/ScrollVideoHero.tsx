@@ -190,10 +190,11 @@ const ScrollVideoHero: React.FC = () => {
           </div>
 
           {/* Centered headline + CTAs */}
-          <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+          <div className="flex-1 flex items-center justify-center px-6 sm:px-10">
+            <div className="flex w-full max-w-5xl flex-col items-center text-center">
             <h1
               ref={headlineRef}
-              className="max-w-4xl text-balance text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.55)]"
+              className="max-w-[14ch] text-pretty text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[0.95] text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.55)]"
               style={{
                 fontFamily: "'Playfair Display', serif",
                 opacity: 0,
@@ -201,14 +202,12 @@ const ScrollVideoHero: React.FC = () => {
                 willChange: 'opacity, transform',
               }}
             >
-              Produtos naturais selecionados
-              <br className="hidden sm:block" />
-              {' '}para cuidar de você
+              Produtos naturais selecionados para cuidar de você
             </h1>
 
             <div
               ref={ctaRef}
-              className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center gap-3 sm:gap-4"
+              className="mt-7 flex w-full max-w-3xl flex-col items-stretch justify-center gap-3 sm:mt-8 sm:flex-row sm:items-center"
               style={{
                 opacity: 0,
                 transform: 'translateY(16px)',
@@ -217,7 +216,7 @@ const ScrollVideoHero: React.FC = () => {
             >
               <Button
                 size="lg"
-                className="uppercase tracking-wide w-full sm:w-auto px-8 shadow-lg shadow-black/30"
+                className="h-14 min-w-[240px] flex-1 uppercase tracking-wide px-8 shadow-lg shadow-black/30 sm:flex-none"
                 onClick={scrollToProducts}
               >
                 Conhecer produtos
@@ -225,7 +224,7 @@ const ScrollVideoHero: React.FC = () => {
               <Button
                 size="lg"
                 variant="outline"
-                className="uppercase tracking-wide w-full sm:w-auto px-8 bg-white/10 backdrop-blur border-white/40 text-white hover:bg-white/20 hover:text-white"
+                className="h-14 min-w-[280px] flex-1 uppercase tracking-wide px-8 bg-white/10 backdrop-blur border-white/40 text-white hover:bg-white/20 hover:text-white sm:flex-none"
                 asChild
               >
                 <a
@@ -237,6 +236,7 @@ const ScrollVideoHero: React.FC = () => {
                   Falar no WhatsApp
                 </a>
               </Button>
+            </div>
             </div>
           </div>
 
