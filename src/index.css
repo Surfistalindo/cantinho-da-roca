@@ -197,27 +197,48 @@
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
-  /* CRM typography roles — Be Vietnam Pro (headlines), Public Sans (body), Epilogue (labels) */
+  /* CRM typography scale — exact spec from Premium CRM System */
   .font-crm {
     font-family: var(--font-crm-body);
-    letter-spacing: -0.005em;
+    font-size: 14px;
+    line-height: 20px;
+    letter-spacing: 0;
   }
-  .font-crm h1,
-  .font-crm h2,
-  .font-crm h3,
-  .font-crm h4,
-  .font-crm h5,
-  .font-crm h6 {
+  .font-crm h1, .font-crm .text-h1 {
     font-family: var(--font-crm-display);
-    letter-spacing: -0.018em;
-    font-weight: 700;
+    font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -0.01em;
+  }
+  .font-crm h2, .font-crm .text-h2 {
+    font-family: var(--font-crm-display);
+    font-size: 16px; line-height: 24px; font-weight: 600; letter-spacing: -0.01em;
+  }
+  .font-crm h3, .font-crm h4, .font-crm h5, .font-crm h6 {
+    font-family: var(--font-crm-display);
+    font-weight: 600; letter-spacing: -0.01em;
+  }
+  .font-crm .text-display-sm {
+    font-family: var(--font-crm-display);
+    font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -0.02em;
+  }
+  .font-crm .text-body-md {
+    font-family: var(--font-crm-body);
+    font-size: 14px; line-height: 20px; font-weight: 400;
+  }
+  .font-crm .text-body-sm {
+    font-family: var(--font-crm-body);
+    font-size: 13px; line-height: 18px; font-weight: 400;
   }
   .font-crm label,
+  .font-crm .text-label-md,
   .font-crm .crm-label,
   .font-crm [data-crm-label] {
     font-family: var(--font-crm-label);
-    letter-spacing: 0.01em;
-    font-weight: 500;
+    font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.01em;
+  }
+  .font-crm .text-label-xs {
+    font-family: var(--font-crm-label);
+    font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.02em;
+    text-transform: uppercase;
   }
 
   /* Material Symbols utility for CRM */
@@ -250,15 +271,15 @@
     background-color: hsl(var(--elevated));
   }
 
-  /* Default visual upgrades inside CRM (no logic changes) */
+  /* Default visual — match design-system 8px radius */
   .font-crm input,
   .font-crm textarea,
   .font-crm [role="combobox"],
   .font-crm button[role="combobox"] {
-    border-radius: 0.625rem;
+    border-radius: 0.5rem;
   }
   .font-crm button:not([role]):not(.no-crm-radius) {
-    border-radius: 0.625rem;
+    border-radius: 0.5rem;
   }
 
   /* Smooth row hover */
