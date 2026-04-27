@@ -192,11 +192,11 @@ const ScrollVideoHero: React.FC = () => {
           <video
             ref={videoRef}
             className="absolute inset-0 h-full w-full object-cover"
-            src={VIDEO_SRC}
+            src={shouldLoadVideo ? VIDEO_SRC : undefined}
             poster={POSTER_SRC}
             muted
             playsInline
-            preload="auto"
+            preload={shouldLoadVideo ? 'auto' : 'none'}
             tabIndex={-1}
             aria-hidden="true"
           />
