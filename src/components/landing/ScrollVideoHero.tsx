@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { MessageCircle } from 'lucide-react';
 import logoImg from '@/assets/logo-cantim.png';
 
-const VIDEO_SRC = '/hero/hero-cantim-scroll.mp4';
-const POSTER_SRC = '/hero/hero-cantim-poster.webp';
+const VIDEO_SRC = '/hero-cantim-scroll.mp4';
+const POSTER_SRC = '/hero-cantim-poster.webp';
 
 const clamp = (v: number, min = 0, max = 1) => Math.max(min, Math.min(max, v));
 // Maps progress within [a, b] to 0..1
@@ -18,81 +18,47 @@ const ScrollVideoHero: React.FC = () => {
   const overlayTextRef = useRef<HTMLDivElement>(null);
 
   const [useStaticFallback, setUseStaticFallback] = useState(false);
-  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+  const [isVideoReady, setIsVideoReady] = useState(false);
 
-  // Decide between video and static fallback (mobile / saveData / reduced motion)
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const isSmall = window.matchMedia('(max-width: 640px)').matches;
-    const conn = (navigator as any).connection;
-    const saveData = !!(conn && conn.saveData);
-    const slow = !!(conn && /(^|-)2g$/.test(conn.effectiveType || ''));
-    if (reducedMotion || (isSmall && (saveData || slow))) {
-      setUseStaticFallback(true);
-    }
-  }, []);
-
-  // Lazy-load: only attach the video src when the hero gets close to the viewport.
-  useEffect(() => {
-    if (useStaticFallback) return;
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
-    if (typeof IntersectionObserver === 'undefined') {
-      setShouldLoadVideo(true);
-      return;
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            setShouldLoadVideo(true);
-            io.disconnect();
-            break;
-          }
-        }
-      },
-      { rootMargin: '200% 0px 200% 0px', threshold: 0 },
-    );
-    io.observe(wrapper);
-    return () => io.disconnect();
-  }, [useStaticFallback]);
-
-  // "Kick" the video so the browser actually decodes frames and lets us seek.
-  // Some browsers (Safari/iOS especially) won't update currentTime visually
-  // until the media has been started at least once.
-  useEffect(() => {
-    if (useStaticFallback || !shouldLoadVideo) return;
     const v = videoRef.current;
     if (!v) return;
-    let cancelled = false;
-    const kick = () => {
-      if (cancelled) return;
-      const p = v.play();
-      if (p && typeof p.then === 'function') {
-        p.then(() => { try { v.pause(); } catch {} }).catch(() => { /* ignore */ });
-      } else {
-        try { v.pause(); } catch {}
-      }
-    };
-    if (v.readyState >= 2) kick();
-    else v.addEventListener('loadeddata', kick, { once: true });
 
-    const id = window.setTimeout(() => {
-      if (!cancelled && v.readyState < 2) setUseStaticFallback(true);
-    }, 4000);
+    const handleLoadedMetadata = () => {
+      setIsVideoReady(true);
+      try {
+        v.pause();
+        v.currentTime = Math.min(0.01, v.duration || 0.01);
+        const playPromise = v.play();
+        if (playPromise && typeof playPromise.then === 'function') {
+          playPromise.then(() => v.pause()).catch(() => v.pause());
+        }
+      } catch {}
+    };
+
+    const handleError = () => {
+      setUseStaticFallback(true);
+    };
+
+    v.addEventListener('loadedmetadata', handleLoadedMetadata);
+    v.addEventListener('error', handleError);
+
+    if (v.readyState >= 1) {
+      handleLoadedMetadata();
+    } else {
+      v.load();
+    }
 
     return () => {
-      cancelled = true;
-      v.removeEventListener('loadeddata', kick);
-      window.clearTimeout(id);
+      v.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      v.removeEventListener('error', handleError);
     };
-  }, [useStaticFallback, shouldLoadVideo]);
+  }, []);
 
   // Scroll-driven loop
   useEffect(() => {
     const wrapper = wrapperRef.current;
-    if (!wrapper) return;
+    if (!wrapper || useStaticFallback) return;
 
     let rafId = 0;
     let queued = false;
@@ -100,33 +66,27 @@ const ScrollVideoHero: React.FC = () => {
 
     const update = () => {
       queued = false;
+      const v = videoRef.current;
+      if (!v || !isVideoReady || !v.duration || !Number.isFinite(v.duration)) return;
+
       const rect = wrapper.getBoundingClientRect();
       const total = rect.height - window.innerHeight;
       const rawProgress = -rect.top / Math.max(1, total);
       const progress = clamp(rawProgress);
 
-      // Drive video time only while we're inside the sticky range (0..1).
-      // Outside it, leave the video frozen at first/last frame and DO NOT
-      // re-issue currentTime writes — that's what causes tiny regressions
-      // and stutters once the page continues past the hero.
-      const v = videoRef.current;
-      if (v && v.duration && Number.isFinite(v.duration)) {
-        const dur = v.duration;
-        // Land exactly at (duration - epsilon) at the end so the browser
-        // doesn't wrap back to 0 when currentTime === duration.
-        const epsilon = Math.min(0.04, dur * 0.01);
-        const target =
-          rawProgress >= 1 ? dur - epsilon
-          : rawProgress <= 0 ? 0
-          : progress * dur;
+      const epsilon = Math.min(0.04, v.duration * 0.01);
+      const targetTime = progress >= 1
+        ? Math.max(v.duration - epsilon, 0)
+        : progress <= 0
+          ? 0.01
+          : Math.min(v.duration * progress, v.duration - epsilon);
 
-        // Only seek when not already seeking and the delta is meaningful.
-        if (!v.seeking && Math.abs(target - lastAppliedTime) > 0.03) {
-          try {
-            v.currentTime = target;
-            lastAppliedTime = target;
-          } catch { /* ignore */ }
-        }
+      if (Math.abs(targetTime - lastAppliedTime) > 0.016 && !v.seeking) {
+        try {
+          v.pause();
+          v.currentTime = targetTime;
+          lastAppliedTime = targetTime;
+        } catch {}
       }
 
       // Headline 0.15 -> 0.45
@@ -165,7 +125,7 @@ const ScrollVideoHero: React.FC = () => {
       window.removeEventListener('resize', schedule);
       cancelAnimationFrame(rafId);
     };
-  }, [useStaticFallback, shouldLoadVideo]);
+  }, [isVideoReady, useStaticFallback]);
 
   const scrollToProducts = () => {
     document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' });
@@ -192,13 +152,14 @@ const ScrollVideoHero: React.FC = () => {
           <video
             ref={videoRef}
             className="absolute inset-0 h-full w-full object-cover"
-            src={shouldLoadVideo ? VIDEO_SRC : undefined}
+            src={VIDEO_SRC}
             poster={POSTER_SRC}
             muted
             playsInline
-            preload={shouldLoadVideo ? 'auto' : 'none'}
+            preload="auto"
             tabIndex={-1}
             aria-hidden="true"
+            disablePictureInPicture
           />
         )}
 
