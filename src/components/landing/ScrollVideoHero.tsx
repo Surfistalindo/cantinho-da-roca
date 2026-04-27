@@ -141,8 +141,6 @@ const ScrollVideoHero: React.FC = () => {
             muted
             playsInline
             preload="auto"
-            // @ts-expect-error - non-standard but supported attribute
-            disableRemotePlayback
             tabIndex={-1}
             aria-hidden="true"
           />
