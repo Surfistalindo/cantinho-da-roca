@@ -18,7 +18,10 @@ export default {
         sans: ['"DM Sans"', 'sans-serif'],
         heading: ['"Satisfy"', 'cursive'],
         body: ['"DM Sans"', 'sans-serif'],
-        crm: ['"Josefin Sans"', 'sans-serif'],
+        crm: ['"Be Vietnam Pro"', '"Public Sans"', 'sans-serif'],
+        'crm-display': ['"Be Vietnam Pro"', 'sans-serif'],
+        'crm-body': ['"Public Sans"', 'sans-serif'],
+        'crm-label': ['"Epilogue"', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -33,6 +36,14 @@ export default {
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
+        },
+        tertiary: {
+          DEFAULT: "hsl(var(--tertiary))",
+          foreground: "hsl(var(--tertiary-foreground))",
+        },
+        neutral: {
+          DEFAULT: "hsl(var(--neutral))",
+          foreground: "hsl(var(--neutral-foreground))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",

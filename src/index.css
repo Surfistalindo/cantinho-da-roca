@@ -65,53 +65,64 @@
     --font-body: 'DM Sans', sans-serif;
   }
 
-  /* CRM Nexus dark theme — surface palette (overrides aplicados via .font-crm) */
+  /* CRM Nexus dark theme — design system tokens (Primary #14B383, Secondary #42A496, Tertiary #289298, Neutral #5C747C) */
   .font-crm {
-    --background: 222 30% 6%;
-    --foreground: 210 20% 92%;
-    --card: 222 26% 9%;
-    --card-foreground: 210 20% 92%;
-    --popover: 222 28% 11%;
-    --popover-foreground: 210 20% 92%;
-    --muted: 222 22% 14%;
-    --muted-foreground: 215 16% 60%;
-    --accent: 222 24% 16%;
-    --accent-foreground: 210 20% 92%;
-    --border: 222 20% 16%;
-    --input: 222 20% 16%;
+    --background: 200 20% 6%;
+    --foreground: 200 12% 92%;
+    --card: 200 18% 9%;
+    --card-foreground: 200 12% 92%;
+    --popover: 200 20% 11%;
+    --popover-foreground: 200 12% 92%;
+    --muted: 200 14% 14%;
+    --muted-foreground: 198 9% 58%;        /* derivado do Neutral #5C747C */
+    --accent: 200 16% 16%;
+    --accent-foreground: 200 12% 92%;
+    --border: 200 14% 16%;
+    --input: 200 14% 16%;
     --radius: 0.75rem;
-    --primary: 158 70% 45%;
-    --primary-foreground: 222 30% 6%;
-    --secondary: 222 24% 16%;
-    --secondary-foreground: 210 20% 92%;
-    --ring: 158 70% 45%;
 
-    --surface-1: 222 26% 9%;
-    --surface-2: 222 24% 12%;
-    --surface-3: 222 22% 15%;
-    --elevated: 222 28% 11%;
-    --border-strong: 222 20% 22%;
+    /* Brand */
+    --primary: 161 79% 39%;                 /* #14B383 */
+    --primary-foreground: 200 20% 6%;
+    --secondary: 173 41% 45%;               /* #42A496 */
+    --secondary-foreground: 200 20% 6%;
+    --tertiary: 184 58% 38%;                /* #289298 */
+    --tertiary-foreground: 200 20% 6%;
+    --neutral: 198 14% 42%;                 /* #5C747C */
+    --neutral-foreground: 200 12% 96%;
+    --ring: 161 79% 39%;
 
-    --success: 158 70% 45%;
-    --success-foreground: 222 30% 6%;
-    --success-soft: 158 50% 18%;
+    --surface-1: 200 18% 9%;
+    --surface-2: 200 16% 12%;
+    --surface-3: 200 14% 15%;
+    --elevated: 200 20% 11%;
+    --border-strong: 200 14% 22%;
+
+    --success: 161 79% 39%;
+    --success-foreground: 200 20% 6%;
+    --success-soft: 161 50% 16%;
     --warning: 38 92% 55%;
-    --warning-foreground: 222 30% 6%;
+    --warning-foreground: 200 20% 6%;
     --warning-soft: 38 60% 18%;
-    --info: 210 90% 60%;
-    --info-foreground: 222 30% 6%;
-    --info-soft: 210 60% 18%;
+    --info: 184 58% 45%;                    /* tertiary tone */
+    --info-foreground: 200 20% 6%;
+    --info-soft: 184 50% 18%;
     --destructive: 0 75% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --sidebar-background: 222 32% 5%;
-    --sidebar-foreground: 215 16% 70%;
-    --sidebar-primary: 158 70% 45%;
-    --sidebar-primary-foreground: 222 30% 6%;
-    --sidebar-accent: 222 26% 11%;
-    --sidebar-accent-foreground: 210 20% 96%;
-    --sidebar-border: 222 22% 13%;
-    --sidebar-ring: 158 70% 45%;
+    --sidebar-background: 200 22% 5%;
+    --sidebar-foreground: 198 12% 70%;
+    --sidebar-primary: 161 79% 39%;
+    --sidebar-primary-foreground: 200 20% 6%;
+    --sidebar-accent: 200 18% 11%;
+    --sidebar-accent-foreground: 200 12% 96%;
+    --sidebar-border: 200 16% 13%;
+    --sidebar-ring: 161 79% 39%;
+
+    /* Typography roles */
+    --font-crm-display: 'Be Vietnam Pro', sans-serif;
+    --font-crm-body: 'Public Sans', sans-serif;
+    --font-crm-label: 'Epilogue', sans-serif;
   }
 
   .dark {
@@ -171,15 +182,27 @@
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
-  .font-crm,
+  /* CRM typography roles — Be Vietnam Pro (headlines), Public Sans (body), Epilogue (labels) */
+  .font-crm {
+    font-family: var(--font-crm-body);
+    letter-spacing: -0.005em;
+  }
   .font-crm h1,
   .font-crm h2,
   .font-crm h3,
   .font-crm h4,
   .font-crm h5,
   .font-crm h6 {
-    font-family: 'Be Vietnam Pro', 'Public Sans', sans-serif;
-    letter-spacing: -0.011em;
+    font-family: var(--font-crm-display);
+    letter-spacing: -0.018em;
+    font-weight: 700;
+  }
+  .font-crm label,
+  .font-crm .crm-label,
+  .font-crm [data-crm-label] {
+    font-family: var(--font-crm-label);
+    letter-spacing: 0.01em;
+    font-weight: 500;
   }
 
   /* Material Symbols utility for CRM */
