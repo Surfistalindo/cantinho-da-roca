@@ -32,19 +32,33 @@ const ScrollVideoHero: React.FC = () => {
     }
   }, []);
 
-  // Safety fallback: if video never reaches canplay in 3.5s, show poster only
+  // "Kick" the video so the browser actually decodes frames and lets us seek.
+  // Some browsers (Safari/iOS especially) won't update currentTime visually
+  // until the media has been started at least once.
   useEffect(() => {
     if (useStaticFallback) return;
     const v = videoRef.current;
     if (!v) return;
-    let ready = false;
-    const onCanPlay = () => { ready = true; };
-    v.addEventListener('loadeddata', onCanPlay, { once: true });
+    let cancelled = false;
+    const kick = () => {
+      if (cancelled) return;
+      const p = v.play();
+      if (p && typeof p.then === 'function') {
+        p.then(() => { try { v.pause(); } catch {} }).catch(() => { /* ignore */ });
+      } else {
+        try { v.pause(); } catch {}
+      }
+    };
+    if (v.readyState >= 2) kick();
+    else v.addEventListener('loadeddata', kick, { once: true });
+
     const id = window.setTimeout(() => {
-      if (!ready) setUseStaticFallback(true);
-    }, 3500);
+      if (!cancelled && v.readyState < 2) setUseStaticFallback(true);
+    }, 4000);
+
     return () => {
-      v.removeEventListener('loadeddata', onCanPlay);
+      cancelled = true;
+      v.removeEventListener('loadeddata', kick);
       window.clearTimeout(id);
     };
   }, [useStaticFallback]);
