@@ -18,48 +18,11 @@ const ScrollVideoHero: React.FC = () => {
   const overlayTextRef = useRef<HTMLDivElement>(null);
 
   const [useStaticFallback, setUseStaticFallback] = useState(false);
-  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
 
-  // Lazy-load: only attach the video src when the hero gets close to the viewport.
   useEffect(() => {
-    if (useStaticFallback) return;
-    const wrapper = wrapperRef.current;
-    if (!wrapper) return;
-
-    const loadNow = () => setShouldLoadVideo(true);
-    const rect = wrapper.getBoundingClientRect();
-    if (rect.top < window.innerHeight * 1.5 && rect.bottom > -window.innerHeight * 0.5) {
-      loadNow();
-      return;
-    }
-
-    if (typeof IntersectionObserver === 'undefined') {
-      loadNow();
-      return;
-    }
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            loadNow();
-            io.disconnect();
-            break;
-          }
-        }
-      },
-      { rootMargin: '150% 0px 150% 0px', threshold: 0 },
-    );
-    io.observe(wrapper);
-    return () => io.disconnect();
-  }, [useStaticFallback]);
-
-  useEffect(() => {
-    if (useStaticFallback || !shouldLoadVideo) return;
     const v = videoRef.current;
     if (!v) return;
-    let timeoutId = 0;
 
     const handleLoadedMetadata = () => {
       setIsVideoReady(true);
@@ -86,25 +49,20 @@ const ScrollVideoHero: React.FC = () => {
       v.load();
     }
 
-    timeoutId = window.setTimeout(() => {
-      if (v.readyState < 1) setUseStaticFallback(true);
-    }, 4000);
-
     return () => {
       v.removeEventListener('loadedmetadata', handleLoadedMetadata);
       v.removeEventListener('error', handleError);
-      window.clearTimeout(timeoutId);
     };
-  }, [useStaticFallback, shouldLoadVideo]);
+  }, []);
 
   // Scroll-driven loop
   useEffect(() => {
     const wrapper = wrapperRef.current;
-    if (!wrapper || useStaticFallback || !shouldLoadVideo) return;
+    if (!wrapper || useStaticFallback) return;
 
     let rafId = 0;
     let queued = false;
-    let lastProgress = -1;
+    let lastAppliedTime = -1;
 
     const update = () => {
       queued = false;
@@ -117,13 +75,17 @@ const ScrollVideoHero: React.FC = () => {
       const progress = clamp(rawProgress);
 
       const epsilon = Math.min(0.04, v.duration * 0.01);
-      const targetTime = progress >= 1 ? v.duration - epsilon : v.duration * progress;
+      const targetTime = progress >= 1
+        ? Math.max(v.duration - epsilon, 0)
+        : progress <= 0
+          ? 0.01
+          : Math.min(v.duration * progress, v.duration - epsilon);
 
-      if (Math.abs(progress - lastProgress) > 0.001) {
+      if (Math.abs(targetTime - lastAppliedTime) > 0.016 && !v.seeking) {
         try {
           v.pause();
           v.currentTime = targetTime;
-          lastProgress = progress;
+          lastAppliedTime = targetTime;
         } catch {}
       }
 
@@ -163,7 +125,7 @@ const ScrollVideoHero: React.FC = () => {
       window.removeEventListener('resize', schedule);
       cancelAnimationFrame(rafId);
     };
-  }, [isVideoReady, shouldLoadVideo, useStaticFallback]);
+  }, [isVideoReady, useStaticFallback]);
 
   const scrollToProducts = () => {
     document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' });
@@ -190,13 +152,14 @@ const ScrollVideoHero: React.FC = () => {
           <video
             ref={videoRef}
             className="absolute inset-0 h-full w-full object-cover"
-            src={shouldLoadVideo ? VIDEO_SRC : undefined}
+            src={VIDEO_SRC}
             poster={POSTER_SRC}
             muted
             playsInline
-            preload={shouldLoadVideo ? 'auto' : 'none'}
+            preload="auto"
             tabIndex={-1}
             aria-hidden="true"
+            disablePictureInPicture
           />
         )}
 
