@@ -1,107 +1,119 @@
 
+## Dashboard Premium: visual 3D, gráficos ricos e filtros avançados
 
-## Importação Excel: suportar planilhas reais e multi-formato
+Hoje o `DashboardPage` é funcional mas plano: KPIs com sparklines minúsculas, listas chapadas e zero filtragem. Vou elevar para um visual premium ao estilo Linear/Attio/Vercel — com **profundidade tonal real**, **gráficos modernos** (donut, barras empilhadas, área com gradiente), **microinterações 3D** (tilt sutil, glow, glassmorphism) e uma **barra de filtros** robusta no topo da página.
 
-### Diagnóstico (planilha enviada)
+### 1. Barra de filtros global (novo componente)
 
-A planilha `PROSPECÇÃO_DE_CLIENTES_ONLINE.xlsx` quebra a importação atual por 5 motivos combinados:
+Topo do dashboard, sticky abaixo do header, com os seguintes controles:
 
-1. **Abas com layouts totalmente diferentes** — uma aba tem `CLIENTE / CONTATO / ÚLTIMO CONTATO / LOJA / PRODUTOS / MARCA`; outra (ABRIL/2026) tem `NICHO / ÚLTIMO CONTATO / LOJA / Veículo / PROCESSO DE VENDA / PRÓXIMO CONTATO / TICKET / VENDEDOR` — sem coluna "nome".
-2. **Cabeçalho não está na linha 1** — algumas abas têm um título mesclado em A1 ("MARCADORES DE DESEMPENHO…") e o cabeçalho real só na linha 2. O parser atual pega a 1ª linha não-vazia → captura o título e descarta tudo.
-3. **Dicionário pobre** — não reconhece `nicho`, `loja`, `veiculo`, `processo de venda`, `próximo contato`, `ticket`, `vendedor`, `marca`, `produtos bio klein …`.
-4. **Datas em formatos sujos** — `04/11//25` (barra dupla), `02.03.26`, `7198421-8820` em telefone, etc.
-5. **Linha sem nome é rejeitada** — várias linhas têm telefone+produto mas nome em branco; viram erro e somem.
+- **Período** (segmented control): `Hoje · 7d · 30d · 90d · Tudo` + opção "Personalizado" abrindo `react-day-picker` em popover.
+- **Status** (multi-select com chips): Novo, Em contato, Negociação, Cliente, Perdido. Aplica a todos KPIs/gráficos.
+- **Origem** (select dinâmico): valores únicos derivados de `leads.origin` + opção "Todas".
+- **Vendedor/Responsável** (se houver, baseado em `notes`/futuro campo) — por ora ocultar se não houver dado.
+- **Score**: chips `Quente · Morno · Frio · Urgente`.
+- **Busca rápida**: input com ícone search filtra leads por nome/telefone.
+- **Botão "Limpar filtros"** + indicador de quantos filtros ativos.
+- **Botão "Exportar"** (CSV do snapshot atual via `reportExporter.ts`).
 
-Resultado prático: só 40 linhas chegam no painel (apenas a primeira aba "limpa" passa).
+Estado dos filtros vive no `DashboardPage` via `useState`, persistido em `searchParams` para deep-link/refresh.
 
-### Correções
+Componente novo: `src/components/admin/dashboard/DashboardFilters.tsx`.
 
-**1. Detecção inteligente de cabeçalho (`excelParser.ts`)**
+### 2. KPIs com profundidade 3D
 
-- Trocar "primeira linha não vazia" por heurística: das 5 primeiras linhas com conteúdo, escolher a que tem mais células curtas tipo cabeçalho (≤3 palavras, sem números longos, sem dígitos puros) **e** que casa com pelo menos 1 termo do dicionário expandido. Isso pula o título mesclado.
-- Fallback: se nenhuma linha bater, usa a primeira não-vazia (comportamento atual).
+Substituir os cards atuais por cards "elevated" com:
 
-**2. Multi-aba com mapeamento independente por aba**
+- **Gradient mesh sutil** no fundo (radial-gradient com cor do tone do KPI a 6% opacidade) usando pseudoelemento `::before`.
+- **Borda dupla**: borda externa fina + borda interna `inset` brilhante (1px `bg-white/[0.04]` no topo) — efeito de bisel sutil.
+- **Sombra ambiente** com 2 camadas: `shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_8px_24px_-12px_rgba(0,0,0,0.6)]`.
+- **Hover tilt 3D**: usar o `useMouseTilt` hook que já existe (`src/hooks/useMouseTilt.ts`) para inclinação leve (max 4°) seguindo o cursor.
+- **Sparkline maior** (h-12) com **gradiente preenchido** abaixo da linha (área), não só linha.
+- **Badge de variação** com ícone trending + porcentagem grande, tom semântico.
 
-Hoje todas as abas são unificadas pela união de colunas — gera linhas semanticamente incompatíveis. Mudar para:
+KPIs (todos respeitam filtros):
+1. **Total de Leads** (info) — total no período + delta vs período anterior + sparkline diária.
+2. **Em andamento** (warning) — leads em contacting/negotiating + sub: "X em negociação".
+3. **Conversão** (success/destructive) — taxa win/total + meta visível com mini progress radial.
+4. **Sem resposta** (destructive) — leads em overdue + atalho "Reengajar".
 
-- Cada aba é parseada separadamente (header próprio + rows próprios).
-- Cada aba recebe seu próprio mapeamento heurístico/IA.
-- O resultado é a **soma** das linhas normalizadas de todas as abas (não a união de colunas).
-- Banner de pré-visualização mostra cabeçalho de cada aba e o mapeamento aplicado, com possibilidade de ajustar por aba.
-- `__sheet` continua viajando como metadado e vira fallback de **origem** quando a aba não tem coluna explícita.
+Componente novo: `src/components/admin/dashboard/KpiCard.tsx`.
 
-**3. Dicionário ampliado (`fieldDictionary.ts`)**
+### 3. Gráficos modernos (3 novos)
 
-Adicionar termos reais encontrados na planilha:
-- `name`: + `clientes`, `responsavel`, `nomedocliente`
-- `phone`: + `contato`, `whats`, `numerodecontato` (com desempate: se há `cliente` + `contato`, "cliente" → name, "contato" → phone; se só "contato" existe, vira name **a menos** que os valores sejam predominantemente numéricos → então phone).
-- `origin`: + `loja`, `veiculo`, `canal`, `midia`, `marca` (loja/veículo são canais de prospecção aqui).
-- `product_interest`: + `produtos`, `produto`, `nicho`, `marca`, `pedido`, `ticket` (ticket-tamanho de venda também conta como interesse comercial).
-- `status`: + `processodevenda`, `processo`, `etapa`, `situacaodavenda`.
-- `next_contact_at`: + `proximocontato`, `proximocontata`, `proximacontata` (typo da planilha), `retornoem`.
-- `notes`: + `vendedor`, `observacoesvendedor`.
+**a) Funil de conversão (donut + legenda)** — `FunnelDonut.tsx`
+- SVG donut com 5 segmentos (status), espaçamento entre segmentos (`stroke-dasharray` com gap), gradient stops por segmento, glow no hover.
+- Centro mostra total + label "leads no período".
+- Legenda lateral com porcentagem e contagem.
 
-**Heurística de desempate por conteúdo**: quando o cabeçalho é ambíguo (`CONTATO` pode ser nome ou telefone), inspecionar 3-5 valores de amostra. Se ≥60% são dígitos/parênteses/traços → phone. Senão → name.
+**b) Tendência (area chart com gradient)** — `TrendArea.tsx`
+- SVG path `<path>` com `fill="url(#grad)"` (linearGradient vertical: cor → transparente).
+- Linha principal 2px + pontos nos picos.
+- Eixo X com labels de dias/semanas conforme período do filtro.
+- Tooltip flutuante ao passar o mouse mostrando dia + valor.
+- 2 séries: leads criados vs ganhos (linhas de cores diferentes).
 
-**4. Inferência de status estendida (`statusInference.ts`)**
+**c) Origem dos leads (barras horizontais empilhadas)** — `OriginBars.tsx`
+- Para cada origem: barra horizontal segmentada por status (novo/contato/negoc./cliente/perdido).
+- Largura proporcional ao volume; segmentos com gradient sutil.
+- Hover destaca o segmento e mostra valor absoluto.
 
-Adicionar palavras-chave reais da coluna PROCESSO DE VENDA:
-- `semresposta`, `peengajamento`, `reengajamento` → `lost` ou novo status `re-engajamento` (mapeio para `contacting` por enquanto, com warning).
-- `vendaconcluida`, `concluida`, `vendido` → `won` (já cobre "vendido"; adicionar "concluida").
-- `vaipassarnaloja`, `vaipassar`, `presencial`, `agendado` → `negotiating`.
-- `entraremcontato` → `contacting`.
+Todos usam **SVG puro** (sem libs novas), respeitam tokens de cor `hsl(var(--primary))` etc., e têm estado vazio amigável.
 
-**5. Parsing de data resiliente (`leadNormalizer.ts`)**
+### 4. Layout do dashboard reorganizado
 
-- Pré-limpar string: colapsar `//` para `/`, remover espaços internos, trocar `.` por `/` quando padrão for `dd.MM.yy`.
-- Já temos suporte a serial Excel e ambíguo BR/US — manter.
-- Aceitar `dd/MM/yy` com ano de 2 dígitos (já tem `normalizeYear`).
+```
+[ Header: título + ações ]
+[ DashboardFilters (sticky) ]
+[ Row 1: 4 KPI cards (3D)                              ]
+[ Row 2: TrendArea (col-span-2) | FunnelDonut          ]
+[ Row 3: OriginBars (col-span-2) | AI Suggestion+Distrib ]
+[ Row 4: Priority Leads (col-span-2) | Próximos contatos ]
+[ Row 5: Activity Feed (col-span-2) | Reengagement      ]
+```
 
-**6. Aceitar linha sem nome quando há telefone + produto**
+Container até `1480px`, `gap-5`, animação `animate-fade-in-up` em cascata leve nos cards (delay incremental de 40ms).
 
-- Se `name` está vazio mas há `phone` válido OU `product_interest` preenchido, gerar nome sintético: `"Lead s/ nome (DDD final-fone)"` ou `"Lead — <produto>"`. Adicionar warning, não erro.
-- Mantém a regra de erro se não houver **nada** identificável (sem nome, sem telefone, sem produto).
+### 5. Microinterações e profundidade
 
-**7. Edge function `ia-suggest-mapping` — prompt mais forte**
+- **Glassmorphism opcional** no card de AI Suggestion: `backdrop-blur` + borda gradiente animada (`@keyframes` shimmer já no projeto ou novo).
+- **Ring de progresso** circular para a meta de conversão (SVG `circle` com `stroke-dasharray` animado).
+- **Hover lift** padrão em todos os cards: `transition-transform`, `hover:-translate-y-0.5`, sombra mais profunda.
+- **Skeleton shimmer** já existente no `LoadingState` — manter, mas com cards de mesma altura para evitar layout shift.
 
-Atualizar o system prompt para:
-- Listar exemplos reais de cabeçalhos brasileiros (nicho, loja, veículo, processo de venda, ticket, vendedor).
-- Instruir o modelo a inferir tipo do **conteúdo das amostras**, não só do header.
-- Permitir mapear "loja" e "veículo" como `origin`.
-- Devolver mapeamentos com confiança ≥ 0.5 mesmo sem header óbvio.
+### 6. Aplicação de filtros
 
-**8. UI: banner por aba no preview (`ExcelPreviewTable.tsx` / `InlineMappingPanel.tsx`)**
+Helper puro `applyDashboardFilters(leads, customers, interactions, filters)` em `src/lib/dashboardFilters.ts` que devolve as listas filtradas. Todos os `useMemo` do dashboard passam a usar essas listas filtradas. Período afeta sparklines/trend (granularidade ajustada: hoje=hora, 7d=dia, 30d=dia, 90d=semana).
 
-- Mostrar tabs (uma por aba detectada) com sua contagem, header detectado e mapeamento atual.
-- Permitir mudar mapeamento por aba.
-- Indicar abas ignoradas com motivo claro ("sem cabeçalho reconhecível", "vazia", "header detectado: <linha>").
+### Arquivos criados
+
+- `src/components/admin/dashboard/DashboardFilters.tsx` — barra de filtros sticky
+- `src/components/admin/dashboard/KpiCard.tsx` — card 3D com tilt + área sparkline
+- `src/components/admin/dashboard/FunnelDonut.tsx` — donut SVG do funil
+- `src/components/admin/dashboard/TrendArea.tsx` — area chart com gradient e tooltip
+- `src/components/admin/dashboard/OriginBars.tsx` — barras horizontais empilhadas
+- `src/components/admin/dashboard/MetaRing.tsx` — ring radial de progresso
+- `src/lib/dashboardFilters.ts` — helpers puros de filtragem
 
 ### Arquivos modificados
 
-- `src/services/ia/excelParser.ts` — detecção de header inteligente; retornar `sheets[]` com `headers/rows/sample` por aba (não unificar).
-- `src/services/ia/leadNormalizer.ts` — pré-limpeza de datas; nome sintético quando há phone/produto.
-- `src/services/ia/columnMapper.ts` — heurística de desempate por conteúdo das amostras; mapeamento por aba.
-- `src/lib/ia/fieldDictionary.ts` — termos brasileiros reais.
-- `src/lib/ia/statusInference.ts` — palavras de "processo de venda".
-- `src/hooks/useExcelImport.ts` — orquestrar mapeamento por aba e somar resultados.
-- `src/components/ia/excel/ExcelPreviewTable.tsx` + `InlineMappingPanel.tsx` — tabs por aba.
-- `supabase/functions/ia-suggest-mapping/index.ts` — prompt reforçado.
+- `src/pages/admin/DashboardPage.tsx` — orquestração com filtros + nova grid + uso dos componentes novos
+- `src/index.css` — adicionar utilitários `.card-3d`, `.bevel-top`, gradient mesh helpers (poucas linhas) e keyframes de shimmer/glow se faltarem
 
 ### Sem mudanças
 
-- RLS, auth, schema das tabelas, módulos CSV/WhatsApp/Paste/Assistente, layout/visual fora do fluxo Excel.
+- Schema, RLS, hooks de dados, módulos IA, landing page, pipeline, leads, customers (nenhuma quebra fora do dashboard).
 
 ### Validação
 
-1. Reimportar a `PROSPECÇÃO_DE_CLIENTES_ONLINE.xlsx` enviada.
-2. Conferir banner: deve listar **todas as abas** com contagem real (>40 linhas no total).
-3. Conferir mapeamento automático: `CLIENTE→name`, `CONTATO→phone`, `ÚLTIMO CONTATO→ignore` ou `notes`, `LOJA→origin`, `PRODUTOS…→product_interest`, `MARCA→notes`. Para ABRIL/2026: `NICHO→product_interest`, `VENDEDOR→notes`, `PROCESSO DE VENDA→status`, `PRÓXIMO CONTATO→next_contact_at`.
-4. Conferir que datas `04/11//25`, `02.03.26`, `7/14/21` aparecem **sem** badge "Data inválida".
-5. Conferir que linhas com telefone mas sem nome viram leads com nome sintético, não erros.
-6. Status "VENDA CONCLUÍDA" → `won`; "SEM RESPOSTA - PEENGAJAMENTO" → `contacting` (warning); "Vai passar na loja" → `negotiating`.
+1. Filtros: alterar período/status/origem reflete imediatamente em **todos** os blocos (KPIs, donut, área, barras, listas).
+2. Tilt 3D funciona em desktop, desativa em touch (`prefers-reduced-motion` respeitado).
+3. Donut/área renderizam corretamente com 0 dados (estado vazio claro).
+4. Conversão mostra ring de progresso até a meta (18%).
+5. Deep-link `?period=30d&status=new,contacting` restaura estado.
+6. Layout em 982px (viewport atual): cards reagrupam para 2 colunas; filtros viram drawer/scroll horizontal sem quebrar.
+7. Performance: nenhum re-render desnecessário; SVG puro, sem libs novas instaladas.
 
 ### Resultado esperado
 
-A planilha real do usuário importa **todas as linhas de todas as abas** (centenas, não 40), com mapeamento automático correto para os layouts encontrados, datas reconhecidas mesmo em formatos sujos, e status inferido a partir da coluna PROCESSO DE VENDA. Nada quebra para CSV/WhatsApp/Paste.
-
+Dashboard com presença visual de produto sério (Linear/Attio level): cards com profundidade real, gráficos ricos contando a história do funil, e uma barra de filtros que torna tudo navegável por período, status, origem e busca — tudo respeitando o design system "Premium CRM" já configurado e os dados reais do Supabase em tempo real.
