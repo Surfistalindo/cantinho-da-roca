@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import LoadingState from '@/components/admin/LoadingState';
@@ -18,6 +18,22 @@ import { MSym } from '@/components/crm/MSym';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import KpiCard from '@/components/admin/dashboard/KpiCard';
+import FunnelDonut, { type FunnelSegment } from '@/components/admin/dashboard/FunnelDonut';
+import TrendArea from '@/components/admin/dashboard/TrendArea';
+import OriginBars, { type OriginRow } from '@/components/admin/dashboard/OriginBars';
+import DashboardFilters from '@/components/admin/dashboard/DashboardFilters';
+import {
+  applyLeadFilters,
+  bucketByDate,
+  decodeFiltersFromParams,
+  encodeFiltersToParams,
+  DEFAULT_FILTERS,
+  getPeriodRange,
+  getPreviousRange,
+  PERIOD_LABEL,
+} from '@/lib/dashboardFilters';
+import { toast } from 'sonner';
 
 interface LeadLite {
   id: string;
@@ -63,32 +79,23 @@ const STATUS_TONE: Record<string, string> = {
   lost: 'bg-muted text-muted-foreground',
 };
 
-function Sparkline({ values, tone = 'success' }: { values: number[]; tone?: 'success' | 'destructive' | 'info' | 'warning' }) {
-  const max = Math.max(...values, 1);
-  const min = Math.min(...values, 0);
-  const range = max - min || 1;
-  const w = 100;
-  const h = 32;
-  const step = w / Math.max(values.length - 1, 1);
-  const points = values.map((v, i) => `${i * step},${h - ((v - min) / range) * h}`).join(' ');
-  const colorClass = {
-    success: 'stroke-success',
-    destructive: 'stroke-destructive',
-    info: 'stroke-info',
-    warning: 'stroke-warning',
-  }[tone];
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-8" preserveAspectRatio="none">
-      <polyline points={points} fill="none" strokeWidth="1.8" className={colorClass} strokeLinejoin="round" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 export default function DashboardPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [leads, setLeads] = useState<LeadLite[]>([]);
   const [customers, setCustomers] = useState<CustomerLite[]>([]);
   const [interactions, setInteractions] = useState<InteractionLite[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [filters, setFilters] = useState(() => decodeFiltersFromParams(searchParams));
+
+  const updateFilters = useCallback((next: typeof filters) => {
+    setFilters(next);
+    const enc = encodeFiltersToParams(next);
+    const newParams = new URLSearchParams(searchParams);
+    ['period', 'status', 'origin', 'score', 'q'].forEach((k) => newParams.delete(k));
+    Object.entries(enc).forEach(([k, v]) => newParams.set(k, v));
+    setSearchParams(newParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const interactionCounts = useInteractionCounts(leads.map((l) => l.id));
 
@@ -106,7 +113,7 @@ export default function DashboardPage() {
         .from('interactions')
         .select('id, contact_type, description, interaction_date, lead_id, customer_id')
         .order('interaction_date', { ascending: false })
-        .limit(8),
+        .limit(20),
     ]);
     setLeads((leadsRes.data as LeadLite[]) ?? []);
     setCustomers((customersRes.data as CustomerLite[]) ?? []);
@@ -119,23 +126,42 @@ export default function DashboardPage() {
   useRealtimeTable('customers', fetchData);
   useRealtimeTable('interactions', fetchData);
 
+  // Origens disponíveis (todos os leads, não filtrados)
+  const availableOrigins = useMemo(() => {
+    const set = new Set<string>();
+    leads.forEach((l) => set.add(l.origin ?? '__none__'));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [leads]);
+
+  const scoreOf = useCallback((l: LeadLite) => {
+    const s = getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 });
+    return { level: s.level, urgent: s.urgent };
+  }, [interactionCounts]);
+
+  // Leads filtrados (afeta KPIs/charts/listas)
+  const filteredLeads = useMemo(
+    () => applyLeadFilters(leads, filters, scoreOf),
+    [leads, filters, scoreOf],
+  );
+
+  // Período anterior para comparação
+  const prevLeads = useMemo(() => {
+    if (filters.period === 'all') return [];
+    const { start, end } = getPreviousRange(filters.period);
+    return leads.filter((l) => {
+      const t = new Date(l.created_at).getTime();
+      return t >= start && t < end;
+    });
+  }, [leads, filters.period]);
+
   // STATS ----------------------------------------------------------
   const stats = useMemo(() => {
-    const now = Date.now();
-    const sevenDaysAgo = now - 7 * 86400e3;
-    const thirtyDaysAgo = now - 30 * 86400e3;
-    const sixtyDaysAgo = now - 60 * 86400e3;
-
-    const total = leads.length;
-    const sold = leads.filter((l) => l.status === LEAD_STATUS.WON).length;
-    const inProgress = leads.filter((l) => l.status === LEAD_STATUS.CONTACTING || l.status === LEAD_STATUS.NEGOTIATING).length;
-    const newLast7d = leads.filter((l) => new Date(l.created_at).getTime() >= sevenDaysAgo).length;
-
-    const last30Sold = leads.filter((l) => l.status === LEAD_STATUS.WON && new Date(l.created_at).getTime() >= thirtyDaysAgo).length;
-    const prev30Sold = leads.filter((l) => l.status === LEAD_STATUS.WON && new Date(l.created_at).getTime() >= sixtyDaysAgo && new Date(l.created_at).getTime() < thirtyDaysAgo).length;
+    const total = filteredLeads.length;
+    const sold = filteredLeads.filter((l) => l.status === LEAD_STATUS.WON).length;
+    const inProgress = filteredLeads.filter((l) => l.status === LEAD_STATUS.CONTACTING || l.status === LEAD_STATUS.NEGOTIATING).length;
 
     let attention = 0; let overdue = 0; let hot = 0; let noResponse = 0;
-    for (const l of leads) {
+    for (const l of filteredLeads) {
       const info = getContactRecency(l.last_contact_at, l.status, l.created_at);
       if (info.level === 'attention') attention++;
       else if (info.level === 'overdue') {
@@ -146,15 +172,13 @@ export default function DashboardPage() {
       if (score.level === 'hot' || score.urgent) hot++;
     }
 
-    // sparkline: leads criados nos últimos 7 dias
-    const buckets: number[] = Array.from({ length: 7 }, () => 0);
-    leads.forEach((l) => {
-      const d = new Date(l.created_at).getTime();
-      const idx = 6 - Math.floor((now - d) / 86400e3);
-      if (idx >= 0 && idx <= 6) buckets[idx]++;
-    });
-
     const conversionRate = total > 0 ? (sold / total) * 100 : 0;
+
+    const prevTotal = prevLeads.length;
+    const prevSold = prevLeads.filter((l) => l.status === LEAD_STATUS.WON).length;
+    const totalDelta = prevTotal > 0 ? Math.round(((total - prevTotal) / prevTotal) * 100) : (total > 0 ? 100 : 0);
+    const prevConv = prevTotal > 0 ? (prevSold / prevTotal) * 100 : 0;
+    const convDelta = conversionRate - prevConv;
 
     return {
       total,
@@ -164,36 +188,41 @@ export default function DashboardPage() {
       attention,
       overdue,
       noResponse,
-      newLast7d,
       conversionRate,
-      last30Sold,
-      prev30Sold,
+      newLeads: filteredLeads.filter((l) => l.status === LEAD_STATUS.NEW).length,
+      contacting: filteredLeads.filter((l) => l.status === LEAD_STATUS.CONTACTING).length,
+      negotiating: filteredLeads.filter((l) => l.status === LEAD_STATUS.NEGOTIATING).length,
+      lostCount: filteredLeads.filter((l) => l.status === LEAD_STATUS.LOST).length,
+      totalDelta,
+      convDelta,
       customerCount: customers.length,
-      sparkLeads: buckets,
-      newLeads: leads.filter((l) => l.status === LEAD_STATUS.NEW).length,
-      contacting: leads.filter((l) => l.status === LEAD_STATUS.CONTACTING).length,
-      negotiating: leads.filter((l) => l.status === LEAD_STATUS.NEGOTIATING).length,
-      lostCount: leads.filter((l) => l.status === LEAD_STATUS.LOST).length,
     };
-  }, [leads, customers, interactionCounts]);
+  }, [filteredLeads, customers, interactionCounts, prevLeads]);
+
+  // Buckets para sparkline & trend
+  const bucketsAll = useMemo(() => bucketByDate(filteredLeads, filters.period), [filteredLeads, filters.period]);
+  const bucketsWon = useMemo(
+    () => bucketByDate(filteredLeads.filter((l) => l.status === LEAD_STATUS.WON), filters.period),
+    [filteredLeads, filters.period],
+  );
 
   const reengagementCandidates = useMemo(() => getReengagementCandidates(leads, customers), [leads, customers]);
 
   const hotLeads = useMemo(() => {
-    return leads
+    return filteredLeads
       .map((l) => ({ ...l, _scoreInfo: getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 }) }))
       .filter((l) => l._scoreInfo.level === 'hot' || l._scoreInfo.urgent)
       .sort(compareByScore)
       .slice(0, 5);
-  }, [leads, interactionCounts]);
+  }, [filteredLeads, interactionCounts]);
 
   const upcomingSchedule = useMemo(() => {
     const now = Date.now();
-    return leads
+    return filteredLeads
       .filter((l) => l.next_contact_at && new Date(l.next_contact_at).getTime() >= now - 86400e3)
       .sort((a, b) => new Date(a.next_contact_at!).getTime() - new Date(b.next_contact_at!).getTime())
       .slice(0, 4);
-  }, [leads]);
+  }, [filteredLeads]);
 
   const aiSuggestion = useMemo(() => {
     if (hotLeads.length === 0) return null;
@@ -209,61 +238,81 @@ export default function DashboardPage() {
     };
   }, [hotLeads]);
 
-  // KPI cards ------------------------------------------------------
-  const conversionTrend = stats.last30Sold - stats.prev30Sold;
-  const conversionPctChange = stats.prev30Sold > 0
-    ? Math.round(((stats.last30Sold - stats.prev30Sold) / stats.prev30Sold) * 100)
-    : (stats.last30Sold > 0 ? 100 : 0);
+  const funnelSegments: FunnelSegment[] = useMemo(() => ([
+    { key: 'new', label: 'Novos', value: stats.newLeads, tone: 'info' },
+    { key: 'contacting', label: 'Em contato', value: stats.contacting, tone: 'primary' },
+    { key: 'negotiating', label: 'Negociação', value: stats.negotiating, tone: 'warning' },
+    { key: 'won', label: 'Cliente', value: stats.sold, tone: 'success' },
+    { key: 'lost', label: 'Perdido', value: stats.lostCount, tone: 'muted' },
+  ]), [stats]);
 
-  const kpis = [
-    {
-      label: 'Total de Leads',
-      value: stats.total.toString(),
-      delta: `+${stats.newLast7d} em 7d`,
-      trend: 'up' as const,
-      sub: `${stats.customerCount} clientes ativos`,
-      sparkline: stats.sparkLeads,
-      tone: 'info' as const,
-    },
-    {
-      label: 'Em andamento',
-      value: stats.inProgress.toString(),
-      delta: 'In-Progress',
-      trend: 'flat' as const,
-      sub: `${stats.negotiating} em negociação agora`,
-      sparkline: [stats.newLeads, stats.contacting, stats.negotiating, stats.sold],
-      tone: 'warning' as const,
-    },
-    {
-      label: 'Conversão',
-      value: `${stats.conversionRate.toFixed(1)}%`,
-      delta: `${conversionPctChange >= 0 ? '+' : ''}${conversionPctChange}%`,
-      trend: conversionTrend >= 0 ? ('up' as const) : ('down' as const),
-      sub: `Meta: 18.0%`,
-      sparkline: [stats.prev30Sold, Math.max(stats.prev30Sold - 1, 0), stats.last30Sold, stats.sold],
-      tone: conversionTrend >= 0 ? ('success' as const) : ('destructive' as const),
-    },
-    {
-      label: 'Sem resposta',
-      value: stats.noResponse.toString(),
-      delta: `${stats.overdue} atrasados`,
-      trend: stats.noResponse > 0 ? ('down' as const) : ('up' as const),
-      sub: 'Reengaje hoje',
-      sparkline: [0, stats.attention, stats.overdue, stats.noResponse],
-      tone: 'destructive' as const,
-    },
-  ];
+  // Origin rows
+  const originRows: OriginRow[] = useMemo(() => {
+    const map = new Map<string, Record<string, number>>();
+    for (const l of filteredLeads) {
+      const k = l.origin ?? '(sem origem)';
+      const cur = map.get(k) ?? { new: 0, contacting: 0, negotiating: 0, won: 0, lost: 0 };
+      cur[l.status] = (cur[l.status] ?? 0) + 1;
+      map.set(k, cur);
+    }
+    return Array.from(map.entries())
+      .map(([origin, segs]) => ({
+        origin,
+        segments: [
+          { key: 'new', label: 'Novos', value: segs.new ?? 0, tone: 'info' as const },
+          { key: 'contacting', label: 'Contato', value: segs.contacting ?? 0, tone: 'primary' as const },
+          { key: 'negotiating', label: 'Negoc.', value: segs.negotiating ?? 0, tone: 'warning' as const },
+          { key: 'won', label: 'Cliente', value: segs.won ?? 0, tone: 'success' as const },
+          { key: 'lost', label: 'Perdido', value: segs.lost ?? 0, tone: 'muted' as const },
+        ],
+      }))
+      .sort((a, b) => b.segments.reduce((x, s) => x + s.value, 0) - a.segments.reduce((x, s) => x + s.value, 0))
+      .slice(0, 6);
+  }, [filteredLeads]);
+
+  // Export CSV
+  const handleExport = useCallback(() => {
+    if (filteredLeads.length === 0) {
+      toast.error('Nada para exportar com os filtros atuais.');
+      return;
+    }
+    const header = ['Nome', 'Telefone', 'Origem', 'Interesse', 'Status', 'Criado em', 'Último contato'];
+    const rows = filteredLeads.map((l) => [
+      l.name,
+      l.phone ?? '',
+      l.origin ?? '',
+      l.product_interest ?? '',
+      STATUS_LABEL_PT[l.status] ?? l.status,
+      new Date(l.created_at).toLocaleString('pt-BR'),
+      l.last_contact_at ? new Date(l.last_contact_at).toLocaleString('pt-BR') : '',
+    ]);
+    const csv = [header, ...rows]
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dashboard-${filters.period}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`${filteredLeads.length} leads exportados.`);
+  }, [filteredLeads, filters.period]);
 
   if (loading) return <LoadingState variant="cards" />;
 
+  const periodLabel = PERIOD_LABEL[filters.period];
+
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="max-w-[1400px] mx-auto space-y-6">
-        {/* Header da página */}
+      <div className="max-w-[1480px] mx-auto space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-[26px] font-bold text-foreground tracking-tight">Dashboard</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">Visão geral da operação comercial em tempo real.</p>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Visão geral da operação comercial · <span className="text-foreground font-semibold">{periodLabel}</span>
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Link
@@ -276,33 +325,174 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {kpis.map((k) => {
-            const trendIcon = k.trend === 'up' ? 'trending_up' : k.trend === 'down' ? 'trending_down' : 'trending_flat';
-            const trendColor = k.trend === 'up' ? 'text-success' : k.trend === 'down' ? 'text-destructive' : 'text-muted-foreground';
-            return (
-              <div key={k.label} className="bg-card rounded-2xl border border-border p-5 hover:border-border-strong transition-colors">
-                <div className="flex items-start justify-between mb-3">
-                  <p className="text-[11px] uppercase tracking-[0.12em] font-semibold text-muted-foreground">{k.label}</p>
-                  <span className={cn('inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-muted', trendColor)}>
-                    <MSym name={trendIcon} size={12} />
-                    {k.delta}
-                  </span>
-                </div>
-                <p className="text-[32px] font-bold text-foreground tabular-nums leading-none tracking-tight">{k.value}</p>
-                <div className="mt-3 -mx-1">
-                  <Sparkline values={k.sparkline} tone={k.tone} />
-                </div>
-                <p className="text-[11px] text-muted-foreground mt-1">{k.sub}</p>
-              </div>
-            );
-          })}
+        {/* Filters bar (sticky) */}
+        <DashboardFilters
+          filters={filters}
+          availableOrigins={availableOrigins}
+          onChange={updateFilters}
+          onReset={() => updateFilters(DEFAULT_FILTERS)}
+          onExport={handleExport}
+        />
+
+        {/* KPI Cards (3D) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-up">
+          <KpiCard
+            label="Total de Leads"
+            icon="group"
+            value={stats.total.toString()}
+            delta={`${stats.totalDelta >= 0 ? '+' : ''}${stats.totalDelta}%`}
+            trend={stats.totalDelta >= 0 ? 'up' : 'down'}
+            sub={`${stats.customerCount} clientes ativos`}
+            sparkline={bucketsAll.values}
+            tone="info"
+          />
+          <KpiCard
+            label="Em andamento"
+            icon="autorenew"
+            value={stats.inProgress.toString()}
+            delta={`${stats.negotiating} negoc.`}
+            trend="flat"
+            sub={`${stats.contacting} em contato ativo`}
+            sparkline={[stats.newLeads, stats.contacting, stats.negotiating, stats.sold]}
+            tone="warning"
+          />
+          <KpiCard
+            label="Conversão"
+            icon="rocket_launch"
+            value={`${stats.conversionRate.toFixed(1)}%`}
+            delta={`${stats.convDelta >= 0 ? '+' : ''}${stats.convDelta.toFixed(1)}pp`}
+            trend={stats.convDelta >= 0 ? 'up' : 'down'}
+            sub="Meta: 18.0%"
+            sparkline={bucketsWon.values}
+            tone={stats.convDelta >= 0 ? 'success' : 'destructive'}
+            ringValue={(stats.conversionRate / 18) * 100}
+            ringTone="success"
+          />
+          <KpiCard
+            label="Sem resposta"
+            icon="warning"
+            value={stats.noResponse.toString()}
+            delta={`${stats.overdue} atrasados`}
+            trend={stats.noResponse > 0 ? 'down' : 'up'}
+            sub="Reengaje hoje"
+            sparkline={[0, stats.attention, stats.overdue, stats.noResponse]}
+            tone="destructive"
+          />
         </div>
 
-        {/* Linha 2: Priority Leads + AI Suggestion / Forecast */}
+        {/* Row 2: Trend + Funnel */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Priority Leads */}
+          <div className="lg:col-span-2 bg-card rounded-2xl border border-border p-5 relative overflow-hidden">
+            <div
+              className="pointer-events-none absolute inset-0 opacity-60"
+              style={{ background: 'radial-gradient(600px circle at 80% 0%, hsl(var(--primary) / 0.08), transparent 60%)' }}
+            />
+            <div className="relative">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <MSym name="show_chart" size={18} className="text-primary" />
+                  Tendência de leads
+                </h3>
+                <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">{periodLabel}</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground mb-4">Volume diário comparado a conversões.</p>
+              <TrendArea
+                labels={bucketsAll.labels}
+                series={[
+                  { key: 'all', label: 'Todos os leads', values: bucketsAll.values, tone: 'primary' },
+                  { key: 'won', label: 'Ganhos', values: bucketsWon.values, tone: 'success' },
+                ]}
+              />
+            </div>
+          </div>
+
+          <div className="bg-card rounded-2xl border border-border p-5 relative overflow-hidden">
+            <div
+              className="pointer-events-none absolute inset-0 opacity-60"
+              style={{ background: 'radial-gradient(400px circle at 50% 100%, hsl(var(--info) / 0.08), transparent 60%)' }}
+            />
+            <div className="relative">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <MSym name="donut_large" size={18} className="text-info" />
+                  Funil de conversão
+                </h3>
+                <Link to="/admin/pipeline" className="text-[11px] font-semibold text-primary hover:opacity-80">Pipeline →</Link>
+              </div>
+              <p className="text-[11px] text-muted-foreground mb-4">Distribuição por estágio.</p>
+              <FunnelDonut segments={funnelSegments} />
+            </div>
+          </div>
+        </div>
+
+        {/* Row 3: Origin bars + AI Suggestion */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 bg-card rounded-2xl border border-border p-5">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                <MSym name="bar_chart" size={18} className="text-warning" />
+                Origem dos leads
+              </h3>
+              <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">{originRows.length} canais</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground mb-4">Volume e composição por canal de origem.</p>
+            <OriginBars rows={originRows} />
+          </div>
+
+          <div className="space-y-4">
+            {aiSuggestion && (
+              <div className="relative rounded-2xl border border-primary/20 p-5 overflow-hidden bg-card">
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{ background: 'radial-gradient(400px circle at 0% 0%, hsl(var(--primary) / 0.18), transparent 60%)' }}
+                />
+                <div className="relative">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-8 w-8 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
+                      <MSym name="tips_and_updates" size={18} filled />
+                    </div>
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.14em] font-bold text-primary">AI Suggestion</p>
+                      <p className="text-[10px] text-muted-foreground">Recomendação automática</p>
+                    </div>
+                  </div>
+                  <p className="text-[13px] text-foreground/90 leading-relaxed italic">"{aiSuggestion.text}"</p>
+                  <Link
+                    to={`/admin/leads?focus=${aiSuggestion.lead.id}`}
+                    className="inline-flex items-center gap-1.5 mt-4 h-8 px-3 rounded-lg bg-primary text-primary-foreground text-[11px] font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    <MSym name="bolt" size={14} filled />
+                    Agir agora
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-card rounded-2xl border border-border p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-foreground">Snapshot</h3>
+                <Link to="/admin/pipeline" className="text-[11px] font-semibold text-primary hover:opacity-80">Pipeline →</Link>
+              </div>
+              <ul className="space-y-2.5">
+                {[
+                  { label: 'Quentes', value: stats.hot, tone: 'text-warning', icon: 'local_fire_department' },
+                  { label: 'Atenção', value: stats.attention, tone: 'text-info', icon: 'visibility' },
+                  { label: 'Atrasados', value: stats.overdue, tone: 'text-destructive', icon: 'schedule' },
+                  { label: 'Reengajar', value: reengagementCandidates.length, tone: 'text-primary', icon: 'replay' },
+                ].map((s) => (
+                  <li key={s.label} className="flex items-center gap-2.5">
+                    <MSym name={s.icon} size={16} className={s.tone} filled />
+                    <span className="text-[12px] text-foreground/90">{s.label}</span>
+                    <span className="ml-auto text-[14px] font-bold tabular-nums text-foreground">{s.value}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 4: Priority Leads + Próximos contatos */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 bg-card rounded-2xl border border-border overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
@@ -311,14 +501,6 @@ export default function DashboardPage() {
                   Priority Leads
                 </h3>
                 <p className="text-[11px] text-muted-foreground mt-0.5">{hotLeads.length} leads quentes priorizados</p>
-              </div>
-              <div className="flex items-center gap-1">
-                <button className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" aria-label="Filtrar">
-                  <MSym name="filter_list" size={18} />
-                </button>
-                <button className="h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" aria-label="Mais opções">
-                  <MSym name="more_horiz" size={18} />
-                </button>
               </div>
             </div>
 
@@ -380,125 +562,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* AI Suggestion + Distribuição */}
-          <div className="space-y-4">
-            {aiSuggestion && (
-              <div className="bg-gradient-to-br from-primary/10 via-card to-card rounded-2xl border border-primary/20 p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="h-8 w-8 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
-                    <MSym name="tips_and_updates" size={18} filled />
-                  </div>
-                  <div>
-                    <p className="text-[11px] uppercase tracking-[0.14em] font-bold text-primary">AI Suggestion</p>
-                    <p className="text-[10px] text-muted-foreground">Recomendação automática</p>
-                  </div>
-                </div>
-                <p className="text-[13px] text-foreground/90 leading-relaxed italic">"{aiSuggestion.text}"</p>
-                <Link
-                  to={`/admin/leads?focus=${aiSuggestion.lead.id}`}
-                  className="inline-flex items-center gap-1.5 mt-4 h-8 px-3 rounded-lg bg-primary text-primary-foreground text-[11px] font-semibold hover:opacity-90 transition-opacity"
-                >
-                  <MSym name="bolt" size={14} filled />
-                  Agir agora
-                </Link>
-              </div>
-            )}
-
-            {/* Distribuição segmentada */}
-            <div className="bg-card rounded-2xl border border-border p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-foreground">Distribuição</h3>
-                <Link to="/admin/pipeline" className="text-[11px] font-semibold text-primary hover:opacity-80">
-                  Pipeline →
-                </Link>
-              </div>
-              {(() => {
-                const segs = [
-                  { label: 'Novos', value: stats.newLeads, className: 'bg-info' },
-                  { label: 'Contato', value: stats.contacting, className: 'bg-primary' },
-                  { label: 'Negoc.', value: stats.negotiating, className: 'bg-warning' },
-                  { label: 'Cliente', value: stats.sold, className: 'bg-success' },
-                  { label: 'Perdido', value: stats.lostCount, className: 'bg-muted-foreground/40' },
-                ];
-                const total = segs.reduce((a, s) => a + s.value, 0) || 1;
-                return (
-                  <>
-                    <div className="flex h-2 w-full rounded-full overflow-hidden bg-muted mb-3">
-                      {segs.map((s) => s.value > 0 && (
-                        <div key={s.label} className={cn('h-full', s.className)} style={{ width: `${(s.value / total) * 100}%` }} />
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {segs.map((s) => (
-                        <div key={s.label} className="flex items-center gap-2 text-[11px]">
-                          <span className={cn('w-2 h-2 rounded-full', s.className)} />
-                          <span className="text-muted-foreground">{s.label}</span>
-                          <span className="ml-auto tabular-nums font-semibold text-foreground">{s.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                );
-              })()}
-            </div>
-          </div>
-        </div>
-
-        {/* Linha 3: Activity Feed + Upcoming Schedule */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 bg-card rounded-2xl border border-border overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-              <h3 className="text-sm font-bold text-foreground">Activity Feed</h3>
-              <button className="text-[11px] font-semibold text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-                <MSym name="filter_list" size={14} /> Filtrar
-              </button>
-            </div>
-            {interactions.length === 0 ? (
-              <div className="p-10 text-center text-sm text-muted-foreground">
-                Sem atividades recentes. Registre uma interação para começar.
-              </div>
-            ) : (
-              <ul className="divide-y divide-border">
-                {interactions.map((i) => {
-                  const iconMap: Record<string, string> = {
-                    whatsapp: 'chat',
-                    ligação: 'call',
-                    ligacao: 'call',
-                    email: 'mail',
-                    'e-mail': 'mail',
-                    reunião: 'event',
-                    reuniao: 'event',
-                    observação: 'sticky_note_2',
-                    observacao: 'sticky_note_2',
-                  };
-                  const icon = iconMap[i.contact_type.toLowerCase()] ?? 'bolt';
-                  return (
-                    <li key={i.id} className="flex items-start gap-3 px-5 py-3.5">
-                      <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-0.5">
-                        <MSym name={icon} size={16} className="text-muted-foreground" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[13px] text-foreground line-clamp-2 leading-relaxed">{i.description}</p>
-                        <p className="text-[11px] text-muted-foreground mt-1">
-                          {formatDistanceToNow(new Date(i.interaction_date), { locale: ptBR, addSuffix: true })}
-                          <span className="mx-1.5">·</span>
-                          <span className="capitalize">{i.contact_type}</span>
-                        </p>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-            <div className="px-5 py-3 border-t border-border bg-muted/30">
-              <Link to="/admin/leads" className="text-[12px] font-semibold text-primary hover:opacity-80 inline-flex items-center gap-1">
-                Ver histórico completo
-                <MSym name="arrow_forward" size={14} />
-              </Link>
-            </div>
-          </div>
-
-          {/* Upcoming Schedule */}
           <div className="bg-card rounded-2xl border border-border overflow-hidden">
             <div className="px-5 py-4 border-b border-border">
               <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
@@ -508,9 +571,7 @@ export default function DashboardPage() {
               <p className="text-[11px] text-muted-foreground mt-0.5">Agenda de retornos programados</p>
             </div>
             {upcomingSchedule.length === 0 ? (
-              <div className="p-10 text-center text-sm text-muted-foreground">
-                Nenhum retorno agendado.
-              </div>
+              <div className="p-10 text-center text-sm text-muted-foreground">Nenhum retorno agendado.</div>
             ) : (
               <ul className="divide-y divide-border">
                 {upcomingSchedule.map((l) => {
@@ -542,6 +603,51 @@ export default function DashboardPage() {
               </ul>
             )}
           </div>
+        </div>
+
+        {/* Row 5: Activity Feed */}
+        <div className="bg-card rounded-2xl border border-border overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+            <h3 className="text-sm font-bold text-foreground">Activity Feed</h3>
+            <span className="text-[11px] text-muted-foreground">{interactions.length} interações recentes</span>
+          </div>
+          {interactions.length === 0 ? (
+            <div className="p-10 text-center text-sm text-muted-foreground">
+              Sem atividades recentes. Registre uma interação para começar.
+            </div>
+          ) : (
+            <ul className="divide-y divide-border">
+              {interactions.slice(0, 8).map((i) => {
+                const iconMap: Record<string, string> = {
+                  whatsapp: 'chat',
+                  ligação: 'call',
+                  ligacao: 'call',
+                  email: 'mail',
+                  'e-mail': 'mail',
+                  reunião: 'event',
+                  reuniao: 'event',
+                  observação: 'sticky_note_2',
+                  observacao: 'sticky_note_2',
+                };
+                const icon = iconMap[i.contact_type.toLowerCase()] ?? 'bolt';
+                return (
+                  <li key={i.id} className="flex items-start gap-3 px-5 py-3.5">
+                    <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-0.5">
+                      <MSym name={icon} size={16} className="text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] text-foreground line-clamp-2 leading-relaxed">{i.description}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        {formatDistanceToNow(new Date(i.interaction_date), { locale: ptBR, addSuffix: true })}
+                        <span className="mx-1.5">·</span>
+                        <span className="capitalize">{i.contact_type}</span>
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
 
         {/* Reengajamento */}
