@@ -21,35 +21,35 @@ const ScrollVideoHero: React.FC = () => {
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
   const [isVideoReady, setIsVideoReady] = useState(false);
 
-  // Only respect reduced motion; otherwise always attempt real video scrubbing.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reducedMotion) {
-      setUseStaticFallback(true);
-    }
-  }, []);
-
   // Lazy-load: only attach the video src when the hero gets close to the viewport.
   useEffect(() => {
     if (useStaticFallback) return;
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
-    if (typeof IntersectionObserver === 'undefined') {
-      setShouldLoadVideo(true);
+
+    const loadNow = () => setShouldLoadVideo(true);
+    const rect = wrapper.getBoundingClientRect();
+    if (rect.top < window.innerHeight * 1.5 && rect.bottom > -window.innerHeight * 0.5) {
+      loadNow();
       return;
     }
+
+    if (typeof IntersectionObserver === 'undefined') {
+      loadNow();
+      return;
+    }
+
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
           if (e.isIntersecting) {
-            setShouldLoadVideo(true);
+            loadNow();
             io.disconnect();
             break;
           }
         }
       },
-      { rootMargin: '200% 0px 200% 0px', threshold: 0 },
+      { rootMargin: '150% 0px 150% 0px', threshold: 0 },
     );
     io.observe(wrapper);
     return () => io.disconnect();
@@ -66,6 +66,10 @@ const ScrollVideoHero: React.FC = () => {
       try {
         v.pause();
         v.currentTime = Math.min(0.01, v.duration || 0.01);
+        const playPromise = v.play();
+        if (playPromise && typeof playPromise.then === 'function') {
+          playPromise.then(() => v.pause()).catch(() => v.pause());
+        }
       } catch {}
     };
 
