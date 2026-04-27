@@ -1,119 +1,79 @@
+## Nova Hero com vídeo controlado pelo scroll
 
-## Dashboard Premium: visual 3D, gráficos ricos e filtros avançados
+Substituir apenas a `HeroSection` atual por um novo componente `ScrollVideoHero`, mantendo todo o resto do site (Navbar, Benefits, Products, Testimonials, LeadForm, Footer) intacto.
 
-Hoje o `DashboardPage` é funcional mas plano: KPIs com sparklines minúsculas, listas chapadas e zero filtragem. Vou elevar para um visual premium ao estilo Linear/Attio/Vercel — com **profundidade tonal real**, **gráficos modernos** (donut, barras empilhadas, área com gradiente), **microinterações 3D** (tilt sutil, glow, glassmorphism) e uma **barra de filtros** robusta no topo da página.
+### Comportamento
 
-### 1. Barra de filtros global (novo componente)
+- Wrapper externo com altura ~250vh para criar “distância” de scroll.
+- Dentro dele, container `sticky top-0 h-screen` que segura a hero travada na viewport enquanto o vídeo avança.
+- Vídeo único MP4 como background, `muted`, `playsInline`, `preload="auto"`, `disableRemotePlayback`, sem controles, sem autoplay tradicional.
+- `requestAnimationFrame` calcula `progress` (0–1) baseado em `getBoundingClientRect()` do wrapper e aplica `video.currentTime = video.duration * progress`.
+- Ao final do progresso, a hero deixa de ser sticky e a página rola normalmente para a próxima seção (Benefits).
+- Fallback: imagem poster `hero-cantim-poster.webp` exibida via `poster` do `<video>` e como `<img>` de fallback se `canplay` não disparar em ~3s ou se `prefers-reduced-motion` estiver ativo. Em mobile (`matchMedia('(max-width: 640px)')` + checagem de `connection.saveData`), usar somente o poster estático sem o vídeo.
 
-Topo do dashboard, sticky abaixo do header, com os seguintes controles:
+### Estrutura visual
 
-- **Período** (segmented control): `Hoje · 7d · 30d · 90d · Tudo` + opção "Personalizado" abrindo `react-day-picker` em popover.
-- **Status** (multi-select com chips): Novo, Em contato, Negociação, Cliente, Perdido. Aplica a todos KPIs/gráficos.
-- **Origem** (select dinâmico): valores únicos derivados de `leads.origin` + opção "Todas".
-- **Vendedor/Responsável** (se houver, baseado em `notes`/futuro campo) — por ora ocultar se não houver dado.
-- **Score**: chips `Quente · Morno · Frio · Urgente`.
-- **Busca rápida**: input com ícone search filtra leads por nome/telefone.
-- **Botão "Limpar filtros"** + indicador de quantos filtros ativos.
-- **Botão "Exportar"** (CSV do snapshot atual via `reportExporter.ts`).
+- Vídeo `absolute inset-0 w-full h-full object-cover`.
+- Overlay marrom/escuro suave: gradiente `from-black/55 via-black/35 to-black/65` + leve tom da paleta marca (`bg-[hsl(var(--primary))]/10` em mix mode).
+- Logo `cantim-logo.png` no topo-esquerdo (com fallback centralizado em mobile), tamanho ~140–160px.
+- Headline grande centralizada: “Produtos naturais selecionados para cuidar de você” (Playfair Display, branco, drop-shadow sutil).
+- Dois botões abaixo: “Conhecer produtos” (primário) e “Falar no WhatsApp” (outline claro com ícone).
+- Sem grid background, sem orbit leaves, sem shaders — visual limpo focado no vídeo.
 
-Estado dos filtros vive no `DashboardPage` via `useState`, persistido em `searchParams` para deep-link/refresh.
+### Animações de UI dirigidas pelo scroll
 
-Componente novo: `src/components/admin/dashboard/DashboardFilters.tsx`.
+Mesmo `progress` 0–1 já calculado é usado para animar:
 
-### 2. KPIs com profundidade 3D
+- `0.00–0.15`: apenas vídeo + logo visíveis (logo com leve fade-in nos primeiros 200ms ao montar).
+- `0.15–0.45`: headline aparece — `opacity 0 → 1`, `translateY 24px → 0`.
+- `0.35–0.65`: botões aparecem — `opacity 0 → 1`, `translateY 16px → 0`, com pequeno stagger entre os dois.
+- `> 0.85`: leve fade-out opcional do overlay de texto para entregar suavemente à próxima seção.
 
-Substituir os cards atuais por cards "elevated" com:
+Tudo aplicado via `style` inline (transform/opacity) calculado no mesmo rAF — sem GSAP, sem dependências novas.
 
-- **Gradient mesh sutil** no fundo (radial-gradient com cor do tone do KPI a 6% opacidade) usando pseudoelemento `::before`.
-- **Borda dupla**: borda externa fina + borda interna `inset` brilhante (1px `bg-white/[0.04]` no topo) — efeito de bisel sutil.
-- **Sombra ambiente** com 2 camadas: `shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_8px_24px_-12px_rgba(0,0,0,0.6)]`.
-- **Hover tilt 3D**: usar o `useMouseTilt` hook que já existe (`src/hooks/useMouseTilt.ts`) para inclinação leve (max 4°) seguindo o cursor.
-- **Sparkline maior** (h-12) com **gradiente preenchido** abaixo da linha (área), não só linha.
-- **Badge de variação** com ícone trending + porcentagem grande, tom semântico.
+### Performance
 
-KPIs (todos respeitam filtros):
-1. **Total de Leads** (info) — total no período + delta vs período anterior + sparkline diária.
-2. **Em andamento** (warning) — leads em contacting/negotiating + sub: "X em negociação".
-3. **Conversão** (success/destructive) — taxa win/total + meta visível com mini progress radial.
-4. **Sem resposta** (destructive) — leads em overdue + atalho "Reengajar".
+- Sem novas libs.
+- Um único `requestAnimationFrame` loop, cancelado no unmount; listener de scroll passivo apenas para agendar o frame.
+- `will-change: transform, opacity` apenas nos elementos animados.
+- Em mobile/`saveData`/`prefers-reduced-motion`: render apenas do poster + textos estáticos, sem montar `<video>` nem rAF.
+- Vídeo carregado com `preload="auto"` e `playsInline`; nunca chamamos `.play()`.
 
-Componente novo: `src/components/admin/dashboard/KpiCard.tsx`.
+### Assets
 
-### 3. Gráficos modernos (3 novos)
+- Copiar o upload para `public/hero/hero-cantim-scroll.mp4` (servido estático, com suporte a HTTP range para o seek por scroll funcionar bem).
+- Gerar `public/hero/hero-cantim-poster.webp` extraindo o primeiro frame do vídeo via ffmpeg + cwebp (qualidade ~78, largura 1920).
 
-**a) Funil de conversão (donut + legenda)** — `FunnelDonut.tsx`
-- SVG donut com 5 segmentos (status), espaçamento entre segmentos (`stroke-dasharray` com gap), gradient stops por segmento, glow no hover.
-- Centro mostra total + label "leads no período".
-- Legenda lateral com porcentagem e contagem.
+### Arquivos
 
-**b) Tendência (area chart com gradient)** — `TrendArea.tsx`
-- SVG path `<path>` com `fill="url(#grad)"` (linearGradient vertical: cor → transparente).
-- Linha principal 2px + pontos nos picos.
-- Eixo X com labels de dias/semanas conforme período do filtro.
-- Tooltip flutuante ao passar o mouse mostrando dia + valor.
-- 2 séries: leads criados vs ganhos (linhas de cores diferentes).
+**Novos**
+- `src/components/landing/ScrollVideoHero.tsx` — componente da hero.
+- `public/hero/hero-cantim-scroll.mp4` — vídeo (cópia do upload).
+- `public/hero/hero-cantim-poster.webp` — poster gerado do 1º frame.
 
-**c) Origem dos leads (barras horizontais empilhadas)** — `OriginBars.tsx`
-- Para cada origem: barra horizontal segmentada por status (novo/contato/negoc./cliente/perdido).
-- Largura proporcional ao volume; segmentos com gradient sutil.
-- Hover destaca o segmento e mostra valor absoluto.
+**Modificado**
+- `src/pages/Index.tsx` — trocar `<HeroSection scrollY={scrollY} />` por `<ScrollVideoHero />`. Nenhuma outra seção é alterada.
 
-Todos usam **SVG puro** (sem libs novas), respeitam tokens de cor `hsl(var(--primary))` etc., e têm estado vazio amigável.
+**Não alterado**
+- `HeroSection.tsx` permanece no repositório (não removido) caso o usuário queira voltar atrás; apenas deixa de ser importado.
 
-### 4. Layout do dashboard reorganizado
+### Detalhes técnicos chave
 
-```
-[ Header: título + ações ]
-[ DashboardFilters (sticky) ]
-[ Row 1: 4 KPI cards (3D)                              ]
-[ Row 2: TrendArea (col-span-2) | FunnelDonut          ]
-[ Row 3: OriginBars (col-span-2) | AI Suggestion+Distrib ]
-[ Row 4: Priority Leads (col-span-2) | Próximos contatos ]
-[ Row 5: Activity Feed (col-span-2) | Reengagement      ]
+```text
+<section> wrapper: position relative; height: 250vh
+  └── <div sticky top-0 h-screen overflow-hidden>
+        ├── <video|img poster> absolute inset-0 object-cover
+        ├── overlay gradiente
+        └── <div content> flex col, logo + headline + CTAs
+                (opacity/translateY calculados via progress)
 ```
 
-Container até `1480px`, `gap-5`, animação `animate-fade-in-up` em cascata leve nos cards (delay incremental de 40ms).
+Cálculo de progresso:
+```ts
+const rect = wrapperRef.current.getBoundingClientRect();
+const total = rect.height - window.innerHeight;
+const progress = clamp(-rect.top / total, 0, 1);
+if (video.duration) video.currentTime = video.duration * progress;
+```
 
-### 5. Microinterações e profundidade
-
-- **Glassmorphism opcional** no card de AI Suggestion: `backdrop-blur` + borda gradiente animada (`@keyframes` shimmer já no projeto ou novo).
-- **Ring de progresso** circular para a meta de conversão (SVG `circle` com `stroke-dasharray` animado).
-- **Hover lift** padrão em todos os cards: `transition-transform`, `hover:-translate-y-0.5`, sombra mais profunda.
-- **Skeleton shimmer** já existente no `LoadingState` — manter, mas com cards de mesma altura para evitar layout shift.
-
-### 6. Aplicação de filtros
-
-Helper puro `applyDashboardFilters(leads, customers, interactions, filters)` em `src/lib/dashboardFilters.ts` que devolve as listas filtradas. Todos os `useMemo` do dashboard passam a usar essas listas filtradas. Período afeta sparklines/trend (granularidade ajustada: hoje=hora, 7d=dia, 30d=dia, 90d=semana).
-
-### Arquivos criados
-
-- `src/components/admin/dashboard/DashboardFilters.tsx` — barra de filtros sticky
-- `src/components/admin/dashboard/KpiCard.tsx` — card 3D com tilt + área sparkline
-- `src/components/admin/dashboard/FunnelDonut.tsx` — donut SVG do funil
-- `src/components/admin/dashboard/TrendArea.tsx` — area chart com gradient e tooltip
-- `src/components/admin/dashboard/OriginBars.tsx` — barras horizontais empilhadas
-- `src/components/admin/dashboard/MetaRing.tsx` — ring radial de progresso
-- `src/lib/dashboardFilters.ts` — helpers puros de filtragem
-
-### Arquivos modificados
-
-- `src/pages/admin/DashboardPage.tsx` — orquestração com filtros + nova grid + uso dos componentes novos
-- `src/index.css` — adicionar utilitários `.card-3d`, `.bevel-top`, gradient mesh helpers (poucas linhas) e keyframes de shimmer/glow se faltarem
-
-### Sem mudanças
-
-- Schema, RLS, hooks de dados, módulos IA, landing page, pipeline, leads, customers (nenhuma quebra fora do dashboard).
-
-### Validação
-
-1. Filtros: alterar período/status/origem reflete imediatamente em **todos** os blocos (KPIs, donut, área, barras, listas).
-2. Tilt 3D funciona em desktop, desativa em touch (`prefers-reduced-motion` respeitado).
-3. Donut/área renderizam corretamente com 0 dados (estado vazio claro).
-4. Conversão mostra ring de progresso até a meta (18%).
-5. Deep-link `?period=30d&status=new,contacting` restaura estado.
-6. Layout em 982px (viewport atual): cards reagrupam para 2 colunas; filtros viram drawer/scroll horizontal sem quebrar.
-7. Performance: nenhum re-render desnecessário; SVG puro, sem libs novas instaladas.
-
-### Resultado esperado
-
-Dashboard com presença visual de produto sério (Linear/Attio level): cards com profundidade real, gráficos ricos contando a história do funil, e uma barra de filtros que torna tudo navegável por período, status, origem e busca — tudo respeitando o design system "Premium CRM" já configurado e os dados reais do Supabase em tempo real.
+CTAs reaproveitam o `Button` shadcn já usado e fazem scroll para `#produtos` e link `https://wa.me/...` (mantendo o número do WhatsApp já configurado em `src/config/app.ts` se existir; caso contrário, usar o mesmo destino do `WhatsAppFloat` atual).
