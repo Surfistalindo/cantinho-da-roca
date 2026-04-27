@@ -18,6 +18,7 @@ const ScrollVideoHero: React.FC = () => {
   const overlayTextRef = useRef<HTMLDivElement>(null);
 
   const [useStaticFallback, setUseStaticFallback] = useState(false);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
 
   // Decide between video and static fallback (mobile / saveData / reduced motion)
   useEffect(() => {
@@ -32,11 +33,36 @@ const ScrollVideoHero: React.FC = () => {
     }
   }, []);
 
+  // Lazy-load: only attach the video src when the hero gets close to the viewport.
+  useEffect(() => {
+    if (useStaticFallback) return;
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setShouldLoadVideo(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            setShouldLoadVideo(true);
+            io.disconnect();
+            break;
+          }
+        }
+      },
+      { rootMargin: '200% 0px 200% 0px', threshold: 0 },
+    );
+    io.observe(wrapper);
+    return () => io.disconnect();
+  }, [useStaticFallback]);
+
   // "Kick" the video so the browser actually decodes frames and lets us seek.
   // Some browsers (Safari/iOS especially) won't update currentTime visually
   // until the media has been started at least once.
   useEffect(() => {
-    if (useStaticFallback) return;
+    if (useStaticFallback || !shouldLoadVideo) return;
     const v = videoRef.current;
     if (!v) return;
     let cancelled = false;
@@ -61,7 +87,7 @@ const ScrollVideoHero: React.FC = () => {
       v.removeEventListener('loadeddata', kick);
       window.clearTimeout(id);
     };
-  }, [useStaticFallback]);
+  }, [useStaticFallback, shouldLoadVideo]);
 
   // Scroll-driven loop
   useEffect(() => {
@@ -70,20 +96,36 @@ const ScrollVideoHero: React.FC = () => {
 
     let rafId = 0;
     let queued = false;
+    let lastAppliedTime = -1;
 
     const update = () => {
       queued = false;
       const rect = wrapper.getBoundingClientRect();
       const total = rect.height - window.innerHeight;
-      const progress = clamp(-rect.top / Math.max(1, total));
+      const rawProgress = -rect.top / Math.max(1, total);
+      const progress = clamp(rawProgress);
 
-      // Drive video time
+      // Drive video time only while we're inside the sticky range (0..1).
+      // Outside it, leave the video frozen at first/last frame and DO NOT
+      // re-issue currentTime writes — that's what causes tiny regressions
+      // and stutters once the page continues past the hero.
       const v = videoRef.current;
       if (v && v.duration && Number.isFinite(v.duration)) {
-        const target = v.duration * progress;
-        // Avoid micro-thrashing
-        if (Math.abs(v.currentTime - target) > 0.03) {
-          try { v.currentTime = target; } catch {}
+        const dur = v.duration;
+        // Land exactly at (duration - epsilon) at the end so the browser
+        // doesn't wrap back to 0 when currentTime === duration.
+        const epsilon = Math.min(0.04, dur * 0.01);
+        const target =
+          rawProgress >= 1 ? dur - epsilon
+          : rawProgress <= 0 ? 0
+          : progress * dur;
+
+        // Only seek when not already seeking and the delta is meaningful.
+        if (!v.seeking && Math.abs(target - lastAppliedTime) > 0.03) {
+          try {
+            v.currentTime = target;
+            lastAppliedTime = target;
+          } catch { /* ignore */ }
         }
       }
 
@@ -123,7 +165,7 @@ const ScrollVideoHero: React.FC = () => {
       window.removeEventListener('resize', schedule);
       cancelAnimationFrame(rafId);
     };
-  }, [useStaticFallback]);
+  }, [useStaticFallback, shouldLoadVideo]);
 
   const scrollToProducts = () => {
     document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' });
@@ -150,11 +192,11 @@ const ScrollVideoHero: React.FC = () => {
           <video
             ref={videoRef}
             className="absolute inset-0 h-full w-full object-cover"
-            src={VIDEO_SRC}
+            src={shouldLoadVideo ? VIDEO_SRC : undefined}
             poster={POSTER_SRC}
             muted
             playsInline
-            preload="auto"
+            preload={shouldLoadVideo ? 'auto' : 'none'}
             tabIndex={-1}
             aria-hidden="true"
           />
