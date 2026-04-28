@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, HelpCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTutorial } from './TutorialProvider';
 import type { TourPlacement } from './types';
@@ -10,8 +10,9 @@ interface Props {
 }
 
 const POPOVER_W = 340;
-const GAP = 14;
+const GAP = 22; // espaço extra para a seta caber entre alvo e card
 const SAFE = 12;
+const ARROW = 14; // tamanho da seta (lado do losango)
 
 export default function TourPopover({ targetRect, placement }: Props) {
   const { currentTour, index, next, prev, stop } = useTutorial();
@@ -19,9 +20,13 @@ export default function TourPopover({ targetRect, placement }: Props) {
   const cardRef = useRef<HTMLDivElement | null>(null);
   const [pos, setPos] = useState<{ left: number; top: number }>({ left: 0, top: 0 });
   const [resolvedPlacement, setResolvedPlacement] = useState<TourPlacement>(placement);
+  const [showDetails, setShowDetails] = useState(false);
 
   const total = currentTour.steps.length;
   const isLast = index === total - 1;
+
+  // Reset detalhes ao trocar de passo
+  useEffect(() => { setShowDetails(false); }, [index]);
 
   // Foca o card ao mudar de passo (acessibilidade)
   useEffect(() => { cardRef.current?.focus(); }, [index]);
@@ -34,7 +39,6 @@ export default function TourPopover({ targetRect, placement }: Props) {
     const vh = window.innerHeight;
 
     if (!targetRect) {
-      // Centro da tela
       setResolvedPlacement('auto');
       setPos({
         left: Math.max(SAFE, (vw - POPOVER_W) / 2),
@@ -53,7 +57,6 @@ export default function TourPopover({ targetRect, placement }: Props) {
 
     let p: TourPlacement = placement;
     if (p === 'auto') {
-      // Escolhe o lado com mais espaço, preferindo bottom > right > top > left.
       const order: TourPlacement[] = ['bottom', 'right', 'top', 'left'];
       p = order.reduce((best, cur) => (spaces[cur] > spaces[best] ? cur : best), 'bottom' as TourPlacement);
     }
@@ -78,15 +81,82 @@ export default function TourPopover({ targetRect, placement }: Props) {
         break;
     }
 
-    // Clamp dentro da viewport.
     left = Math.max(SAFE, Math.min(vw - POPOVER_W - SAFE, left));
     top = Math.max(SAFE, Math.min(vh - ch - SAFE, top));
 
     setResolvedPlacement(p);
     setPos({ left, top });
-  }, [targetRect, placement, index, step?.body]);
+  }, [targetRect, placement, index, step?.body, showDetails]);
 
   if (!step) return null;
+
+  // ===== Seta apontando do popover para o alvo =====
+  // Calcula posição relativa da seta dentro do card.
+  const ch = cardRef.current?.offsetHeight ?? 0;
+  let arrowStyle: React.CSSProperties | null = null;
+  if (targetRect && resolvedPlacement !== 'auto') {
+    const r = targetRect;
+    const targetCenterX = r.x + r.w / 2;
+    const targetCenterY = r.y + r.h / 2;
+
+    const base: React.CSSProperties = {
+      position: 'absolute',
+      width: ARROW,
+      height: ARROW,
+      background: 'hsl(var(--popover))',
+      border: '1px solid hsl(var(--border))',
+      transform: 'rotate(45deg)',
+      boxShadow: '0 0 0 0 transparent',
+    };
+
+    switch (resolvedPlacement) {
+      case 'bottom': {
+        // Seta no topo do card, apontando para cima
+        const localX = Math.max(16, Math.min(POPOVER_W - 16 - ARROW, targetCenterX - pos.left - ARROW / 2));
+        arrowStyle = {
+          ...base,
+          left: localX,
+          top: -ARROW / 2,
+          borderRight: 'none',
+          borderBottom: 'none',
+        };
+        break;
+      }
+      case 'top': {
+        const localX = Math.max(16, Math.min(POPOVER_W - 16 - ARROW, targetCenterX - pos.left - ARROW / 2));
+        arrowStyle = {
+          ...base,
+          left: localX,
+          bottom: -ARROW / 2,
+          borderLeft: 'none',
+          borderTop: 'none',
+        };
+        break;
+      }
+      case 'left': {
+        const localY = Math.max(16, Math.min(ch - 16 - ARROW, targetCenterY - pos.top - ARROW / 2));
+        arrowStyle = {
+          ...base,
+          top: localY,
+          right: -ARROW / 2,
+          borderLeft: 'none',
+          borderBottom: 'none',
+        };
+        break;
+      }
+      case 'right': {
+        const localY = Math.max(16, Math.min(ch - 16 - ARROW, targetCenterY - pos.top - ARROW / 2));
+        arrowStyle = {
+          ...base,
+          top: localY,
+          left: -ARROW / 2,
+          borderRight: 'none',
+          borderTop: 'none',
+        };
+        break;
+      }
+    }
+  }
 
   return (
     <div
@@ -104,6 +174,14 @@ export default function TourPopover({ targetRect, placement }: Props) {
       }}
       data-placement={resolvedPlacement}
     >
+      {/* Seta direcional (losango com 2 bordas para virar triângulo visual) */}
+      {arrowStyle && (
+        <span
+          aria-hidden
+          style={{ ...arrowStyle, animation: 'tour-arrow-pulse 1.6s ease-in-out infinite' }}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between gap-3 px-4 pt-3.5 pb-1.5">
         <div className="flex flex-col gap-0.5 min-w-0">
@@ -126,10 +204,30 @@ export default function TourPopover({ targetRect, placement }: Props) {
 
       {/* Body */}
       <div
-        className="px-4 pb-3 text-[12.5px] leading-relaxed text-muted-foreground [&_strong]:text-foreground [&_strong]:font-semibold"
-        // step.body é estático e curado — sem entrada de usuário.
+        className="px-4 pb-2 text-[12.5px] leading-relaxed text-muted-foreground [&_strong]:text-foreground [&_strong]:font-semibold"
         dangerouslySetInnerHTML={{ __html: step.body }}
       />
+
+      {/* "Não entendi?" — explicação detalhada expansível */}
+      {step.details && (
+        <div className="px-4 pb-2">
+          <button
+            type="button"
+            onClick={() => setShowDetails((v) => !v)}
+            aria-expanded={showDetails}
+            className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 -mx-1.5 text-[11.5px] font-medium text-primary hover:bg-primary/10 transition-colors"
+          >
+            <HelpCircle className="h-3.5 w-3.5" />
+            {showDetails ? 'Ocultar explicação' : 'Não entendi, explica melhor'}
+          </button>
+          {showDetails && (
+            <div
+              className="mt-2 rounded-lg border border-border/70 bg-muted/40 px-3 py-2.5 text-[12px] leading-relaxed text-foreground/90 [&_strong]:text-foreground [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-4 [&_ul]:space-y-1 [&_li]:marker:text-primary"
+              dangerouslySetInnerHTML={{ __html: step.details }}
+            />
+          )}
+        </div>
+      )}
 
       {/* Progresso (dots) */}
       <div className="px-4 pb-3 flex items-center gap-1">
@@ -179,6 +277,10 @@ export default function TourPopover({ targetRect, placement }: Props) {
         @keyframes tour-pop-in {
           from { opacity: 0; transform: scale(0.96); }
           to   { opacity: 1; transform: scale(1); }
+        }
+        @keyframes tour-arrow-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.0); }
+          50%      { box-shadow: 0 0 0 6px hsl(var(--primary) / 0.18); }
         }
         @media (prefers-reduced-motion: reduce) {
           [data-placement] { animation: none !important; transition: none !important; }
