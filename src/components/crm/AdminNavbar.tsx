@@ -35,14 +35,14 @@ export default function AdminNavbar() {
   const initials = (user?.email ?? '?').split('@')[0].slice(0, 2).toUpperCase();
 
   return (
-    <header className="h-14 border-b border-border bg-card/80 backdrop-blur-md flex items-center justify-between px-3 sm:px-4 shrink-0 sticky top-0 z-30">
+    <header className="h-12 border-b border-border bg-card flex items-center justify-between px-3 sm:px-4 shrink-0 sticky top-0 z-30">
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
         <div className="hidden sm:flex items-center gap-1.5 text-[12px] min-w-0">
-          <span className="text-muted-foreground/70">Workspace</span>
-          <MSym name="chevron_right" size={14} className="text-muted-foreground/50" />
+          <span className="text-muted-foreground">Workspace</span>
+          <MSym name="chevron_right" size={14} className="text-muted-foreground/60" />
           <span className="font-semibold text-foreground truncate">{currentLabel}</span>
-          <span className="ml-2 inline-flex items-center gap-1 px-2 h-5 rounded-md bg-success/15 text-success text-[10px] font-semibold uppercase tracking-wide">
+          <span className="ml-2 inline-flex items-center gap-1 px-2 h-5 rounded-md bg-success/15 text-success text-[10px] font-bold uppercase tracking-wide">
             <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
             On track
           </span>
@@ -55,7 +55,7 @@ export default function AdminNavbar() {
             <input
               type="text"
               placeholder="Buscar leads, clientes…"
-              className="w-full h-8 pl-9 pr-3 rounded-md bg-muted/60 border border-transparent focus:border-primary/40 focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 text-[12.5px] placeholder:text-muted-foreground/70 transition-colors"
+              className="w-full h-8 pl-9 pr-3 rounded-md bg-surface-3 border border-transparent focus:border-primary/40 focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 text-[12.5px] placeholder:text-muted-foreground transition-colors"
             />
           </div>
         </div>

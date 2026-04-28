@@ -65,86 +65,95 @@
     --font-body: 'DM Sans', sans-serif;
   }
 
-  /* CRM — Dark "Board Corporativo" palette inspired by Monday.com / Linear / ClickUp.
-     Cool blue-grey surfaces, vivid accents for badges. Scoped to .font-crm only. */
+  /* CRM — Light "Monday Work Management" palette.
+     White panels, soft grey background, vivid solid status cells. Scoped to .font-crm only. */
   .font-crm {
-    /* Surface ladder (L0 → L4) — quase preto azulado */
-    --background: 222 18% 7%;                    /* page bg */
-    --foreground: 220 14% 92%;                   /* primary text */
-    --card: 222 15% 10%;                         /* panels */
-    --card-foreground: 220 14% 92%;
-    --popover: 222 15% 13%;                      /* popovers/menus */
-    --popover-foreground: 220 14% 92%;
-    --muted: 222 14% 12%;                        /* zebra/hover base */
-    --muted-foreground: 220 9% 65%;              /* secondary text */
-    --accent: 222 14% 14%;
-    --accent-foreground: 220 14% 95%;
-    --border: 222 12% 19%;                       /* discreet dividers */
-    --input: 222 12% 19%;
+    /* Surface ladder (L0 → L4) — branco e cinzas claros */
+    --background: 220 23% 97%;                   /* #f6f7fb page bg */
+    --foreground: 222 26% 14%;                   /* #1f2533 primary text */
+    --card: 0 0% 100%;                           /* white panels */
+    --card-foreground: 222 26% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 26% 14%;
+    --muted: 220 18% 96%;                        /* hover base */
+    --muted-foreground: 222 11% 45%;             /* #676879 secondary text */
+    --accent: 220 18% 94%;
+    --accent-foreground: 222 26% 14%;
+    --border: 220 15% 90%;                       /* #e0e3eb discreet dividers */
+    --input: 220 15% 88%;
     --radius: 0.5rem;
 
-    /* Brand — Monday-like blue */
-    --primary: 212 100% 56%;                     /* #1f76ff-ish */
+    /* Brand — Monday blue */
+    --primary: 212 100% 46%;                     /* #0073ea */
     --primary-foreground: 0 0% 100%;
-    --primary-container: 212 90% 32%;
-    --primary-container-foreground: 0 0% 100%;
+    --primary-container: 212 95% 92%;
+    --primary-container-foreground: 212 100% 26%;
 
-    --secondary: 220 12% 22%;                    /* neutral surface btn */
-    --secondary-foreground: 220 14% 92%;
-    --secondary-container: 222 15% 16%;
-    --secondary-container-foreground: 220 14% 92%;
+    --secondary: 220 18% 94%;                    /* neutral surface btn */
+    --secondary-foreground: 222 20% 22%;
+    --secondary-container: 220 18% 96%;
+    --secondary-container-foreground: 222 26% 14%;
 
-    --tertiary: 188 80% 55%;                     /* cyan accent */
-    --tertiary-foreground: 191 100% 10%;
-    --tertiary-container: 188 60% 30%;
-    --tertiary-container-foreground: 0 0% 100%;
+    --tertiary: 188 80% 45%;                     /* cyan accent */
+    --tertiary-foreground: 0 0% 100%;
+    --tertiary-container: 188 70% 92%;
+    --tertiary-container-foreground: 188 80% 22%;
 
-    --neutral: 220 8% 55%;
-    --neutral-foreground: 220 14% 92%;
-    --ring: 212 100% 56%;
+    --neutral: 220 10% 60%;
+    --neutral-foreground: 222 26% 14%;
+    --ring: 212 100% 46%;
 
-    /* Surface ladder */
-    --surface-1: 222 15% 10%;
-    --surface-2: 222 14% 12%;
-    --surface-3: 222 13% 15%;
-    --surface-4: 222 12% 18%;
-    --elevated: 222 15% 13%;
-    --border-strong: 222 10% 28%;
+    /* Surface ladder — white → progressively cooler greys */
+    --surface-1: 0 0% 100%;
+    --surface-2: 220 20% 98%;
+    --surface-3: 220 18% 96%;
+    --surface-4: 220 16% 93%;
+    --elevated: 0 0% 100%;
+    --border-strong: 220 14% 80%;
 
-    /* Status — vivid for badges */
-    --success: 142 70% 45%;                      /* #22c55e-ish */
+    /* Status — Monday-style vivid solids */
+    --success: 152 100% 39%;                     /* #00c875 verde "concluído" */
     --success-foreground: 0 0% 100%;
-    --success-soft: 142 50% 18%;
-    --warning: 38 95% 56%;                       /* amber */
-    --warning-foreground: 30 80% 12%;
-    --warning-soft: 38 60% 18%;
-    --info: 212 95% 60%;
+    --success-soft: 152 70% 92%;
+    --warning: 32 98% 62%;                       /* #fdab3d laranja "pausado" */
+    --warning-foreground: 30 80% 14%;
+    --warning-soft: 32 95% 94%;
+    --info: 199 100% 38%;                        /* #0086c0 azul "em andamento" */
     --info-foreground: 0 0% 100%;
-    --info-soft: 212 70% 20%;
-    --destructive: 0 75% 60%;
+    --info-soft: 199 90% 94%;
+    --destructive: 350 75% 57%;                  /* #e2445c vermelho "não iniciado" */
     --destructive-foreground: 0 0% 100%;
 
-    /* Tag palette — for Setor / Frente / Projeto cells (Monday-style) */
-    --tag-blue: 212 95% 60%;
-    --tag-cyan: 188 80% 55%;
-    --tag-green: 142 65% 50%;
-    --tag-yellow: 45 95% 55%;
-    --tag-orange: 22 95% 60%;
-    --tag-red: 0 80% 62%;
-    --tag-pink: 330 80% 65%;
-    --tag-purple: 265 75% 65%;
-    --tag-indigo: 240 70% 65%;
-    --tag-teal: 172 70% 45%;
+    /* Status cells (Monday solid colors — a célula inteira é pintada) */
+    --status-done: 152 100% 39%;                 /* #00c875 verde */
+    --status-progress: 199 100% 38%;             /* #0086c0 azul */
+    --status-blocked: 350 75% 57%;               /* #e2445c vermelho */
+    --status-paused: 32 98% 62%;                 /* #fdab3d laranja */
+    --status-working: 217 100% 60%;              /* #579bfc azul claro */
+    --status-review: 268 65% 62%;                /* #a25ddc roxo */
+    --status-neutral: 220 10% 75%;               /* #c4c4c4 cinza */
 
-    /* Sidebar — slightly darker than main */
-    --sidebar-background: 222 22% 5%;
-    --sidebar-foreground: 220 10% 72%;
-    --sidebar-primary: 212 100% 60%;
+    /* Tag palette — pílulas coloridas (Setor / Frente / Origem) Monday-style */
+    --tag-blue: 217 100% 60%;                    /* #579bfc */
+    --tag-cyan: 188 85% 50%;
+    --tag-green: 152 70% 45%;                    /* #00c875 */
+    --tag-yellow: 45 100% 56%;                   /* #ffcb00 */
+    --tag-orange: 32 98% 62%;                    /* #fdab3d */
+    --tag-red: 350 75% 57%;                      /* #e2445c */
+    --tag-pink: 332 100% 55%;                    /* #ff158a */
+    --tag-purple: 268 65% 62%;                   /* #a25ddc */
+    --tag-indigo: 240 60% 62%;
+    --tag-teal: 172 70% 42%;
+
+    /* Sidebar — branca estilo Monday */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 14% 35%;           /* #4f5466 */
+    --sidebar-primary: 212 100% 46%;             /* azul barra ativa */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 212 90% 16%;               /* active item bg (blue-tinted) */
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 222 14% 14%;
-    --sidebar-ring: 212 100% 60%;
+    --sidebar-accent: 220 22% 94%;               /* #e6e9ef item ativo bg */
+    --sidebar-accent-foreground: 222 28% 12%;    /* texto preto bold no item ativo */
+    --sidebar-border: 220 15% 92%;
+    --sidebar-ring: 212 100% 46%;
 
     /* Typography roles */
     --font-crm-display: 'Be Vietnam Pro', sans-serif;
@@ -303,48 +312,58 @@
   .font-crm .board-panel {
     background-color: hsl(var(--card));
     border: 1px solid hsl(var(--border));
-    border-radius: 0.625rem;
+    border-radius: 0.5rem;
     overflow: hidden;
+    box-shadow: 0 1px 2px 0 hsl(220 25% 14% / 0.04);
   }
   .font-crm .board-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
     font-size: 12.5px;
+    background-color: hsl(var(--card));
   }
   .font-crm .board-table thead th {
-    background-color: hsl(var(--surface-2));
+    background-color: hsl(var(--surface-3));
     color: hsl(var(--muted-foreground));
     font-weight: 600;
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0.4rem 0.625rem;
+    font-size: 11px;
+    text-transform: none;
+    letter-spacing: 0.01em;
+    padding: 0.5rem 0.625rem;
     border-bottom: 1px solid hsl(var(--border));
+    border-right: 1px solid hsl(var(--border));
     text-align: left;
     white-space: nowrap;
     position: sticky;
     top: 0;
     z-index: 5;
   }
+  .font-crm .board-table thead th:last-child { border-right: 0; }
   .font-crm .board-table tbody td {
-    padding: 0.375rem 0.625rem;
-    border-bottom: 1px solid hsl(var(--border) / 0.55);
+    padding: 0;
+    border-bottom: 1px solid hsl(var(--border));
+    border-right: 1px solid hsl(var(--border));
     height: 36px;
     color: hsl(var(--foreground));
     vertical-align: middle;
+    background-color: hsl(var(--card));
+  }
+  .font-crm .board-table tbody td:last-child { border-right: 0; }
+  .font-crm .board-table tbody td > .cell-pad {
+    padding: 0.375rem 0.625rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
   }
   .font-crm .board-table tbody tr {
     transition: background-color 140ms ease;
   }
   .font-crm .board-table tbody tr:hover td {
-    background-color: hsl(var(--muted) / 0.6);
-  }
-  .font-crm .board-table tbody tr:active td {
-    background-color: hsl(var(--primary) / 0.10);
+    background-color: hsl(var(--muted) / 0.7);
   }
   .font-crm .board-row-active td {
-    background-color: hsl(var(--primary) / 0.08);
+    background-color: hsl(var(--primary) / 0.06);
   }
 
   /* Density helpers — opt-in compact controls */
@@ -368,7 +387,7 @@
     width: 80px;
     height: 6px;
     border-radius: 999px;
-    background: hsl(var(--muted));
+    background: hsl(var(--surface-4));
     overflow: hidden;
   }
   .font-crm .progress-cell > span {
@@ -379,12 +398,37 @@
     transition: width 200ms ease;
   }
 
+  /* Status cells (célula inteira pintada — Monday Work Management) */
+  .font-crm .status-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    padding: 0 0.5rem;
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 600;
+    text-align: center;
+    text-transform: lowercase;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    min-height: 32px;
+  }
+  .font-crm .status-done     { background-color: hsl(var(--status-done)); }
+  .font-crm .status-progress { background-color: hsl(var(--status-progress)); }
+  .font-crm .status-blocked  { background-color: hsl(var(--status-blocked)); }
+  .font-crm .status-paused   { background-color: hsl(var(--status-paused)); }
+  .font-crm .status-working  { background-color: hsl(var(--status-working)); }
+  .font-crm .status-review   { background-color: hsl(var(--status-review)); }
+  .font-crm .status-neutral  { background-color: hsl(var(--status-neutral)); color: hsl(222 26% 14%); }
+
   /* Tag/badge palette helpers (Monday-style cells) */
   .font-crm .tag-cell {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0.125rem 0.5rem;
+    padding: 0.18rem 0.55rem;
     border-radius: 0.375rem;
     font-size: 11px;
     font-weight: 600;
@@ -395,8 +439,8 @@
   .font-crm .tag-blue   { background-color: hsl(var(--tag-blue)); }
   .font-crm .tag-cyan   { background-color: hsl(var(--tag-cyan)); }
   .font-crm .tag-green  { background-color: hsl(var(--tag-green)); }
-  .font-crm .tag-yellow { background-color: hsl(var(--tag-yellow)); color: hsl(30 80% 12%); }
-  .font-crm .tag-orange { background-color: hsl(var(--tag-orange)); }
+  .font-crm .tag-yellow { background-color: hsl(var(--tag-yellow)); color: hsl(30 80% 14%); }
+  .font-crm .tag-orange { background-color: hsl(var(--tag-orange)); color: hsl(30 80% 14%); }
   .font-crm .tag-red    { background-color: hsl(var(--tag-red)); }
   .font-crm .tag-pink   { background-color: hsl(var(--tag-pink)); }
   .font-crm .tag-purple { background-color: hsl(var(--tag-purple)); }
@@ -410,6 +454,7 @@
     position: relative;
     background-color: hsl(var(--sidebar-accent));
     color: hsl(var(--sidebar-accent-foreground));
+    font-weight: 600;
   }
   .font-crm [data-sidebar="menu-button"][data-active="true"]::before,
   .font-crm .sidebar-item-active::before {
@@ -428,32 +473,35 @@
     border-bottom: 1px solid hsl(var(--border));
   }
   .font-crm .crm-dense-table table thead th {
-    background-color: hsl(var(--surface-2));
-    height: 32px !important;
+    background-color: hsl(var(--surface-3));
+    height: 34px !important;
     padding: 0 0.625rem !important;
-    font-size: 10.5px !important;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: 11px !important;
+    text-transform: none;
+    letter-spacing: 0.01em;
     color: hsl(var(--muted-foreground)) !important;
+    font-weight: 600;
     position: sticky;
     top: 0;
     z-index: 5;
+    border-right: 1px solid hsl(var(--border));
   }
+  .font-crm .crm-dense-table table thead th:last-child { border-right: 0; }
   .font-crm .crm-dense-table table tbody tr {
-    height: 36px;
-    border-bottom: 1px solid hsl(var(--border) / 0.55);
+    height: 38px;
+    border-bottom: 1px solid hsl(var(--border));
     transition: background-color 140ms ease;
+    background-color: hsl(var(--card));
   }
   .font-crm .crm-dense-table table tbody tr:hover {
-    background-color: hsl(var(--muted) / 0.6) !important;
-  }
-  .font-crm .crm-dense-table table tbody tr:active {
-    background-color: hsl(var(--primary) / 0.10) !important;
+    background-color: hsl(var(--muted) / 0.7) !important;
   }
   .font-crm .crm-dense-table table tbody td {
     padding: 0.375rem 0.625rem !important;
     vertical-align: middle;
+    border-right: 1px solid hsl(var(--border));
   }
+  .font-crm .crm-dense-table table tbody td:last-child { border-right: 0; }
 
   /* Spinner reduzido para skeletons em painéis densos */
   .font-crm .dense-skeleton {

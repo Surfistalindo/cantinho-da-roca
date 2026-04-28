@@ -28,6 +28,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faUserCheck, faPlus, faCircleCheck, faClock, faTriangleExclamation, faMoon } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { colorForLabel } from '@/components/crm/ui/TagCell';
 import { getCustomerLifecycle, purchaseRecencyLabel } from '@/lib/customerLifecycle';
 
 interface Customer {
@@ -300,7 +301,11 @@ export default function ClientsPage() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{c.product_bought ?? '—'}</TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {c.product_bought ? (
+                            <span className={cn('tag-cell', `tag-${colorForLabel(c.product_bought)}`)}>{c.product_bought}</span>
+                          ) : <span className="text-xs text-muted-foreground">—</span>}
+                        </TableCell>
                         <TableCell className="hidden sm:table-cell text-[11px] text-muted-foreground">
                           {c.purchase_date ? (
                             <div>

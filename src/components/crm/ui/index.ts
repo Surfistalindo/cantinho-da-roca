@@ -5,3 +5,7 @@ export { default as PageTabs } from './PageTabs';
 export type { PageTab } from './PageTabs';
 export { default as ActionToolbar } from './ActionToolbar';
 export { default as DataBoard } from './DataBoard';
+export { default as StatusCell } from './StatusCell';
+export type { StatusCellVariant } from './StatusCell';
+export { default as TagCell, colorForLabel } from './TagCell';
+export type { TagColor } from './TagCell';
