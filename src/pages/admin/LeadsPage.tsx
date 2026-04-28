@@ -574,33 +574,40 @@ export default function LeadsPage() {
                       return (
                         <TableHeader className="sticky top-0 z-20 bg-card shadow-[0_1px_0_0_hsl(var(--border))]">
                           <TableRow className="hover:bg-transparent border-border [&>th]:bg-card">
-                            <TableHead className="w-[36px] pl-3 pr-0">
+                            <TableHead scope="col" className="w-[36px] pl-3 pr-0">
                               <Checkbox
                                 checked={allChecked ? true : someChecked ? 'indeterminate' : false}
                                 onCheckedChange={() => toggleGroup(groupIds, allChecked)}
-                                aria-label="Selecionar todos"
+                                aria-label={`Selecionar todos os ${groupIds.length} leads visíveis deste grupo`}
                               />
                             </TableHead>
-                            <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground min-w-[240px]">Lead</TableHead>
-                            <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Origem</TableHead>
-                            <TableHead className="hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[200px]">Interesse</TableHead>
-                            <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px]">Status</TableHead>
-                            <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[120px]">Prioridade</TableHead>
-                            <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Recência</TableHead>
-                            <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[100px]">
+                            <TableHead scope="col" className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground min-w-[240px]">Lead</TableHead>
+                            <TableHead scope="col" className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Origem</TableHead>
+                            <TableHead scope="col" className="hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[200px]">Interesse</TableHead>
+                            <TableHead scope="col" className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px]">Status</TableHead>
+                            <TableHead scope="col" className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[120px]">Prioridade</TableHead>
+                            <TableHead scope="col" className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Recência</TableHead>
+                            <TableHead
+                              scope="col"
+                              aria-sort={sortBy === 'score' ? 'none' : (sortDir === 'desc' ? 'descending' : 'ascending')}
+                              className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[100px]"
+                            >
                               <button
+                                type="button"
                                 onClick={toggleSort}
-                                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors uppercase"
+                                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring rounded-sm"
                                 title={sortBy === 'score' ? 'Ordenado por prioridade' : 'Ordenado por data'}
+                                aria-label={`Alternar ordenação. Atual: ${sortBy === 'score' ? 'prioridade' : sortDir === 'desc' ? 'mais recentes' : 'mais antigos'}`}
                               >
                                 {sortBy === 'score' ? 'Prioridade' : 'Entrada'}
                                 <FontAwesomeIcon
                                   icon={sortDir === 'desc' ? faArrowDownShortWide : faArrowUpShortWide}
                                   className="h-3 w-3"
+                                  aria-hidden="true"
                                 />
                               </button>
                             </TableHead>
-                            <TableHead className="w-[140px] text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Ações</TableHead>
+                            <TableHead scope="col" className="w-[140px] text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Ações</TableHead>
                           </TableRow>
                         </TableHeader>
                       );
