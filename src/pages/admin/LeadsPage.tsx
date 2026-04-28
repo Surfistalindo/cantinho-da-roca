@@ -522,12 +522,12 @@ export default function LeadsPage() {
                           onClick={() => setDensity('compact')}
                           className={cn('h-7 w-7 rounded flex items-center justify-center transition-colors',
                             density === 'compact' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
-                          aria-label="Densidade compacta"
+                          aria-label="Compactar tabela para caber sem rolar lateral"
                         >
                           <FontAwesomeIcon icon={faTableList} className="h-3 w-3" />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent>Densidade compacta</TooltipContent>
+                      <TooltipContent>Compactar (cabe sem rolar lateral)</TooltipContent>
                     </Tooltip>
                   </div>
                 )}
