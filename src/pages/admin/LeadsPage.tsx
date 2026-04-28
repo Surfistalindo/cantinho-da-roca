@@ -856,10 +856,19 @@ export default function LeadsPage() {
                           <div
                             ref={(node) => { tableGroupScrollRefs.current[groupKey] = node; }}
                             className={cn(
-                              'crm-row-resize overflow-y-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-sm',
-                              density === 'compact' ? 'crm-compact-table overflow-x-hidden' : 'overflow-x-auto',
+                              'crm-row-resize crm-smooth-scroll crm-dense-table min-w-0 max-w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-sm',
+                              density === 'compact'
+                                ? 'crm-compact-table overflow-x-hidden overflow-y-auto'
+                                : 'crm-x-scroll-always overflow-x-auto overflow-y-auto',
                             )}
                             style={{ maxHeight: 'calc(100vh - 280px)', ['--row-h' as any]: `${rowHeight}px` }}
+                            onWheel={(e) => {
+                              // Shift + scroll → rola horizontal (atalho clássico)
+                              if (e.shiftKey && e.deltaY !== 0) {
+                                e.currentTarget.scrollLeft += e.deltaY;
+                                e.preventDefault();
+                              }
+                            }}
                             onPointerDown={(e) => {
                               // Drag-resize: pointerdown nos últimos 5px da borda inferior de qualquer <tr>
                               const tr = (e.target as HTMLElement)?.closest('tr');
