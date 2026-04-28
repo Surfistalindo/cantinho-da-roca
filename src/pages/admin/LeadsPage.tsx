@@ -550,8 +550,8 @@ export default function LeadsPage() {
                       const allChecked = groupIds.length > 0 && groupIds.every((id) => selected.has(id));
                       const someChecked = !allChecked && groupIds.some((id) => selected.has(id));
                       return (
-                        <TableHeader>
-                          <TableRow className="hover:bg-transparent border-border">
+                        <TableHeader className="sticky top-0 z-20 bg-card shadow-[0_1px_0_0_hsl(var(--border))]">
+                          <TableRow className="hover:bg-transparent border-border [&>th]:bg-card">
                             <TableHead className="w-[36px] pl-3 pr-0">
                               <Checkbox
                                 checked={allChecked ? true : someChecked ? 'indeterminate' : false}
