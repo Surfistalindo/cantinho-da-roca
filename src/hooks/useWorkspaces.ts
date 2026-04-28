@@ -27,7 +27,7 @@ export function useWorkspaces() {
   useEffect(() => {
     refresh();
     const channel = supabase
-      .channel('workspaces-boards')
+      .channel(`workspaces-boards-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'workspaces' }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'boards' }, refresh)
       .subscribe();
