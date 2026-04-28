@@ -109,18 +109,18 @@ export default function AdminSidebar() {
 
     return (
       <SidebarMenuItem key={item.key}>
-        <SidebarMenuButton asChild className="h-10 rounded-lg px-3 text-[13px] font-medium text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground transition-colors">
+        <SidebarMenuButton asChild className="h-9 rounded-md px-3 text-[12.5px] font-medium text-sidebar-foreground hover:bg-sidebar-accent/40 hover:text-sidebar-accent-foreground transition-colors">
           <NavLink
             to={item.url}
             end={item.key !== 'ia'}
-            activeClassName="!bg-sidebar-accent !text-sidebar-accent-foreground [&_.material-symbols-outlined]:text-sidebar-primary"
+            activeClassName="sidebar-item-active !text-sidebar-accent-foreground [&_.material-symbols-outlined]:text-sidebar-primary"
           >
-            <MSym name={item.icon} size={20} />
+            <MSym name={item.icon} size={18} />
             {!collapsed && (
               <span className="flex-1 flex items-center justify-between">
                 <span>{item.title}</span>
                 {badgeValue > 0 && (
-                  <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-destructive/20 text-destructive text-[10px] font-semibold">
+                  <span className="inline-flex items-center justify-center min-w-[18px] h-4 px-1.5 rounded-full bg-destructive/20 text-destructive text-[10px] font-semibold">
                     {badgeValue}
                   </span>
                 )}
