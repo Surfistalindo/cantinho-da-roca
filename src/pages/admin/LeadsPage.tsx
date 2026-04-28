@@ -862,6 +862,8 @@ export default function LeadsPage() {
                               </div>
                             </TableCell>
                           </TableRow>
+                            )}
+                          </DraggableRow>
                         );
                       });
 
