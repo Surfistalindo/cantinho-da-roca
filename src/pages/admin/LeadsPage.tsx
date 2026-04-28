@@ -794,7 +794,10 @@ export default function LeadsPage() {
                         <>
                           <div
                             ref={(node) => { tableGroupScrollRefs.current[groupKey] = node; }}
-                            className="overflow-x-auto overflow-y-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-sm"
+                            className={cn(
+                              'overflow-y-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-sm',
+                              density === 'compact' ? 'crm-compact-table overflow-x-hidden' : 'overflow-x-auto',
+                            )}
                             style={{ maxHeight: 'calc(100vh - 280px)' }}
                             tabIndex={0}
                             role="region"
