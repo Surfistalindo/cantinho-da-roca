@@ -420,15 +420,15 @@ export default function MondaySidebar() {
       </SidebarContent>
 
       {/* Footer */}
-      <SidebarFooter className="border-t border-sidebar-border p-2">
+      <SidebarFooter className="border-t border-hairline p-2">
         <TooltipProvider delayDuration={300}>
           <div
             className={cn(
               'flex items-center gap-2.5 rounded-md',
-              !collapsed && 'p-1.5 hover:bg-sidebar-accent/60 transition-colors',
+              !collapsed && 'p-1.5 hover:bg-sidebar-accent/60 transition-[background-color] duration-crm ease-crm',
             )}
           >
-            <div className="h-7 w-7 shrink-0 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+            <div className="h-7 w-7 shrink-0 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center ring-1 ring-hairline">
               {initials}
             </div>
             {!collapsed && (
@@ -443,7 +443,7 @@ export default function MondaySidebar() {
                   <TooltipTrigger asChild>
                     <button
                       onClick={handleSignOut}
-                      className="h-6 w-6 rounded-md flex items-center justify-center text-sidebar-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      className="h-6 w-6 rounded-md flex items-center justify-center text-sidebar-foreground hover:text-destructive hover:bg-destructive/10 transition-[background-color,color] duration-crm ease-crm"
                       aria-label="Sair"
                     >
                       <MSym name="logout" size={14} />
