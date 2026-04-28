@@ -62,6 +62,7 @@ export default function InteractionTimeline({ entityId, entityType }: Props) {
 
   useEffect(() => {
     fetchData();
+    setVisibleCount(PAGE_SIZE);
   }, [fetchData]);
 
   useRealtimeTable('interactions', fetchData);
