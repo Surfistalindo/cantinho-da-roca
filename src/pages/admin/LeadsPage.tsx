@@ -34,6 +34,7 @@ import { getContactRecency } from '@/lib/contactRecency';
 import { getLeadScore, compareByScore } from '@/lib/leadScore';
 import { cn } from '@/lib/utils';
 import { colorForLabel } from '@/components/crm/ui/TagCell';
+import GroupSection, { type GroupColor } from '@/components/crm/ui/GroupSection';
 
 interface Lead {
   id: string;
