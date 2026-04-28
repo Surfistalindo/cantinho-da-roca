@@ -1,13 +1,21 @@
 import { Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
+import { trackPermissionError } from '@/lib/telemetry';
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, loading: authLoading, signOut } = useAuth();
   const { isAdmin, loading: roleLoading, role } = useUserRole();
+
+  useEffect(() => {
+    if (!authLoading && !roleLoading && session && !isAdmin) {
+      trackPermissionError('Acesso negado ao painel admin', { role, userId: session.user?.id });
+    }
+  }, [authLoading, roleLoading, session, isAdmin, role]);
 
   if (authLoading || (session && roleLoading)) {
     return (
