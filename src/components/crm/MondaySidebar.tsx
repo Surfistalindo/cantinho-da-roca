@@ -116,7 +116,7 @@ export default function MondaySidebar() {
       {/* Product header */}
       <SidebarHeader className="px-3 pt-3 pb-3 border-b border-sidebar-border bg-sidebar-accent/20">
         <div className={cn('flex items-center gap-2.5', collapsed && 'justify-center')}>
-          <div className="h-8 w-8 shrink-0 rounded-md bg-card ring-1 ring-sidebar-border flex items-center justify-center overflow-hidden p-0.5">
+          <div className={cn('shrink-0 rounded-lg bg-card ring-1 ring-sidebar-border flex items-center justify-center overflow-hidden p-1', collapsed ? 'h-9 w-9' : 'h-14 w-14')}>
             <img src={cantimLogo} alt="Cantim da Roça" className="h-full w-full object-contain" />
           </div>
           {!collapsed && (
