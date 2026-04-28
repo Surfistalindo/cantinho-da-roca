@@ -39,9 +39,8 @@ const REGISTRY: TourRegistryEntry[] = [
   { match: '/admin/ia/paste', tour: iaPasteTour },
   { match: '/admin/ia/whatsapp', tour: iaWhatsAppImportTour },
   { match: '/admin/ia', tour: iaHomeTour },
-  // Boards (regex)
+  // Boards (regex captura /admin/boards/:id)
   { match: /^\/admin\/boards\//, tour: boardsTour },
-  { match: '/admin/task-boards', tour: taskBoardTour },
 ];
 
 export function resolveTour(pathname: string): Tour {
