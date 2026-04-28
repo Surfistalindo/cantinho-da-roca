@@ -142,10 +142,11 @@ export default function MondaySidebar() {
                   to={it.url}
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center gap-2.5 h-8 px-2.5 rounded-md text-[12.5px] font-medium transition-colors',
+                      'flex items-center gap-2.5 h-8 px-2.5 rounded-md text-[12.5px] font-medium',
+                      'transition-colors duration-crm ease-crm',
                       isActive
                         ? 'sidebar-item-active text-sidebar-accent-foreground'
-                        : 'text-sidebar-foreground hover:bg-sidebar-accent/40',
+                        : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
                     )
                   }
                 >
@@ -172,10 +173,11 @@ export default function MondaySidebar() {
                   end
                   className={({ isActive }) =>
                     cn(
-                      'flex items-center gap-2.5 h-8 px-2.5 rounded-md text-[12.5px] font-medium transition-colors',
+                      'flex items-center gap-2.5 h-8 px-2.5 rounded-md text-[12.5px] font-medium',
+                      'transition-colors duration-crm ease-crm',
                       isActive
                         ? 'sidebar-item-active text-sidebar-accent-foreground'
-                        : 'text-sidebar-foreground hover:bg-sidebar-accent/40',
+                        : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
                     )
                   }
                 >
@@ -618,8 +620,8 @@ function DroppableWorkspaceItem({
     <li
       ref={setNodeRef}
       className={cn(
-        'rounded-md transition-colors',
-        isOver && 'ring-1 ring-primary/50 bg-primary/5',
+        'rounded-md transition-[background-color,box-shadow,outline] duration-crm ease-crm',
+        isOver && 'outline outline-2 outline-primary/60 outline-offset-[-2px] bg-primary/8 shadow-soft',
       )}
     >
       {children}

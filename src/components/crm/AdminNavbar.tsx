@@ -79,12 +79,13 @@ export default function AdminNavbar({ onOpenPalette, onShowHelp }: Props) {
   return (
     <header
       className={cn(
-        'h-14 border-b border-hairline bg-card/85 backdrop-blur-sm',
+        'h-14 border-b border-hairline bg-card/80 backdrop-blur-md',
         'flex items-center justify-between px-3 sm:px-5 shrink-0 sticky top-0 z-30',
+        'supports-[backdrop-filter]:bg-card/70',
       )}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors -ml-1" />
+        <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors duration-crm ease-crm -ml-1" />
 
         {/* Dynamic editorial breadcrumb */}
         <nav
@@ -93,7 +94,7 @@ export default function AdminNavbar({ onOpenPalette, onShowHelp }: Props) {
         >
           <Link
             to="/admin/dashboard"
-            className="text-muted-foreground hover:text-foreground transition-colors font-medium"
+            className="text-muted-foreground hover:text-foreground transition-colors duration-crm ease-crm font-medium"
           >
             Workspace
           </Link>
@@ -102,15 +103,15 @@ export default function AdminNavbar({ onOpenPalette, onShowHelp }: Props) {
               <MSym name="chevron_right" size={14} className="text-muted-foreground/50 shrink-0" />
               {i === crumbs.length - 1 ? (
                 <span
-                  className="font-display-soft font-semibold text-foreground truncate tracking-tight"
-                  style={{ fontSize: '14px' }}
+                  className="font-semibold text-foreground truncate tracking-tight"
+                  style={{ fontSize: '14px', letterSpacing: '-0.01em' }}
                 >
                   {c.label}
                 </span>
               ) : (
                 <Link
                   to={c.href}
-                  className="text-muted-foreground hover:text-foreground transition-colors font-medium truncate"
+                  className="text-muted-foreground hover:text-foreground transition-colors duration-crm ease-crm font-medium truncate"
                 >
                   {c.label}
                 </Link>
@@ -126,11 +127,13 @@ export default function AdminNavbar({ onOpenPalette, onShowHelp }: Props) {
             onClick={onOpenPalette}
             className={cn(
               'group flex items-center gap-2.5 w-full h-9 pl-3 pr-2 rounded-lg',
-              'bg-surface-2 border border-hairline hover:border-hairline-strong hover:bg-card text-left transition-colors',
+              'bg-surface-2 border border-hairline hover:border-hairline-strong hover:bg-card text-left',
+              'transition-[background-color,border-color,box-shadow] duration-crm ease-crm',
+              'hover:shadow-soft',
             )}
             aria-label="Abrir paleta de comandos"
           >
-            <MSym name="search" size={16} className="text-muted-foreground" />
+            <MSym name="search" size={16} className="text-muted-foreground group-hover:text-foreground transition-colors duration-crm ease-crm" />
             <span className="flex-1 text-[12.5px] text-muted-foreground">
               Buscar leads, clientes, comandos…
             </span>
@@ -150,7 +153,8 @@ export default function AdminNavbar({ onOpenPalette, onShowHelp }: Props) {
                 to="/admin/ia/assistant"
                 className={cn(
                   'hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-lg',
-                  'bg-primary/10 hover:bg-primary/15 text-primary text-[12.5px] font-semibold transition-colors',
+                  'bg-primary/10 hover:bg-primary/15 text-primary text-[12.5px] font-semibold',
+                  'transition-colors duration-crm ease-crm',
                 )}
               >
                 <MSym name="auto_awesome" size={16} filled />
@@ -167,7 +171,7 @@ export default function AdminNavbar({ onOpenPalette, onShowHelp }: Props) {
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="h-9 w-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                className="h-9 w-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-crm ease-crm"
                 aria-label="Notificações"
               >
                 <MSym name="notifications" size={18} />
@@ -183,7 +187,7 @@ export default function AdminNavbar({ onOpenPalette, onShowHelp }: Props) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Ver site público"
-                className="h-9 w-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                className="h-9 w-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-crm ease-crm"
               >
                 <MSym name="open_in_new" size={18} />
               </Link>
@@ -194,10 +198,10 @@ export default function AdminNavbar({ onOpenPalette, onShowHelp }: Props) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="flex items-center gap-2 h-9 pl-1 pr-2 rounded-full hover:bg-muted transition-colors ml-1"
+                className="flex items-center gap-2 h-9 pl-1 pr-2 rounded-full hover:bg-muted transition-colors duration-crm ease-crm ml-1"
                 aria-label="Menu do usuário"
               >
-                <span className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-accent-brand text-primary-foreground text-[11px] font-bold flex items-center justify-center shadow-crm-sm">
+                <span className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-accent-brand text-primary-foreground text-[11px] font-bold flex items-center justify-center shadow-crm-sm ring-2 ring-card">
                   {initials}
                 </span>
                 <span className="hidden md:inline text-xs font-medium text-foreground/80 max-w-[140px] truncate">
@@ -205,7 +209,7 @@ export default function AdminNavbar({ onOpenPalette, onShowHelp }: Props) {
                 </span>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-60 rounded-xl border-hairline shadow-crm-pop">
+            <DropdownMenuContent align="end" className="w-60 rounded-xl border-hairline shadow-floating">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-0.5">
                   <p className="text-xs font-semibold leading-none">Sessão ativa</p>
