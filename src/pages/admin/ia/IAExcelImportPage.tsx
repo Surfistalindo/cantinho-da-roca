@@ -146,15 +146,7 @@ export default function IAExcelImportPage() {
       )}
 
       {/* ============= ETAPA 2 — PARSING ============= */}
-      {state.step === 'parsing' && (
-        <div className="rounded-2xl border bg-card p-12 text-center">
-          <FontAwesomeIcon icon={faSpinner} spin className="h-7 w-7 text-primary mb-3" />
-          <p className="text-[13.5px] text-foreground font-medium">Lendo e interpretando planilha…</p>
-          <p className="text-[12px] text-muted-foreground mt-1">
-            A IA está sugerindo o mapeamento de colunas.
-          </p>
-        </div>
-      )}
+      {state.step === 'parsing' && <ParsingLoader />}
 
       {/* ============= ETAPA 3 — MAPEAMENTO ============= */}
       {state.step === 'mapping' && state.parsed && (
