@@ -16,6 +16,7 @@ import ImportProgress from '@/components/ia/excel/ImportProgress';
 import ImportResultView from '@/components/ia/excel/ImportResult';
 import ImportHistoryBanner from '@/components/ia/excel/ImportHistoryBanner';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useExcelImport } from '@/hooks/useExcelImport';
 import { cn } from '@/lib/utils';
 
