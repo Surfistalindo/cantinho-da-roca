@@ -45,6 +45,7 @@ import SavedFiltersMenu, { type SavedLeadFilter } from '@/components/admin/leads
 import QuickActionsPopover from '@/components/admin/leads/QuickActionsPopover';
 import { exportLeadsToCsv } from '@/components/admin/leads/exportLeadsCsv';
 import { useLeadsUrlState } from '@/hooks/useLeadsUrlState';
+import { logger } from '@/lib/logger';
 
 interface Lead {
   id: string;
@@ -159,6 +160,7 @@ export default function LeadsPage() {
     !!dateFrom || !!dateTo;
 
   const clearFilters = () => {
+    logger.debug('[leads] filters cleared');
     url.set({
       search: '', status: 'all', origin: 'all',
       recency: 'all', priority: 'all', from: null, to: null,
@@ -174,6 +176,8 @@ export default function LeadsPage() {
 
   const fetchLeads = useCallback(async () => {
     setFetchError(null);
+    logger.debug('[leads] fetch start');
+    const startedAt = performance.now();
     const { data, error } = await supabase
       .from('leads')
       .select(
@@ -182,8 +186,10 @@ export default function LeadsPage() {
       .order('created_at', { ascending: false })
       .limit(2000);
     if (error) {
+      logger.error('[leads] fetch error', { code: (error as { code?: string }).code, message: error.message });
       setFetchError(new Error(error.message ?? 'Erro ao carregar leads'));
     } else {
+      logger.debug('[leads] fetch ok', { count: data?.length ?? 0, ms: Math.round(performance.now() - startedAt) });
       setLeads((data as Lead[]) ?? []);
     }
     setLoading(false);
@@ -279,6 +285,25 @@ export default function LeadsPage() {
     statusFilter, originFilter, search, recencyFilter, priorityFilter,
     sortBy, sortDir, activeKpi, dateFrom, dateTo,
   ]);
+
+  // Indicador de refresh in-place ao trocar filtros/ordenação (não desmonta o scroller)
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const firstRefreshRunRef = useRef(true);
+  useEffect(() => {
+    if (firstRefreshRunRef.current) { firstRefreshRunRef.current = false; return; }
+    setIsRefreshing(true);
+    const debounceLog = window.setTimeout(() => {
+      logger.debug('[leads] filters', {
+        search, statusFilter, originFilter, recencyFilter, priorityFilter,
+        activeKpi, sortBy, sortDir,
+        dateFrom: dateFrom?.toISOString() ?? null,
+        dateTo: dateTo?.toISOString() ?? null,
+      });
+    }, 250);
+    const offTimer = window.setTimeout(() => setIsRefreshing(false), 320);
+    return () => { window.clearTimeout(debounceLog); window.clearTimeout(offTimer); };
+  }, [statusFilter, originFilter, search, recencyFilter, priorityFilter,
+      sortBy, sortDir, activeKpi, dateFrom, dateTo]);
 
   const newestId = useMemo(() => {
     if (leads.length === 0) return null;
@@ -537,7 +562,14 @@ export default function LeadsPage() {
           onSelect={applyKpi}
         />
 
-        <div className="board-panel p-3 space-y-3 min-w-0">
+        <div className="board-panel p-3 space-y-3 min-w-0 relative" aria-busy={isRefreshing}>
+          <div
+            aria-hidden="true"
+            className={cn(
+              'pointer-events-none absolute left-0 right-0 top-0 h-0.5 bg-primary/60 transition-opacity rounded-t-md',
+              isRefreshing ? 'opacity-100 animate-pulse' : 'opacity-0',
+            )}
+          />
           <div className="flex flex-wrap items-start gap-2">
             <div ref={searchInputRef} className="flex-1 min-w-0">
               <LeadFilters
@@ -762,8 +794,24 @@ export default function LeadsPage() {
                         <>
                           <div
                             ref={(node) => { tableGroupScrollRefs.current[groupKey] = node; }}
-                            className="overflow-x-auto overflow-y-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full"
+                            className="overflow-x-auto overflow-y-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-sm"
                             style={{ maxHeight: 'calc(100vh - 280px)' }}
+                            tabIndex={0}
+                            role="region"
+                            aria-label={`Tabela de leads — grupo ${groupKey}`}
+                            data-refreshing={isRefreshing ? 'true' : 'false'}
+                            onKeyDown={(e) => {
+                              const tag = (e.target as HTMLElement)?.tagName;
+                              if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+                              const el = e.currentTarget;
+                              const step = Math.max(40, el.clientHeight * 0.8);
+                              if (e.key === 'PageDown') { e.preventDefault(); el.scrollBy({ top: step, behavior: 'smooth' }); }
+                              else if (e.key === 'PageUp') { e.preventDefault(); el.scrollBy({ top: -step, behavior: 'smooth' }); }
+                              else if (e.key === 'Home') { e.preventDefault(); el.scrollTo({ top: 0, behavior: 'smooth' }); }
+                              else if (e.key === 'End') { e.preventDefault(); el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); }
+                              else if (e.key === 'ArrowDown') { e.preventDefault(); el.scrollBy({ top: 48 }); }
+                              else if (e.key === 'ArrowUp') { e.preventDefault(); el.scrollBy({ top: -48 }); }
+                            }}
                           >
                             <Table>
                               {renderHeader(info.pageItems.map((i) => i.id))}
