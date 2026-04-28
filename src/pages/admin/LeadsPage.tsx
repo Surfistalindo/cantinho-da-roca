@@ -733,7 +733,7 @@ export default function LeadsPage() {
                                 aria-label={`Selecionar ${lead.name}`}
                               />
                             </TableCell>
-                            <TableCell className="font-medium">
+                            <TableCell className={cn('font-medium', density === 'comfortable' && 'crm-pin-left')}>
                               <div className="flex items-center gap-3">
                                 <InitialsAvatar name={lead.name} size={density === 'compact' ? 'sm' : 'md'} />
                                 <div className="min-w-0">
