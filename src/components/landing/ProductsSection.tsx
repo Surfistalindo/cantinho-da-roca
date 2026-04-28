@@ -1,4 +1,3 @@
-import logoImg from '@/assets/logo-cantim.png';
 import { Button } from '@/components/ui/button';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import LeafSVG from './LeafSVG';
@@ -30,17 +29,6 @@ export default function ProductsSection({ scrollY = 0 }: ProductsSectionProps) {
       </div>
       <div className="absolute bottom-20 right-10 pointer-events-none animate-leaf-float opacity-20 z-[1]" style={{ animationDelay: '0.5s' }}>
         <LeafSVG size={16} id="prod2" style={{ transform: 'rotate(-25deg)' }} />
-      </div>
-
-      {/* Decorative parallax logo */}
-      <div
-        className="absolute -right-10 sm:-right-20 top-1/3 pointer-events-none opacity-[0.04] z-[1]"
-        style={{
-          transform: `translateY(${scrollY * -0.15}px) rotate(15deg)`,
-          willChange: 'transform',
-        }}
-      >
-        <img src={logoImg} alt="" className="w-[240px] sm:w-[400px]" aria-hidden="true" />
       </div>
 
       <div className="relative z-10" ref={ref}>
