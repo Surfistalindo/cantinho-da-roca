@@ -25,16 +25,17 @@ interface StepDef {
   label: string;
   short: string;
   icon: IconDefinition;
+  hint: string;
 }
 
 const STEPS: StepDef[] = [
-  { key: 'upload',    label: 'Upload do arquivo',         short: 'Upload',     icon: faCloudArrowUp },
-  { key: 'preview',   label: 'Leitura e preview',         short: 'Preview',    icon: faTableList },
-  { key: 'mapping',   label: 'Mapeamento inteligente',    short: 'Mapeamento', icon: faWandMagicSparkles },
-  { key: 'strategy',  label: 'Estratégia de duplicados',  short: 'Estratégia', icon: faSitemap },
-  { key: 'review',    label: 'Revisão linha-a-linha',     short: 'Revisão',    icon: faShieldHalved },
-  { key: 'duplicate', label: 'Análise de duplicados',     short: 'Duplicados', icon: faClone },
-  { key: 'confirm',   label: 'Confirmação e relatório',   short: 'Resultado',  icon: faCircleCheck },
+  { key: 'upload',    label: 'Upload do arquivo',         short: 'Upload',     icon: faCloudArrowUp,        hint: 'Envie sua planilha .xlsx, .xls ou .csv.' },
+  { key: 'preview',   label: 'Leitura e preview',         short: 'Preview',    icon: faTableList,           hint: 'A IA lê e mostra um preview das primeiras linhas.' },
+  { key: 'mapping',   label: 'Mapeamento inteligente',    short: 'Mapeamento', icon: faWandMagicSparkles,   hint: 'Confira a qual campo do CRM cada coluna corresponde.' },
+  { key: 'strategy',  label: 'Estratégia de duplicados',  short: 'Estratégia', icon: faSitemap,             hint: 'Escolha o que fazer quando o telefone já existir no CRM.' },
+  { key: 'review',    label: 'Revisão linha-a-linha',     short: 'Revisão',    icon: faShieldHalved,        hint: 'Veja erros e avisos por linha e ajuste se necessário.' },
+  { key: 'duplicate', label: 'Análise de duplicados',     short: 'Duplicados', icon: faClone,               hint: 'Decida individualmente o que fazer com cada lead duplicado.' },
+  { key: 'confirm',   label: 'Confirmação e relatório',   short: 'Resultado',  icon: faCircleCheck,         hint: 'Importação concluída — veja o relatório final.' },
 ];
 
 function stepIndex(s: string): number {
