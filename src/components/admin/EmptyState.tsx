@@ -12,15 +12,15 @@ interface Props {
 
 export default function EmptyState({ icon = faInbox, title, description, action }: Props) {
   return (
-    <div className="text-center py-16 px-6">
-      <div className="w-16 h-16 rounded-2xl bg-muted mx-auto mb-5 flex items-center justify-center ring-8 ring-muted/40">
-        <FontAwesomeIcon icon={icon} className="w-7 h-7 text-muted-foreground" />
+    <div className="text-center py-10 px-6">
+      <div className="w-12 h-12 rounded-xl bg-muted mx-auto mb-3 flex items-center justify-center ring-4 ring-muted/40">
+        <FontAwesomeIcon icon={icon} className="w-5 h-5 text-muted-foreground" />
       </div>
-      <p className="text-base font-semibold text-foreground">{title}</p>
+      <p className="text-[13px] font-semibold text-foreground">{title}</p>
       {description && (
-        <p className="text-sm text-muted-foreground mt-1.5 max-w-sm mx-auto leading-relaxed">{description}</p>
+        <p className="text-[12px] text-muted-foreground mt-1 max-w-sm mx-auto leading-snug">{description}</p>
       )}
-      {action && <div className="mt-6">{action}</div>}
+      {action && <div className="mt-4">{action}</div>}
     </div>
   );
 }
