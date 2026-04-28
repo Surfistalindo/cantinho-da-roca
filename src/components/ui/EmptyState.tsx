@@ -1,6 +1,14 @@
 import { type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
-import LeafSvg from '@/assets/illustrations/leaf.svg?react';
+
+const LeafSvg = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden>
+    <path d="M8 56 C 14 28, 32 10, 56 8 C 56 32, 38 50, 12 56 Z" fill="currentColor" opacity="0.92" />
+    <path d="M10 54 C 22 42, 36 28, 52 14" stroke="currentColor" strokeOpacity="0.45" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+    <path d="M22 46 C 26 40, 32 36, 38 34" stroke="currentColor" strokeOpacity="0.35" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+    <path d="M28 50 C 32 45, 38 42, 44 41" stroke="currentColor" strokeOpacity="0.3" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+  </svg>
+);
 
 interface EmptyStateProps {
   title: string;
