@@ -30,6 +30,7 @@ const SEED: SeedWorkspace[] = [
       { name: 'Leads', icon: 'users', kind: 'route', route_path: '/admin/leads' },
       { name: 'Pipeline', icon: 'kanban', kind: 'route', route_path: '/admin/pipeline' },
       { name: 'Clientes', icon: 'user-check', kind: 'route', route_path: '/admin/clients' },
+      { name: 'WhatsApp', icon: 'message-circle', kind: 'route', route_path: '/admin/whatsapp' },
     ],
   },
   {
@@ -71,20 +72,46 @@ export function useEnsureDefaultWorkspaces() {
       if (!userRes.user) return;
 
       const existing = await workspaceService.list();
-      if (existing.length > 0) return;
 
-      for (const ws of SEED) {
-        const created = await workspaceService.create({
-          name: ws.name,
-          icon: ws.icon,
-          color: ws.color,
-        });
-        if (ws.is_active) {
-          await workspaceService.setActive(created.id);
+      if (existing.length === 0) {
+        // Primeiro acesso — semeia tudo
+        for (const ws of SEED) {
+          const created = await workspaceService.create({
+            name: ws.name,
+            icon: ws.icon,
+            color: ws.color,
+          });
+          if (ws.is_active) {
+            await workspaceService.setActive(created.id);
+          }
+          for (const b of ws.boards) {
+            await boardService.create({
+              workspace_id: created.id,
+              name: b.name,
+              icon: b.icon,
+              color: b.color,
+              kind: b.kind,
+              route_path: b.route_path ?? null,
+            });
+          }
         }
+        return;
+      }
+
+      // Workspaces já existem — garante que boards novos do SEED sejam adicionados
+      for (const ws of SEED) {
+        const match = existing.find((w) => w.name === ws.name);
+        if (!match) continue;
+        const currentBoards = await boardService.listByWorkspace(match.id);
         for (const b of ws.boards) {
+          const already = currentBoards.some((cb) =>
+            b.kind === 'route'
+              ? cb.route_path === b.route_path
+              : cb.name === b.name && cb.kind === b.kind,
+          );
+          if (already) continue;
           await boardService.create({
-            workspace_id: created.id,
+            workspace_id: match.id,
             name: b.name,
             icon: b.icon,
             color: b.color,
