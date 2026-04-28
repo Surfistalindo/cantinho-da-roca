@@ -140,8 +140,29 @@ export function TutorialProvider({ children }: { children: ReactNode }) {
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
+const NOOP_CTX: TutorialCtx = {
+  currentTour: { id: 'noop', title: '', summary: '', steps: [], version: 0 },
+  active: false,
+  index: 0,
+  start: () => {},
+  next: () => {},
+  prev: () => {},
+  stop: () => {},
+  goTo: () => {},
+  isCompleted: () => true,
+};
+
 export function useTutorial() {
   const c = useContext(Ctx);
-  if (!c) throw new Error('useTutorial deve estar dentro de <TutorialProvider>');
+  if (!c) {
+    // Em vez de derrubar a árvore (blank screen), devolve um contexto inerte.
+    // Isso protege contra HMR stale e usos do HelpButton fora do CrmLayout.
+    if (typeof console !== 'undefined') {
+      // eslint-disable-next-line no-console
+      console.warn('useTutorial usado fora de <TutorialProvider> — retornando contexto vazio.');
+    }
+    return NOOP_CTX;
+  }
   return c;
 }
+
