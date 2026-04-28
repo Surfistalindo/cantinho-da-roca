@@ -826,6 +826,25 @@
     background-color: hsl(var(--muted-foreground) / 0.6);
   }
 
+  /* Quando o CRM está montado, o documento inteiro é o scroller —
+     aplica o mesmo scrollbar premium ao html/body. */
+  html:has(.font-crm) {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--hairline-strong) / 0.6) transparent;
+  }
+  html:has(.font-crm)::-webkit-scrollbar { width: 10px; height: 10px; }
+  html:has(.font-crm)::-webkit-scrollbar-track { background: transparent; }
+  html:has(.font-crm)::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--hairline-strong) / 0.5);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background-color 180ms cubic-bezier(.2,.8,.2,1);
+  }
+  html:has(.font-crm)::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.6);
+  }
+
   /* Focus-ring premium dentro do CRM (substitui halos default duplos) */
   .font-crm :where(button, a, [role="button"], [role="combobox"], [role="switch"], input, textarea, select):focus-visible {
     outline: none;
