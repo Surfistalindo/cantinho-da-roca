@@ -653,7 +653,16 @@ export default function LeadsPage() {
                                 aria-label={`Selecionar todos os ${groupIds.length} leads visíveis deste grupo`}
                               />
                             </TableHead>
-                            <TableHead scope="col" className={cn('text-[11px] uppercase tracking-wider font-semibold text-muted-foreground', density === 'compact' ? 'min-w-[160px]' : 'min-w-[240px]')}>Lead</TableHead>
+                            <TableHead
+                              scope="col"
+                              className={cn(
+                                'text-[11px] uppercase tracking-wider font-semibold text-muted-foreground',
+                                density === 'compact' ? 'min-w-[160px]' : 'min-w-[240px]',
+                                density === 'comfortable' && 'crm-pin-left',
+                              )}
+                            >
+                              Lead
+                            </TableHead>
                             <TableHead scope="col" className={cn('hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]', density === 'compact' && 'lg:hidden')}>Origem</TableHead>
                             <TableHead scope="col" className={cn('hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[200px]', density === 'compact' && 'xl:hidden')}>Interesse</TableHead>
                             <TableHead scope="col" className={cn('text-[11px] uppercase tracking-wider font-semibold text-muted-foreground', density === 'compact' ? 'w-[120px]' : 'w-[160px]')}>Status</TableHead>
@@ -679,7 +688,16 @@ export default function LeadsPage() {
                                 />
                               </button>
                             </TableHead>
-                            <TableHead scope="col" className={cn('text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground', density === 'compact' ? 'w-[80px]' : 'w-[140px]')}>Ações</TableHead>
+                            <TableHead
+                              scope="col"
+                              className={cn(
+                                'text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground',
+                                density === 'compact' ? 'w-[80px]' : 'w-[140px]',
+                                density === 'comfortable' && 'crm-pin-right',
+                              )}
+                            >
+                              Ações
+                            </TableHead>
                           </TableRow>
                         </TableHeader>
                       );
@@ -715,7 +733,7 @@ export default function LeadsPage() {
                                 aria-label={`Selecionar ${lead.name}`}
                               />
                             </TableCell>
-                            <TableCell className="font-medium">
+                            <TableCell className={cn('font-medium', density === 'comfortable' && 'crm-pin-left')}>
                               <div className="flex items-center gap-3">
                                 <InitialsAvatar name={lead.name} size={density === 'compact' ? 'sm' : 'md'} />
                                 <div className="min-w-0">
@@ -756,8 +774,11 @@ export default function LeadsPage() {
                             <TableCell className="text-[11px] text-muted-foreground whitespace-nowrap font-mono">
                               {format(new Date(lead.created_at), 'dd/MM/yy', { locale: ptBR })}
                             </TableCell>
-                            <TableCell onClick={(e) => e.stopPropagation()}>
-                              <div className="flex justify-end gap-0.5 opacity-70 group-hover:opacity-100 transition-opacity">
+                            <TableCell
+                              onClick={(e) => e.stopPropagation()}
+                              className={cn(density === 'comfortable' && 'crm-pin-right')}
+                            >
+                              <div className="crm-row-actions flex justify-end gap-0.5">
                                 {density !== 'compact' && (
                                   <QuickActionsPopover
                                     leadId={lead.id}
