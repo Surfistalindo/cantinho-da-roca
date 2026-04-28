@@ -1,96 +1,65 @@
-## Redesign do CRM — abordagem em 4 fases
+## Fase 4 — Dashboard + Kanban + polish final
 
-O documento que você anexou é grande (tokens, layout, navbar, sidebar, leads, kanban, dashboard) e algumas partes conflitam com regras antigas da memória. Você optou por **redesign completo + atualizar memória + adicionar pinned columns no comfortable**.
+Última fase do redesign. Aplica os tokens da Fase 1 (sombras `floating`, transições `crm`, hairlines, focus-ring, scrollbar) nos pontos visuais ainda no estilo "antigo" (KpiCard com tilt 3D + glow forte, LeadCard kanban genérico) e faz auditoria visual nas três telas principais.
 
-Em vez de despejar tudo num único patch (alto risco de regressão visual e funcional), vou executar **uma fase por vez**, com aprovação no fim de cada uma. Este plano cobre **Fase 1** em detalhe + esboço das fases seguintes.
+### 4.1 KPI Cards — `src/components/admin/dashboard/KpiCard.tsx`
 
----
+Calmar a estética. Hoje tem perspective tilt + radial gradient grande + sombra escura — destoa da nova direção Linear/Vercel.
 
-### Princípios que guiam todas as fases
+- Trocar `border border-border` + sombras manuais por `surface-card--hair` + `shadow-soft`.
+- Remover `useMouseTilt` e o radial gradient grande. Manter apenas:
+  - `hover: shadow-pop -translate-y-px` em `duration-crm ease-crm`.
+  - Spotlight muito sutil (radial 240px, opacity 0.5) no hover, sem seguir o mouse.
+- Tipografia: valor com `text-[34px] font-bold tabular-nums tracking-tight` (já existe) e `font-display` opcional via classe pra ganhar Geist quando disponível (cai pra Inter no resto).
+- Badges de delta: usar paleta semântica atual mas com `rounded-full` e `px-2 py-0.5` para look mais Monday/Linear.
+- Sparkline mantém. Apenas reduzir stroke pra 1.4 e gradient stop final pra opacity 0.05 (mais discreto no light).
+- Manter `MetaRing` no canto quando passado.
+- Respeita `prefers-reduced-motion` (já implícito ao remover tilt).
 
-- Escopo do redesign = `.font-crm` (todo `/admin/*`). **Landing fica intocada.**
-- Mantém Lovable Cloud + RLS + paginação por grupo + filtros URL + bulk + tutorial FAB já existentes.
-- Sem novas libs. Sem `cursor` custom. Sem gradientes roxos. Sem mudar schema.
-- Performance: nenhuma fonte nova além das já carregadas (Inter / JetBrains Mono / Caveat / Material Symbols). Glassmorphism só onde pré-aprovado (navbar e popovers — leve, não decorativo).
-- Toda animação 150–220ms, ease-out. Respeita `prefers-reduced-motion`.
+### 4.2 LeadCard Kanban — `src/components/pipeline/LeadCard.tsx`
 
----
+Alinhar à mesma linguagem das tabelas de Leads.
 
-### Fase 1 — Memória + Design System global (esta fase)
+- `rounded-md` → `rounded-lg`. Trocar `shadow-soft` base por `surface-card--hair` (sem border explícita) + `shadow-soft`.
+- `hover`: `shadow-card -translate-y-px` em `duration-crm`.
+- Estado dragging: além do `opacity-50 ring-2 ring-primary/40 shadow-pop`, adicionar `rotate-[0.5deg]` (sutil, nada de cartoon).
+- Lateral colorida `before:` mantida (priority hint).
+- Fontes: `font-mono` no telefone fica melhor com `tabular-nums` (vai pegar JetBrains Mono via `.font-crm`).
+- Espaçamentos: `p-2.5 pl-3` → `p-3 pl-3.5`. Gap interno 8px em vez de 10/12 misturados.
 
-**1.1 Atualizar memórias** (a regra antiga proibia glassmorphism e troca de fonte; agora você liberou):
+### 4.3 LeadsKanban DragOverlay — `src/components/admin/leads/LeadsKanban.tsx`
 
-- `mem://index.md` Core: trocar a linha "Sem purple gradients, glassmorphism, cursor custom..." por uma versão refinada: glass leve permitido só em navbar/popover, sem gradientes roxos, sem cursor custom.
-- `mem://design/crm-typography`: manter Inter como base, **adicionar permissão** para usar Geist (opcional) só em `text-display-*`. Mono = JetBrains Mono.
-- Novo `mem://design/crm-redesign-2026`: documenta tokens (paleta refinada, sombras `soft/pop/ringed`, raios, durações, scrollbar) para servir de fonte da verdade.
+- Card flutuante do overlay: `border-primary` + `shadow-pop` → `surface-card--hair` + `shadow-floating` + `ring-2 ring-primary/40 ring-offset-1 ring-offset-background`. Mais limpo, segue a linguagem dos popovers.
+- Width fixo 224px (`w-56`) mantido.
 
-**1.2 `tailwind.config.ts`**
+### 4.4 Polish global — `src/index.css`
 
-- Refinar `boxShadow`: já tem `soft/card/pop/ringed` — adicionar `shadow-floating` (popovers) e `shadow-inset-hairline` (boards).
-- `transitionDuration` e `transitionTimingFunction`: presets `crm-fast` (120ms), `crm` (180ms), `crm-slow` (240ms) com `cubic-bezier(.2,.8,.2,1)`.
-- Não mudar paleta semântica (HSL já existe via vars). Apenas garantir que `--ring` no light tem alpha pronto pra focus-ring premium.
+Pequenos retoques, todos dentro de `.font-crm`:
 
-**1.3 `src/index.css` — bloco global do CRM**
+- Garantir que `*[data-state="open"]` em popovers/dropdowns use `shadow-floating` (já ajustamos em alguns; aplicar via seletor genérico nos primitivos do Radix usados no CRM, sem afetar landing).
+- `.crm-card-hover`: utilitário curto reutilizável → `transition: var(--crm) ease-crm; &:hover { transform: translateY(-1px); box-shadow: var(--shadow-card); }`. Usado por KpiCard, LeadCard e cards de dashboard secundários.
+- Tooltip Radix dentro de `.font-crm`: `bg-popover/95 backdrop-blur-sm shadow-floating border-hairline text-[12px]`.
 
-Sem renomear vars existentes (evita regressão). Adicionar:
+### 4.5 Auditoria visual final
 
-- **Scrollbar utility refinada** (`.crm-smooth-scroll` já existe; criar `.crm-scrollbar-thin` complementar com 8px, hover 10px, cor `hsl(var(--hairline-strong))`).
-- **Focus-visible global** dentro de `.font-crm`: anel `0 0 0 3px hsl(var(--ring) / 0.35)` em botões, links, inputs, células, switches; remove halos default duplos.
-- **Skeleton premium** `.crm-skeleton`: shimmer 1.4s baseado em `surface-2 → surface-3 → surface-2`.
-- **Sticky/pinned helpers** (preparação p/ Fase 3):
-  - `.crm-pin-left { position: sticky; left: 0; background: hsl(var(--card)); z-index: 4; box-shadow: 1px 0 0 0 hsl(var(--hairline)); }`
-  - `.crm-pin-right { ...right: 0; box-shadow: -1px 0 0 0 hsl(var(--hairline)); }`
-  - Variante `.crm-pin-left-shadowed` com `clip-path` que evita sombra cortada na borda do scroller.
-- **Hover affordance em linhas de tabela**: `.font-crm .board-table tbody tr` ganha `--row-actions-opacity: 0` por padrão, `:hover { --row-actions-opacity: 1 }`. Ações de linha usam essa variável (preparação p/ Fase 3).
-- **Linear/Vercel hairlines**: `.font-crm .surface-card` ganha alternativa `.surface-card--hair` com `box-shadow: 0 0 0 1px hsl(var(--hairline)), 0 1px 2px hsl(220 25% 14% / .04)` (sem border, alinhamento perfeito a 1px).
+Sem mudanças de código. Apenas verificar nos viewports:
 
-**1.4 Verificação Fase 1**
+- 375px (mobile): `/admin/leads` (cards mode), `/admin/dashboard`, `/admin/pipeline`.
+- 768px (tablet): mesmos + `/admin/clients`.
+- 1280px e 1536px (desktop): mesmos + `/admin/whatsapp`, `/admin/ia/classify`.
 
-- Abrir `/admin/dashboard`, `/admin/leads`, `/admin/pipeline` no preview e confirmar: nada quebrou visualmente, focus-ring novo aparece com Tab, scroll fica mais fino. Skeleton ainda não foi adotado em telas — só está disponível.
+Critérios: nenhum scroll horizontal indesejado, focus-ring novo aparece em Tab, KPIs respiram sem o glow agressivo, kanban cards consistentes com tabela, popovers/dropdowns com `shadow-floating`.
 
-> Aprovado isto, parto para Fase 2.
+### Arquivos da Fase 4
 
----
+- `src/components/admin/dashboard/KpiCard.tsx` — refactor calmo
+- `src/components/pipeline/LeadCard.tsx` — alinhar linguagem
+- `src/components/admin/leads/LeadsKanban.tsx` — DragOverlay
+- `src/index.css` — `.crm-card-hover`, tooltip primitivo, popover floating padrão
 
-### Fase 2 — Layout + Navbar + Sidebar (próxima)
+### Não-objetivos
 
-Resumo (vai virar plan próprio):
-
-- `CrmLayout`: surface ladder explícita (`surface-sunken` no shell, `surface-1` no main), padding e max-width revisados, garantir `overflow-x-hidden` no shell.
-- `AdminNavbar`: glass leve (`bg-card/80 backdrop-blur-md` + `border-b hairline`), realinhar grid (logo/breadcrumb | search | actions), avatar com ring `ringed`, search com `kbd-chip` refinado.
-- `MondaySidebar`: estados ativos com barra de acento à esquerda + bg `sidebar-accent/60`; ícones crisp 16px; transições 180ms; feedback DnD com `outline + ring + scale .98`.
-
-### Fase 3 — Leads (tabela + pinned columns + comfortable)
-
-- Mantém modo **compact** atual (sem scroll).
-- Em **comfortable**: scroller volta a `overflow-x-auto`, mas coluna "Lead" fica `crm-pin-left` e "Ações" fica `crm-pin-right`. Header também sticky vertical (já é) e horizontal nas pinned.
-- Quick actions de linha: ícones aparecem só no hover via `--row-actions-opacity`.
-- Empty state ilustrado (já temos `EmptyState` warm) reutilizado quando filtros sem resultado.
-- Filtros e view switcher repintados com componentes do design system novo (segmented control mais Linear-like).
-
-### Fase 4 — Dashboard + Kanban + polish final
-
-- KPIs: card `surface-card--hair` + `hover: shadow-pop translate-y-[-1px]` 180ms; tipografia tabular-nums grande.
-- Charts: tooltip refinado (popover novo + sombra floating).
-- LeadsKanban + LeadCard: sombras suaves, estado dragging com `rotate-1 + shadow-pop`, badges status do design system, espaçamento 8px.
-- Auditoria visual final em mobile (375 e 768) e desktop (1280 e 1536).
-
----
-
-### Arquivos da Fase 1
-
-- `mem://index.md` — atualizar Core
-- `mem://design/crm-typography` — atualizar
-- `mem://design/crm-redesign-2026` — novo
-- `tailwind.config.ts` — sombras + transições
-- `src/index.css` — utilitários (focus, skeleton, pinned helpers, hover affordance, hairlines)
-
-Nenhum componente/página é tocado nesta fase — risco mínimo, apenas tokens e utilitários novos prontos pra Fase 2/3.
-
----
-
-### Não-objetivos (para todas as fases)
-
-- Não mexer em landing, schema, edge functions, hooks de dados, paginação, filtros URL, tutorial, IA.
-- Não trocar `Inter` como fonte base. Geist só fica como opção opcional em headings, sem ser default.
-- Não adicionar libs novas (sem framer-motion novo, sem nova icon lib).
+- Não mexer em hooks de dados, charts, lógica de DnD, cálculos de score, paginação, filtros.
+- Não adicionar libs (sem framer, sem nova icon lib).
+- Não trocar paleta nem tipografia base. Geist permanece opcional.
+- Landing intocada.

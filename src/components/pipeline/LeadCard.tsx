@@ -50,12 +50,11 @@ export default function LeadCard({ lead, onClick, interactionCount }: Props) {
       {...listeners}
       onClick={onClick}
       className={cn(
-        'relative bg-card border border-border rounded-md p-2.5 pl-3 cursor-grab active:cursor-grabbing transition-all duration-150 shadow-soft',
-        'hover:border-primary/40 hover:shadow-card',
+        'relative surface-card--hair crm-card-hover p-3 pl-3.5 cursor-grab active:cursor-grabbing',
         'before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-full',
         sideTone,
         score.urgent && 'ring-1 ring-destructive/40',
-        isDragging && 'opacity-50 shadow-pop ring-2 ring-primary/40',
+        isDragging && 'opacity-50 ring-2 ring-primary/40 shadow-pop rotate-[0.5deg]',
       )}
     >
       {score.level !== 'closed' && (
@@ -64,11 +63,11 @@ export default function LeadCard({ lead, onClick, interactionCount }: Props) {
         </div>
       )}
 
-      <div className="flex items-start gap-2.5">
+      <div className="flex items-start gap-2">
         <InitialsAvatar name={lead.name} size="sm" />
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-[13px] text-foreground truncate leading-tight">{lead.name}</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5 font-mono truncate">
+          <p className="text-[11px] text-muted-foreground mt-0.5 font-mono tabular-nums truncate">
             {lead.phone ?? 'Sem telefone'}
           </p>
         </div>

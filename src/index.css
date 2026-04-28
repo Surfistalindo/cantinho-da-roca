@@ -933,6 +933,33 @@
     .font-crm .surface-card--hair { transition: none; }
     .font-crm .surface-card--hair.is-interactive:hover { transform: none; }
   }
+
+  /* Reusable card hover lift (KPIs, lead cards, dashboard cards) */
+  .font-crm .crm-card-hover {
+    transition: transform 180ms cubic-bezier(.2,.8,.2,1),
+                box-shadow 180ms cubic-bezier(.2,.8,.2,1),
+                border-color 180ms cubic-bezier(.2,.8,.2,1);
+    will-change: transform;
+  }
+  .font-crm .crm-card-hover:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 0 0 1px hsl(var(--hairline-strong)),
+      0 8px 24px -8px hsl(220 25% 14% / 0.14),
+      0 2px 4px -2px hsl(220 25% 14% / 0.06);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .font-crm .crm-card-hover { transition: none; }
+    .font-crm .crm-card-hover:hover { transform: none; }
+  }
+
+  /* Radix popovers / dropdowns / tooltips inside CRM get the floating shadow */
+  .font-crm [data-radix-popper-content-wrapper] > * {
+    box-shadow:
+      0 12px 32px -8px hsl(220 25% 14% / 0.18),
+      0 4px 8px -4px hsl(220 25% 14% / 0.10),
+      0 0 0 1px hsl(220 14% 14% / 0.06) !important;
+  }
 }
 
 /* GPU compositing for shader canvases */

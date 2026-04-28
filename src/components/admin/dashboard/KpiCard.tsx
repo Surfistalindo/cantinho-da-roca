@@ -1,4 +1,3 @@
-import { useMouseTilt } from '@/hooks/useMouseTilt';
 import { MSym } from '@/components/crm/MSym';
 import { cn } from '@/lib/utils';
 import MetaRing from './MetaRing';
@@ -14,7 +13,7 @@ interface Props {
   sub?: string;
   sparkline: number[];
   tone?: KpiTone;
-  ringValue?: number;       // se setado, mostra MetaRing no canto
+  ringValue?: number;
   ringTone?: KpiTone;
   action?: ReactNode;
   icon?: string;
@@ -35,16 +34,9 @@ const TONE_FILL_ID: Record<KpiTone, string> = {
   primary: 'kpi-grad-primary',
 };
 const TONE_BADGE: Record<'up' | 'down' | 'flat', string> = {
-  up: 'bg-success/15 text-success border-success/20',
-  down: 'bg-destructive/15 text-destructive border-destructive/20',
-  flat: 'bg-muted text-muted-foreground border-border',
-};
-const TONE_GLOW: Record<KpiTone, string> = {
-  success: 'hsl(var(--success) / 0.18)',
-  destructive: 'hsl(var(--destructive) / 0.18)',
-  warning: 'hsl(var(--warning) / 0.18)',
-  info: 'hsl(var(--info) / 0.18)',
-  primary: 'hsl(var(--primary) / 0.18)',
+  up: 'bg-success/12 text-success',
+  down: 'bg-destructive/12 text-destructive',
+  flat: 'bg-muted text-muted-foreground',
 };
 
 function AreaSpark({ values, tone, gradId }: { values: number[]; tone: KpiTone; gradId: string }) {
@@ -61,12 +53,12 @@ function AreaSpark({ values, tone, gradId }: { values: number[]; tone: KpiTone; 
     <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-9" preserveAspectRatio="none">
       <defs>
         <linearGradient id={gradId} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor={`hsl(var(--${tone}))`} stopOpacity="0.45" />
-          <stop offset="100%" stopColor={`hsl(var(--${tone}))`} stopOpacity="0" />
+          <stop offset="0%" stopColor={`hsl(var(--${tone}))`} stopOpacity="0.28" />
+          <stop offset="100%" stopColor={`hsl(var(--${tone}))`} stopOpacity="0.05" />
         </linearGradient>
       </defs>
       <path d={areaPath} fill={`url(#${gradId})`} />
-      <path d={linePath} fill="none" strokeWidth="1.6" className={TONE_STROKE[tone]} strokeLinejoin="round" strokeLinecap="round" />
+      <path d={linePath} fill="none" strokeWidth="1.4" className={TONE_STROKE[tone]} strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   );
 }
@@ -74,47 +66,22 @@ function AreaSpark({ values, tone, gradId }: { values: number[]; tone: KpiTone; 
 export default function KpiCard({
   label, value, delta, trend = 'flat', sub, sparkline, tone = 'info', ringValue, ringTone, action, icon,
 }: Props) {
-  const { ref, tilt, onMouseMove, onMouseLeave } = useMouseTilt(4);
   const trendIcon = trend === 'up' ? 'trending_up' : trend === 'down' ? 'trending_down' : 'trending_flat';
 
   return (
-    <div
-      ref={ref}
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
-      className="group relative rounded-2xl border border-border bg-card p-5 overflow-hidden transition-[transform,box-shadow,border-color] duration-300 will-change-transform hover:border-border-strong motion-reduce:transform-none"
-      style={{
-        transform: `perspective(800px) rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg)`,
-        boxShadow: `0 1px 0 0 hsl(0 0% 100% / 0.04) inset, 0 12px 28px -16px hsl(0 0% 0% / 0.55), 0 0 0 1px hsl(0 0% 100% / 0.02) inset`,
-        transformStyle: 'preserve-3d',
-      }}
-    >
-      {/* gradient mesh + spotlight */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-80 transition-opacity duration-500"
-        style={{
-          background: `radial-gradient(420px circle at ${tilt.lightX}% ${tilt.lightY}%, ${TONE_GLOW[tone]}, transparent 55%)`,
-        }}
-      />
-      <div
-        className="pointer-events-none absolute inset-0 rounded-2xl"
-        style={{
-          background: `linear-gradient(180deg, hsl(0 0% 100% / 0.04) 0%, transparent 35%)`,
-        }}
-      />
-
+    <div className="surface-card--hair crm-card-hover group relative p-5 overflow-hidden">
       <div className="relative">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-2 min-w-0">
             {icon && (
-              <div className={cn('h-8 w-8 rounded-lg flex items-center justify-center shrink-0', `bg-${tone}/15 text-${tone}`)}>
+              <div className={cn('h-8 w-8 rounded-lg flex items-center justify-center shrink-0', `bg-${tone}/12 text-${tone}`)}>
                 <MSym name={icon} size={16} filled />
               </div>
             )}
             <p className="text-[10px] uppercase tracking-[0.14em] font-bold text-muted-foreground truncate">{label}</p>
           </div>
           {delta && (
-            <span className={cn('inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md border', TONE_BADGE[trend])}>
+            <span className={cn('inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full tabular-nums', TONE_BADGE[trend])}>
               <MSym name={trendIcon} size={11} />
               {delta}
             </span>
