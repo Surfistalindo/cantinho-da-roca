@@ -346,14 +346,14 @@ export default function MondaySidebar() {
                               end={b.kind === 'route'}
                               className={({ isActive }) =>
                                 cn(
-                                  'flex-1 flex items-center gap-2 h-7 px-2 rounded-md text-[12px] transition-colors',
+                                  'flex-1 flex items-center gap-2 h-7 px-2 rounded-md text-[12px] transition-[background-color,color] duration-crm ease-crm',
                                   isActive
                                     ? 'sidebar-item-active text-sidebar-accent-foreground'
-                                    : 'text-sidebar-foreground hover:bg-sidebar-accent/40',
+                                    : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
                                 )
                               }
                             >
-                              <MSym name={b.icon || 'square'} size={14} className="opacity-70" />
+                              <MSym name={b.icon || 'square'} size={14} className="opacity-70 shrink-0" />
                               <span className="truncate">{b.name}</span>
                             </NavLink>
                             <button
