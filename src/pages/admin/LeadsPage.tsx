@@ -512,32 +512,58 @@ export default function LeadsPage() {
                   <LeadsViewSwitcher view={view} onChange={setView} />
                 </div>
                 {view === 'table' && (
-                  <div className="hidden sm:flex items-center rounded-md border border-border p-0.5 bg-card">
+                  <div className="hidden sm:flex items-center rounded-md border border-border bg-card overflow-hidden" data-tour="leads-row-height">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
-                          onClick={() => setDensity('comfortable')}
-                          className={cn('h-7 w-7 rounded flex items-center justify-center transition-colors',
-                            density === 'comfortable' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
-                          aria-label="Densidade confortável"
+                          onClick={() => setRowHeightClamped(rowHeight - 4)}
+                          className="h-7 w-7 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          aria-label="Diminuir altura da linha"
+                          disabled={rowHeight <= 26}
                         >
-                          <FontAwesomeIcon icon={faTableCellsLarge} className="h-3 w-3" />
+                          <span className="text-base leading-none">−</span>
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent>Densidade confortável</TooltipContent>
+                      <TooltipContent>Linha menor</TooltipContent>
                     </Tooltip>
+                    <div className="flex items-center border-x border-border">
+                      {[
+                        { v: 30, label: 'S', tip: 'Compacto' },
+                        { v: 38, label: 'M', tip: 'Cozy' },
+                        { v: 52, label: 'L', tip: 'Confortável' },
+                      ].map((p) => (
+                        <Tooltip key={p.v}>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => setRowHeight(p.v)}
+                              className={cn(
+                                'h-7 w-7 flex items-center justify-center text-[11px] font-medium transition-colors',
+                                rowHeight === p.v
+                                  ? 'bg-muted text-foreground'
+                                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/60',
+                              )}
+                              aria-label={`Altura ${p.tip}`}
+                              aria-pressed={rowHeight === p.v}
+                            >
+                              {p.label}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>{p.tip} ({p.v}px)</TooltipContent>
+                        </Tooltip>
+                      ))}
+                    </div>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
-                          onClick={() => setDensity('compact')}
-                          className={cn('h-7 w-7 rounded flex items-center justify-center transition-colors',
-                            density === 'compact' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
-                          aria-label="Compactar tabela para caber sem rolar lateral"
+                          onClick={() => setRowHeightClamped(rowHeight + 4)}
+                          className="h-7 w-7 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          aria-label="Aumentar altura da linha"
+                          disabled={rowHeight >= 72}
                         >
-                          <FontAwesomeIcon icon={faTableList} className="h-3 w-3" />
+                          <span className="text-base leading-none">+</span>
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent>Compactar (cabe sem rolar lateral)</TooltipContent>
+                      <TooltipContent>Linha maior</TooltipContent>
                     </Tooltip>
                   </div>
                 )}
