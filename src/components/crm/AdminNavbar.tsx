@@ -82,6 +82,7 @@ export default function AdminNavbar({ onOpenPalette, onShowHelp }: Props) {
         'h-14 border-b border-hairline bg-card/80 backdrop-blur-md',
         'flex items-center justify-between px-3 sm:px-5 shrink-0 sticky top-0 z-30',
         'supports-[backdrop-filter]:bg-card/70',
+        'crm-sticky-layer',
       )}
     >
       <div className="flex items-center gap-3 min-w-0 flex-1">
