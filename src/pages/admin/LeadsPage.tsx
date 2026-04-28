@@ -90,10 +90,20 @@ export default function LeadsPage() {
   const [newDefaultStatus, setNewDefaultStatus] = useState('new');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [activeKpi, setActiveKpi] = useState<KpiKey | null>(null);
-  const [density, setDensity] = useState<'comfortable' | 'compact'>(() => {
-    if (typeof window === 'undefined') return 'comfortable';
-    return (localStorage.getItem('crm:leads:density') as 'comfortable' | 'compact') || 'comfortable';
+  // Altura de linha em px — substitui o booleano density (compatibilidade abaixo).
+  // Presets: 30 (compact) · 38 (cozy) · 52 (comfortable). Range: 26–72.
+  const [rowHeight, setRowHeight] = useState<number>(() => {
+    if (typeof window === 'undefined') return 38;
+    const saved = Number(localStorage.getItem('crm:leads:rowHeight'));
+    if (Number.isFinite(saved) && saved >= 26 && saved <= 72) return saved;
+    // Migração do valor antigo "density"
+    const legacy = localStorage.getItem('crm:leads:density');
+    return legacy === 'compact' ? 30 : 38;
   });
+  // density derivado mantém todas as condicionais existentes funcionando.
+  const density: 'comfortable' | 'compact' = rowHeight <= 32 ? 'compact' : 'comfortable';
+  const setRowHeightClamped = (v: number) =>
+    setRowHeight(Math.max(26, Math.min(72, Math.round(v))));
   const [view, setView] = useState<LeadsView>(() => {
     const fromUrl = (typeof window !== 'undefined'
       ? new URLSearchParams(window.location.search).get('view')
@@ -113,7 +123,7 @@ export default function LeadsPage() {
   const dateFrom = url.from;
   const dateTo = url.to;
 
-  useEffect(() => { localStorage.setItem('crm:leads:density', density); }, [density]);
+  useEffect(() => { localStorage.setItem('crm:leads:rowHeight', String(rowHeight)); }, [rowHeight]);
   useEffect(() => {
     localStorage.setItem(VIEW_KEY, view);
     const params = new URLSearchParams(searchParams);
