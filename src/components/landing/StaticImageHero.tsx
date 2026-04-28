@@ -75,25 +75,30 @@ const StaticImageHero: React.FC = () => {
       {/* Background hi-res, fade-in quando carregado */}
       <div
         className={cn(
-          'absolute inset-0 bg-no-repeat bg-cover bg-center sm:bg-fixed transition-opacity duration-500',
+          'absolute inset-0 bg-no-repeat bg-cover transition-opacity duration-500',
+          'bg-center sm:bg-fixed lg:bg-[position:75%_center] xl:bg-[position:80%_center]',
           bgLoaded ? 'opacity-100' : 'opacity-0'
         )}
         style={{ backgroundImage: `url(${heroBg})` }}
         aria-hidden="true"
       />
 
-      {/* Overlay de legibilidade */}
+      {/* Overlay de legibilidade — vertical no mobile, horizontal em desktop */}
       <div
-        className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/25 to-black/75 pointer-events-none"
+        className="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/15 via-black/25 to-black/75 lg:bg-gradient-to-r lg:from-black/70 lg:via-black/45 lg:to-transparent"
         aria-hidden="true"
       />
 
       {/* Conteúdo */}
       <div
-        className="relative z-10 flex min-h-screen flex-col items-center justify-center sm:justify-end pb-12 sm:pb-24 px-6 sm:px-10 pt-24 sm:pt-28 md:pt-32"
+        className={cn(
+          'relative z-10 flex min-h-screen flex-col px-6 sm:px-10 lg:px-16 xl:px-24',
+          'items-center justify-center sm:justify-end lg:items-start lg:justify-center',
+          'pb-12 sm:pb-24 lg:pb-0 pt-24 sm:pt-28 md:pt-32 lg:pt-24'
+        )}
         style={{ paddingTop: 'max(6rem, env(safe-area-inset-top) + 4rem)' }}
       >
-        <div className="w-full max-w-3xl text-center">
+        <div className="w-full max-w-3xl lg:max-w-2xl text-center lg:text-left">
 
           <span
             ref={badge.ref}
@@ -109,13 +114,12 @@ const StaticImageHero: React.FC = () => {
           <h1
             ref={title.ref}
             className={cn(
-              'mt-6 text-pretty font-display-warm text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.55)]',
+              'mt-6 text-pretty font-display-warm text-4xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-bold leading-[1.05] text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.55)]',
               reveal(title.visible),
             )}
             style={{ transitionDelay: '120ms' }}
           >
-            Sabores e cuidados <br className="hidden sm:block" />
-            direto da{' '}
+            Sabores e cuidados direto da{' '}
             <span
               className="font-hand text-honey not-italic inline-flex items-baseline gap-1 align-baseline"
               style={{ fontWeight: 600 }}
@@ -129,7 +133,7 @@ const StaticImageHero: React.FC = () => {
           <p
             ref={subtitle.ref}
             className={cn(
-              'mx-auto mt-5 max-w-xl font-body-warm text-sm sm:text-base md:text-lg text-white/85 leading-relaxed',
+              'mx-auto lg:mx-0 mt-5 max-w-xl font-body-warm text-sm sm:text-base md:text-lg text-white/85 leading-relaxed',
               reveal(subtitle.visible),
             )}
             style={{ transitionDelay: '240ms' }}
@@ -141,7 +145,7 @@ const StaticImageHero: React.FC = () => {
           <div
             ref={ctas.ref}
             className={cn(
-              'mt-8 flex w-full flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center',
+              'mt-8 flex w-full flex-col items-stretch justify-center lg:justify-start gap-3 sm:flex-row sm:items-center',
               reveal(ctas.visible),
             )}
             style={{ transitionDelay: '360ms' }}
@@ -168,7 +172,7 @@ const StaticImageHero: React.FC = () => {
 
         <div
           ref={hint.ref}
-          className={cn('mt-12 sm:mt-16 flex justify-center', reveal(hint.visible))}
+          className={cn('mt-12 sm:mt-16 lg:mt-20 flex w-full justify-center lg:justify-start', reveal(hint.visible))}
           style={{ transitionDelay: '500ms' }}
         >
           <span className="text-[11px] sm:text-xs uppercase tracking-[3px] text-white/70">
