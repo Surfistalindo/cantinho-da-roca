@@ -202,14 +202,14 @@ export default function MondaySidebar() {
                     to={boardHref(b)}
                     className={({ isActive }) =>
                       cn(
-                        'group flex items-center gap-2 h-7 px-2.5 rounded-md text-[12px] transition-colors',
+                        'group flex items-center gap-2 h-7 px-2.5 rounded-md text-[12px] transition-[background-color,color] duration-crm ease-crm',
                         isActive
                           ? 'sidebar-item-active text-sidebar-accent-foreground'
-                          : 'text-sidebar-foreground hover:bg-sidebar-accent/40',
+                          : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
                       )
                     }
                   >
-                    <Star size={12} className="fill-[hsl(var(--honey))] text-[hsl(var(--honey))]" />
+                    <Star size={12} className="fill-[hsl(var(--honey))] text-[hsl(var(--honey))] shrink-0" />
                     <span className="truncate flex-1">{b.name}</span>
                   </NavLink>
                 </li>
