@@ -365,7 +365,7 @@ export default function LeadsPage() {
     toast.success(`${filtered.length} lead(s) exportado(s)`);
   };
 
-  // ----- Atalhos / 1 2 3 -----
+  // ----- Atalhos / 1 2 3 [ ] -----
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
@@ -380,10 +380,23 @@ export default function LeadsPage() {
       } else if (e.key === '1') setView('table');
       else if (e.key === '2') setView('kanban');
       else if (e.key === '3') setView('cards');
+      else if (e.key === '[' || e.key === ']') {
+        // Navega no primeiro grupo paginável visível
+        const dir = e.key === ']' ? 1 : -1;
+        for (const g of STATUS_GROUPS) {
+          const items = grouped.map[g.key];
+          if (items && items.length > paged.pageSize) {
+            const info = paged.paginate(items, g.key);
+            const next = Math.min(Math.max(1, info.page + dir), info.totalPages);
+            if (next !== info.page) info.setPage(next);
+            break;
+          }
+        }
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, []);
+  }, [grouped, paged]);
 
   const applySaved = (f: SavedLeadFilter) => {
     setSearch(f.search); setStatusFilter(f.status); setOriginFilter(f.origin);
