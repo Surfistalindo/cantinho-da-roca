@@ -286,6 +286,7 @@ export default function IAClassifyPage() {
               })}
             </TableBody>
           </Table>
+          </div>
         </Card>
       </div>
     </IAPageShell>
