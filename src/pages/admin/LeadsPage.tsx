@@ -397,8 +397,10 @@ export default function LeadsPage() {
   }, [grouped, paged]);
 
   const applySaved = (f: SavedLeadFilter) => {
-    setSearch(f.search); setStatusFilter(f.status); setOriginFilter(f.origin);
-    updateRecency(f.recency); updatePriority(f.priority);
+    url.set({
+      search: f.search, status: f.status, origin: f.origin,
+      recency: f.recency, priority: f.priority,
+    });
     toast.success(`Filtro "${f.name}" aplicado`);
   };
 
