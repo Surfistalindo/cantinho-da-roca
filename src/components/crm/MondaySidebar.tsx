@@ -78,6 +78,25 @@ export default function MondaySidebar() {
     navigate('/admin/login');
   };
 
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleDragEnd = async (e: DragEndEvent) => {
+    const boardId = String(e.active.id);
+    const overId = e.over?.id ? String(e.over.id) : null;
+    if (!overId || !overId.startsWith('ws:')) return;
+    const targetWsId = overId.slice(3);
+    const board = boards.find((b) => b.id === boardId);
+    if (!board || board.workspace_id === targetWsId) return;
+    const targetWs = workspaces.find((w) => w.id === targetWsId);
+    try {
+      await boardService.moveToWorkspace(boardId, targetWsId);
+      toast.success(`Movido para "${targetWs?.name ?? 'área'}"`);
+      refresh();
+    } catch {
+      toast.error('Não foi possível mover');
+    }
+  };
+
   const filteredWorkspaces = workspaces.filter((w) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
