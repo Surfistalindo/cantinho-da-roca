@@ -44,6 +44,7 @@ import LeadsCards from '@/components/admin/leads/LeadsCards';
 import SavedFiltersMenu, { type SavedLeadFilter } from '@/components/admin/leads/SavedFiltersMenu';
 import QuickActionsPopover from '@/components/admin/leads/QuickActionsPopover';
 import { exportLeadsToCsv } from '@/components/admin/leads/exportLeadsCsv';
+import { useLeadsUrlState } from '@/hooks/useLeadsUrlState';
 
 interface Lead {
   id: string;
