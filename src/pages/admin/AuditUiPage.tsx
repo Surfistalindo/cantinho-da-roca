@@ -64,7 +64,7 @@ const initialChecks: CheckItem[] = [
   { id: 'tabs', label: 'PageTabs alterna abas', status: 'pending' },
 ];
 
-const statusVariants = ['blue', 'green', 'yellow', 'orange', 'red', 'pink', 'purple', 'cyan', 'indigo', 'teal'] as const;
+const statusVariants = ['success', 'warning', 'danger', 'info', 'neutral', 'purple', 'pink', 'orange', 'cyan', 'indigo', 'teal'] as const;
 
 export default function AuditUiPage() {
   const { toast } = useToast();
@@ -83,10 +83,10 @@ export default function AuditUiPage() {
   const pendingCount = checks.filter((c) => c.status === 'pending').length;
 
   const tabs = [
-    { id: 'overview', label: 'Visão geral' },
-    { id: 'overlays', label: 'Modais & Sheets' },
-    { id: 'states', label: 'Estados' },
-    { id: 'tokens', label: 'Tokens visuais' },
+    { value: 'overview', label: 'Visão geral' },
+    { value: 'overlays', label: 'Modais & Sheets' },
+    { value: 'states', label: 'Estados' },
+    { value: 'tokens', label: 'Tokens visuais' },
   ];
 
   return (
@@ -116,7 +116,7 @@ export default function AuditUiPage() {
         </div>
       </div>
 
-      <PageTabs tabs={tabs} active={activeTab} onChange={setActiveTab} />
+      <PageTabs tabs={tabs} value={activeTab} onChange={setActiveTab} />
 
       {activeTab === 'overview' && (
         <DataBoard title="Checklist de validação">
@@ -281,33 +281,35 @@ export default function AuditUiPage() {
         <div className="grid gap-4 md:grid-cols-2">
           <DataBoard title="Loading">
             <div className="p-4 space-y-3">
-              <ActionToolbar>
-                <div className="flex flex-wrap gap-1.5">
-                  {(['skeleton', 'spinner', 'cards'] as const).map((v) => (
+              <ActionToolbar
+                left={
+                  <>
+                    {(['skeleton', 'spinner', 'cards'] as const).map((v) => (
+                      <Button
+                        key={v}
+                        size="sm"
+                        variant={loadingVariant === v ? 'default' : 'outline'}
+                        className="h-7 text-[11px]"
+                        onClick={() => {
+                          setLoadingVariant(v);
+                          setShowLoading(true);
+                          setStatus(`loading-${v}`, 'pass');
+                        }}
+                      >
+                        {v}
+                      </Button>
+                    ))}
                     <Button
-                      key={v}
                       size="sm"
-                      variant={loadingVariant === v ? 'default' : 'outline'}
+                      variant="ghost"
                       className="h-7 text-[11px]"
-                      onClick={() => {
-                        setLoadingVariant(v);
-                        setShowLoading(true);
-                        setStatus(`loading-${v}`, 'pass');
-                      }}
+                      onClick={() => setShowLoading(false)}
                     >
-                      {v}
+                      Limpar
                     </Button>
-                  ))}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 text-[11px]"
-                    onClick={() => setShowLoading(false)}
-                  >
-                    Limpar
-                  </Button>
-                </div>
-              </ActionToolbar>
+                  </>
+                }
+              />
               {showLoading ? (
                 <LoadingState variant={loadingVariant} />
               ) : (
