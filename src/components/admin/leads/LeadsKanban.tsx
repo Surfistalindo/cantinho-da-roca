@@ -104,7 +104,7 @@ export default function LeadsKanban({ leads, interactionCounts, onLeadClick, onA
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5 min-w-0 max-w-full">
         {APP_CONFIG.leadStatuses.map((s) => (
           <PipelineColumn
             key={s.value}
