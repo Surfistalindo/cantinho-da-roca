@@ -77,9 +77,9 @@ export default function RowReviewTable({
   const dupSet = useMemo(() => new Set(duplicates.map((d) => d.rowIndex)), [duplicates]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 min-w-0 max-w-full">
       {/* Header com KPIs e filtros */}
-      <div className="rounded-2xl border bg-card overflow-hidden">
+      <div className="rounded-2xl border bg-card overflow-hidden min-w-0 max-w-full">
         <div className="px-4 py-3 border-b bg-muted/20 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap">
             <KpiBadge label="Válidas" value={counts.valid} tone="success" />
@@ -122,9 +122,9 @@ export default function RowReviewTable({
         </div>
 
         {/* Tabela */}
-        <div className="overflow-x-auto max-h-[520px] overflow-y-auto">
+        <div className="surface-table-wrap has-sticky-first" style={{ ['--table-max-h' as string]: '520px' }}>
           <table className="w-full text-[12px] border-collapse">
-            <thead className="sticky top-0 z-10 bg-card border-b">
+            <thead className="bg-card border-b">
               <tr>
                 <th className="text-left px-3 py-2 text-[10.5px] uppercase tracking-wider font-semibold text-muted-foreground w-14">
                   Linha
