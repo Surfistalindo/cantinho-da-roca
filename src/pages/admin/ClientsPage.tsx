@@ -350,7 +350,7 @@ export default function ClientsPage() {
                 </TableBody>
               </Table>
             </div>
-          )}
+          </ListState>
         </div>
 
         <CustomerDetailSheet customer={selectedCustomer} open={sheetOpen} onOpenChange={setSheetOpen} onUpdated={fetchCustomers} />
