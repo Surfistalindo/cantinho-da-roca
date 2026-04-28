@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { HelpCircle, Play, Lightbulb, Keyboard, BookOpen, Sparkles } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { useTutorial } from './TutorialProvider';
 import Glossary from './Glossary';
 
