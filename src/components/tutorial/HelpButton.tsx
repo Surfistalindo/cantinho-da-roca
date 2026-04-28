@@ -151,39 +151,36 @@ function MenuItem({
   );
 }
 
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-const TipsSheet = React.forwardRef<HTMLDivElement, { open: boolean; onOpenChange: (o: boolean) => void }>(
-  function TipsSheet({ open, onOpenChange }, _ref) {
-    const { currentTour } = useTutorial();
-    return (
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="w-[380px] sm:w-[440px] overflow-y-auto">
-          <SheetHeader className="text-left">
-            <SheetTitle className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              {currentTour.title} — dicas
-            </SheetTitle>
-            <SheetDescription>{currentTour.summary}</SheetDescription>
-          </SheetHeader>
-          <ol className="mt-5 space-y-3.5">
-            {currentTour.steps.map((s, i) => (
-              <li key={s.id} className="flex gap-3 rounded-lg border border-border bg-card/40 p-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary text-[11px] font-semibold tabular-nums">
-                  {i + 1}
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[12.5px] font-semibold text-foreground">{s.title}</p>
-                  <p
-                    className="text-[12px] text-muted-foreground mt-0.5 leading-relaxed [&_strong]:text-foreground [&_strong]:font-semibold"
-                    dangerouslySetInnerHTML={{ __html: s.body }}
-                  />
-                </div>
-              </li>
-            ))}
-          </ol>
-        </SheetContent>
-      </Sheet>
-    );
-  },
-);
+function TipsSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+  const { currentTour } = useTutorial();
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="w-[380px] sm:w-[440px] overflow-y-auto">
+        <SheetHeader className="text-left">
+          <SheetTitle className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            {currentTour.title} — dicas
+          </SheetTitle>
+          <SheetDescription>{currentTour.summary}</SheetDescription>
+        </SheetHeader>
+        <ol className="mt-5 space-y-3.5">
+          {currentTour.steps.map((s, i) => (
+            <li key={s.id} className="flex gap-3 rounded-lg border border-border bg-card/40 p-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary text-[11px] font-semibold tabular-nums">
+                {i + 1}
+              </span>
+              <div className="min-w-0">
+                <p className="text-[12.5px] font-semibold text-foreground">{s.title}</p>
+                <p
+                  className="text-[12px] text-muted-foreground mt-0.5 leading-relaxed [&_strong]:text-foreground [&_strong]:font-semibold"
+                  dangerouslySetInnerHTML={{ __html: s.body }}
+                />
+              </div>
+            </li>
+          ))}
+        </ol>
+      </SheetContent>
+    </Sheet>
+  );
+}
 
