@@ -21,6 +21,7 @@ export default function TourPopover({ targetRect, placement }: Props) {
   const [pos, setPos] = useState<{ left: number; top: number }>({ left: 0, top: 0 });
   const [resolvedPlacement, setResolvedPlacement] = useState<TourPlacement>(placement);
   const [showDetails, setShowDetails] = useState(false);
+  const [cardHeight, setCardHeight] = useState(0);
 
   const total = currentTour.steps.length;
   const isLast = index === total - 1;
@@ -30,6 +31,17 @@ export default function TourPopover({ targetRect, placement }: Props) {
 
   // Foca o card ao mudar de passo (acessibilidade)
   useEffect(() => { cardRef.current?.focus(); }, [index]);
+
+  // Observa altura real do card para reposicionar a seta sem depender de leitura síncrona.
+  useLayoutEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const update = () => setCardHeight(el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Calcula posição do popover relativo ao alvo.
   useLayoutEffect(() => {
