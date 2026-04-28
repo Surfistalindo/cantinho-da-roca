@@ -30,6 +30,7 @@ const SEED: SeedWorkspace[] = [
       { name: 'Leads', icon: 'users', kind: 'route', route_path: '/admin/leads' },
       { name: 'Pipeline', icon: 'kanban', kind: 'route', route_path: '/admin/pipeline' },
       { name: 'Clientes', icon: 'user-check', kind: 'route', route_path: '/admin/clients' },
+      { name: 'WhatsApp', icon: 'message-circle', kind: 'route', route_path: '/admin/whatsapp' },
     ],
   },
   {
