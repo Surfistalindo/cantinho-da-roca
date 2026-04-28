@@ -11,6 +11,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MSym } from './MSym';
+import ThemeToggle from './ThemeToggle';
+import { cn } from '@/lib/utils';
 
 const ROUTE_LABELS: Record<string, string> = {
   dashboard: 'Dashboard',
@@ -18,6 +20,22 @@ const ROUTE_LABELS: Record<string, string> = {
   pipeline: 'Pipeline',
   clients: 'Clientes',
   ia: 'IA',
+  whatsapp: 'WhatsApp',
+  'my-work': 'Meu trabalho',
+  audit: 'Auditoria',
+  telemetry: 'Telemetria',
+};
+
+const IA_SUB_LABELS: Record<string, string> = {
+  excel: 'Excel',
+  csv: 'CSV',
+  paste: 'Texto colado',
+  whatsapp: 'WhatsApp',
+  duplicates: 'Duplicados',
+  classify: 'Sugestão de status',
+  score: 'Score automático',
+  insights: 'Insights',
+  assistant: 'Assistente',
 };
 
 interface Props {
@@ -34,49 +52,104 @@ export default function AdminNavbar({ onOpenPalette }: Props) {
     navigate('/admin/login');
   };
 
-  const segment = location.pathname.split('/').filter(Boolean)[1] ?? 'dashboard';
-  const currentLabel = ROUTE_LABELS[segment] ?? 'Dashboard';
+  // Build dynamic breadcrumb from path segments
+  const segments = location.pathname.split('/').filter(Boolean);
+  const adminIdx = segments.indexOf('admin');
+  const after = adminIdx >= 0 ? segments.slice(adminIdx + 1) : [];
+  const crumbs: { label: string; href: string }[] = [];
+  if (after.length > 0) {
+    const root = after[0];
+    crumbs.push({
+      label: ROUTE_LABELS[root] ?? root.charAt(0).toUpperCase() + root.slice(1),
+      href: `/admin/${root}`,
+    });
+    if (root === 'ia' && after[1]) {
+      crumbs.push({
+        label: IA_SUB_LABELS[after[1]] ?? after[1],
+        href: `/admin/ia/${after[1]}`,
+      });
+    }
+  }
+
   const initials = (user?.email ?? '?').split('@')[0].slice(0, 2).toUpperCase();
   const isMac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform);
 
   return (
-    <header className="h-12 border-b border-border bg-card flex items-center justify-between px-3 sm:px-4 shrink-0 sticky top-0 z-30">
+    <header
+      className={cn(
+        'h-14 border-b border-hairline bg-card/85 backdrop-blur-sm',
+        'flex items-center justify-between px-3 sm:px-5 shrink-0 sticky top-0 z-30',
+      )}
+    >
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
-        <div className="hidden sm:flex items-center gap-1.5 text-[12px] min-w-0">
-          <span className="text-muted-foreground">Workspace</span>
-          <MSym name="chevron_right" size={14} className="text-muted-foreground/60" />
-          <span className="font-semibold text-foreground truncate">{currentLabel}</span>
-          <span className="ml-2 inline-flex items-center gap-1 px-2 h-5 rounded-md bg-success/15 text-success text-[10px] font-bold uppercase tracking-wide">
-            <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-            On track
-          </span>
-        </div>
+        <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors -ml-1" />
 
-        {/* Command palette trigger (substitui o input de busca solto) */}
-        <div className="hidden md:flex items-center gap-2 ml-3 flex-1 max-w-md">
+        {/* Dynamic editorial breadcrumb */}
+        <nav
+          aria-label="Breadcrumb"
+          className="hidden sm:flex items-center gap-1.5 text-[13px] min-w-0"
+        >
+          <Link
+            to="/admin/dashboard"
+            className="text-muted-foreground hover:text-foreground transition-colors font-medium"
+          >
+            Workspace
+          </Link>
+          {crumbs.map((c, i) => (
+            <div key={c.href} className="flex items-center gap-1.5 min-w-0">
+              <MSym name="chevron_right" size={14} className="text-muted-foreground/50 shrink-0" />
+              {i === crumbs.length - 1 ? (
+                <span
+                  className="font-display-soft font-semibold text-foreground truncate tracking-tight"
+                  style={{ fontSize: '14px' }}
+                >
+                  {c.label}
+                </span>
+              ) : (
+                <Link
+                  to={c.href}
+                  className="text-muted-foreground hover:text-foreground transition-colors font-medium truncate"
+                >
+                  {c.label}
+                </Link>
+              )}
+            </div>
+          ))}
+        </nav>
+
+        {/* Command palette trigger */}
+        <div className="hidden md:flex items-center gap-2 ml-auto sm:ml-3 flex-1 max-w-md">
           <button
             type="button"
             onClick={onOpenPalette}
-            className="group flex items-center gap-2 w-full h-8 pl-3 pr-2 rounded-md bg-surface-3 border border-transparent hover:border-border-strong hover:bg-card text-left transition-colors"
+            className={cn(
+              'group flex items-center gap-2.5 w-full h-9 pl-3 pr-2 rounded-lg',
+              'bg-surface-2 border border-hairline hover:border-hairline-strong hover:bg-card text-left transition-colors',
+            )}
             aria-label="Abrir paleta de comandos"
           >
             <MSym name="search" size={16} className="text-muted-foreground" />
-            <span className="flex-1 text-[12.5px] text-muted-foreground">Buscar ou navegar…</span>
-            <kbd className="hidden lg:inline-flex items-center gap-0.5 px-1.5 h-5 rounded border border-border bg-background text-[10px] font-mono font-semibold text-muted-foreground">
-              {isMac ? '⌘' : 'Ctrl'} K
+            <span className="flex-1 text-[12.5px] text-muted-foreground">
+              Buscar leads, clientes, comandos…
+            </span>
+            <kbd className="hidden lg:inline-flex kbd-chip">
+              {isMac ? '⌘' : 'Ctrl'}
             </kbd>
+            <kbd className="hidden lg:inline-flex kbd-chip">K</kbd>
           </button>
         </div>
       </div>
 
       <TooltipProvider delayDuration={200}>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           <Tooltip>
             <TooltipTrigger asChild>
               <Link
                 to="/admin/ia/assistant"
-                className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-primary/10 hover:bg-primary/15 text-primary text-[12px] font-semibold transition-colors"
+                className={cn(
+                  'hidden sm:inline-flex items-center gap-1.5 h-9 px-3 rounded-lg',
+                  'bg-primary/10 hover:bg-primary/15 text-primary text-[12.5px] font-semibold transition-colors',
+                )}
               >
                 <MSym name="auto_awesome" size={16} filled />
                 <span>Ask AI</span>
@@ -85,10 +158,15 @@ export default function AdminNavbar({ onOpenPalette }: Props) {
             <TooltipContent>Abrir assistente IA</TooltipContent>
           </Tooltip>
 
+          <ThemeToggle />
+
           <Tooltip>
             <TooltipTrigger asChild>
-              <button className="h-9 w-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                <MSym name="notifications" size={20} />
+              <button
+                className="h-9 w-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                aria-label="Notificações"
+              >
+                <MSym name="notifications" size={18} />
               </button>
             </TooltipTrigger>
             <TooltipContent>Notificações</TooltipContent>
@@ -115,7 +193,7 @@ export default function AdminNavbar({ onOpenPalette }: Props) {
                 className="flex items-center gap-2 h-9 pl-1 pr-2 rounded-full hover:bg-muted transition-colors ml-1"
                 aria-label="Menu do usuário"
               >
-                <span className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-[11px] font-bold flex items-center justify-center">
+                <span className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-accent-brand text-primary-foreground text-[11px] font-bold flex items-center justify-center shadow-crm-sm">
                   {initials}
                 </span>
                 <span className="hidden md:inline text-xs font-medium text-foreground/80 max-w-[140px] truncate">
@@ -123,11 +201,11 @@ export default function AdminNavbar({ onOpenPalette }: Props) {
                 </span>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 rounded-xl">
+            <DropdownMenuContent align="end" className="w-60 rounded-xl border-hairline shadow-crm-pop">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-0.5">
-                  <p className="text-xs font-medium leading-none">Sessão ativa</p>
-                  <p className="text-[11px] text-muted-foreground leading-none truncate">{user?.email}</p>
+                  <p className="text-xs font-semibold leading-none">Sessão ativa</p>
+                  <p className="text-[11px] text-muted-foreground leading-none truncate mt-1">{user?.email}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
