@@ -193,7 +193,11 @@ export default function IAClassifyPage() {
         </Card>
 
         {/* Tabela */}
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden min-w-0 max-w-full">
+          <div
+            className="surface-table-wrap has-sticky-first"
+            style={{ ['--table-max-h' as string]: 'calc(100vh - 360px)' }}
+          >
           <Table>
             <TableHeader>
               <TableRow>
