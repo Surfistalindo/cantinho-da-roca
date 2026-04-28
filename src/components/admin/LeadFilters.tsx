@@ -58,14 +58,14 @@ export default function LeadFilters({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2.5 mb-5">
+    <div className="flex flex-wrap items-center gap-1.5 mb-3">
       {onRecencyChange && (
         <Button
           variant={noResponseActive ? 'default' : 'outline'}
           size="sm"
           onClick={applyNoResponse}
           className={cn(
-            'h-10 text-xs',
+            'h-8 text-[12px] px-2.5',
             noResponseActive && 'bg-destructive hover:bg-destructive/90 text-destructive-foreground border-destructive',
           )}
         >
@@ -73,20 +73,20 @@ export default function LeadFilters({
           Sem resposta
         </Button>
       )}
-      <div className="relative flex-1 min-w-[220px]">
+      <div className="relative flex-1 min-w-[200px]">
         <FontAwesomeIcon
           icon={faMagnifyingGlass}
-          className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground"
         />
         <Input
           placeholder="Buscar por nome ou telefone..."
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-9 h-10 bg-muted/40 border-transparent focus-visible:bg-card focus-visible:border-input"
+          className="pl-8 h-8 text-[12px] bg-muted/60 border-transparent focus-visible:bg-card focus-visible:border-input"
         />
       </div>
       <Select value={statusFilter} onValueChange={onStatusChange}>
-        <SelectTrigger className="w-[150px] h-10 text-xs bg-muted/40 border-transparent">
+        <SelectTrigger className="w-[140px] h-8 text-[12px] bg-muted/60 border-transparent">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
@@ -97,7 +97,7 @@ export default function LeadFilters({
         </SelectContent>
       </Select>
       <Select value={originFilter} onValueChange={onOriginChange}>
-        <SelectTrigger className="w-[150px] h-10 text-xs bg-muted/40 border-transparent">
+        <SelectTrigger className="w-[140px] h-8 text-[12px] bg-muted/60 border-transparent">
           <SelectValue placeholder="Origem" />
         </SelectTrigger>
         <SelectContent>
@@ -109,7 +109,7 @@ export default function LeadFilters({
       </Select>
       {onPriorityChange && (
         <Select value={priorityFilter ?? 'all'} onValueChange={(v) => onPriorityChange(v as PriorityFilter)}>
-          <SelectTrigger className="w-[160px] h-10 text-xs bg-muted/40 border-transparent">
+          <SelectTrigger className="w-[150px] h-8 text-[12px] bg-muted/60 border-transparent">
             <SelectValue placeholder="Prioridade" />
           </SelectTrigger>
           <SelectContent>
@@ -128,7 +128,7 @@ export default function LeadFilters({
       )}
       {onRecencyChange && (
         <Select value={recencyFilter ?? 'all'} onValueChange={(v) => onRecencyChange(v as RecencyFilter)}>
-          <SelectTrigger className="w-[180px] h-10 text-xs bg-muted/40 border-transparent">
+          <SelectTrigger className="w-[170px] h-8 text-[12px] bg-muted/60 border-transparent">
             <SelectValue placeholder="Recência" />
           </SelectTrigger>
           <SelectContent>
@@ -144,9 +144,9 @@ export default function LeadFilters({
           variant="ghost"
           size="sm"
           onClick={clearAll}
-          className="h-10 text-xs text-muted-foreground hover:text-foreground"
+          className="h-8 text-[12px] px-2 text-muted-foreground hover:text-foreground"
         >
-          <FontAwesomeIcon icon={faXmark} className="h-3 w-3 mr-1.5" />
+          <FontAwesomeIcon icon={faXmark} className="h-3 w-3 mr-1" />
           Limpar
         </Button>
       )}

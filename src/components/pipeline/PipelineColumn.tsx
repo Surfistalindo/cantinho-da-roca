@@ -50,11 +50,11 @@ export default function PipelineColumn({ status, leads, onLeadClick, onAddLead, 
       ref={setNodeRef}
       aria-label={`Coluna ${label}, ${leads.length} ${leads.length === 1 ? 'lead' : 'leads'}`}
       className={cn(
-        'rounded-2xl border border-border bg-muted/50 transition-all duration-150 flex flex-col min-h-[320px]',
+        'rounded-lg border border-border bg-surface-2 transition-all duration-150 flex flex-col min-h-[320px]',
         isOver && 'bg-primary/5 ring-2 ring-primary/20 border-primary/30',
       )}
     >
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2.5 border-b border-border/60 bg-muted/80 backdrop-blur rounded-t-2xl">
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-2 px-2.5 py-2 border-b border-border bg-surface-3/90 backdrop-blur rounded-t-lg">
         <div className="flex items-center gap-2 min-w-0">
           <span className={cn('inline-flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-wide', cfg.color.replace(/bg-[^\s]+/g, ''))}>
             <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />

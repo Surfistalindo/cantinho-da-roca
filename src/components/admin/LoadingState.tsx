@@ -30,15 +30,15 @@ export default function LoadingState({ variant = 'skeleton' }: Props) {
   }
 
   return (
-    <div className="space-y-3 py-2">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-muted/40 animate-pulse">
-          <div className="h-9 w-9 rounded-full bg-muted" />
-          <div className="flex-1 space-y-2">
-            <div className="h-3 w-1/3 bg-muted rounded" />
-            <div className="h-2.5 w-1/4 bg-muted rounded" />
+    <div className="space-y-1.5 py-1">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 px-2.5 h-9 rounded-md bg-muted/40 animate-pulse">
+          <div className="h-6 w-6 rounded-full bg-muted" />
+          <div className="flex-1 space-y-1">
+            <div className="h-2.5 w-1/3 bg-muted rounded" />
+            <div className="h-2 w-1/4 bg-muted rounded" />
           </div>
-          <div className="h-6 w-16 bg-muted rounded-full" />
+          <div className="h-4 w-14 bg-muted rounded-full" />
         </div>
       ))}
     </div>

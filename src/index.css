@@ -209,16 +209,16 @@
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
-  /* CRM typography scale — exact spec from Premium CRM System */
+  /* CRM typography scale — densificada estilo Monday/Linear */
   .font-crm {
     font-family: var(--font-crm-body);
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 13px;
+    line-height: 18px;
     letter-spacing: 0;
   }
   .font-crm h1, .font-crm .text-h1 {
     font-family: var(--font-crm-display);
-    font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -0.01em;
+    font-size: 18px; line-height: 24px; font-weight: 600; letter-spacing: -0.01em;
   }
   .font-crm h2, .font-crm .text-h2 {
     font-family: var(--font-crm-display);
@@ -316,25 +316,67 @@
     background-color: hsl(var(--surface-2));
     color: hsl(var(--muted-foreground));
     font-weight: 600;
-    font-size: 11px;
+    font-size: 10.5px;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 0.5rem 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 0.4rem 0.625rem;
     border-bottom: 1px solid hsl(var(--border));
     text-align: left;
     white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 5;
   }
   .font-crm .board-table tbody td {
-    padding: 0.5rem 0.75rem;
-    border-bottom: 1px solid hsl(var(--border) / 0.7);
-    height: 40px;
+    padding: 0.375rem 0.625rem;
+    border-bottom: 1px solid hsl(var(--border) / 0.55);
+    height: 36px;
     color: hsl(var(--foreground));
+    vertical-align: middle;
+  }
+  .font-crm .board-table tbody tr {
+    transition: background-color 140ms ease;
   }
   .font-crm .board-table tbody tr:hover td {
-    background-color: hsl(var(--muted) / 0.55);
+    background-color: hsl(var(--muted) / 0.6);
+  }
+  .font-crm .board-table tbody tr:active td {
+    background-color: hsl(var(--primary) / 0.10);
   }
   .font-crm .board-row-active td {
     background-color: hsl(var(--primary) / 0.08);
+  }
+
+  /* Density helpers — opt-in compact controls */
+  .font-crm .dense-input,
+  .font-crm .dense-input input,
+  .font-crm .dense-select [role="combobox"] {
+    height: 32px !important;
+    font-size: 12px;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  .font-crm .dense-btn {
+    height: 32px;
+    font-size: 12px;
+    padding: 0 0.625rem;
+  }
+
+  /* Subtle progress bar inside a table cell (Monday-like) */
+  .font-crm .progress-cell {
+    position: relative;
+    width: 80px;
+    height: 6px;
+    border-radius: 999px;
+    background: hsl(var(--muted));
+    overflow: hidden;
+  }
+  .font-crm .progress-cell > span {
+    display: block;
+    height: 100%;
+    background: hsl(var(--success));
+    border-radius: 999px;
+    transition: width 200ms ease;
   }
 
   /* Tag/badge palette helpers (Monday-style cells) */
@@ -379,6 +421,43 @@
     width: 3px;
     border-radius: 2px;
     background: hsl(var(--sidebar-primary));
+  }
+
+  /* ─── Densificação automática de <Table> shadcn dentro do CRM ─── */
+  .font-crm .crm-dense-table table thead tr {
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  .font-crm .crm-dense-table table thead th {
+    background-color: hsl(var(--surface-2));
+    height: 32px !important;
+    padding: 0 0.625rem !important;
+    font-size: 10.5px !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: hsl(var(--muted-foreground)) !important;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  .font-crm .crm-dense-table table tbody tr {
+    height: 36px;
+    border-bottom: 1px solid hsl(var(--border) / 0.55);
+    transition: background-color 140ms ease;
+  }
+  .font-crm .crm-dense-table table tbody tr:hover {
+    background-color: hsl(var(--muted) / 0.6) !important;
+  }
+  .font-crm .crm-dense-table table tbody tr:active {
+    background-color: hsl(var(--primary) / 0.10) !important;
+  }
+  .font-crm .crm-dense-table table tbody td {
+    padding: 0.375rem 0.625rem !important;
+    vertical-align: middle;
+  }
+
+  /* Spinner reduzido para skeletons em painéis densos */
+  .font-crm .dense-skeleton {
+    padding: 0.5rem;
   }
 }
 
