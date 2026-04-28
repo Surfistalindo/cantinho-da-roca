@@ -1,14 +1,12 @@
-import PipelineBoard from '@/components/pipeline/PipelineBoard';
 import PageHeader from '@/components/admin/PageHeader';
+import { Navigate } from 'react-router-dom';
 
 export default function PipelinePage() {
+  // Pipeline foi unificado dentro de Leads (visão Kanban).
   return (
-    <div className="max-w-[1600px] mx-auto space-y-7">
-      <PageHeader
-        title="Pipeline"
-        description="Arraste os leads entre as colunas para atualizar o status do funil em tempo real."
-      />
-      <PipelineBoard />
-    </div>
+    <>
+      <PageHeader title="Pipeline" description="Redirecionando para Leads — visão Kanban..." />
+      <Navigate to="/admin/leads?view=kanban" replace />
+    </>
   );
 }
