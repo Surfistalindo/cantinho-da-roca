@@ -203,6 +203,25 @@ export default function LeadsPage() {
     return list;
   }, [leads, statusFilter, originFilter, search, recencyFilter, priorityFilter, sortBy, sortDir, interactionCounts]);
 
+  // Agrupamento por status — estilo Monday "Sprint 18 - …"
+  const STATUS_GROUPS: { key: string; title: string; color: GroupColor }[] = [
+    { key: 'new',         title: 'Novo',         color: 'blue'   },
+    { key: 'contacted',   title: 'Em contato',   color: 'cyan'   },
+    { key: 'negotiating', title: 'Negociação',   color: 'orange' },
+    { key: 'converted',   title: 'Convertido',   color: 'green'  },
+    { key: 'lost',        title: 'Perdido',      color: 'red'    },
+  ];
+  const grouped = useMemo(() => {
+    const map: Record<string, typeof filtered> = {};
+    for (const g of STATUS_GROUPS) map[g.key] = [];
+    const other: typeof filtered = [];
+    for (const l of filtered) {
+      if (map[l.status]) map[l.status].push(l);
+      else other.push(l);
+    }
+    return { map, other };
+  }, [filtered]);
+
   const newestId = useMemo(() => {
     if (leads.length === 0) return null;
     return [...leads].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].id;
