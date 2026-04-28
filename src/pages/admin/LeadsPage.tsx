@@ -176,6 +176,8 @@ export default function LeadsPage() {
 
   const fetchLeads = useCallback(async () => {
     setFetchError(null);
+    logger.debug('[leads] fetch start');
+    const startedAt = performance.now();
     const { data, error } = await supabase
       .from('leads')
       .select(
@@ -184,8 +186,10 @@ export default function LeadsPage() {
       .order('created_at', { ascending: false })
       .limit(2000);
     if (error) {
+      logger.error('[leads] fetch error', { code: (error as { code?: string }).code, message: error.message });
       setFetchError(new Error(error.message ?? 'Erro ao carregar leads'));
     } else {
+      logger.debug('[leads] fetch ok', { count: data?.length ?? 0, ms: Math.round(performance.now() - startedAt) });
       setLeads((data as Lead[]) ?? []);
     }
     setLoading(false);
