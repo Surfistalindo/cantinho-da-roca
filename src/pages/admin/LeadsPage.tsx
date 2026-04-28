@@ -731,12 +731,12 @@ export default function LeadsPage() {
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell className="hidden lg:table-cell">
+                            <TableCell className={cn('hidden lg:table-cell', density === 'compact' && 'lg:hidden')}>
                               {lead.origin ? (
                                 <span className={cn('tag-cell', `tag-${colorForLabel(lead.origin)}`)}>{lead.origin}</span>
                               ) : <span className="text-xs text-muted-foreground">—</span>}
                             </TableCell>
-                            <TableCell className="hidden xl:table-cell text-xs text-muted-foreground max-w-[200px] truncate">
+                            <TableCell className={cn('hidden xl:table-cell text-xs text-muted-foreground max-w-[200px] truncate', density === 'compact' && 'xl:hidden')}>
                               {lead.product_interest ?? '—'}
                             </TableCell>
                             <TableCell onClick={(e) => e.stopPropagation()}>
@@ -745,7 +745,7 @@ export default function LeadsPage() {
                             <TableCell>
                               <LeadScoreBadge lead={lead} interactionCount={interactionCounts[lead.id] ?? 0} size="sm" />
                             </TableCell>
-                            <TableCell className="hidden lg:table-cell">
+                            <TableCell className={cn('hidden lg:table-cell', density === 'compact' && 'lg:hidden')}>
                               <ContactRecencyBadge
                                 lastContactAt={lead.last_contact_at}
                                 status={lead.status}
