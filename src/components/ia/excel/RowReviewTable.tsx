@@ -211,6 +211,7 @@ export default function RowReviewTable({
         onOpenChange={setPanelOpen}
         mappings={mappings}
         onApply={onRemap}
+        samplesByHeader={samplesByHeader}
       />
     </div>
   );
