@@ -507,6 +507,90 @@
   .font-crm .dense-skeleton {
     padding: 0.5rem;
   }
+
+  /* ─── Group sections (Monday "Sprint 18 - 22/04 a 11/05") ─── */
+  .font-crm .group-section { margin-bottom: 1rem; }
+  .font-crm .group-section:last-child { margin-bottom: 0; }
+  .font-crm .group-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 32px;
+    padding: 0 0.5rem;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    color: hsl(var(--foreground));
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1;
+    border-radius: 4px;
+    transition: background-color 120ms ease;
+  }
+  .font-crm .group-header:hover { background-color: hsl(var(--muted)); }
+  .font-crm .group-header:focus-visible {
+    outline: 2px solid hsl(var(--primary) / 0.55);
+    outline-offset: 2px;
+  }
+  .font-crm .group-header .chev {
+    transition: transform 160ms ease;
+    color: hsl(var(--muted-foreground));
+  }
+  .font-crm .group-header.is-open .chev { transform: rotate(90deg); }
+  .font-crm .group-title {
+    color: var(--group-color, hsl(var(--foreground)));
+    font-weight: 700;
+  }
+  .font-crm .group-count {
+    color: hsl(var(--muted-foreground));
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .font-crm .group-color-bar {
+    width: 6px;
+    height: 16px;
+    border-radius: 3px;
+    background: var(--group-color, hsl(var(--neutral)));
+    flex-shrink: 0;
+  }
+  .font-crm .group-body {
+    margin-top: 4px;
+    border-left: 6px solid var(--group-color, hsl(var(--neutral)));
+    border-radius: 0 6px 6px 0;
+    overflow: hidden;
+    background: hsl(var(--card));
+    box-shadow: 0 1px 2px 0 hsl(220 25% 14% / 0.04);
+  }
+  .font-crm .group-body .crm-dense-table table thead th {
+    background-color: hsl(var(--surface-3));
+  }
+
+  /* Sticky 1ª coluna em tabelas densas (mantém nome visível ao scroll horizontal) */
+  .font-crm .crm-dense-table table thead th:first-child,
+  .font-crm .crm-dense-table table tbody td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 4;
+    background-color: hsl(var(--card));
+  }
+  .font-crm .crm-dense-table table thead th:first-child {
+    background-color: hsl(var(--surface-3));
+    z-index: 6;
+  }
+  .font-crm .crm-dense-table table tbody tr:hover td:first-child {
+    background-color: hsl(var(--muted));
+  }
+
+  /* Foco acessível padronizado em rows clicáveis */
+  .font-crm .crm-dense-table table tbody tr:focus-within {
+    outline: 2px solid hsl(var(--primary) / 0.45);
+    outline-offset: -2px;
+  }
+
+  /* Compact row variant (usada por Pipeline/Boards densos) */
+  .font-crm .row-compact td { height: 32px; }
 }
 
 /* GPU compositing for shader canvases */
