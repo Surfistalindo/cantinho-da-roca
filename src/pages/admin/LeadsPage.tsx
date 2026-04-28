@@ -399,7 +399,7 @@ export default function LeadsPage() {
                         <TableRow className="hover:bg-transparent border-border">
                           <TableHead className="w-[36px] pl-3 pr-0">
                             <Checkbox
-                              checked={allChecked || (someChecked && 'indeterminate')}
+                              checked={allChecked ? true : someChecked ? 'indeterminate' : false}
                               onCheckedChange={() => toggleGroup(groupIds, allChecked)}
                               aria-label="Selecionar todos"
                             />
