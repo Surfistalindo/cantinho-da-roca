@@ -683,24 +683,44 @@ export default function LeadsPage() {
                         );
                       });
 
-                    const renderGroup = (items: typeof filtered) => (
-                      <div
-                        className="overflow-x-auto overflow-y-auto crm-dense-table min-w-0 max-w-full"
-                        style={{ maxHeight: 'calc(100vh - 280px)' }}
-                      >
-                        <Table>
-                          {renderHeader(items.map((i) => i.id))}
-                          <TableBody>{renderRows(items)}</TableBody>
-                        </Table>
-                      </div>
-                    );
+                    const renderGroup = (items: typeof filtered, groupKey: string, showSizer: boolean) => {
+                      const info = paged.paginate(items, groupKey);
+                      return (
+                        <>
+                          <div
+                            className="overflow-x-auto overflow-y-auto crm-dense-table min-w-0 max-w-full"
+                            style={{ maxHeight: 'calc(100vh - 280px)' }}
+                          >
+                            <Table>
+                              {renderHeader(info.pageItems.map((i) => i.id))}
+                              <TableBody>{renderRows(info.pageItems)}</TableBody>
+                            </Table>
+                          </div>
+                          <LeadsPagination
+                            page={info.page}
+                            totalPages={info.totalPages}
+                            rangeStart={info.rangeStart}
+                            rangeEnd={info.rangeEnd}
+                            total={info.total}
+                            pageSize={paged.pageSize}
+                            onPageChange={info.setPage}
+                            onPageSizeChange={paged.setPageSize}
+                            showPageSize={showSizer}
+                          />
+                        </>
+                      );
+                    };
 
+                    // Marca o primeiro grupo visível para mostrar o seletor "por página"
+                    let sizerShown = false;
                     return (
                       <>
                         {STATUS_GROUPS.map((g) => {
                           const items = grouped.map[g.key];
                           if (items.length === 0) return null;
                           const todayCount = items.filter((l) => isToday(l.created_at)).length;
+                          const showSizer = !sizerShown;
+                          sizerShown = true;
                           return (
                             <GroupSection
                               key={g.key}
@@ -710,13 +730,13 @@ export default function LeadsPage() {
                               defaultOpen={g.key !== 'lost'}
                               meta={todayCount > 0 ? `${todayCount} hoje` : undefined}
                             >
-                              {renderGroup(items)}
+                              {renderGroup(items, g.key, showSizer)}
                             </GroupSection>
                           );
                         })}
                         {grouped.other.length > 0 && (
                           <GroupSection title="Outros" count={grouped.other.length} color="neutral" defaultOpen={false}>
-                            {renderGroup(grouped.other)}
+                            {renderGroup(grouped.other, '__other__', !sizerShown)}
                           </GroupSection>
                         )}
                       </>
