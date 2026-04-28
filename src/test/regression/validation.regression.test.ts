@@ -34,8 +34,9 @@ describe('Regressão: schemas de validação', () => {
     expect(r.name).toBe('Maria');
   });
 
-  it('stripHtml remove tags', () => {
-    expect(stripHtml('<script>x</script>oi')).toBe('oi');
+  it('stripHtml remove apenas tags HTML, mantendo conteúdo', () => {
+    expect(stripHtml('<b>oi</b>')).toBe('oi');
+    expect(stripHtml('a<script>x</script>b')).toBe('axb');
   });
 
   it('escapePostgrestSearch remove caracteres perigosos', () => {

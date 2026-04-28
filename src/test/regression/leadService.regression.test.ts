@@ -39,11 +39,15 @@ describe('Regressão: leadService (CRUD + filtros)', () => {
     await leadService.list({ search: 'Maria,*()\'' });
     const orCall = mockCalls().find((c) => c.method === 'or');
     expect(orCall).toBeTruthy();
-    const filter = (orCall!.args[0] as string);
-    // Caracteres perigosos não devem aparecer no filtro .or()
-    expect(filter).not.toMatch(/[,()'"*\\]/);
+    const filter = orCall!.args[0] as string;
     expect(filter).toContain('name.ilike');
     expect(filter).toContain('phone.ilike');
+    // O termo de busca interpolado (entre %...%) não pode conter caracteres perigosos.
+    const matches = Array.from(filter.matchAll(/%([^%]*)%/g));
+    expect(matches.length).toBeGreaterThan(0);
+    for (const m of matches) {
+      expect(m[1]).not.toMatch(/[,()'"*\\]/);
+    }
   });
 
   it('create() valida payload e insere com campos esperados', async () => {
