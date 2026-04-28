@@ -38,4 +38,6 @@ const Glossary = React.forwardRef<HTMLDivElement, Props>(function Glossary({ ope
       </SheetContent>
     </Sheet>
   );
-}
+});
+
+export default Glossary;
