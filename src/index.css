@@ -1,4 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Satisfy&family=Oswald:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Josefin+Sans:wght@300;400;500;600;700&display=swap');
+/* CRM "Atelier OS" — Fraunces (display serif), Geist (UI), JetBrains Mono (numbers) */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -65,100 +67,172 @@
     --font-body: 'DM Sans', sans-serif;
   }
 
-  /* CRM — Light "Monday Work Management" palette.
-     White panels, soft grey background, vivid solid status cells. Scoped to .font-crm only. */
+  /* ============================================================
+     CRM — "Atelier OS" direction (Linear + Vercel + Notion + Cantim).
+     Editorial, dense, refined. Light mode default.
+     ============================================================ */
   .font-crm {
-    /* Surface ladder — Monday Work Management exato */
-    --background: 220 23% 97%;                   /* #f6f7fb page bg */
-    --foreground: 230 12% 17%;                   /* #323338 primary text Monday */
+    /* Surface ladder — paper neutrals */
+    --background: 220 25% 98%;                   /* page bg "paper" */
+    --foreground: 222 18% 14%;                   /* primary text */
     --card: 0 0% 100%;                           /* white panels */
-    --card-foreground: 230 12% 17%;
+    --card-foreground: 222 18% 14%;
     --popover: 0 0% 100%;
-    --popover-foreground: 230 12% 17%;
-    --muted: 225 23% 97%;                        /* #f5f6f8 row hover */
-    --muted-foreground: 228 11% 47%;             /* #676879 secondary text Monday */
-    --accent: 220 22% 94%;                       /* #e6e9ef */
-    --accent-foreground: 230 14% 14%;
-    --border: 228 18% 85%;                       /* #d0d4e4 Monday divider */
-    --input: 228 18% 82%;
-    --radius: 0.375rem;
+    --popover-foreground: 222 18% 14%;
+    --muted: 220 22% 96%;                        /* row hover */
+    --muted-foreground: 222 11% 44%;             /* secondary text */
+    --accent: 220 22% 94%;
+    --accent-foreground: 222 18% 12%;
+    --border: 220 14% 90%;                       /* hairline default */
+    --input: 220 14% 86%;
+    --radius: 0.5rem;
 
-    /* Brand — Monday blue */
-    --primary: 212 100% 46%;                     /* #0073ea */
+    /* Brand — Monday blue stays for primary actions; moss is brand voice */
+    --primary: 212 95% 46%;                      /* #0073ea */
     --primary-foreground: 0 0% 100%;
     --primary-container: 212 95% 92%;
     --primary-container-foreground: 212 100% 26%;
 
-    --secondary: 220 18% 94%;                    /* neutral surface btn */
+    --secondary: 220 18% 95%;
     --secondary-foreground: 222 20% 22%;
     --secondary-container: 220 18% 96%;
     --secondary-container-foreground: 222 26% 14%;
 
-    --tertiary: 188 80% 45%;                     /* cyan accent */
+    --tertiary: 188 80% 45%;
     --tertiary-foreground: 0 0% 100%;
     --tertiary-container: 188 70% 92%;
     --tertiary-container-foreground: 188 80% 22%;
 
     --neutral: 220 10% 60%;
     --neutral-foreground: 222 26% 14%;
-    --ring: 212 100% 46%;
+    --ring: 212 95% 46%;
 
-    /* Surface ladder — white → progressively cooler greys */
+    /* Surface ladder — fine cool greys */
+    --surface-0: 220 25% 98%;
     --surface-1: 0 0% 100%;
-    --surface-2: 220 20% 98%;
-    --surface-3: 220 18% 96%;
-    --surface-4: 220 16% 93%;
+    --surface-2: 220 22% 97%;
+    --surface-3: 220 20% 95%;
+    --surface-4: 220 18% 92%;
+    --surface-sunken: 220 22% 95%;
     --elevated: 0 0% 100%;
-    --border-strong: 220 14% 80%;
+
+    /* Hairlines & strong borders */
+    --hairline: 220 14% 91%;
+    --hairline-strong: 220 14% 82%;
+    --border-strong: 220 14% 82%;
+
+    /* Shadows — paper-like, restrained */
+    --shadow-xs: 0 1px 0 0 hsl(220 25% 14% / 0.04);
+    --shadow-sm: 0 1px 2px 0 hsl(220 25% 14% / 0.05), 0 1px 1px 0 hsl(220 25% 14% / 0.04);
+    --shadow-md: 0 4px 12px -4px hsl(220 25% 14% / 0.08), 0 1px 2px hsl(220 25% 14% / 0.04);
+    --shadow-pop: 0 16px 32px -16px hsl(220 25% 14% / 0.18), 0 4px 12px -4px hsl(220 25% 14% / 0.08);
+
+    /* Brand voice colors (used sparingly for editorial accents) */
+    --accent-brand: 152 38% 36%;                 /* moss profundo Cantim */
+    --accent-warm: 38 88% 56%;                   /* honey */
 
     /* Status — Monday-style vivid solids */
-    --success: 152 100% 39%;                     /* #00c875 verde "concluído" */
+    --success: 152 100% 39%;
     --success-foreground: 0 0% 100%;
     --success-soft: 152 70% 92%;
-    --warning: 32 98% 62%;                       /* #fdab3d laranja "pausado" */
+    --warning: 32 98% 62%;
     --warning-foreground: 30 80% 14%;
     --warning-soft: 32 95% 94%;
-    --info: 199 100% 38%;                        /* #0086c0 azul "em andamento" */
+    --info: 199 100% 38%;
     --info-foreground: 0 0% 100%;
     --info-soft: 199 90% 94%;
-    --destructive: 350 75% 57%;                  /* #e2445c vermelho "não iniciado" */
+    --destructive: 350 75% 57%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Status cells (Monday solid colors — a célula inteira é pintada) */
-    --status-done: 152 100% 39%;                 /* #00c875 verde */
-    --status-progress: 199 100% 38%;             /* #0086c0 azul */
-    --status-blocked: 350 75% 57%;               /* #e2445c vermelho */
-    --status-paused: 32 98% 62%;                 /* #fdab3d laranja */
-    --status-working: 217 100% 60%;              /* #579bfc azul claro */
-    --status-review: 268 65% 62%;                /* #a25ddc roxo */
-    --status-neutral: 220 10% 75%;               /* #c4c4c4 cinza */
+    /* Status cells (Monday solid colors) */
+    --status-done: 152 100% 39%;
+    --status-progress: 199 100% 38%;
+    --status-blocked: 350 75% 57%;
+    --status-paused: 32 98% 62%;
+    --status-working: 217 100% 60%;
+    --status-review: 268 65% 62%;
+    --status-neutral: 220 10% 75%;
 
-    /* Tag palette — pílulas coloridas (Setor / Frente / Origem) Monday-style */
-    --tag-blue: 217 100% 60%;                    /* #579bfc */
+    /* Tag palette — colored pills */
+    --tag-blue: 217 100% 60%;
     --tag-cyan: 188 85% 50%;
-    --tag-green: 152 70% 45%;                    /* #00c875 */
-    --tag-yellow: 45 100% 56%;                   /* #ffcb00 */
-    --tag-orange: 32 98% 62%;                    /* #fdab3d */
-    --tag-red: 350 75% 57%;                      /* #e2445c */
-    --tag-pink: 332 100% 55%;                    /* #ff158a */
-    --tag-purple: 268 65% 62%;                   /* #a25ddc */
+    --tag-green: 152 70% 45%;
+    --tag-yellow: 45 100% 56%;
+    --tag-orange: 32 98% 62%;
+    --tag-red: 350 75% 57%;
+    --tag-pink: 332 100% 55%;
+    --tag-purple: 268 65% 62%;
     --tag-indigo: 240 60% 62%;
     --tag-teal: 172 70% 42%;
 
-    /* Sidebar — branca estilo Monday */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 14% 35%;           /* #4f5466 */
-    --sidebar-primary: 212 100% 46%;             /* azul barra ativa */
+    /* Sidebar — paper white, Linear-feel */
+    --sidebar-background: 220 24% 99%;
+    --sidebar-foreground: 222 14% 32%;
+    --sidebar-primary: 212 95% 46%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 22% 94%;               /* #e6e9ef item ativo bg */
-    --sidebar-accent-foreground: 222 28% 12%;    /* texto preto bold no item ativo */
-    --sidebar-border: 220 15% 92%;
-    --sidebar-ring: 212 100% 46%;
+    --sidebar-accent: 220 22% 94%;
+    --sidebar-accent-foreground: 222 28% 10%;
+    --sidebar-border: 220 14% 91%;
+    --sidebar-ring: 212 95% 46%;
 
-    /* Typography roles */
-    --font-crm-display: 'Be Vietnam Pro', sans-serif;
-    --font-crm-body: 'Public Sans', sans-serif;
-    --font-crm-label: 'Epilogue', sans-serif;
+    /* Typography roles — Atelier OS */
+    --font-crm-display: 'Fraunces', 'Recoleta', Georgia, serif;
+    --font-crm-body: 'Geist', 'Public Sans', system-ui, sans-serif;
+    --font-crm-label: 'Geist', 'Epilogue', sans-serif;
+    --font-crm-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-crm-hand: 'Caveat', cursive;
+  }
+
+  /* ============================================================
+     CRM — Focus Dark mode (editorial dark, not pure black).
+     Activated by [data-crm-theme="dark"] on <html>.
+     ============================================================ */
+  [data-crm-theme="dark"] .font-crm {
+    --background: 220 24% 8%;
+    --foreground: 220 14% 90%;
+    --card: 220 22% 11%;
+    --card-foreground: 220 14% 92%;
+    --popover: 220 22% 12%;
+    --popover-foreground: 220 14% 92%;
+    --muted: 220 18% 15%;
+    --muted-foreground: 220 10% 62%;
+    --accent: 220 18% 18%;
+    --accent-foreground: 220 14% 92%;
+    --border: 220 14% 18%;
+    --input: 220 14% 22%;
+
+    --primary: 212 100% 60%;
+    --primary-foreground: 220 24% 8%;
+
+    --surface-0: 220 24% 8%;
+    --surface-1: 220 22% 11%;
+    --surface-2: 220 22% 13%;
+    --surface-3: 220 20% 16%;
+    --surface-4: 220 18% 20%;
+    --surface-sunken: 220 26% 7%;
+    --elevated: 220 22% 13%;
+
+    --hairline: 220 14% 18%;
+    --hairline-strong: 220 12% 26%;
+    --border-strong: 220 12% 26%;
+
+    --shadow-xs: 0 1px 0 0 hsl(0 0% 0% / 0.3);
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.35), 0 1px 1px 0 hsl(0 0% 0% / 0.25);
+    --shadow-md: 0 4px 12px -4px hsl(0 0% 0% / 0.45), 0 1px 2px hsl(0 0% 0% / 0.35);
+    --shadow-pop: 0 16px 32px -16px hsl(0 0% 0% / 0.6), 0 4px 12px -4px hsl(0 0% 0% / 0.4);
+
+    --success-soft: 152 30% 16%;
+    --warning-soft: 32 30% 18%;
+    --info-soft: 199 35% 16%;
+
+    --sidebar-background: 220 26% 9%;
+    --sidebar-foreground: 220 12% 75%;
+    --sidebar-primary: 212 100% 62%;
+    --sidebar-primary-foreground: 220 24% 8%;
+    --sidebar-accent: 220 20% 15%;
+    --sidebar-accent-foreground: 220 14% 95%;
+    --sidebar-border: 220 14% 17%;
+    --sidebar-ring: 212 100% 62%;
   }
 
   .dark {
@@ -891,3 +965,212 @@ html {
   .warm-tilt,
   .warm-stamp { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
 }
+
+/* ============================================================
+   ATELIER OS — CRM premium utilities
+   Editorial-tech direction: Linear + Vercel + Notion + Cantim voice.
+   All scoped to .font-crm so the landing stays untouched.
+   ============================================================ */
+
+/* Page canvas — paper with hairline grain */
+.font-crm .crm-paper-bg {
+  background-color: hsl(var(--surface-0));
+  background-image:
+    radial-gradient(1200px 600px at 0% -10%, hsl(var(--primary) / 0.04), transparent 60%),
+    radial-gradient(800px 500px at 100% 0%, hsl(var(--accent-brand) / 0.04), transparent 60%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.18  0 0 0 0 0.22  0 0 0 0 0.30  0 0 0 0.025 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: auto, auto, 240px 240px;
+}
+[data-crm-theme="dark"] .font-crm .crm-paper-bg {
+  background-image:
+    radial-gradient(1200px 600px at 0% -10%, hsl(var(--primary) / 0.10), transparent 60%),
+    radial-gradient(800px 500px at 100% 0%, hsl(var(--accent-brand) / 0.08), transparent 60%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.04 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* Editorial display — Fraunces with optical size */
+.font-crm .font-display {
+  font-family: var(--font-crm-display);
+  font-feature-settings: 'ss01', 'ss02', 'cv11';
+  font-variation-settings: 'opsz' 96, 'SOFT' 50, 'WONK' 0;
+  letter-spacing: -0.02em;
+}
+.font-crm .font-display-soft {
+  font-family: var(--font-crm-display);
+  font-variation-settings: 'opsz' 14, 'SOFT' 100, 'WONK' 0;
+  letter-spacing: -0.01em;
+}
+.font-crm .font-mono-num {
+  font-family: var(--font-crm-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.font-crm .font-hand-crm {
+  font-family: var(--font-crm-hand);
+}
+
+/* Replace global headings inside CRM with Fraunces */
+.font-crm h1, .font-crm h2, .font-crm h3,
+.font-crm h4, .font-crm h5, .font-crm h6 {
+  font-family: var(--font-crm-display);
+  font-variation-settings: 'opsz' 36, 'SOFT' 50;
+  letter-spacing: -0.018em;
+}
+
+/* Stagger reveal for orchestrated page load */
+@keyframes crm-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.font-crm .crm-stagger > * {
+  opacity: 0;
+  animation: crm-rise 480ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+.font-crm .crm-stagger > *:nth-child(1) { animation-delay: 30ms; }
+.font-crm .crm-stagger > *:nth-child(2) { animation-delay: 90ms; }
+.font-crm .crm-stagger > *:nth-child(3) { animation-delay: 150ms; }
+.font-crm .crm-stagger > *:nth-child(4) { animation-delay: 210ms; }
+.font-crm .crm-stagger > *:nth-child(5) { animation-delay: 270ms; }
+.font-crm .crm-stagger > *:nth-child(6) { animation-delay: 330ms; }
+.font-crm .crm-stagger > *:nth-child(7) { animation-delay: 390ms; }
+.font-crm .crm-stagger > *:nth-child(8) { animation-delay: 450ms; }
+
+/* Keyboard chip (⌘K, G L, etc.) — Linear-style */
+.font-crm .kbd-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-family: var(--font-crm-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--surface-3));
+  border: 1px solid hsl(var(--hairline));
+  box-shadow: inset 0 -1px 0 0 hsl(var(--hairline-strong) / 0.4);
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+/* Editorial focus ring */
+.font-crm :focus-visible {
+  outline: 2px solid hsl(var(--primary) / 0.55);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Sidebar item — animated active rail (slide-in indicator) */
+.font-crm .sidebar-item-active::before,
+.font-crm [data-sidebar="menu-button"][data-active="true"]::before {
+  transform-origin: center;
+  animation: crm-rail-slide 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes crm-rail-slide {
+  from { transform: scaleY(0.2); opacity: 0; }
+  to   { transform: scaleY(1); opacity: 1; }
+}
+
+/* Row hover rail (Linear-style left blue rail on hover) */
+.font-crm .crm-row-rail {
+  position: relative;
+  isolation: isolate;
+}
+.font-crm .crm-row-rail::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 6px; bottom: 6px;
+  width: 2px;
+  background: hsl(var(--primary));
+  border-radius: 2px;
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 1;
+}
+.font-crm .crm-row-rail:hover::before,
+.font-crm .crm-row-rail[data-active="true"]::before {
+  transform: scaleY(1);
+}
+
+/* Mobile-first horizontal scroll snap (KPI carousel) */
+.font-crm .crm-h-snap {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-inline: 12px;
+}
+.font-crm .crm-h-snap > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+/* StatChip — clickable inline metric pill */
+.font-crm .stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--hairline));
+  background: hsl(var(--surface-1));
+  color: hsl(var(--foreground));
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+  cursor: pointer;
+}
+.font-crm .stat-chip:hover {
+  background: hsl(var(--surface-3));
+  border-color: hsl(var(--hairline-strong));
+}
+.font-crm .stat-chip[data-active="true"] {
+  background: hsl(var(--primary) / 0.10);
+  border-color: hsl(var(--primary) / 0.35);
+  color: hsl(var(--primary));
+}
+.font-crm .stat-chip .dot {
+  width: 6px; height: 6px; border-radius: 999px;
+  background: currentColor; opacity: 0.8;
+}
+
+/* Subtle paper-card surface (used by KpiCard, panels) */
+.font-crm .paper-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--hairline));
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 200ms ease, box-shadow 240ms ease, transform 240ms ease;
+}
+.font-crm .paper-card:hover {
+  border-color: hsl(var(--hairline-strong));
+  box-shadow: var(--shadow-md);
+}
+
+/* Toast / Sonner editorial polish */
+.font-crm [data-sonner-toast] {
+  font-family: var(--font-crm-body);
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-pop) !important;
+}
+.font-crm [data-sonner-toast] [data-title] {
+  font-family: var(--font-crm-display);
+  font-variation-settings: 'opsz' 14;
+  letter-spacing: -0.01em;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .font-crm .crm-stagger > *,
+  .font-crm .crm-row-rail::before,
+  .font-crm .sidebar-item-active::before {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
