@@ -37,7 +37,7 @@ const benefits = [
 function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: number; isVisible: boolean }) {
   return (
     <div
-      className="group relative rounded-2xl overflow-hidden min-h-[220px] sm:min-h-[280px] transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_18px_40px_-20px_hsl(25_45%_22%/0.4)] shadow-[0_4px_15px_-8px_hsl(25_45%_22%/0.2)]"
+      className="group relative rounded-2xl overflow-hidden min-h-[200px] sm:min-h-[280px] transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_18px_40px_-20px_hsl(25_45%_22%/0.4)] shadow-[0_4px_15px_-8px_hsl(25_45%_22%/0.2)]"
       style={{
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'translateY(0)' : 'translateY(40px)',
@@ -59,7 +59,7 @@ function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: nu
           <FontAwesomeIcon icon={b.icon} className="text-xl sm:text-2xl" />
         </div>
 
-        <h3 className="font-display-warm text-xl sm:text-2xl font-bold mb-1.5 text-white">{b.title}</h3>
+        <h3 className="font-display-warm text-lg sm:text-2xl font-bold mb-1.5 text-white">{b.title}</h3>
         <p className="font-body-warm text-white/85 text-sm leading-relaxed">{b.description}</p>
       </div>
     </div>
@@ -70,7 +70,7 @@ export default function BenefitsSection() {
   const { ref, isVisible } = useScrollAnimation<HTMLDivElement>({ threshold: 0.08 });
 
   return (
-    <section id="beneficios" className="py-16 relative overflow-hidden sm:py-0" style={{ background: '#f7f5f0' }}>
+    <section id="beneficios" className="py-16 sm:py-24 relative overflow-hidden" style={{ background: '#f7f5f0' }}>
       <div className="absolute top-8 right-10 pointer-events-none animate-leaf-float opacity-20 z-[1]" style={{ animationDelay: '1s' }}>
         <LeafSVG size={22} id="ben1" style={{ transform: 'rotate(-30deg)' }} />
       </div>
@@ -96,7 +96,7 @@ export default function BenefitsSection() {
             Simplicidade, qualidade e resultado. É isso que a gente entrega.
           </p>
         </div>
-        <div ref={ref} className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+        <div ref={ref} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {benefits.map((b, i) => (
             <BenefitCard key={b.title} b={b} index={i} isVisible={isVisible} />
           ))}

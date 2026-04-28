@@ -676,8 +676,13 @@ canvas {
 /* Smooth scroll for the whole page */
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 80px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Shimmer gradient animation for hero title */
