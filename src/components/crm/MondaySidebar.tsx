@@ -291,7 +291,7 @@ export default function MondaySidebar() {
                                 <MoreHorizontal size={13} />
                               </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuContent align="end" className="w-44 border-hairline shadow-floating">
                               <DropdownMenuItem
                                 onClick={async () => {
                                   const name = window.prompt('Renomear área de trabalho', ws.name);
