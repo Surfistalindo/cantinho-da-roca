@@ -18,6 +18,7 @@ interface RowReviewTableProps {
   mappings: ColumnMapping[];
   onUpdateField: (rowIndex: number, field: keyof NormalizedLeadRow['data'], value: unknown) => void;
   onRemap: (mappings: ColumnMapping[]) => void;
+  samplesByHeader?: Record<string, unknown[]>;
 }
 
 type Filter = 'all' | 'errors' | 'warnings' | 'valid';
