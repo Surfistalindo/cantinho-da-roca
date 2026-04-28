@@ -176,7 +176,7 @@ export default function LeadsPage() {
     const { data, error } = await supabase
       .from('leads')
       .select(
-        'id,name,phone,status,origin,product_interest,last_contact_at,next_contact_at,notes,created_at,updated_at,ai_score,ai_priority,ai_score_reason,ai_summary',
+        'id,name,phone,status,origin,product_interest,last_contact_at,next_contact_at,notes,created_at,updated_at,ai_score,ai_priority,ai_score_reason,ai_summary,assigned_to',
       )
       .order('created_at', { ascending: false })
       .limit(2000);
