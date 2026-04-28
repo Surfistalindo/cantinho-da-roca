@@ -40,6 +40,7 @@ import GroupSection, { type GroupColor } from '@/components/crm/ui/GroupSection'
 import LeadsKpiStrip, { type KpiKey } from '@/components/admin/leads/LeadsKpiStrip';
 import LeadsViewSwitcher, { type LeadsView } from '@/components/admin/leads/LeadsViewSwitcher';
 import LeadsKanban from '@/components/admin/leads/LeadsKanban';
+import { LeadsDndProvider, DroppableGroupHeader, DraggableRow } from '@/components/admin/leads/LeadsTableDnd';
 import LeadsCards from '@/components/admin/leads/LeadsCards';
 import SavedFiltersMenu, { type SavedLeadFilter } from '@/components/admin/leads/SavedFiltersMenu';
 import QuickActionsPopover from '@/components/admin/leads/QuickActionsPopover';
@@ -224,6 +225,13 @@ export default function LeadsPage() {
       if (!map.has(k)) map.set(k, trimmed);
     }
     return Array.from(map.values()).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }, [leads]);
+
+  // Lookup id → { name, status } usado pelo DnD da tabela.
+  const leadIndex = useMemo(() => {
+    const map: Record<string, { name: string; status: string }> = {};
+    for (const l of leads) map[l.id] = { name: l.name, status: l.status };
+    return map;
   }, [leads]);
 
   const filtered = useMemo(() => {
@@ -677,6 +685,7 @@ export default function LeadsPage() {
               <>
                 {/* Desktop — agrupado por status */}
                 <div className="hidden md:block space-y-2">
+                  <LeadsDndProvider leadIndex={leadIndex} onChanged={fetchLeads}>
                   {(() => {
                     const renderHeader = (groupIds: string[]) => {
                       const allChecked = groupIds.length > 0 && groupIds.every((id) => selected.has(id));
@@ -684,7 +693,8 @@ export default function LeadsPage() {
                       return (
                         <TableHeader className="sticky top-0 z-20 bg-card shadow-[0_1px_0_0_hsl(var(--border))]">
                           <TableRow className="hover:bg-transparent border-border [&>th]:bg-card">
-                            <TableHead scope="col" className="w-[36px] pl-3 pr-0">
+                            <TableHead scope="col" className="w-[20px] pl-2 pr-0" aria-hidden="true" />
+                            <TableHead scope="col" className="w-[36px] pl-2 pr-0">
                               <Checkbox
                                 checked={allChecked ? true : someChecked ? 'indeterminate' : false}
                                 onCheckedChange={() => toggleGroup(groupIds, allChecked)}
@@ -747,8 +757,10 @@ export default function LeadsPage() {
                         const score = getLeadScore(lead, { interactionCount: interactionCounts[lead.id] ?? 0 });
                         const isChecked = selected.has(lead.id);
                         return (
+                          <DraggableRow key={lead.id} id={lead.id}>
+                            {({ setNodeRef, isDragging, grip, style }) => (
                           <TableRow
-                            key={lead.id}
+                            ref={setNodeRef as any}
                             tabIndex={0}
                             role="button"
                             aria-label={`Abrir detalhes de ${lead.name}, status ${lead.status}`}
@@ -760,11 +772,16 @@ export default function LeadsPage() {
                               isNewest && '!bg-primary/5 hover:!bg-primary/10',
                               isChecked && '!bg-primary/[0.06] hover:!bg-primary/10',
                               score.urgent && 'border-l-2 border-l-destructive',
+                              isDragging && 'opacity-40',
                             )}
+                            style={style}
                             onClick={() => openDetail(lead)}
                             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(lead); } }}
                           >
-                            <TableCell className="pl-3 pr-0" onClick={(e) => e.stopPropagation()}>
+                            <TableCell className="pl-2 pr-0 w-[20px]" onClick={(e) => e.stopPropagation()}>
+                              {grip}
+                            </TableCell>
+                            <TableCell className="pl-2 pr-0" onClick={(e) => e.stopPropagation()}>
                               <Checkbox
                                 checked={isChecked}
                                 onCheckedChange={() => toggleOne(lead.id)}
@@ -846,6 +863,8 @@ export default function LeadsPage() {
                               </div>
                             </TableCell>
                           </TableRow>
+                            )}
+                          </DraggableRow>
                         );
                       });
 
@@ -960,16 +979,17 @@ export default function LeadsPage() {
                           const showSizer = !sizerShown;
                           sizerShown = true;
                           return (
-                            <GroupSection
-                              key={g.key}
-                              title={g.title}
-                              count={items.length}
-                              color={g.color}
-                              defaultOpen={g.key !== 'lost'}
-                              meta={todayCount > 0 ? `${todayCount} hoje` : undefined}
-                            >
-                              {renderGroup(items, g.key, showSizer)}
-                            </GroupSection>
+                            <DroppableGroupHeader key={g.key} status={g.key}>
+                              <GroupSection
+                                title={g.title}
+                                count={items.length}
+                                color={g.color}
+                                defaultOpen={g.key !== 'lost'}
+                                meta={todayCount > 0 ? `${todayCount} hoje` : undefined}
+                              >
+                                {renderGroup(items, g.key, showSizer)}
+                              </GroupSection>
+                            </DroppableGroupHeader>
                           );
                         })}
                         {grouped.other.length > 0 && (
@@ -980,6 +1000,7 @@ export default function LeadsPage() {
                       </>
                     );
                   })()}
+                  </LeadsDndProvider>
                 </div>
 
                 {/* Mobile — usa visão de Cards */}
