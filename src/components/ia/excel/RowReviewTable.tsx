@@ -52,7 +52,7 @@ function getCellState(row: NormalizedLeadRow, field: keyof NormalizedLeadRow['da
 }
 
 export default function RowReviewTable({
-  rows, duplicates, mappings, onUpdateField, onRemap,
+  rows, duplicates, mappings, onUpdateField, onRemap, samplesByHeader,
 }: RowReviewTableProps) {
   const [filter, setFilter] = useState<Filter>('all');
   const [panelOpen, setPanelOpen] = useState(false);
