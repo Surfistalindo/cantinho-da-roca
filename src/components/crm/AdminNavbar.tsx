@@ -35,23 +35,27 @@ export default function AdminNavbar() {
   const initials = (user?.email ?? '?').split('@')[0].slice(0, 2).toUpperCase();
 
   return (
-    <header className="h-16 border-b border-border bg-card/95 backdrop-blur-md flex items-center justify-between px-4 sm:px-6 shrink-0 sticky top-0 z-30">
-      <div className="flex items-center gap-4 min-w-0 flex-1">
+    <header className="h-14 border-b border-border bg-card/80 backdrop-blur-md flex items-center justify-between px-3 sm:px-4 shrink-0 sticky top-0 z-30">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
         <SidebarTrigger className="text-muted-foreground hover:text-foreground transition-colors" />
-        <div className="hidden sm:flex items-center gap-2 text-[13px] min-w-0">
-          <span className="text-muted-foreground">CRM</span>
-          <MSym name="chevron_right" size={16} className="text-muted-foreground/60" />
+        <div className="hidden sm:flex items-center gap-1.5 text-[12px] min-w-0">
+          <span className="text-muted-foreground/70">Workspace</span>
+          <MSym name="chevron_right" size={14} className="text-muted-foreground/50" />
           <span className="font-semibold text-foreground truncate">{currentLabel}</span>
+          <span className="ml-2 inline-flex items-center gap-1 px-2 h-5 rounded-md bg-success/15 text-success text-[10px] font-semibold uppercase tracking-wide">
+            <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+            On track
+          </span>
         </div>
 
         {/* Search */}
-        <div className="hidden md:flex items-center gap-2 ml-4 flex-1 max-w-md">
+        <div className="hidden md:flex items-center gap-2 ml-3 flex-1 max-w-md">
           <div className="relative flex-1">
-            <MSym name="search" size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <MSym name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               placeholder="Buscar leads, clientes…"
-              className="w-full h-9 pl-10 pr-3 rounded-lg bg-muted/50 border border-transparent focus:border-border-strong focus:bg-card focus:outline-none focus:ring-2 focus:ring-ring/30 text-[13px] placeholder:text-muted-foreground/70 transition-colors"
+              className="w-full h-8 pl-9 pr-3 rounded-md bg-muted/60 border border-transparent focus:border-primary/40 focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 text-[12.5px] placeholder:text-muted-foreground/70 transition-colors"
             />
           </div>
         </div>
