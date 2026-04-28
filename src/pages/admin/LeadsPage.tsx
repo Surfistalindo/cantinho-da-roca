@@ -286,6 +286,25 @@ export default function LeadsPage() {
     sortBy, sortDir, activeKpi, dateFrom, dateTo,
   ]);
 
+  // Indicador de refresh in-place ao trocar filtros/ordenação (não desmonta o scroller)
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const firstRefreshRunRef = useRef(true);
+  useEffect(() => {
+    if (firstRefreshRunRef.current) { firstRefreshRunRef.current = false; return; }
+    setIsRefreshing(true);
+    const debounceLog = window.setTimeout(() => {
+      logger.debug('[leads] filters', {
+        search, statusFilter, originFilter, recencyFilter, priorityFilter,
+        activeKpi, sortBy, sortDir,
+        dateFrom: dateFrom?.toISOString() ?? null,
+        dateTo: dateTo?.toISOString() ?? null,
+      });
+    }, 250);
+    const offTimer = window.setTimeout(() => setIsRefreshing(false), 320);
+    return () => { window.clearTimeout(debounceLog); window.clearTimeout(offTimer); };
+  }, [statusFilter, originFilter, search, recencyFilter, priorityFilter,
+      sortBy, sortDir, activeKpi, dateFrom, dateTo]);
+
   const newestId = useMemo(() => {
     if (leads.length === 0) return null;
     return [...leads].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].id;
