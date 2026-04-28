@@ -41,6 +41,8 @@ export interface UseExcelImportState {
   mappings: ColumnMapping[];
   /** Mapeamento por aba (usado internamente para normalizar). */
   mappingsBySheet: Record<string, ColumnMapping[]>;
+  /** Amostras de valores por header (até 8), mescladas de todas as abas — usado em tooltips e legendas da UI. */
+  samplesByHeader: Record<string, unknown[]>;
   defaultStrategy: DuplicateStrategy;
   normalized: NormalizedLeadRow[];
   duplicates: DuplicateMatch[];
@@ -52,6 +54,7 @@ export interface UseExcelImportState {
 
 const INITIAL: UseExcelImportState = {
   step: 'idle', file: null, parsed: null, mappings: [], mappingsBySheet: {},
+  samplesByHeader: {},
   defaultStrategy: 'skip',
   normalized: [], duplicates: [], progress: null, result: null, error: null,
   detectedTemplate: null,
