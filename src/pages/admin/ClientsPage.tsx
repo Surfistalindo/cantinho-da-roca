@@ -300,7 +300,11 @@ export default function ClientsPage() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{c.product_bought ?? '—'}</TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {c.product_bought ? (
+                            <span className={cn('tag-cell', `tag-${colorForLabel(c.product_bought)}`)}>{c.product_bought}</span>
+                          ) : <span className="text-xs text-muted-foreground">—</span>}
+                        </TableCell>
                         <TableCell className="hidden sm:table-cell text-[11px] text-muted-foreground">
                           {c.purchase_date ? (
                             <div>
