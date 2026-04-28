@@ -794,8 +794,24 @@ export default function LeadsPage() {
                         <>
                           <div
                             ref={(node) => { tableGroupScrollRefs.current[groupKey] = node; }}
-                            className="overflow-x-auto overflow-y-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full"
+                            className="overflow-x-auto overflow-y-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-sm"
                             style={{ maxHeight: 'calc(100vh - 280px)' }}
+                            tabIndex={0}
+                            role="region"
+                            aria-label={`Tabela de leads — grupo ${groupKey}`}
+                            data-refreshing={isRefreshing ? 'true' : 'false'}
+                            onKeyDown={(e) => {
+                              const tag = (e.target as HTMLElement)?.tagName;
+                              if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+                              const el = e.currentTarget;
+                              const step = Math.max(40, el.clientHeight * 0.8);
+                              if (e.key === 'PageDown') { e.preventDefault(); el.scrollBy({ top: step, behavior: 'smooth' }); }
+                              else if (e.key === 'PageUp') { e.preventDefault(); el.scrollBy({ top: -step, behavior: 'smooth' }); }
+                              else if (e.key === 'Home') { e.preventDefault(); el.scrollTo({ top: 0, behavior: 'smooth' }); }
+                              else if (e.key === 'End') { e.preventDefault(); el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); }
+                              else if (e.key === 'ArrowDown') { e.preventDefault(); el.scrollBy({ top: 48 }); }
+                              else if (e.key === 'ArrowUp') { e.preventDefault(); el.scrollBy({ top: -48 }); }
+                            }}
                           >
                             <Table>
                               {renderHeader(info.pageItems.map((i) => i.id))}
