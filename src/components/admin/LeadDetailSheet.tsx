@@ -284,7 +284,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
             {/* Por que essa prioridade */}
             {scoreInfo && scoreInfo.level !== 'closed' && scoreInfo.reasons.length > 0 && (
               <section className={cn(
-                'rounded-2xl border p-5',
+                'rounded-2xl border p-4',
                 scoreInfo.urgent ? 'bg-destructive/5 border-destructive/20' : 'bg-card border-border',
               )}>
                 <SectionLabel>Por que essa prioridade</SectionLabel>
@@ -300,7 +300,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
             )}
 
             {/* Status & Acompanhamento */}
-            <section className="rounded-2xl bg-card border border-border p-5">
+            <section className="rounded-2xl bg-card border border-border p-4">
               <SectionLabel>Status & Acompanhamento</SectionLabel>
               <div className="divide-y divide-border/60 -my-1">
                 <InfoRow label="Status atual">
@@ -330,7 +330,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
             </section>
 
             {/* Dados do contato */}
-            <section className="rounded-2xl bg-card border border-border p-5">
+            <section className="rounded-2xl bg-card border border-border p-4">
               <SectionLabel>Dados do contato</SectionLabel>
               {editing ? (
                 <div className="space-y-3">
@@ -372,7 +372,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
             </section>
 
             {/* Mensagem & Observações */}
-            <section className="rounded-2xl border border-border surface-muted p-5">
+            <section className="rounded-2xl border border-border surface-muted p-4">
               <SectionLabel>
                 <span className="inline-flex items-center gap-1.5">
                   <FontAwesomeIcon icon={faQuoteLeft} className="h-3 w-3" />
@@ -394,7 +394,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
             </section>
 
             {/* Histórico de Interações */}
-            <section className="rounded-2xl bg-card border border-border p-5">
+            <section className="rounded-2xl bg-card border border-border p-4">
               <SectionLabel>Histórico de Interações</SectionLabel>
               <InteractionTimeline entityId={lead.id} entityType="lead" />
             </section>
