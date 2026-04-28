@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { ChevronUp, Trash2, X, Tag, CalendarPlus, Copy, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import AssigneePicker from './AssigneePicker';
 
 interface Props {
   count: number;
@@ -18,11 +19,12 @@ interface Props {
   onScheduleFollowup?: (date: Date) => void;
   onCopyPhones?: () => void;
   onExport?: () => void;
+  onAssign?: (userId: string | null, name: string | null) => void;
 }
 
 export default function BulkActionsBar({
   count, onClear, onChangeStatus, onDelete,
-  onScheduleFollowup, onCopyPhones, onExport,
+  onScheduleFollowup, onCopyPhones, onExport, onAssign,
 }: Props) {
   const [calOpen, setCalOpen] = useState(false);
   if (count === 0) return null;
