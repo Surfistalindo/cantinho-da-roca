@@ -278,7 +278,7 @@ export default function LeadsPage() {
           }
         />
 
-        <div className="board-panel crm-dense-table p-3">
+        <div className="board-panel p-3 space-y-3">
           <LeadFilters
             search={search}
             onSearchChange={setSearch}
