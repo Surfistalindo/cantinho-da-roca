@@ -134,7 +134,8 @@ export default function LeadsPage() {
       .select('*')
       .order('created_at', { ascending: false });
     if (error) {
-      setFetchError(error instanceof Error ? error : new Error(error.message));
+      const err = error as { message?: string };
+      setFetchError(new Error(err.message ?? 'Erro ao carregar leads'));
     } else {
       setLeads((data as Lead[]) ?? []);
     }
