@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, ArrowRight } from 'lucide-react';
-import heroBg from '@/assets/hero-cantim-bg.webp';
+import heroBg from '@/assets/hero-cantim-clean.png';
 import heroLqip from '@/assets/hero-cantim-bg-lqip.webp';
+import logoOficial from '@/assets/logo-cantim-oficial.png';
 import { useReveal } from '@/hooks/useReveal';
 import { cn } from '@/lib/utils';
 import { Stamp } from './Stamp';
@@ -43,6 +44,7 @@ const StaticImageHero: React.FC = () => {
   const subtitle = useReveal<HTMLParagraphElement>({ threshold: 0.1 });
   const ctas = useReveal<HTMLDivElement>({ threshold: 0.1 });
   const hint = useReveal<HTMLDivElement>({ threshold: 0.1 });
+  const logo = useReveal<HTMLImageElement>({ threshold: 0.1 });
 
   const scrollToProducts = () => {
     document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' });
@@ -89,9 +91,24 @@ const StaticImageHero: React.FC = () => {
       {/* Conteúdo */}
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-end pb-16 sm:pb-24 px-6 sm:px-10 pt-28 sm:pt-32">
         <div className="w-full max-w-3xl text-center">
+          {/* Logo oficial sobreposta — posicionada bem abaixo da navbar
+              para nunca ser cortada em nenhum tamanho de tela */}
+          <img
+            ref={logo.ref}
+            src={logoOficial}
+            alt="Cantim da Roça — Produtos Naturais e Suplementos"
+            loading="eager"
+            decoding="async"
+            className={cn(
+              'mx-auto mb-6 sm:mb-8 h-auto w-[260px] sm:w-[320px] md:w-[380px] drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)] select-none',
+              reveal(logo.visible),
+            )}
+          />
+
           <span
             ref={badge.ref}
             className={cn('inline-block', reveal(badge.visible))}
+            style={{ transitionDelay: '60ms' }}
           >
             <Stamp className="text-base text-honey">
               <LeafAccent className="h-4 w-4 text-moss" />
