@@ -93,7 +93,7 @@ const TABS = [
   { key: 'overview', label: 'Visão geral', icon: 'dashboard' },
   { key: 'funnel', label: 'Funil & Velocidade', icon: 'filter_alt' },
   { key: 'channels', label: 'Canais', icon: 'hub' },
-  { key: 'activity', label: 'Atividade & Retenção', icon: 'pulse' },
+  { key: 'activity', label: 'Atividade & Retenção', icon: 'monitor_heart' },
 ] as const;
 type TabKey = (typeof TABS)[number]['key'];
 
