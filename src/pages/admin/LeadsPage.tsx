@@ -305,46 +305,51 @@ export default function LeadsPage() {
             emptyDescription="Aguarde novos cadastros pelo site ou crie um lead manualmente."
           >
             <>
-              {/* Desktop */}
-              <div className="hidden md:block overflow-x-auto -mx-5">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent border-border">
-                      <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Lead</TableHead>
-                      <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Origem</TableHead>
-                      <TableHead className="hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Interesse</TableHead>
-                      <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Status</TableHead>
-                      <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Prioridade</TableHead>
-                      <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Recência</TableHead>
-                      <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
-                        <button
-                          onClick={toggleSort}
-                          className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors uppercase"
-                          title={sortBy === 'score' ? 'Ordenado por prioridade' : 'Ordenado por data'}
-                        >
-                          {sortBy === 'score' ? 'Prioridade' : 'Entrada'}
-                          <FontAwesomeIcon
-                            icon={sortDir === 'desc' ? faArrowDownShortWide : faArrowUpShortWide}
-                            className="h-3 w-3"
-                          />
-                        </button>
-                      </TableHead>
-                      <TableHead className="w-[120px] text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filtered.map((lead, idx) => {
+              {/* Desktop — agrupado por status estilo Monday */}
+              <div className="hidden md:block space-y-2">
+                {(() => {
+                  const renderHeader = () => (
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent border-border">
+                        <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground min-w-[240px]">Lead</TableHead>
+                        <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Origem</TableHead>
+                        <TableHead className="hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[200px]">Interesse</TableHead>
+                        <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px]">Status</TableHead>
+                        <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[120px]">Prioridade</TableHead>
+                        <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Recência</TableHead>
+                        <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[100px]">
+                          <button
+                            onClick={toggleSort}
+                            className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors uppercase"
+                            title={sortBy === 'score' ? 'Ordenado por prioridade' : 'Ordenado por data'}
+                          >
+                            {sortBy === 'score' ? 'Prioridade' : 'Entrada'}
+                            <FontAwesomeIcon
+                              icon={sortDir === 'desc' ? faArrowDownShortWide : faArrowUpShortWide}
+                              className="h-3 w-3"
+                            />
+                          </button>
+                        </TableHead>
+                        <TableHead className="w-[120px] text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                  );
+
+                  const renderRows = (items: typeof filtered) =>
+                    items.map((lead) => {
                       const isNewest = lead.id === newestId;
                       const score = getLeadScore(lead, { interactionCount: interactionCounts[lead.id] ?? 0 });
                       return (
                         <TableRow
                           key={lead.id}
+                          tabIndex={0}
                           className={cn(
-                            'group cursor-pointer border-border/60',
+                            'group cursor-pointer border-border/60 outline-none',
                             isNewest && '!bg-primary/5 hover:!bg-primary/10',
                             score.urgent && 'border-l-2 border-l-destructive',
                           )}
                           onClick={() => openDetail(lead)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') openDetail(lead); }}
                         >
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-3">
@@ -417,9 +422,44 @@ export default function LeadsPage() {
                           </TableCell>
                         </TableRow>
                       );
-                    })}
-                  </TableBody>
-                </Table>
+                    });
+
+                  const renderGroup = (items: typeof filtered) => (
+                    <div className="overflow-x-auto crm-dense-table">
+                      <Table>
+                        {renderHeader()}
+                        <TableBody>{renderRows(items)}</TableBody>
+                      </Table>
+                    </div>
+                  );
+
+                  return (
+                    <>
+                      {STATUS_GROUPS.map((g) => {
+                        const items = grouped.map[g.key];
+                        if (items.length === 0) return null;
+                        const todayCount = items.filter((l) => isToday(l.created_at)).length;
+                        return (
+                          <GroupSection
+                            key={g.key}
+                            title={g.title}
+                            count={items.length}
+                            color={g.color}
+                            defaultOpen={g.key !== 'lost'}
+                            meta={todayCount > 0 ? `${todayCount} hoje` : undefined}
+                          >
+                            {renderGroup(items)}
+                          </GroupSection>
+                        );
+                      })}
+                      {grouped.other.length > 0 && (
+                        <GroupSection title="Outros" count={grouped.other.length} color="neutral" defaultOpen={false}>
+                          {renderGroup(grouped.other)}
+                        </GroupSection>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
 
               {/* Mobile */}
