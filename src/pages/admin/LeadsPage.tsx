@@ -679,7 +679,7 @@ export default function LeadsPage() {
                                 />
                               </button>
                             </TableHead>
-                            <TableHead scope="col" className="w-[140px] text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Ações</TableHead>
+                            <TableHead scope="col" className={cn('text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground', density === 'compact' ? 'w-[80px]' : 'w-[140px]')}>Ações</TableHead>
                           </TableRow>
                         </TableHeader>
                       );
