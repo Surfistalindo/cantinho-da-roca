@@ -112,7 +112,7 @@ export default function MondaySidebar() {
     b.kind === 'route' && b.route_path ? b.route_path : `/admin/boards/${b.id}`;
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
+    <Sidebar collapsible="icon" data-tour="sidebar" className="border-r border-sidebar-border bg-sidebar">
       {/* Product header */}
       <SidebarHeader className="px-3 pt-3 pb-3 border-b border-sidebar-border bg-sidebar-accent/20">
         <div className={cn('flex items-center gap-2.5', collapsed && 'justify-center')}>

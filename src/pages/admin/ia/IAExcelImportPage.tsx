@@ -74,10 +74,12 @@ export default function IAExcelImportPage() {
     >
       <TooltipProvider delayDuration={150}>
       {/* ============= BANNER PERSISTENTE DE HISTÓRICO ============= */}
-      <ImportHistoryBanner />
+      <div data-tour="excel-history">
+        <ImportHistoryBanner />
+      </div>
 
       {/* ============= STEPPER ============= */}
-      <div className="mb-6 rounded-2xl border bg-card p-4 sm:p-5">
+      <div data-tour="excel-stepper" className="mb-6 rounded-2xl border bg-card p-4 sm:p-5">
         <div className="flex items-center justify-between mb-3 gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <span className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
@@ -143,7 +145,9 @@ export default function IAExcelImportPage() {
 
       {/* ============= ETAPA 1 — UPLOAD ============= */}
       {state.step === 'idle' && (
-        <ExcelDropzone onFile={im.handleFile} />
+        <div data-tour="excel-dropzone">
+          <ExcelDropzone onFile={im.handleFile} />
+        </div>
       )}
 
       {/* ============= ETAPA 2 — PARSING ============= */}

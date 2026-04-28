@@ -8,6 +8,9 @@ import ShortcutsHelp from './ShortcutsHelp';
 import { TelemetryErrorBoundary } from '@/components/admin/TelemetryErrorBoundary';
 import { useEnsureDefaultWorkspaces } from '@/hooks/useEnsureDefaultWorkspaces';
 import { useGlobalShortcuts } from '@/hooks/useGlobalShortcuts';
+import { TutorialProvider } from '@/components/tutorial/TutorialProvider';
+import HelpButton from '@/components/tutorial/HelpButton';
+import TourOverlay from '@/components/tutorial/TourOverlay';
 
 export default function CrmLayout() {
   useEnsureDefaultWorkspaces();
@@ -22,25 +25,29 @@ export default function CrmLayout() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background font-crm text-foreground">
-        <MondaySidebar />
-        <div className="flex-1 flex flex-col min-w-0 crm-paper-bg">
-          <AdminNavbar onOpenPalette={() => setPaletteOpen(true)} />
-          <main className="flex-1 overflow-y-auto min-w-0">
-            <div className="px-3 sm:px-5 lg:px-7 py-4 sm:py-6 max-w-[1600px] mx-auto w-full min-w-0 crm-stagger">
-              <TelemetryErrorBoundary scope="admin-route">
-                <Outlet />
-              </TelemetryErrorBoundary>
-            </div>
-          </main>
+      <TutorialProvider>
+        <div className="min-h-screen flex w-full bg-background font-crm text-foreground">
+          <MondaySidebar />
+          <div className="flex-1 flex flex-col min-w-0 crm-paper-bg">
+            <AdminNavbar onOpenPalette={() => setPaletteOpen(true)} />
+            <main className="flex-1 overflow-y-auto min-w-0">
+              <div className="px-3 sm:px-5 lg:px-7 py-4 sm:py-6 max-w-[1600px] mx-auto w-full min-w-0 crm-stagger">
+                <TelemetryErrorBoundary scope="admin-route">
+                  <Outlet />
+                </TelemetryErrorBoundary>
+              </div>
+            </main>
+          </div>
         </div>
-      </div>
-      <CommandPalette
-        open={paletteOpen}
-        onOpenChange={setPaletteOpen}
-        onNewLead={() => window.dispatchEvent(new CustomEvent('crm:new-lead'))}
-      />
-      <ShortcutsHelp open={helpOpen} onOpenChange={setHelpOpen} />
+        <CommandPalette
+          open={paletteOpen}
+          onOpenChange={setPaletteOpen}
+          onNewLead={() => window.dispatchEvent(new CustomEvent('crm:new-lead'))}
+        />
+        <ShortcutsHelp open={helpOpen} onOpenChange={setHelpOpen} />
+        <HelpButton onOpenShortcuts={() => setHelpOpen(true)} />
+        <TourOverlay />
+      </TutorialProvider>
     </SidebarProvider>
   );
 }
