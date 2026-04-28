@@ -969,16 +969,17 @@ export default function LeadsPage() {
                           const showSizer = !sizerShown;
                           sizerShown = true;
                           return (
-                            <GroupSection
-                              key={g.key}
-                              title={g.title}
-                              count={items.length}
-                              color={g.color}
-                              defaultOpen={g.key !== 'lost'}
-                              meta={todayCount > 0 ? `${todayCount} hoje` : undefined}
-                            >
-                              {renderGroup(items, g.key, showSizer)}
-                            </GroupSection>
+                            <DroppableGroupHeader key={g.key} status={g.key}>
+                              <GroupSection
+                                title={g.title}
+                                count={items.length}
+                                color={g.color}
+                                defaultOpen={g.key !== 'lost'}
+                                meta={todayCount > 0 ? `${todayCount} hoje` : undefined}
+                              >
+                                {renderGroup(items, g.key, showSizer)}
+                              </GroupSection>
+                            </DroppableGroupHeader>
                           );
                         })}
                         {grouped.other.length > 0 && (
