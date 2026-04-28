@@ -264,6 +264,14 @@ export default function LeadsPage() {
     return { map, other };
   }, [filtered]);
 
+  // Paginação por grupo
+  const paged = useLeadsPaged();
+  // Reseta páginas quando filtros/busca/ordenação mudam
+  useResetPagesOn(paged.resetAll, [
+    statusFilter, originFilter, search, recencyFilter, priorityFilter,
+    sortBy, sortDir, activeKpi,
+  ]);
+
   const newestId = useMemo(() => {
     if (leads.length === 0) return null;
     return [...leads].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].id;
