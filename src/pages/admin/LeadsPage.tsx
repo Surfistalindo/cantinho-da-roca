@@ -484,16 +484,19 @@ export default function LeadsPage() {
             <div ref={searchInputRef} className="flex-1 min-w-0">
               <LeadFilters
                 search={search}
-                onSearchChange={setSearch}
+                onSearchChange={(v) => url.set({ search: v })}
                 statusFilter={statusFilter}
-                onStatusChange={setStatusFilter}
+                onStatusChange={(v) => url.set({ status: v })}
                 originFilter={originFilter}
-                onOriginChange={setOriginFilter}
+                onOriginChange={(v) => url.set({ origin: v })}
                 recencyFilter={recencyFilter}
                 onRecencyChange={updateRecency}
                 priorityFilter={priorityFilter}
                 onPriorityChange={updatePriority}
                 availableOrigins={availableOrigins}
+                dateFrom={dateFrom}
+                dateTo={dateTo}
+                onDateRangeChange={(f, t) => url.set({ from: f, to: t })}
               />
             </div>
             <SavedFiltersMenu
