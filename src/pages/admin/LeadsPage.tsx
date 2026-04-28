@@ -56,6 +56,7 @@ interface Lead {
   last_contact_at: string | null;
   next_contact_at: string | null;
   notes: string | null;
+  assigned_to?: string | null;
 }
 
 type SortDir = 'desc' | 'asc';
