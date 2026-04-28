@@ -40,9 +40,10 @@ const IA_SUB_LABELS: Record<string, string> = {
 
 interface Props {
   onOpenPalette?: () => void;
+  onShowHelp?: () => void;
 }
 
-export default function AdminNavbar({ onOpenPalette }: Props) {
+export default function AdminNavbar({ onOpenPalette, onShowHelp }: Props) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
