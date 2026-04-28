@@ -653,12 +653,12 @@ export default function LeadsPage() {
                                 aria-label={`Selecionar todos os ${groupIds.length} leads visíveis deste grupo`}
                               />
                             </TableHead>
-                            <TableHead scope="col" className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground min-w-[240px]">Lead</TableHead>
-                            <TableHead scope="col" className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Origem</TableHead>
-                            <TableHead scope="col" className="hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[200px]">Interesse</TableHead>
-                            <TableHead scope="col" className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px]">Status</TableHead>
+                            <TableHead scope="col" className={cn('text-[11px] uppercase tracking-wider font-semibold text-muted-foreground', density === 'compact' ? 'min-w-[160px]' : 'min-w-[240px]')}>Lead</TableHead>
+                            <TableHead scope="col" className={cn('hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]', density === 'compact' && 'lg:hidden')}>Origem</TableHead>
+                            <TableHead scope="col" className={cn('hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[200px]', density === 'compact' && 'xl:hidden')}>Interesse</TableHead>
+                            <TableHead scope="col" className={cn('text-[11px] uppercase tracking-wider font-semibold text-muted-foreground', density === 'compact' ? 'w-[120px]' : 'w-[160px]')}>Status</TableHead>
                             <TableHead scope="col" className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[120px]">Prioridade</TableHead>
-                            <TableHead scope="col" className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Recência</TableHead>
+                            <TableHead scope="col" className={cn('hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]', density === 'compact' && 'lg:hidden')}>Recência</TableHead>
                             <TableHead
                               scope="col"
                               aria-sort={sortBy === 'score' ? 'none' : (sortDir === 'desc' ? 'descending' : 'ascending')}
