@@ -67,100 +67,172 @@
     --font-body: 'DM Sans', sans-serif;
   }
 
-  /* CRM — Light "Monday Work Management" palette.
-     White panels, soft grey background, vivid solid status cells. Scoped to .font-crm only. */
+  /* ============================================================
+     CRM — "Atelier OS" direction (Linear + Vercel + Notion + Cantim).
+     Editorial, dense, refined. Light mode default.
+     ============================================================ */
   .font-crm {
-    /* Surface ladder — Monday Work Management exato */
-    --background: 220 23% 97%;                   /* #f6f7fb page bg */
-    --foreground: 230 12% 17%;                   /* #323338 primary text Monday */
+    /* Surface ladder — paper neutrals */
+    --background: 220 25% 98%;                   /* page bg "paper" */
+    --foreground: 222 18% 14%;                   /* primary text */
     --card: 0 0% 100%;                           /* white panels */
-    --card-foreground: 230 12% 17%;
+    --card-foreground: 222 18% 14%;
     --popover: 0 0% 100%;
-    --popover-foreground: 230 12% 17%;
-    --muted: 225 23% 97%;                        /* #f5f6f8 row hover */
-    --muted-foreground: 228 11% 47%;             /* #676879 secondary text Monday */
-    --accent: 220 22% 94%;                       /* #e6e9ef */
-    --accent-foreground: 230 14% 14%;
-    --border: 228 18% 85%;                       /* #d0d4e4 Monday divider */
-    --input: 228 18% 82%;
-    --radius: 0.375rem;
+    --popover-foreground: 222 18% 14%;
+    --muted: 220 22% 96%;                        /* row hover */
+    --muted-foreground: 222 11% 44%;             /* secondary text */
+    --accent: 220 22% 94%;
+    --accent-foreground: 222 18% 12%;
+    --border: 220 14% 90%;                       /* hairline default */
+    --input: 220 14% 86%;
+    --radius: 0.5rem;
 
-    /* Brand — Monday blue */
-    --primary: 212 100% 46%;                     /* #0073ea */
+    /* Brand — Monday blue stays for primary actions; moss is brand voice */
+    --primary: 212 95% 46%;                      /* #0073ea */
     --primary-foreground: 0 0% 100%;
     --primary-container: 212 95% 92%;
     --primary-container-foreground: 212 100% 26%;
 
-    --secondary: 220 18% 94%;                    /* neutral surface btn */
+    --secondary: 220 18% 95%;
     --secondary-foreground: 222 20% 22%;
     --secondary-container: 220 18% 96%;
     --secondary-container-foreground: 222 26% 14%;
 
-    --tertiary: 188 80% 45%;                     /* cyan accent */
+    --tertiary: 188 80% 45%;
     --tertiary-foreground: 0 0% 100%;
     --tertiary-container: 188 70% 92%;
     --tertiary-container-foreground: 188 80% 22%;
 
     --neutral: 220 10% 60%;
     --neutral-foreground: 222 26% 14%;
-    --ring: 212 100% 46%;
+    --ring: 212 95% 46%;
 
-    /* Surface ladder — white → progressively cooler greys */
+    /* Surface ladder — fine cool greys */
+    --surface-0: 220 25% 98%;
     --surface-1: 0 0% 100%;
-    --surface-2: 220 20% 98%;
-    --surface-3: 220 18% 96%;
-    --surface-4: 220 16% 93%;
+    --surface-2: 220 22% 97%;
+    --surface-3: 220 20% 95%;
+    --surface-4: 220 18% 92%;
+    --surface-sunken: 220 22% 95%;
     --elevated: 0 0% 100%;
-    --border-strong: 220 14% 80%;
+
+    /* Hairlines & strong borders */
+    --hairline: 220 14% 91%;
+    --hairline-strong: 220 14% 82%;
+    --border-strong: 220 14% 82%;
+
+    /* Shadows — paper-like, restrained */
+    --shadow-xs: 0 1px 0 0 hsl(220 25% 14% / 0.04);
+    --shadow-sm: 0 1px 2px 0 hsl(220 25% 14% / 0.05), 0 1px 1px 0 hsl(220 25% 14% / 0.04);
+    --shadow-md: 0 4px 12px -4px hsl(220 25% 14% / 0.08), 0 1px 2px hsl(220 25% 14% / 0.04);
+    --shadow-pop: 0 16px 32px -16px hsl(220 25% 14% / 0.18), 0 4px 12px -4px hsl(220 25% 14% / 0.08);
+
+    /* Brand voice colors (used sparingly for editorial accents) */
+    --accent-brand: 152 38% 36%;                 /* moss profundo Cantim */
+    --accent-warm: 38 88% 56%;                   /* honey */
 
     /* Status — Monday-style vivid solids */
-    --success: 152 100% 39%;                     /* #00c875 verde "concluído" */
+    --success: 152 100% 39%;
     --success-foreground: 0 0% 100%;
     --success-soft: 152 70% 92%;
-    --warning: 32 98% 62%;                       /* #fdab3d laranja "pausado" */
+    --warning: 32 98% 62%;
     --warning-foreground: 30 80% 14%;
     --warning-soft: 32 95% 94%;
-    --info: 199 100% 38%;                        /* #0086c0 azul "em andamento" */
+    --info: 199 100% 38%;
     --info-foreground: 0 0% 100%;
     --info-soft: 199 90% 94%;
-    --destructive: 350 75% 57%;                  /* #e2445c vermelho "não iniciado" */
+    --destructive: 350 75% 57%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Status cells (Monday solid colors — a célula inteira é pintada) */
-    --status-done: 152 100% 39%;                 /* #00c875 verde */
-    --status-progress: 199 100% 38%;             /* #0086c0 azul */
-    --status-blocked: 350 75% 57%;               /* #e2445c vermelho */
-    --status-paused: 32 98% 62%;                 /* #fdab3d laranja */
-    --status-working: 217 100% 60%;              /* #579bfc azul claro */
-    --status-review: 268 65% 62%;                /* #a25ddc roxo */
-    --status-neutral: 220 10% 75%;               /* #c4c4c4 cinza */
+    /* Status cells (Monday solid colors) */
+    --status-done: 152 100% 39%;
+    --status-progress: 199 100% 38%;
+    --status-blocked: 350 75% 57%;
+    --status-paused: 32 98% 62%;
+    --status-working: 217 100% 60%;
+    --status-review: 268 65% 62%;
+    --status-neutral: 220 10% 75%;
 
-    /* Tag palette — pílulas coloridas (Setor / Frente / Origem) Monday-style */
-    --tag-blue: 217 100% 60%;                    /* #579bfc */
+    /* Tag palette — colored pills */
+    --tag-blue: 217 100% 60%;
     --tag-cyan: 188 85% 50%;
-    --tag-green: 152 70% 45%;                    /* #00c875 */
-    --tag-yellow: 45 100% 56%;                   /* #ffcb00 */
-    --tag-orange: 32 98% 62%;                    /* #fdab3d */
-    --tag-red: 350 75% 57%;                      /* #e2445c */
-    --tag-pink: 332 100% 55%;                    /* #ff158a */
-    --tag-purple: 268 65% 62%;                   /* #a25ddc */
+    --tag-green: 152 70% 45%;
+    --tag-yellow: 45 100% 56%;
+    --tag-orange: 32 98% 62%;
+    --tag-red: 350 75% 57%;
+    --tag-pink: 332 100% 55%;
+    --tag-purple: 268 65% 62%;
     --tag-indigo: 240 60% 62%;
     --tag-teal: 172 70% 42%;
 
-    /* Sidebar — branca estilo Monday */
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 14% 35%;           /* #4f5466 */
-    --sidebar-primary: 212 100% 46%;             /* azul barra ativa */
+    /* Sidebar — paper white, Linear-feel */
+    --sidebar-background: 220 24% 99%;
+    --sidebar-foreground: 222 14% 32%;
+    --sidebar-primary: 212 95% 46%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 22% 94%;               /* #e6e9ef item ativo bg */
-    --sidebar-accent-foreground: 222 28% 12%;    /* texto preto bold no item ativo */
-    --sidebar-border: 220 15% 92%;
-    --sidebar-ring: 212 100% 46%;
+    --sidebar-accent: 220 22% 94%;
+    --sidebar-accent-foreground: 222 28% 10%;
+    --sidebar-border: 220 14% 91%;
+    --sidebar-ring: 212 95% 46%;
 
-    /* Typography roles */
-    --font-crm-display: 'Be Vietnam Pro', sans-serif;
-    --font-crm-body: 'Public Sans', sans-serif;
-    --font-crm-label: 'Epilogue', sans-serif;
+    /* Typography roles — Atelier OS */
+    --font-crm-display: 'Fraunces', 'Recoleta', Georgia, serif;
+    --font-crm-body: 'Geist', 'Public Sans', system-ui, sans-serif;
+    --font-crm-label: 'Geist', 'Epilogue', sans-serif;
+    --font-crm-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-crm-hand: 'Caveat', cursive;
+  }
+
+  /* ============================================================
+     CRM — Focus Dark mode (editorial dark, not pure black).
+     Activated by [data-crm-theme="dark"] on <html>.
+     ============================================================ */
+  [data-crm-theme="dark"] .font-crm {
+    --background: 220 24% 8%;
+    --foreground: 220 14% 90%;
+    --card: 220 22% 11%;
+    --card-foreground: 220 14% 92%;
+    --popover: 220 22% 12%;
+    --popover-foreground: 220 14% 92%;
+    --muted: 220 18% 15%;
+    --muted-foreground: 220 10% 62%;
+    --accent: 220 18% 18%;
+    --accent-foreground: 220 14% 92%;
+    --border: 220 14% 18%;
+    --input: 220 14% 22%;
+
+    --primary: 212 100% 60%;
+    --primary-foreground: 220 24% 8%;
+
+    --surface-0: 220 24% 8%;
+    --surface-1: 220 22% 11%;
+    --surface-2: 220 22% 13%;
+    --surface-3: 220 20% 16%;
+    --surface-4: 220 18% 20%;
+    --surface-sunken: 220 26% 7%;
+    --elevated: 220 22% 13%;
+
+    --hairline: 220 14% 18%;
+    --hairline-strong: 220 12% 26%;
+    --border-strong: 220 12% 26%;
+
+    --shadow-xs: 0 1px 0 0 hsl(0 0% 0% / 0.3);
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.35), 0 1px 1px 0 hsl(0 0% 0% / 0.25);
+    --shadow-md: 0 4px 12px -4px hsl(0 0% 0% / 0.45), 0 1px 2px hsl(0 0% 0% / 0.35);
+    --shadow-pop: 0 16px 32px -16px hsl(0 0% 0% / 0.6), 0 4px 12px -4px hsl(0 0% 0% / 0.4);
+
+    --success-soft: 152 30% 16%;
+    --warning-soft: 32 30% 18%;
+    --info-soft: 199 35% 16%;
+
+    --sidebar-background: 220 26% 9%;
+    --sidebar-foreground: 220 12% 75%;
+    --sidebar-primary: 212 100% 62%;
+    --sidebar-primary-foreground: 220 24% 8%;
+    --sidebar-accent: 220 20% 15%;
+    --sidebar-accent-foreground: 220 14% 95%;
+    --sidebar-border: 220 14% 17%;
+    --sidebar-ring: 212 100% 62%;
   }
 
   .dark {
