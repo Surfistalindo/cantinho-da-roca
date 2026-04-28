@@ -853,6 +853,12 @@ export default function LeadsPage() {
                       const info = paged.paginate(items, groupKey);
                       return (
                         <>
+                          {density !== 'compact' && (
+                            <div className="flex items-center justify-end gap-1.5 px-1 pb-1 text-[11px] text-muted-foreground/70">
+                              <kbd className="px-1.5 py-0.5 rounded border border-border bg-muted font-mono text-[10px]">Shift</kbd>
+                              <span>+ rolar para arrastar lateralmente</span>
+                            </div>
+                          )}
                           <div
                             ref={(node) => { tableGroupScrollRefs.current[groupKey] = node; }}
                             className={cn(
