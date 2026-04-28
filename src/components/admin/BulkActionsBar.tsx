@@ -62,6 +62,14 @@ export default function BulkActionsBar({
           </DropdownMenuContent>
         </DropdownMenu>
 
+        {onAssign && (
+          <AssigneePicker
+            triggerLabel="Atribuir"
+            triggerSrLabel={`Atribuir responsável a ${count} lead(s)`}
+            onSelect={onAssign}
+          />
+        )}
+
         {onScheduleFollowup && (
           <Popover open={calOpen} onOpenChange={setCalOpen}>
             <PopoverTrigger asChild>
