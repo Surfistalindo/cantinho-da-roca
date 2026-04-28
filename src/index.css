@@ -613,7 +613,10 @@
      a tabela tem scroll lateral, pois o usuário só percebe ao chegar no
      fim. Forçamos uma trilha persistente, fina e elegante. */
   .font-crm .crm-x-scroll-always {
+    /* Reserva espaço para a scrollbar vertical também, evitando que ela
+       se sobreponha à última coluna ("Ações") quando há scroll-y. */
     scrollbar-gutter: stable;
+    padding-right: 2px;
   }
   .font-crm .crm-x-scroll-always::-webkit-scrollbar {
     height: 10px;  /* eixo X */
