@@ -796,6 +796,143 @@
   /* Helper barato: força min-width:0 em filho flex/grid (causa raiz
      de tabelas largas que esticam o container pai). */
   .min-w-0-safe { min-width: 0; }
+
+  /* ──────────────────────────────────────────────────────────────
+   * CRM Redesign 2026 — utilitários premium (Linear/Vercel/Notion).
+   * Tokens documentados em mem://design/crm-redesign-2026.
+   * ────────────────────────────────────────────────────────────── */
+
+  /* Scrollbar refinada (8px, hover 10px) — opt-in via classe */
+  .crm-scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--hairline-strong) / 0.6) transparent;
+  }
+  .crm-scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .crm-scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .crm-scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--hairline-strong) / 0.5);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background-color 180ms cubic-bezier(.2,.8,.2,1);
+  }
+  .crm-scrollbar-thin:hover::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--hairline-strong) / 0.85);
+  }
+  .crm-scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.6);
+  }
+
+  /* Focus-ring premium dentro do CRM (substitui halos default duplos) */
+  .font-crm :where(button, a, [role="button"], [role="combobox"], [role="switch"], input, textarea, select):focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.35);
+    border-radius: 0.375rem;
+  }
+  /* Inputs/combobox preservam border + ganham ring leve */
+  .font-crm :where(input, textarea, [role="combobox"]):focus-visible {
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.25), inset 0 0 0 1px hsl(var(--ring) / 0.7);
+  }
+
+  /* Skeleton premium — shimmer 1.4s entre surface-2 → surface-3 → surface-2 */
+  .crm-skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: hsl(var(--surface-2));
+    border-radius: 0.375rem;
+  }
+  .crm-skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--surface-3) / 0.85) 50%,
+      transparent 100%
+    );
+    animation: crm-skeleton-shimmer 1.4s cubic-bezier(.2,.8,.2,1) infinite;
+  }
+  @keyframes crm-skeleton-shimmer {
+    100% { transform: translateX(100%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .crm-skeleton::after { animation: none; }
+    .crm-skeleton { opacity: 0.85; }
+  }
+
+  /* Pinned columns — preparados para Fase 3 (Leads comfortable) */
+  .font-crm .crm-pin-left {
+    position: sticky;
+    left: 0;
+    z-index: 4;
+    background-color: hsl(var(--card));
+    box-shadow: 1px 0 0 0 hsl(var(--hairline));
+  }
+  .font-crm .crm-pin-right {
+    position: sticky;
+    right: 0;
+    z-index: 4;
+    background-color: hsl(var(--card));
+    box-shadow: -1px 0 0 0 hsl(var(--hairline));
+  }
+  .font-crm thead .crm-pin-left,
+  .font-crm thead .crm-pin-right {
+    z-index: 6;
+    background-color: hsl(var(--surface-3));
+  }
+  .font-crm tbody tr:hover .crm-pin-left,
+  .font-crm tbody tr:hover .crm-pin-right {
+    background-color: hsl(var(--muted) / 0.85);
+  }
+
+  /* Hover affordance — quick actions de linha aparecem só no hover/focus */
+  .font-crm .board-table tbody tr,
+  .font-crm .crm-dense-table table tbody tr {
+    --row-actions-opacity: 0;
+  }
+  .font-crm .board-table tbody tr:hover,
+  .font-crm .board-table tbody tr:focus-within,
+  .font-crm .crm-dense-table table tbody tr:hover,
+  .font-crm .crm-dense-table table tbody tr:focus-within {
+    --row-actions-opacity: 1;
+  }
+  .crm-row-actions {
+    opacity: var(--row-actions-opacity, 1);
+    transition: opacity 180ms cubic-bezier(.2,.8,.2,1);
+  }
+  @media (hover: none) {
+    .font-crm .board-table tbody tr,
+    .font-crm .crm-dense-table table tbody tr {
+      --row-actions-opacity: 1;
+    }
+  }
+
+  /* Hairline card — Linear/Vercel feel, sem border (1px box-shadow) */
+  .font-crm .surface-card--hair {
+    background-color: hsl(var(--card));
+    border-radius: 0.5rem;
+    box-shadow:
+      0 0 0 1px hsl(var(--hairline)),
+      0 1px 2px hsl(220 25% 14% / 0.04);
+    transition: box-shadow 180ms cubic-bezier(.2,.8,.2,1),
+                transform 180ms cubic-bezier(.2,.8,.2,1);
+  }
+  .font-crm .surface-card--hair.is-interactive:hover {
+    box-shadow:
+      0 0 0 1px hsl(var(--hairline-strong)),
+      0 8px 24px -8px hsl(220 25% 14% / 0.12),
+      0 2px 4px -2px hsl(220 25% 14% / 0.06);
+    transform: translateY(-1px);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .font-crm .surface-card--hair { transition: none; }
+    .font-crm .surface-card--hair.is-interactive:hover { transform: none; }
+  }
 }
 
 /* GPU compositing for shader canvases */
