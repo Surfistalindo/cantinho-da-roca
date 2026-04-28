@@ -94,19 +94,6 @@ const StaticImageHero: React.FC = () => {
         style={{ paddingTop: 'max(6rem, env(safe-area-inset-top) + 4rem)' }}
       >
         <div className="w-full max-w-3xl text-center">
-          {/* Logo oficial sobreposta — escala fluida que nunca corta nem encosta na navbar */}
-          <img
-            ref={logo.ref}
-            src={logoOficial}
-            alt="Cantim da Roça — Produtos Naturais e Suplementos"
-            loading="eager"
-            decoding="async"
-            className={cn(
-              'mx-auto mb-4 sm:mb-6 md:mb-8 h-auto max-h-[18vh] sm:max-h-[22vh] object-contain drop-shadow-[0_4px_14px_rgba(0,0,0,0.4)] sm:drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)] select-none',
-              reveal(logo.visible),
-            )}
-            style={{ width: 'clamp(170px, 38vw, 360px)' }}
-          />
 
           <span
             ref={badge.ref}
