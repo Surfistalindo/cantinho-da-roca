@@ -14,6 +14,7 @@ import NewLeadDialog from '@/components/admin/NewLeadDialog';
 import PageHeader from '@/components/admin/PageHeader';
 import EmptyState from '@/components/admin/EmptyState';
 import LoadingState from '@/components/admin/LoadingState';
+import ListState from '@/components/admin/ListState';
 import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
 import InitialsAvatar from '@/components/admin/InitialsAvatar';
 import LeadScoreBadge from '@/components/admin/LeadScoreBadge';
@@ -53,6 +54,7 @@ export default function LeadsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<Error | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [originFilter, setOriginFilter] = useState('all');
@@ -126,11 +128,16 @@ export default function LeadsPage() {
   };
 
   const fetchLeads = useCallback(async () => {
-    const { data } = await supabase
+    setFetchError(null);
+    const { data, error } = await supabase
       .from('leads')
       .select('*')
       .order('created_at', { ascending: false });
-    setLeads((data as Lead[]) ?? []);
+    if (error) {
+      setFetchError(error instanceof Error ? error : new Error(error.message));
+    } else {
+      setLeads((data as Lead[]) ?? []);
+    }
     setLoading(false);
   }, []);
 
