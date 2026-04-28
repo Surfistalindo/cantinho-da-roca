@@ -227,6 +227,13 @@ export default function LeadsPage() {
     return Array.from(map.values()).sort((a, b) => a.localeCompare(b, 'pt-BR'));
   }, [leads]);
 
+  // Lookup id → { name, status } usado pelo DnD da tabela.
+  const leadIndex = useMemo(() => {
+    const map: Record<string, { name: string; status: string }> = {};
+    for (const l of leads) map[l.id] = { name: l.name, status: l.status };
+    return map;
+  }, [leads]);
+
   const filtered = useMemo(() => {
     const list = leads.filter((l) => {
       if (statusFilter !== 'all' && l.status !== statusFilter) return false;
