@@ -339,7 +339,11 @@ export default function LeadsPage() {
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell className="hidden lg:table-cell text-xs text-muted-foreground">{lead.origin ?? '—'}</TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            {lead.origin ? (
+                              <span className={cn('tag-cell', `tag-${colorForLabel(lead.origin)}`)}>{lead.origin}</span>
+                            ) : <span className="text-xs text-muted-foreground">—</span>}
+                          </TableCell>
                           <TableCell className="hidden xl:table-cell text-xs text-muted-foreground max-w-[200px] truncate">
                             {lead.product_interest ?? '—'}
                           </TableCell>
