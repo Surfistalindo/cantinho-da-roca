@@ -194,30 +194,45 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
             <div className="flex items-start gap-4">
               <InitialsAvatar name={lead.name} size="lg" />
               <div className="min-w-0 flex-1">
-                <SheetTitle className="text-xl font-semibold tracking-tight flex flex-wrap items-center gap-2">
-                  <span className="truncate">{lead.name}</span>
-                  <LeadStatusBadge status={lead.status} />
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent className="overflow-y-auto sm:max-w-xl p-0 flex flex-col bg-muted/30">
+          {/* HEADER */}
+          <SheetHeader className="px-7 pt-7 pb-6 border-b border-border bg-card sticky top-0 z-10 space-y-0">
+            <div className="flex items-start gap-4">
+              <InitialsAvatar name={lead.name} size="lg" />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <SheetTitle className="text-[22px] leading-tight font-semibold tracking-tight truncate">
+                      {lead.name}
+                    </SheetTitle>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-muted-foreground">
+                      {lead.phone && (
+                        <span className="inline-flex items-center gap-1.5">
+                          <FontAwesomeIcon icon={faPhone} className="h-3 w-3" />
+                          <span className="font-medium font-mono">{lead.phone}</span>
+                        </span>
+                      )}
+                      {lead.phone && <span className="text-border">·</span>}
+                      <span className="text-muted-foreground/80">há {createdRelative}</span>
+                    </div>
+                  </div>
                   <LeadScoreBadge lead={lead} interactionCount={interactionCount} size="md" />
-                  {lead.cadence_exhausted && (
-                    <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-destructive/10 text-destructive border border-destructive/20">
-                      Régua esgotada
-                    </span>
-                  )}
-                </SheetTitle>
-                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
-                  {lead.phone && (
-                    <span className="inline-flex items-center gap-1.5">
-                      <FontAwesomeIcon icon={faPhone} className="h-3 w-3" />
-                      <span className="font-medium font-mono">{lead.phone}</span>
-                    </span>
-                  )}
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  <LeadStatusBadge status={lead.status} />
                   <ContactRecencyBadge
                     lastContactAt={lead.last_contact_at}
                     status={lead.status}
                     createdAt={lead.created_at}
                     size="sm"
                   />
-                  <span className="text-muted-foreground/70">· Lead há {createdRelative}</span>
+                  {lead.cadence_exhausted && (
+                    <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-destructive/10 text-destructive border border-destructive/20">
+                      Régua esgotada
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
