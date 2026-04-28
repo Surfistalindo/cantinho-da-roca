@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -6,31 +7,53 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import CrmLayout from "@/components/crm/CrmLayout";
+
+// Páginas críticas (eager) — landing + login + páginas mais usadas
 import Index from "./pages/Index";
 import AdminLogin from "./pages/AdminLogin";
 import ResetPassword from "./pages/ResetPassword";
 import DashboardPage from "./pages/admin/DashboardPage";
 import LeadsPage from "./pages/admin/LeadsPage";
-import PipelinePage from "./pages/admin/PipelinePage";
-import ClientsPage from "./pages/admin/ClientsPage";
-import IAHomePage from "./pages/admin/ia/IAHomePage";
-import IAExcelImportPage from "./pages/admin/ia/IAExcelImportPage";
-import IACsvImportPage from "./pages/admin/ia/IACsvImportPage";
-import IAPasteImportPage from "./pages/admin/ia/IAPasteImportPage";
-import IAWhatsAppImportPage from "./pages/admin/ia/IAWhatsAppImportPage";
-import IADuplicatesPage from "./pages/admin/ia/IADuplicatesPage";
-import IAClassifyPage from "./pages/admin/ia/IAClassifyPage";
-import IAScorePage from "./pages/admin/ia/IAScorePage";
-import IAInsightsPage from "./pages/admin/ia/IAInsightsPage";
-import IAAssistantPage from "./pages/admin/ia/IAAssistantPage";
-import AuditUiPage from "./pages/admin/AuditUiPage";
-import TelemetryPage from "./pages/admin/TelemetryPage";
-import TaskBoardPage from "./pages/admin/TaskBoardPage";
-import MyWorkPage from "./pages/admin/MyWorkPage";
-import WhatsAppPage from "./pages/admin/WhatsAppPage";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Páginas pesadas / raramente usadas — lazy
+const PipelinePage = lazy(() => import("./pages/admin/PipelinePage"));
+const ClientsPage = lazy(() => import("./pages/admin/ClientsPage"));
+const IAHomePage = lazy(() => import("./pages/admin/ia/IAHomePage"));
+const IAExcelImportPage = lazy(() => import("./pages/admin/ia/IAExcelImportPage"));
+const IACsvImportPage = lazy(() => import("./pages/admin/ia/IACsvImportPage"));
+const IAPasteImportPage = lazy(() => import("./pages/admin/ia/IAPasteImportPage"));
+const IAWhatsAppImportPage = lazy(() => import("./pages/admin/ia/IAWhatsAppImportPage"));
+const IADuplicatesPage = lazy(() => import("./pages/admin/ia/IADuplicatesPage"));
+const IAClassifyPage = lazy(() => import("./pages/admin/ia/IAClassifyPage"));
+const IAScorePage = lazy(() => import("./pages/admin/ia/IAScorePage"));
+const IAInsightsPage = lazy(() => import("./pages/admin/ia/IAInsightsPage"));
+const IAAssistantPage = lazy(() => import("./pages/admin/ia/IAAssistantPage"));
+const AuditUiPage = lazy(() => import("./pages/admin/AuditUiPage"));
+const TelemetryPage = lazy(() => import("./pages/admin/TelemetryPage"));
+const TaskBoardPage = lazy(() => import("./pages/admin/TaskBoardPage"));
+const MyWorkPage = lazy(() => import("./pages/admin/MyWorkPage"));
+const WhatsAppPage = lazy(() => import("./pages/admin/WhatsAppPage"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,         // 30s — dados considerados frescos
+      gcTime: 5 * 60_000,         // 5min — mantém cache mesmo sem assinantes
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+    mutations: {
+      retry: 0,
+    },
+  },
+});
+
+const RouteFallback = () => (
+  <div className="flex h-[60vh] w-full items-center justify-center">
+    <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -54,23 +77,23 @@ const App = () => (
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<DashboardPage />} />
               <Route path="leads" element={<LeadsPage />} />
-              <Route path="pipeline" element={<PipelinePage />} />
-              <Route path="clients" element={<ClientsPage />} />
-              <Route path="ia" element={<IAHomePage />} />
-              <Route path="ia/excel" element={<IAExcelImportPage />} />
-              <Route path="ia/csv" element={<IACsvImportPage />} />
-              <Route path="ia/paste" element={<IAPasteImportPage />} />
-              <Route path="ia/whatsapp" element={<IAWhatsAppImportPage />} />
-              <Route path="ia/duplicates" element={<IADuplicatesPage />} />
-              <Route path="ia/classify" element={<IAClassifyPage />} />
-              <Route path="ia/score" element={<IAScorePage />} />
-              <Route path="ia/insights" element={<IAInsightsPage />} />
-              <Route path="ia/assistant" element={<IAAssistantPage />} />
-              <Route path="audit-ui" element={<AuditUiPage />} />
-              <Route path="telemetry" element={<TelemetryPage />} />
-              <Route path="my-work" element={<MyWorkPage />} />
-              <Route path="whatsapp" element={<WhatsAppPage />} />
-              <Route path="boards/:boardId" element={<TaskBoardPage />} />
+              <Route path="pipeline" element={<Suspense fallback={<RouteFallback />}><PipelinePage /></Suspense>} />
+              <Route path="clients" element={<Suspense fallback={<RouteFallback />}><ClientsPage /></Suspense>} />
+              <Route path="ia" element={<Suspense fallback={<RouteFallback />}><IAHomePage /></Suspense>} />
+              <Route path="ia/excel" element={<Suspense fallback={<RouteFallback />}><IAExcelImportPage /></Suspense>} />
+              <Route path="ia/csv" element={<Suspense fallback={<RouteFallback />}><IACsvImportPage /></Suspense>} />
+              <Route path="ia/paste" element={<Suspense fallback={<RouteFallback />}><IAPasteImportPage /></Suspense>} />
+              <Route path="ia/whatsapp" element={<Suspense fallback={<RouteFallback />}><IAWhatsAppImportPage /></Suspense>} />
+              <Route path="ia/duplicates" element={<Suspense fallback={<RouteFallback />}><IADuplicatesPage /></Suspense>} />
+              <Route path="ia/classify" element={<Suspense fallback={<RouteFallback />}><IAClassifyPage /></Suspense>} />
+              <Route path="ia/score" element={<Suspense fallback={<RouteFallback />}><IAScorePage /></Suspense>} />
+              <Route path="ia/insights" element={<Suspense fallback={<RouteFallback />}><IAInsightsPage /></Suspense>} />
+              <Route path="ia/assistant" element={<Suspense fallback={<RouteFallback />}><IAAssistantPage /></Suspense>} />
+              <Route path="audit-ui" element={<Suspense fallback={<RouteFallback />}><AuditUiPage /></Suspense>} />
+              <Route path="telemetry" element={<Suspense fallback={<RouteFallback />}><TelemetryPage /></Suspense>} />
+              <Route path="my-work" element={<Suspense fallback={<RouteFallback />}><MyWorkPage /></Suspense>} />
+              <Route path="whatsapp" element={<Suspense fallback={<RouteFallback />}><WhatsAppPage /></Suspense>} />
+              <Route path="boards/:boardId" element={<Suspense fallback={<RouteFallback />}><TaskBoardPage /></Suspense>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -52,10 +52,13 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // instance_id NÃO é mais persistido na tabela (é um segredo do servidor).
+    // O cliente envia para confirmar a configuração; o backend só registra que
+    // está configurado se os secrets ZAPI_* também estiverem presentes.
     const hasTokens = !!Deno.env.get("ZAPI_INSTANCE_TOKEN") && !!Deno.env.get("ZAPI_CLIENT_TOKEN");
+    void instance_id; // mantido na interface por compatibilidade, mas não armazenado
 
     await admin.from("whatsapp_config").update({
-      instance_id: instance_id.trim(),
       is_configured: hasTokens,
       updated_by: userId,
     }).eq("provider", "zapi");

@@ -461,7 +461,6 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          instance_id: string | null
           is_configured: boolean
           provider: string
           updated_at: string
@@ -470,7 +469,6 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          instance_id?: string | null
           is_configured?: boolean
           provider?: string
           updated_at?: string
@@ -479,7 +477,6 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          instance_id?: string | null
           is_configured?: boolean
           provider?: string
           updated_at?: string

@@ -1,60 +1,107 @@
-## Refinamentos finais de scroll do CRM
 
-Cinco ajustes complementares ao scroll híbrido implementado anteriormente. Tudo escopado a `.font-crm` — landing intocada.
+# Vistoria completa — Cantinho da Roça
 
-### 1. Anti-salto no overscroll chaining
+Rodei o scanner de segurança, o linter do banco, revisei `App.tsx`, edge functions, `LeadsPage`, hooks, e mapeei o que está publicado em Realtime. Encontrei **3 falhas críticas de segurança**, 7 avisos de hardening, 4 oportunidades reais de performance e alguns bugs pequenos. Plano abaixo, agrupado por prioridade.
 
-Quando uma `div` interna esgota seu scroll, o browser propaga o evento pro documento — mas como o documento também tem `overscroll-behavior: auto` por padrão, o trackpad/touch dispara um pequeno "salto"/bounce. A correção é dupla:
+---
 
-- No `<html>` do CRM: `overscroll-behavior-y: none` — corta bounce do documento root, sem perder o chaining (que vem de cada container interno).
-- Em containers internos: `overscroll-behavior: contain` quando devem confinar (sheets/dialogs) e `overscroll-behavior-y: auto` quando devem entregar o resto pro documento.
+## 🔴 P0 — Segurança crítica (corrigir já)
 
-Também adiciono `scrollbar-gutter: stable` ao `<html>` pra evitar o "pulo" horizontal de 8-10px quando um dialog abre (scrollbar some, conteúdo desloca).
+### 1. Realtime aberto a qualquer usuário autenticado
+Hoje as tabelas `leads`, `customers`, `whatsapp_messages` e `whatsapp_templates` estão publicadas em `supabase_realtime` **sem nenhuma policy em `realtime.messages`**. Qualquer conta autenticada (mesmo sem role `vendedor`/`admin`) consegue se inscrever no canal e receber telefones, mensagens e dados de clientes em tempo real.
 
-### 2. Utilitários padronizados de scroll
+**Fix (migration):** habilitar RLS em `realtime.messages` e adicionar policy `SELECT` exigindo `has_role(auth.uid(),'admin') OR has_role(auth.uid(),'vendedor')`.
 
-Hoje cada componente escolhe `overflow-y-auto + overscroll? + crm-smooth-scroll?` solto. Crio duas classes que codificam a regra:
+### 2. Insert público de leads sem sanitização de campos sensíveis
+A policy `Anyone can submit a lead` usa `WITH CHECK (true)` — o trigger `sanitize_public_lead_insert` já zera vários campos, mas anônimo consegue gravar `assigned_to`, `ai_score`, etc. antes do trigger correr, e não há validação de tamanho/charset do `phone`.
 
-- **`.crm-scroll-area`** — confina o scroll dentro do elemento (não vaza pro documento). Para sheets, dialogs, painéis em split, listas que devem ter rolagem independente.
-- **`.crm-scroll-passthrough`** — rola por dentro mas, ao esgotar, deixa o documento continuar (chaining suave). Para listas longas dentro de telas que rolam pelo documento.
+**Fix:** reescrever a policy para listar **apenas** colunas mínimas permitidas via `WITH CHECK` (name + phone + origin + product_interest todos com bounds), e ampliar o trigger para também resetar `assigned_to`, validar formato do telefone (regex apenas dígitos/+/espaço/-/parênteses) e rejeitar payloads >2KB.
 
-Ambas trazem o scrollbar fino premium e `contain: paint` (próximo ponto).
+### 3. Storage `video` e `skill` sem nenhuma RLS
+Buckets marcados como privados, mas `storage.objects` não tem policy → **qualquer autenticado lê/sobe/apaga qualquer arquivo de qualquer bucket**.
 
-Substituo os usos atuais nos componentes-chave:
-- `LeadDetailSheet`, `CustomerDetailSheet`, `NewLeadDialog` → `crm-scroll-area` (precisam confinar)
-- `IAAssistantPage` chat scroller → `crm-scroll-area`
-- Tabela densa do `LeadsPage` (modo comfortable com scroll horizontal) e `ClientsPage` → mantém `overflow-*-auto` mas ganha `crm-scroll-passthrough` no eixo Y quando aplicável
+**Fix (migration):** adicionar 4 policies em `storage.objects` (SELECT/INSERT/UPDATE/DELETE) restritas a admin (e dono do objeto via `owner = auth.uid()` quando aplicável). Decidir buckets onde só admin pode escrever.
 
-### 3. Performance da rolagem (will-change + reduzir reflows)
+---
 
-- Nova classe `.crm-sticky-layer` (aplicada no wrapper sticky da sidebar e no `<header>` do `AdminNavbar`): `will-change: transform; transform: translateZ(0); backface-visibility: hidden;` — promove o elemento a uma camada de compositing própria, então a roda do mouse não dispara repaint do conteúdo atrás. Anulada em `prefers-reduced-motion: reduce` (sem ganho real e custa memória).
-- `contain: paint` nos containers `.crm-scroll-area` e `.crm-scroll-passthrough`: o browser sabe que mudanças dentro do elemento não afetam o resto da página, então não recalcula layout dos irmãos durante o scroll.
-- Não toco em transforms ou animações já existentes (nada de microanimações novas, conforme regra Core).
+## 🟠 P1 — Hardening de banco e funções
 
-### 4. Fallback para navegadores sem `:has()`
+### 4. `SECURITY DEFINER` executável por anônimo/auth
+Linter aponta 8 ocorrências (4 anônimas + 4 autenticadas). Funções afetadas: `assign_default_role`, `handle_new_user`, `sanitize_public_lead_insert`, `sync_last_contact_from_interaction`, `has_role`, `update_updated_at_column`.
 
-Hoje o scrollbar fino premium do documento só aparece se o navegador suportar `html:has(.font-crm)`. Suporte é amplo (Chrome 105+, Safari 15.4+, Firefox 121+), mas usuários em browsers antigos veem o scrollbar default do SO no `<html>`.
+**Fix:** as 5 primeiras só rodam via trigger — `REVOKE EXECUTE ... FROM PUBLIC, anon, authenticated`. `has_role` precisa continuar callable por `authenticated` (usada em policies), só revogar de `anon`.
 
-Solução: o CSS aceita as duas formas — `html:has(.font-crm)` **e** `html.crm-active`. O `CrmLayout` adiciona/remove a classe `crm-active` no `<html>` via `useEffect` (no mount) e cleanup (no unmount). Cobertura: 100%, com zero degradação visual nos navegadores modernos (a regra `:has` continua valendo e a classe é só backup).
+### 5. Policy SELECT incompleta em `lead_notes`
+Vendedores não enxergam notas escritas por outros vendedores — gap funcional do CRM.
 
-### 5. Mobile: sidebar sticky não pode interferir
+**Fix:** adicionar policy `SELECT` para `vendedor`/`admin` (manter restrição de DELETE só ao autor/admin).
 
-No mobile (`< 768px`), o `Sidebar` do shadcn vira automaticamente um `Sheet` (offcanvas). Mas o nosso wrapper `<div className="sticky top-0 h-screen shrink-0 z-20">` no `CrmLayout` continua ocupando espaço e fixando 100vh — isso quebra o scroll fino do documento e cria layout-thrash em mobile.
+### 6. `instance_id` do WhatsApp em texto plano
+`whatsapp_config.instance_id` exposto a todo admin e legível em queries.
 
-Correção:
-- Adiciono classe `crm-sidebar-shell` ao wrapper.
-- No CSS, `@media (max-width: 767px)` zera o sticky/h-screen/z-index dessa classe (`position: static; height: auto; z-index: auto`). O Sheet do shadcn passa a ser a única referência da sidebar mobile, como deveria.
-- Restauro `-webkit-overflow-scrolling: touch` no `<html>` mobile (momentum scroll nativo do iOS, perdido quando definimos `overscroll-behavior-y: none`).
+**Fix:** mover `instance_id` para o secret manager (já existe `ZAPI_INSTANCE_TOKEN`) e referenciá-lo apenas nas edge functions. Manter na tabela só o flag `is_configured` + `provider`.
 
-### Arquivos editados
+### 7. Extensões em schema `public`
+Mover extensões instaladas para schema `extensions` (criar se não existir). Baixo risco mas remove o warning do linter.
 
-- `src/index.css` — utilitários (`.crm-scroll-area`, `.crm-scroll-passthrough`, `.crm-sticky-layer`, `.crm-sidebar-shell`), fallback `:has()`, regras mobile, anti-salto.
-- `src/components/crm/CrmLayout.tsx` — `useEffect` que liga/desliga `html.crm-active`, classe `crm-sidebar-shell + crm-sticky-layer` no wrapper da sidebar.
-- `src/components/crm/AdminNavbar.tsx` — adiciona `crm-sticky-layer` ao `<header>`.
-- `src/components/admin/LeadDetailSheet.tsx`, `src/components/admin/CustomerDetailSheet.tsx`, `src/components/admin/NewLeadDialog.tsx`, `src/pages/admin/ia/IAAssistantPage.tsx` — trocar `overflow-y-auto` solto por `crm-scroll-area`.
+---
 
-### Não-objetivos
+## 🟡 P2 — Performance e otimização
 
-- Não trocar a estratégia de scroll do documento (foi aprovada na rodada anterior).
-- Não mexer em hooks de dados, paginação, filtros, tutoriais ou pipeline.
-- Não adicionar libs (sem virtualização, sem lib de scroll).
+### 8. `LeadsPage.tsx` com 1056 linhas e re-render pesado
+Arquivo monolítico, vários `useEffect` em sequência, sem `React.memo` nas linhas da tabela. Ações:
+- Extrair `LeadsTableGroup`, `LeadsTableRow` (memoizado), `LeadsToolbar` em arquivos próprios.
+- Memoizar handlers passados a cada linha (`useCallback`) para evitar invalidar `memo`.
+- Trocar `localStorage.setItem` direto por `useDebouncedEffect` onde estiver em loop de resize.
+
+### 9. `QueryClient` sem defaults
+Hoje `new QueryClient()` cru → cada hook refaz fetch a cada focus, sem retry inteligente.
+
+**Fix:** definir `staleTime: 30s`, `gcTime: 5min`, `refetchOnWindowFocus: false`, `retry: 1`.
+
+### 10. Bundle bloated por dependências não usadas
+Detectei no `package.json`: `@react-three/drei`, `three`, `@paper-design/shaders-react`, `@fortawesome/*` (com `lucide-react` já cobrindo ícones), `embla-carousel-react`. Vou rodar `rg` por uso real e remover as efetivamente órfãs antes de mexer.
+
+**Fix:** `bun remove` das não usadas + adicionar `React.lazy` + `Suspense` para todas as páginas `/admin/ia/*` e `/admin/telemetry`/`audit-ui` (raramente abertas) no `App.tsx`.
+
+### 11. Webfonts: dois requests para Fontshare
+Hoje carrega Recoleta + General Sans num CSS único — manter. Mas há `Material Symbols Outlined` carregado em todo o site e usado só em poucos pontos. Verificar uso e, se possível, remover (já temos `lucide-react`).
+
+---
+
+## 🟢 P3 — Bugs e qualidade de código
+
+### 12. `dangerouslySetInnerHTML` no sistema de tutorial
+Conteúdo é estático no código (não vem de input do usuário), risco real ≈ 0, mas é uma má prática que pode virar XSS quando alguém adicionar tour vindo do banco no futuro.
+
+**Fix:** trocar `step.body`/`step.details` para `ReactNode` (JSX) nas definições de tour, remover `dangerouslySetInnerHTML` em `TourPopover.tsx` e `HelpButton.tsx`.
+
+### 13. `console.log/error` sobrando em produção
+Achei usos em `LeadsTableDnd.tsx` e `dashboard/ActivityFeed.tsx`. Substituir por `telemetry.error()` (já existe em `src/lib/telemetry`) ou remover.
+
+### 14. Index HTML com TODOs e `meta author=Lovable`
+- Remover comentários `<!-- TODO: ... -->` deixados no `index.html`.
+- Atualizar `<meta name="author">` para "Cantinho da Roça".
+
+### 15. Migration única e auditável
+Tudo de schema vai numa migration enxuta com comentários por seção, nessa ordem: revoke executes → policy realtime → policy storage → policy lead_notes → reescrita do INSERT público + trigger reforçado → mover instance_id.
+
+---
+
+## Como vou executar
+
+1. **Migration de segurança** (P0 + P1.4/5/6) — uma única migration aprovada pelo usuário.
+2. **Edge function `wa-send` / `wa-cadence-tick`** — atualizar para ler `instance_id` do secret em vez da tabela.
+3. **Refactor `LeadsPage`** — extrair 3 componentes, memoizar linhas.
+4. **`App.tsx`** — `lazy` + `Suspense` nas rotas pesadas e configurar `QueryClient`.
+5. **Limpeza de deps + tutorial XSS-safe + logs + index.html.**
+6. **Re-rodar `security_scan` + `linter`** ao final e marcar findings como `mark_as_fixed` com explicação.
+
+**Nada deste plano quebra UI existente** — é cirúrgico.
+
+### Pontos para sua decisão
+- **Storage**: posso restringir `video` e `skill` a **só admin** (mais seguro) ou manter `vendedor` lendo? Vou assumir **só admin** se você não disser nada.
+- **Realtime**: assumir que **só admin + vendedor** podem subscrever (mesma regra dos SELECTs já existentes).
+- **Deps a remover**: vou confirmar uso real antes de remover qualquer uma; se estiver em uso, mantenho.
+
+Aprovando, eu já começo pela migration P0.

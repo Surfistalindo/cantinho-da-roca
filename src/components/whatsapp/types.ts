@@ -43,7 +43,6 @@ export interface WATemplate {
 }
 
 export interface WAConfig {
-  instance_id: string | null;
   is_configured: boolean;
   updated_at: string;
 }
