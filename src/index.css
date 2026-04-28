@@ -643,10 +643,8 @@
     }
   }
 
-  /* ─── Modo compacto: tudo encolhe pra caber sem scroll horizontal ─── */
-  .font-crm .crm-compact-table {
-    overflow-x: hidden !important;
-  }
+  /* ─── Modo compacto: encolhe ao máximo, mas permite scroll-x se ainda
+     não couber (evita corte lateral dos cabeçalhos em viewports estreitas). */
   .font-crm .crm-compact-table table {
     table-layout: auto;
     width: 100%;

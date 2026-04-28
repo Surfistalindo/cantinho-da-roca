@@ -1,107 +1,30 @@
+## Problema
 
-# Vistoria completa — Cantinho da Roça
+No modo **compact** da tabela de Leads, várias colunas continuam visíveis (Lead 160px + Status 120px + Prioridade 120px + Ações ~120px = ~520px só de obrigatórias, sem contar Origem/Interesse/Recência em telas maiores) mas o container está com `overflow-x: hidden !important` (regra `.crm-compact-table` em `src/index.css:648`). Resultado: em larguras menores os cabeçalhos/células ficam **cortados lateralmente sem possibilidade de scroll**.
 
-Rodei o scanner de segurança, o linter do banco, revisei `App.tsx`, edge functions, `LeadsPage`, hooks, e mapeei o que está publicado em Realtime. Encontrei **3 falhas críticas de segurança**, 7 avisos de hardening, 4 oportunidades reais de performance e alguns bugs pequenos. Plano abaixo, agrupado por prioridade.
+A correção anterior (remover `maxHeight` e usar `overflow-y-visible`) tirou também o scroll vertical interno por engano. O usuário quer reverter isso: **scroll vertical interno volta**, e o **scroll horizontal passa a existir também no modo compact** quando a tabela não couber.
 
----
+## Solução
 
-## 🔴 P0 — Segurança crítica (corrigir já)
+### 1. Restaurar scroll interno vertical (`src/pages/admin/LeadsPage.tsx`)
+No container do grupo (linhas ~881-888):
+- Voltar a usar `overflow-y-auto` + `maxHeight` baseado em viewport (algo como `calc(100vh - 320px)` com `min-height` para grupos pequenos não ficarem espremidos), igual ao comportamento original antes da última edição.
+- Manter o `crm-smooth-scroll` que já existe.
 
-### 1. Realtime aberto a qualquer usuário autenticado
-Hoje as tabelas `leads`, `customers`, `whatsapp_messages` e `whatsapp_templates` estão publicadas em `supabase_realtime` **sem nenhuma policy em `realtime.messages`**. Qualquer conta autenticada (mesmo sem role `vendedor`/`admin`) consegue se inscrever no canal e receber telefones, mensagens e dados de clientes em tempo real.
+### 2. Permitir scroll horizontal no modo compact
+Trocar `overflow-x-hidden` por `overflow-x-auto` na variante compact e ajustar o CSS de `.crm-compact-table` em `src/index.css` (linha 648) para **remover** o `overflow-x: hidden !important` — deixar o overflow ser controlado pelo Tailwind no JSX.
 
-**Fix (migration):** habilitar RLS em `realtime.messages` e adicionar policy `SELECT` exigindo `has_role(auth.uid(),'admin') OR has_role(auth.uid(),'vendedor')`.
+Reaproveitar a estética do scrollbar persistente do `crm-x-scroll-always` também no compact (aplicar a classe nas duas densidades), para que a barrinha lateral apareça discreta sempre que houver overflow.
 
-### 2. Insert público de leads sem sanitização de campos sensíveis
-A policy `Anyone can submit a lead` usa `WITH CHECK (true)` — o trigger `sanitize_public_lead_insert` já zera vários campos, mas anônimo consegue gravar `assigned_to`, `ai_score`, etc. antes do trigger correr, e não há validação de tamanho/charset do `phone`.
+### 3. Garantir que a tabela não force largura mínima desnecessária no compact
+A `<table>` compact já tem `table-layout: auto` + `width: 100%`. Vai expandir naturalmente conforme o conteúdo das colunas obrigatórias e gerar scroll horizontal quando não couber, em vez de cortar.
 
-**Fix:** reescrever a policy para listar **apenas** colunas mínimas permitidas via `WITH CHECK` (name + phone + origin + product_interest todos com bounds), e ampliar o trigger para também resetar `assigned_to`, validar formato do telefone (regex apenas dígitos/+/espaço/-/parênteses) e rejeitar payloads >2KB.
+## Resultado esperado
 
-### 3. Storage `video` e `skill` sem nenhuma RLS
-Buckets marcados como privados, mas `storage.objects` não tem policy → **qualquer autenticado lê/sobe/apaga qualquer arquivo de qualquer bucket**.
+- Modo **comfortable**: igual ao atual (scroll vertical interno + scroll horizontal sempre visível, pinned cols Lead/Ações).
+- Modo **compact**: scroll vertical interno **de volta**, e scroll horizontal aparece **se** a viewport não comportar todas as colunas obrigatórias — sem mais corte lateral nos cabeçalhos. O aviso "Shift + rolar" continua oculto no compact (como já está).
 
-**Fix (migration):** adicionar 4 policies em `storage.objects` (SELECT/INSERT/UPDATE/DELETE) restritas a admin (e dono do objeto via `owner = auth.uid()` quando aplicável). Decidir buckets onde só admin pode escrever.
+## Arquivos afetados
 
----
-
-## 🟠 P1 — Hardening de banco e funções
-
-### 4. `SECURITY DEFINER` executável por anônimo/auth
-Linter aponta 8 ocorrências (4 anônimas + 4 autenticadas). Funções afetadas: `assign_default_role`, `handle_new_user`, `sanitize_public_lead_insert`, `sync_last_contact_from_interaction`, `has_role`, `update_updated_at_column`.
-
-**Fix:** as 5 primeiras só rodam via trigger — `REVOKE EXECUTE ... FROM PUBLIC, anon, authenticated`. `has_role` precisa continuar callable por `authenticated` (usada em policies), só revogar de `anon`.
-
-### 5. Policy SELECT incompleta em `lead_notes`
-Vendedores não enxergam notas escritas por outros vendedores — gap funcional do CRM.
-
-**Fix:** adicionar policy `SELECT` para `vendedor`/`admin` (manter restrição de DELETE só ao autor/admin).
-
-### 6. `instance_id` do WhatsApp em texto plano
-`whatsapp_config.instance_id` exposto a todo admin e legível em queries.
-
-**Fix:** mover `instance_id` para o secret manager (já existe `ZAPI_INSTANCE_TOKEN`) e referenciá-lo apenas nas edge functions. Manter na tabela só o flag `is_configured` + `provider`.
-
-### 7. Extensões em schema `public`
-Mover extensões instaladas para schema `extensions` (criar se não existir). Baixo risco mas remove o warning do linter.
-
----
-
-## 🟡 P2 — Performance e otimização
-
-### 8. `LeadsPage.tsx` com 1056 linhas e re-render pesado
-Arquivo monolítico, vários `useEffect` em sequência, sem `React.memo` nas linhas da tabela. Ações:
-- Extrair `LeadsTableGroup`, `LeadsTableRow` (memoizado), `LeadsToolbar` em arquivos próprios.
-- Memoizar handlers passados a cada linha (`useCallback`) para evitar invalidar `memo`.
-- Trocar `localStorage.setItem` direto por `useDebouncedEffect` onde estiver em loop de resize.
-
-### 9. `QueryClient` sem defaults
-Hoje `new QueryClient()` cru → cada hook refaz fetch a cada focus, sem retry inteligente.
-
-**Fix:** definir `staleTime: 30s`, `gcTime: 5min`, `refetchOnWindowFocus: false`, `retry: 1`.
-
-### 10. Bundle bloated por dependências não usadas
-Detectei no `package.json`: `@react-three/drei`, `three`, `@paper-design/shaders-react`, `@fortawesome/*` (com `lucide-react` já cobrindo ícones), `embla-carousel-react`. Vou rodar `rg` por uso real e remover as efetivamente órfãs antes de mexer.
-
-**Fix:** `bun remove` das não usadas + adicionar `React.lazy` + `Suspense` para todas as páginas `/admin/ia/*` e `/admin/telemetry`/`audit-ui` (raramente abertas) no `App.tsx`.
-
-### 11. Webfonts: dois requests para Fontshare
-Hoje carrega Recoleta + General Sans num CSS único — manter. Mas há `Material Symbols Outlined` carregado em todo o site e usado só em poucos pontos. Verificar uso e, se possível, remover (já temos `lucide-react`).
-
----
-
-## 🟢 P3 — Bugs e qualidade de código
-
-### 12. `dangerouslySetInnerHTML` no sistema de tutorial
-Conteúdo é estático no código (não vem de input do usuário), risco real ≈ 0, mas é uma má prática que pode virar XSS quando alguém adicionar tour vindo do banco no futuro.
-
-**Fix:** trocar `step.body`/`step.details` para `ReactNode` (JSX) nas definições de tour, remover `dangerouslySetInnerHTML` em `TourPopover.tsx` e `HelpButton.tsx`.
-
-### 13. `console.log/error` sobrando em produção
-Achei usos em `LeadsTableDnd.tsx` e `dashboard/ActivityFeed.tsx`. Substituir por `telemetry.error()` (já existe em `src/lib/telemetry`) ou remover.
-
-### 14. Index HTML com TODOs e `meta author=Lovable`
-- Remover comentários `<!-- TODO: ... -->` deixados no `index.html`.
-- Atualizar `<meta name="author">` para "Cantinho da Roça".
-
-### 15. Migration única e auditável
-Tudo de schema vai numa migration enxuta com comentários por seção, nessa ordem: revoke executes → policy realtime → policy storage → policy lead_notes → reescrita do INSERT público + trigger reforçado → mover instance_id.
-
----
-
-## Como vou executar
-
-1. **Migration de segurança** (P0 + P1.4/5/6) — uma única migration aprovada pelo usuário.
-2. **Edge function `wa-send` / `wa-cadence-tick`** — atualizar para ler `instance_id` do secret em vez da tabela.
-3. **Refactor `LeadsPage`** — extrair 3 componentes, memoizar linhas.
-4. **`App.tsx`** — `lazy` + `Suspense` nas rotas pesadas e configurar `QueryClient`.
-5. **Limpeza de deps + tutorial XSS-safe + logs + index.html.**
-6. **Re-rodar `security_scan` + `linter`** ao final e marcar findings como `mark_as_fixed` com explicação.
-
-**Nada deste plano quebra UI existente** — é cirúrgico.
-
-### Pontos para sua decisão
-- **Storage**: posso restringir `video` e `skill` a **só admin** (mais seguro) ou manter `vendedor` lendo? Vou assumir **só admin** se você não disser nada.
-- **Realtime**: assumir que **só admin + vendedor** podem subscrever (mesma regra dos SELECTs já existentes).
-- **Deps a remover**: vou confirmar uso real antes de remover qualquer uma; se estiver em uso, mantenho.
-
-Aprovando, eu já começo pela migration P0.
+- `src/pages/admin/LeadsPage.tsx` — container do grupo (~linhas 881-888)
+- `src/index.css` — regra `.crm-compact-table` (~linha 647-649)
