@@ -746,15 +746,33 @@ export default function LeadsPage() {
 
                 {/* Mobile — usa visão de Cards */}
                 <div className="md:hidden">
-                  <LeadsCards
-                    leads={filtered}
-                    selected={selected}
-                    onToggleOne={toggleOne}
-                    newestId={newestId}
-                    interactionCounts={interactionCounts}
-                    onOpenDetail={openDetail}
-                    onUpdated={fetchLeads}
-                  />
+                  {(() => {
+                    const info = paged.paginate(filtered, '__mobile__');
+                    return (
+                      <>
+                        <LeadsCards
+                          leads={info.pageItems}
+                          selected={selected}
+                          onToggleOne={toggleOne}
+                          newestId={newestId}
+                          interactionCounts={interactionCounts}
+                          onOpenDetail={openDetail}
+                          onUpdated={fetchLeads}
+                        />
+                        <LeadsPagination
+                          page={info.page}
+                          totalPages={info.totalPages}
+                          rangeStart={info.rangeStart}
+                          rangeEnd={info.rangeEnd}
+                          total={info.total}
+                          pageSize={paged.pageSize}
+                          onPageChange={info.setPage}
+                          onPageSizeChange={paged.setPageSize}
+                          showPageSize
+                        />
+                      </>
+                    );
+                  })()}
                 </div>
               </>
             )}
