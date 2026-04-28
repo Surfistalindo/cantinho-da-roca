@@ -40,6 +40,7 @@ import GroupSection, { type GroupColor } from '@/components/crm/ui/GroupSection'
 import LeadsKpiStrip, { type KpiKey } from '@/components/admin/leads/LeadsKpiStrip';
 import LeadsViewSwitcher, { type LeadsView } from '@/components/admin/leads/LeadsViewSwitcher';
 import LeadsKanban from '@/components/admin/leads/LeadsKanban';
+import { LeadsDndProvider, DroppableGroupHeader, DraggableRow } from '@/components/admin/leads/LeadsTableDnd';
 import LeadsCards from '@/components/admin/leads/LeadsCards';
 import SavedFiltersMenu, { type SavedLeadFilter } from '@/components/admin/leads/SavedFiltersMenu';
 import QuickActionsPopover from '@/components/admin/leads/QuickActionsPopover';
