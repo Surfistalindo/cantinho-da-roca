@@ -24,10 +24,10 @@ export default function CrmLayout() {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background font-crm text-foreground">
         <MondaySidebar />
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 crm-paper-bg">
           <AdminNavbar onOpenPalette={() => setPaletteOpen(true)} />
-          <main className="flex-1 overflow-y-auto bg-background">
-            <div className="px-3 sm:px-5 py-4 sm:py-5 animate-fade-in-up">
+          <main className="flex-1 overflow-y-auto">
+            <div className="px-3 sm:px-5 lg:px-7 py-4 sm:py-6 max-w-[1600px] mx-auto w-full crm-stagger">
               <TelemetryErrorBoundary scope="admin-route">
                 <Outlet />
               </TelemetryErrorBoundary>
