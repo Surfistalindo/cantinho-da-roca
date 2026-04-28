@@ -58,6 +58,9 @@ interface Lead {
   last_contact_at: string | null;
   next_contact_at: string | null;
   notes: string | null;
+  cadence_exhausted?: boolean | null;
+  cadence_step?: number | null;
+  whatsapp_opt_out?: boolean | null;
 }
 
 interface Props {
@@ -186,6 +189,11 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
                   <span className="truncate">{lead.name}</span>
                   <LeadStatusBadge status={lead.status} />
                   <LeadScoreBadge lead={lead} interactionCount={interactionCount} size="md" />
+                  {lead.cadence_exhausted && (
+                    <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-destructive/10 text-destructive border border-destructive/20">
+                      Régua esgotada
+                    </span>
+                  )}
                 </SheetTitle>
                 <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
                   {lead.phone && (

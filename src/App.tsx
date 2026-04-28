@@ -27,6 +27,7 @@ import AuditUiPage from "./pages/admin/AuditUiPage";
 import TelemetryPage from "./pages/admin/TelemetryPage";
 import TaskBoardPage from "./pages/admin/TaskBoardPage";
 import MyWorkPage from "./pages/admin/MyWorkPage";
+import WhatsAppPage from "./pages/admin/WhatsAppPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -68,6 +69,7 @@ const App = () => (
               <Route path="audit-ui" element={<AuditUiPage />} />
               <Route path="telemetry" element={<TelemetryPage />} />
               <Route path="my-work" element={<MyWorkPage />} />
+              <Route path="whatsapp" element={<WhatsAppPage />} />
               <Route path="boards/:boardId" element={<TaskBoardPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />

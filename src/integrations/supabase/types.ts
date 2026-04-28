@@ -454,6 +454,36 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_config: {
+        Row: {
+          created_at: string
+          id: string
+          instance_id: string | null
+          is_configured: boolean
+          provider: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instance_id?: string | null
+          is_configured?: boolean
+          provider?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instance_id?: string | null
+          is_configured?: boolean
+          provider?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       whatsapp_messages: {
         Row: {
           body: string | null
@@ -463,7 +493,9 @@ export type Database = {
           error_code: string | null
           error_message: string | null
           id: string
+          image_url: string | null
           lead_id: string | null
+          message_type: string
           status: string
           template_name: string | null
           updated_at: string
@@ -477,7 +509,9 @@ export type Database = {
           error_code?: string | null
           error_message?: string | null
           id?: string
+          image_url?: string | null
           lead_id?: string | null
+          message_type?: string
           status?: string
           template_name?: string | null
           updated_at?: string
@@ -491,7 +525,9 @@ export type Database = {
           error_code?: string | null
           error_message?: string | null
           id?: string
+          image_url?: string | null
           lead_id?: string | null
+          message_type?: string
           status?: string
           template_name?: string | null
           updated_at?: string

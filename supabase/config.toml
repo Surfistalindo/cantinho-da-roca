@@ -14,3 +14,12 @@ verify_jwt = false
 
 [functions.ia-classify-status]
 verify_jwt = false
+
+[functions.wa-send]
+verify_jwt = false
+
+[functions.wa-cadence-tick]
+verify_jwt = false
+
+[functions.wa-config-save]
+verify_jwt = false
