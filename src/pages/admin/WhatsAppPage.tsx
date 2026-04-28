@@ -70,7 +70,6 @@ export default function WhatsAppPage() {
       <PageHeader
         title="WhatsApp"
         description="Envie mensagens via Z-API, gerencie a régua de cadência e visualize o histórico."
-        icon={<FontAwesomeIcon icon={faWhatsapp} className="h-5 w-5 text-success" />}
       />
 
       <Tabs value={tab} onValueChange={setTab} className="space-y-4">
