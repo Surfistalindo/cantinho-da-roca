@@ -1,111 +1,47 @@
-## Objetivo
+## Problema
 
-Modernizar o Dashboard com (1) Activity Feed **utilizável** (cada item leva ao lead/cliente correspondente, mostra nome do contato, evita preview de templates gigantes) e (2) novos dashboards **interativos, responsivos e atuais** organizados em abas — sem sobrecarregar a tela inicial.
+Em telas largas (1920×1080), a hero `StaticImageHero` apresenta dois problemas visíveis no print do usuário:
 
----
+1. **Conteúdo sobrepõe os produtos da imagem**: o texto + CTAs ficam centralizados (`max-w-3xl` + `justify-center`) bem em cima do bule, do pote de mel e da sacola "Cantim da Roça" — protagonistas visuais do hero.
+2. **Quebra de linha forçada esquisita**: `<br className="hidden sm:block">` força "Sabores e cuidados" / "direto da roça para você" em duas linhas, o que em desktop deixa a linha 2 muito longa e desalinhada.
+3. **`bg-center` em ultrawide** mantém os produtos à direita parcialmente cortados, e a parte esquerda (janela com luz) some sob o overlay escuro.
+4. **`sm:justify-end`** ancora tudo no rodapé deixando metade da tela vazia em monitores 1080p.
 
-## 1. Activity Feed — torná-lo utilizável
+## Correções
 
-Problemas atuais (visíveis no print):
-- Mostra só a descrição crua (template gigante "[Template: Primeiro contato] Olá Chef!...") sem identificar o lead.
-- Não é clicável.
-- Repete o mesmo template várias vezes sem diferenciação visual.
+Editar **`src/components/landing/StaticImageHero.tsx`**:
 
-Correções:
-- Resolver `lead_id`/`customer_id` → exibir **nome do contato** em destaque + ação ("Mensagem para **Chef**").
-- Resumir templates: detectar prefixo `[Template: X]` e mostrar como chip "Template · Primeiro contato" + 1 linha do corpo.
-- Cada item vira `<Link>` para `/admin/leads?focus={id}` ou `/admin/clients?focus={id}`.
-- Hover state, ícone tonal por tipo (whatsapp=verde, ligação=azul, etc).
-- Filtro rápido no topo: Todos · WhatsApp · Ligações · Notas.
-- "Ver tudo" → leva à página de telemetria/interações.
+### A. Layout split em desktop (`lg:` ≥ 1024px)
+- Texto, CTAs e hint passam a alinhar à **esquerda** em `lg+`, deixando o lado direito livre para os produtos da foto respirarem.
+- `items-center justify-center sm:justify-end` em mobile/tablet vira `lg:items-start lg:justify-center` em desktop.
+- `max-w-3xl text-center` em mobile vira `lg:max-w-2xl lg:text-left`.
+- Padding lateral aumenta no desktop: `lg:px-16 xl:px-24`.
 
----
+### B. Background reposicionado em wide
+- Mantém `bg-center` em ≤ md.
+- Em `lg+` muda para `bg-[position:75%_center]` (xl: `80%_center`) — empurra a câmera para a direita, deixando a janela e o produto da direita melhor enquadrados, e abre a região esquerda como "área para o texto".
 
-## 2. Reorganizar em abas (não empilhar tudo)
+### C. Overlay direcional
+- Em mobile permanece o gradiente vertical atual (`from-black/15 via-black/25 to-black/75`).
+- Em `lg+` adiciona um gradiente **horizontal** (`lg:bg-gradient-to-r lg:from-black/70 lg:via-black/45 lg:to-transparent`) que escurece só o lado esquerdo onde o texto vive, mantendo os produtos à direita totalmente visíveis sem véu.
 
-Substituir a longa rolagem por `Tabs` no topo do dashboard:
+### D. Tipografia
+- Remover o `<br className="hidden sm:block">` forçado — deixar o título quebrar naturalmente respeitando `max-w-2xl`.
+- Reduzir um passo no desktop: `lg:text-6xl xl:text-7xl` (estava `lg:text-7xl`) para caber bem em duas linhas alinhadas à esquerda.
 
-```text
-[ Visão geral ] [ Funil & Velocidade ] [ Canais & Origem ] [ Atividade & Retenção ]
-```
+### E. Pequenos ajustes de espaçamento
+- `pb-12 sm:pb-24 lg:pb-0` (sem ancorar no rodapé em desktop, o `justify-center` cuida).
+- `mt-12 sm:mt-16 lg:mt-20` no hint "Role para descobrir", justificado à esquerda em desktop.
 
-- **Visão geral** (atual, enxuta): KPIs + Tendência + Priority Leads + Próximos contatos.
-- **Funil & Velocidade** (novo): donut do funil + novo gráfico de velocidade.
-- **Canais & Origem** (novo): OriginBars + novo gráfico de performance por canal.
-- **Atividade & Retenção** (novo): Activity Feed melhorado + heatmap + cohort.
+## Resultado esperado
 
-Filtros e período permanecem sticky no topo, válidos para todas as abas.
-
----
-
-## 3. Novos dashboards (4)
-
-### A. Heatmap de Atividade (Activity Heatmap)
-- Grid 7 dias × 24 horas mostrando volume de interações.
-- Cores em escala HSL com `--primary`.
-- Hover: tooltip com "Quarta 14h · 8 interações".
-- Útil para descobrir melhor horário de contato.
-- Fonte: `interactions.interaction_date`.
-
-### B. Velocidade do Funil (Funnel Velocity)
-- Barras horizontais com **tempo médio** que um lead passa em cada estágio (novo → em contato → negociação → ganho).
-- Comparação com período anterior (delta em verde/vermelho).
-- Identifica gargalos.
-- Fonte: histórico de `leads.status` + `created_at` + `last_contact_at` (aproximação a partir de interações).
-
-### C. Performance por Canal de WhatsApp
-- Cards interativos por origem com 4 mini-métricas: enviados / respondidos / convertidos / taxa.
-- Mini-sparkline em cada card.
-- Click → filtra o resto do dashboard por essa origem.
-- Fonte: `whatsapp_messages` cruzado com `leads.origin` e `leads.status`.
-
-### D. Cohort de Retenção / Conversão
-- Tabela cohort: linhas = semana de entrada do lead, colunas = semanas até conversão (W0, W1, W2, W3+).
-- Células coloridas por taxa de conversão acumulada.
-- Mostra quanto tempo leva para fechar e onde leads "morrem".
-- Fonte: `leads.created_at` + `customers.purchase_date`.
-
-Todos com:
-- SVG nativo (sem libs novas) seguindo o padrão de `TrendArea`/`FunnelDonut`.
-- Tooltip on hover, animação `fade-in-up` ao montar.
-- Skeleton enquanto carrega.
-- Responsivo: scroll horizontal em telas estreitas para tabela cohort/heatmap.
-
----
-
-## 4. Responsividade
-
-- Tabs viram `Select` em `< sm`.
-- Heatmap: scroll horizontal em mobile, célula mínima 18px.
-- Cards de canal: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`.
-- Cohort: scroll horizontal com cabeçalho sticky.
-- Tooltips usam `Popover` em touch (long-press).
-
----
-
-## Detalhes técnicos
-
-**Arquivos novos:**
-- `src/components/admin/dashboard/ActivityHeatmap.tsx`
-- `src/components/admin/dashboard/FunnelVelocity.tsx`
-- `src/components/admin/dashboard/ChannelPerformance.tsx`
-- `src/components/admin/dashboard/RetentionCohort.tsx`
-- `src/components/admin/dashboard/ActivityFeed.tsx` (extraído + melhorado, com resolução de leads/customers)
-- `src/lib/dashboardAnalytics.ts` (helpers puros: buildHeatmap, buildVelocity, buildChannels, buildCohort)
-
-**Arquivos editados:**
-- `src/pages/admin/DashboardPage.tsx`: introduzir `<Tabs>` (`@/components/ui/tabs` já existe), distribuir blocos atuais e novos pelas 4 abas, ampliar fetch para `whatsapp_messages` (limit ~500) e mais `interactions` (~500) usados pelos analytics.
-- Persistir aba ativa em `?tab=` na URL (mesmo padrão dos filtros).
-
-**Performance:**
-- Computações em `useMemo` por aba.
-- Paginar Activity Feed (20 + "carregar mais").
-
-**Sem libs novas** — tudo com SVG + Tailwind, mantendo a direção visual Monday-clean já estabelecida (sem gradientes purple, sem glassmorphism).
-
----
+| Breakpoint | Resultado |
+|---|---|
+| Mobile / tablet | Sem mudança visual — mesmo layout centralizado atual. |
+| Desktop ≥1024 | Texto à esquerda com gradiente escurecendo só esse lado; produtos da direita 100% visíveis e protagonizando. |
+| Ultrawide 1920+ | Foto reenquadrada (75–80%), produtos respirando, conteúdo numa coluna confortável à esquerda. |
 
 ## Fora do escopo
-- Exportar PDF dos dashboards.
-- Criação de dashboards customizáveis pelo usuário.
-- Real-time push de novas interações no heatmap (já cobre via `useRealtimeTable`).
+- Trocar a imagem do hero.
+- Refatorar outras seções (BenefitsSection, ProductsSection etc).
+- Adicionar variação de hero por dispositivo.
