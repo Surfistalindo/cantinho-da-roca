@@ -665,6 +665,95 @@
 
   /* Compact row variant (usada por Pipeline/Boards densos) */
   .font-crm .row-compact td { height: 32px; }
+
+  /* ──────────────────────────────────────────────────────────────
+   * Layout containment primitives — Monday/Linear/ClickUp style.
+   * Garantem que tabelas e painéis grandes rolem dentro do próprio
+   * bloco, sem expandir a largura da página.
+   * ────────────────────────────────────────────────────────────── */
+  .surface-shell {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .surface-scroll-x {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .surface-scroll-y {
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* Wrapper genérico para qualquer <table> larga.
+     - Header sticky no topo do wrapper.
+     - Opcional: 1ª coluna sticky via .has-sticky-first. */
+  .surface-table-wrap {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: var(--table-max-h, 70vh);
+    position: relative;
+    background-color: hsl(var(--card));
+  }
+  .surface-table-wrap > table { width: 100%; }
+  .surface-table-wrap thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background-color: hsl(var(--surface-3, var(--muted)));
+  }
+  .surface-table-wrap.has-sticky-first thead th:first-child,
+  .surface-table-wrap.has-sticky-first tbody td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    background-color: hsl(var(--card));
+  }
+  .surface-table-wrap.has-sticky-first thead th:first-child { z-index: 6; }
+  .surface-table-wrap.has-sticky-first tbody tr:hover td:first-child {
+    background-color: hsl(var(--muted));
+  }
+
+  /* Split layout: área principal flexível + painel lateral fixo. */
+  .surface-split {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .surface-split > .surface-main {
+    flex: 1 1 0%;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .surface-side-panel {
+    flex-shrink: 0;
+    width: 100%;
+    align-self: stretch;
+  }
+  @media (min-width: 1024px) {
+    .surface-side-panel {
+      width: 360px;
+      position: sticky;
+      top: 1rem;
+      max-height: calc(100vh - 6rem);
+      overflow-y: auto;
+    }
+  }
+  @media (min-width: 1280px) {
+    .surface-side-panel { width: 400px; }
+  }
+
+  /* Helper barato: força min-width:0 em filho flex/grid (causa raiz
+     de tabelas largas que esticam o container pai). */
+  .min-w-0-safe { min-width: 0; }
 }
 
 /* GPU compositing for shader canvases */

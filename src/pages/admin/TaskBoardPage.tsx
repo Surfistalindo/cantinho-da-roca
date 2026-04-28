@@ -133,11 +133,11 @@ export default function TaskBoardPage() {
         />
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 min-w-0 max-w-full">
         {STATUSES.map((col) => (
           <section
             key={col.value}
-            className="rounded-lg border border-border bg-card flex flex-col min-h-[280px]"
+            className="rounded-lg border border-border bg-card flex flex-col min-h-[280px] min-w-0"
           >
             <header className="flex items-center justify-between px-3 py-2 border-b border-border">
               <div className="flex items-center gap-2">

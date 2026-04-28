@@ -27,7 +27,7 @@ export default function ExcelPreviewTable({ parsed, rows = 8 }: ExcelPreviewTabl
   const headerRowIdx = parsed.sheets.find((s) => s.name === active.name)?.headerRowIndex;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 min-w-0 max-w-full">
       {parsed.sheets.length > 1 && (
         <div className="rounded-xl border bg-muted/20 px-4 py-3">
           <div className="text-[12px] font-semibold text-foreground mb-2">
@@ -58,7 +58,7 @@ export default function ExcelPreviewTable({ parsed, rows = 8 }: ExcelPreviewTabl
         </div>
       )}
 
-      <div className="rounded-xl border bg-card overflow-hidden">
+      <div className="rounded-xl border bg-card overflow-hidden min-w-0 max-w-full">
         <div className="px-4 py-3 border-b bg-muted/30 flex items-center justify-between gap-2 flex-wrap">
           <div className="flex flex-col">
             <h4 className="text-[13px] font-semibold text-foreground">
@@ -74,9 +74,9 @@ export default function ExcelPreviewTable({ parsed, rows = 8 }: ExcelPreviewTabl
             {active.totalRows} {active.totalRows === 1 ? 'linha' : 'linhas'} · {visibleHeaders.length} colunas
           </span>
         </div>
-        <div className="overflow-x-auto max-h-[420px]">
+        <div className="surface-table-wrap has-sticky-first" style={{ ['--table-max-h' as string]: '420px' }}>
           <table className="w-full text-[12px]">
-            <thead className="bg-muted/20 sticky top-0">
+            <thead className="bg-muted/20">
               <tr>
                 {visibleHeaders.map((h, i) => (
                   <th key={i} className="px-3 py-2 text-left font-semibold text-foreground whitespace-nowrap border-b">{h}</th>

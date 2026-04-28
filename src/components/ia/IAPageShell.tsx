@@ -15,7 +15,7 @@ interface IAPageShellProps {
 
 export default function IAPageShell({ title, subtitle, breadcrumbs = [], backTo, actions, children }: IAPageShellProps) {
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up min-w-0 max-w-full">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="space-y-2.5 min-w-0">
           <nav className="flex items-center gap-1.5 text-[11.5px] text-muted-foreground font-medium">
@@ -54,7 +54,7 @@ export default function IAPageShell({ title, subtitle, breadcrumbs = [], backTo,
         </div>
         {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
       </div>
-      <div>{children}</div>
+      <div className="min-w-0 max-w-full">{children}</div>
     </div>
   );
 }
