@@ -267,6 +267,44 @@ export default function LeadsPage() {
     fetchLeads();
   };
 
+  // ----- Multi-select helpers -----
+  const toggleOne = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  const toggleGroup = (ids: string[], allSelected: boolean) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allSelected) ids.forEach((i) => next.delete(i));
+      else ids.forEach((i) => next.add(i));
+      return next;
+    });
+  const clearSelection = () => setSelected(new Set());
+
+  const bulkChangeStatus = async (status: string) => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    const { error } = await supabase.from('leads').update({ status }).in('id', ids);
+    if (error) { toast.error('Erro ao atualizar status'); return; }
+    toast.success(`${ids.length} lead(s) movido(s)`);
+    clearSelection();
+    fetchLeads();
+  };
+  const bulkDelete = async () => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    if (!confirm(`Excluir ${ids.length} lead(s)? Esta ação não pode ser desfeita.`)) return;
+    const { error } = await supabase.from('leads').delete().in('id', ids);
+    if (error) { toast.error('Erro ao excluir'); return; }
+    toast.success(`${ids.length} lead(s) excluído(s)`);
+    clearSelection();
+    fetchLeads();
+  };
+
+  const rowPad = density === 'compact' ? 'h-9' : 'h-12';
+
   return (
     <TooltipProvider delayDuration={200}>
       <div className="max-w-[1600px] mx-auto space-y-3">
@@ -274,10 +312,40 @@ export default function LeadsPage() {
           title="Leads"
           description="Central comercial — acompanhe, filtre e gerencie todos os leads em um só lugar."
           actions={
-            <Button onClick={() => setNewOpen(true)} size="sm" className="h-9 shadow-sm">
-              <FontAwesomeIcon icon={faPlus} className="h-3.5 w-3.5 mr-1.5" />
-              Novo contato
-            </Button>
+            <div className="flex items-center gap-1.5">
+              <div className="hidden sm:flex items-center rounded-md border border-border p-0.5 bg-card">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setDensity('comfortable')}
+                      className={cn('h-7 w-7 rounded flex items-center justify-center transition-colors',
+                        density === 'comfortable' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
+                      aria-label="Densidade confortável"
+                    >
+                      <FontAwesomeIcon icon={faTableCellsLarge} className="h-3 w-3" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Densidade confortável</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setDensity('compact')}
+                      className={cn('h-7 w-7 rounded flex items-center justify-center transition-colors',
+                        density === 'compact' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
+                      aria-label="Densidade compacta"
+                    >
+                      <FontAwesomeIcon icon={faTableList} className="h-3 w-3" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Densidade compacta</TooltipContent>
+                </Tooltip>
+              </div>
+              <Button onClick={() => setNewOpen(true)} size="sm" className="h-9 shadow-sm">
+                <FontAwesomeIcon icon={faPlus} className="h-3.5 w-3.5 mr-1.5" />
+                Novo contato
+              </Button>
+            </div>
           }
           meta={
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
