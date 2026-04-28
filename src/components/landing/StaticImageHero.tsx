@@ -84,15 +84,17 @@ const StaticImageHero: React.FC = () => {
 
       {/* Overlay de legibilidade */}
       <div
-        className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/70 pointer-events-none"
+        className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/25 to-black/75 pointer-events-none"
         aria-hidden="true"
       />
 
       {/* Conteúdo */}
-      <div className="relative z-10 flex min-h-screen flex-col items-center justify-end pb-16 sm:pb-24 px-6 sm:px-10 pt-28 sm:pt-32">
+      <div
+        className="relative z-10 flex min-h-screen flex-col items-center justify-center sm:justify-end pb-12 sm:pb-24 px-6 sm:px-10 pt-24 sm:pt-28 md:pt-32"
+        style={{ paddingTop: 'max(6rem, env(safe-area-inset-top) + 4rem)' }}
+      >
         <div className="w-full max-w-3xl text-center">
-          {/* Logo oficial sobreposta — posicionada bem abaixo da navbar
-              para nunca ser cortada em nenhum tamanho de tela */}
+          {/* Logo oficial sobreposta — escala fluida que nunca corta nem encosta na navbar */}
           <img
             ref={logo.ref}
             src={logoOficial}
@@ -100,9 +102,10 @@ const StaticImageHero: React.FC = () => {
             loading="eager"
             decoding="async"
             className={cn(
-              'mx-auto mb-6 sm:mb-8 h-auto w-[260px] sm:w-[320px] md:w-[380px] drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)] select-none',
+              'mx-auto mb-4 sm:mb-6 md:mb-8 h-auto max-h-[18vh] sm:max-h-[22vh] object-contain drop-shadow-[0_4px_14px_rgba(0,0,0,0.4)] sm:drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)] select-none',
               reveal(logo.visible),
             )}
+            style={{ width: 'clamp(170px, 38vw, 360px)' }}
           />
 
           <span
@@ -158,7 +161,7 @@ const StaticImageHero: React.FC = () => {
           >
             <Button
               size="lg"
-              className="h-14 font-body-warm uppercase tracking-wide px-8 shadow-lg shadow-black/30 bg-clay hover:bg-clay/90 text-white"
+              className="h-14 font-body-warm uppercase tracking-wide px-8 shadow-lg shadow-black/30 bg-clay hover:bg-clay/90 text-white transition-shadow hover:shadow-[0_12px_32px_-8px_hsl(var(--clay)/0.55)]"
               onClick={scrollToProducts}
             >
               Conhecer produtos

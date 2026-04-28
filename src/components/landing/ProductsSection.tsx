@@ -34,13 +34,13 @@ export default function ProductsSection({ scrollY = 0 }: ProductsSectionProps) {
 
       {/* Decorative parallax logo */}
       <div
-        className="absolute -right-20 top-1/3 pointer-events-none opacity-[0.04] z-[1]"
+        className="absolute -right-10 sm:-right-20 top-1/3 pointer-events-none opacity-[0.04] z-[1]"
         style={{
           transform: `translateY(${scrollY * -0.15}px) rotate(15deg)`,
           willChange: 'transform',
         }}
       >
-        <img src={logoImg} alt="" className="w-[300px] sm:w-[400px]" aria-hidden="true" />
+        <img src={logoImg} alt="" className="w-[240px] sm:w-[400px]" aria-hidden="true" />
       </div>
 
       <div className="relative z-10" ref={ref}>

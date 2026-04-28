@@ -36,6 +36,7 @@ export default function Navbar({ scrollY }: NavbarProps) {
         transform: `translateY(${navbarTranslateY}%)`,
         transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease',
         pointerEvents: showNavbar ? 'auto' : 'none',
+        paddingTop: 'env(safe-area-inset-top)',
       }}
     >
       <div
@@ -47,7 +48,7 @@ export default function Navbar({ scrollY }: NavbarProps) {
           <img
             src={logo}
             alt="Cantinho da Roça"
-            className="h-20 sm:h-24"
+            className="h-12 sm:h-14 w-auto"
             style={{
               opacity: showNavbar ? 1 : 0,
               transform: showNavbar ? 'scale(1)' : 'scale(0.8)',
@@ -64,7 +65,7 @@ export default function Navbar({ scrollY }: NavbarProps) {
                 onClick={() => handleClick(l.href)}
                 className={
                   (l as any).highlight
-                    ? 'text-sm font-semibold tracking-wide bg-primary text-primary-foreground px-4 py-2 rounded-full hover:bg-primary/90 transition-colors'
+                    ? 'text-sm font-semibold tracking-wide bg-clay text-white px-4 py-2 rounded-full hover:bg-clay/90 transition-colors'
                     : 'text-sm font-medium tracking-wide text-foreground/60 hover:text-primary transition-colors relative group'
                 }
                 style={{
