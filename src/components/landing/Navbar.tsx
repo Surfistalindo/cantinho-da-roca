@@ -48,7 +48,7 @@ export default function Navbar({ scrollY }: NavbarProps) {
           <img
             src={logo}
             alt="Cantinho da Roça"
-            className="h-40 sm:h-48 md:h-56 w-auto"
+            className="h-40 sm:h-48 md:h-56 w-auto mb-px text-justify mx-[10px] my-[10px] pl-px pt-px pr-px pb-px"
             style={{
               opacity: showNavbar ? 1 : 0,
               transform: showNavbar ? 'scale(1)' : 'scale(0.8)',
