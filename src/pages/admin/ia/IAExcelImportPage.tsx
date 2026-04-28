@@ -13,6 +13,7 @@ import DefaultStrategyPicker from '@/components/ia/excel/DefaultStrategyPicker';
 import RowReviewTable from '@/components/ia/excel/RowReviewTable';
 import DuplicateResolver from '@/components/ia/excel/DuplicateResolver';
 import ImportProgress from '@/components/ia/excel/ImportProgress';
+import ParsingLoader from '@/components/ia/excel/ParsingLoader';
 import ImportResultView from '@/components/ia/excel/ImportResult';
 import ImportHistoryBanner from '@/components/ia/excel/ImportHistoryBanner';
 import { Button } from '@/components/ui/button';
