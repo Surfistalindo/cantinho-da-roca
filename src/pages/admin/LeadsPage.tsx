@@ -229,9 +229,18 @@ export default function LeadsPage() {
         if (activeKpi === 'hot' && !(score.level === 'hot' || score.urgent)) return false;
         if (activeKpi === 'overdue' && rec.level !== 'overdue') return false;
       }
+      if (dateFrom) {
+        if (new Date(l.created_at) < dateFrom) return false;
+      }
+      if (dateTo) {
+        if (new Date(l.created_at) > dateTo) return false;
+      }
       if (search) {
-        const q = search.toLowerCase();
-        if (!l.name.toLowerCase().includes(q) && !(l.phone ?? '').includes(q)) return false;
+        const q = search.toLowerCase().trim();
+        const onlyDigits = q.replace(/\D/g, '');
+        const phoneDigits = (l.phone ?? '').replace(/\D/g, '');
+        const phoneHit = onlyDigits.length >= 3 ? phoneDigits.includes(onlyDigits) : false;
+        if (!l.name.toLowerCase().includes(q) && !phoneHit && !(l.phone ?? '').toLowerCase().includes(q)) return false;
       }
       return true;
     });
