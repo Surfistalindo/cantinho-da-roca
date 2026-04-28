@@ -50,7 +50,7 @@ export default function AutomationsDialog({ open, onOpenChange, templates, onCha
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[85vh] !grid-rows-[auto_minmax(0,1fr)] grid-cols-1">
         <DialogHeader>
           <DialogTitle className="font-display-warm text-xl flex items-center gap-2">
             <FontAwesomeIcon icon={faRobot} className="h-5 w-5 text-[hsl(var(--honey))]" />
@@ -62,7 +62,7 @@ export default function AutomationsDialog({ open, onOpenChange, templates, onCha
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 -mx-6 px-6">
+        <ScrollArea className="min-h-0 -mx-6 px-6 h-full">
           <div className="space-y-3 py-2">
             {templates.length === 0 && (
               <div className="text-center text-sm text-muted-foreground py-8">

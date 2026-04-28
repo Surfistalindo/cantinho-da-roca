@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -47,9 +48,13 @@ const normalize = (name: string) => {
 };
 
 /** Lightweight wrapper around Google Material Symbols Outlined. */
-export function MSym({ name, className, filled, size }: Props) {
+export const MSym = forwardRef<HTMLSpanElement, Props>(function MSym(
+  { name, className, filled, size },
+  ref,
+) {
   return (
     <span
+      ref={ref}
       className={cn('material-symbols-outlined', filled && 'msym-fill', className)}
       style={size ? { fontSize: `${size}px` } : undefined}
       aria-hidden
@@ -57,5 +62,4 @@ export function MSym({ name, className, filled, size }: Props) {
       {normalize(name)}
     </span>
   );
-}
-
+});
