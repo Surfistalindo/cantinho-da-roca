@@ -3,8 +3,10 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import AdminNavbar from './AdminNavbar';
 import AdminSidebar from './AdminSidebar';
 import { TelemetryErrorBoundary } from '@/components/admin/TelemetryErrorBoundary';
+import { useEnsureDefaultWorkspaces } from '@/hooks/useEnsureDefaultWorkspaces';
 
 export default function CrmLayout() {
+  useEnsureDefaultWorkspaces();
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background font-crm text-foreground">
