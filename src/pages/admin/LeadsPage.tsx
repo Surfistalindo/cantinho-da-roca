@@ -811,6 +811,7 @@ export default function LeadsPage() {
           onScheduleFollowup={bulkScheduleFollowup}
           onCopyPhones={bulkCopyPhones}
           onExport={bulkExport}
+          onAssign={bulkAssign}
         />
       </div>
     </TooltipProvider>
