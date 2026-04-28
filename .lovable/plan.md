@@ -1,143 +1,84 @@
-## Sidebar estilo Monday — workspaces dinâmicos + boards genéricos
+## Objetivo
 
-Substitui visualmente a `AdminSidebar` atual pela estrutura da Monday (header de produto, bloco IA fixo, busca, Favoritos, Áreas de trabalho com seletor, workspaces expansíveis com boards aninhados, +, ⋯ e drag-and-drop). Tudo persistido por usuário no Supabase. **Nenhuma rota ou página atual é removida.**
+Tirar a página `/admin/ia/insights` do estado "Em construção" e entregar a feature prometida no card:
 
-### Anatomia da nova sidebar (de cima pra baixo)
+- Resumo de 2 linhas por lead
+- Lista de próximos passos sugeridos
+- Filtro por prioridade, score, status, "sem resumo"
+- Mensagem de follow-up integrada ao WhatsApp
 
-```text
-┌──────────────────────────────────────┐
-│ 🌿 cantim work management        ▾   │ ← header de produto (substitui logo atual)
-├──────────────────────────────────────┤
-│ 🏠  Página inicial                   │ → /admin/dashboard
-│ 📥  Meu trabalho                     │ → /admin/my-work (novo)
-│ 🔔  Mais                             │ → menu (Telemetria, Auditoria…)
-├──────────────────────────────────────┤
-│ cantim IA                            │ ← bloco fixo (não editável)
-│ 🤖  Assistente de IA                 │ → /admin/ia/assistant
-│ ✨  Vibe (Insights)                  │ → /admin/ia/insights
-│ 🧠  Agentes de IA                    │ → /admin/ia (visão geral)
-│ 📝  Anotador de IA (Score)           │ → /admin/ia/score
-├──────────────────────────────────────┤
-│ Favoritos                       …    │
-│ ⭐ Pipeline de vendas                │ ← qualquer board favoritado
-├──────────────────────────────────────┤
-│ Áreas de trabalho             🔍 +   │
-│ ▾ [Vendas Cantim ▾]                  │ ← dropdown de workspace ativo
-│   ▾ 🟧 CRM Operacional      ⭐ ⋯ +   │ ← workspace expansível
-│       👥  Leads                       │
-│       📊  Pipeline                    │
-│       👤  Clientes                    │
-│       ⚡  Automação WhatsApp          │
-│   ▸ 🟦 Importação IA        ⭐ ⋯ +   │
-│   ▸ 🟪 Tarefas internas     ⭐ ⋯ +   │ ← workspace que usa o board genérico
-└──────────────────────────────────────┘
-```
+Usa a IA via Lovable AI Gateway (modelo padrão `google/gemini-2.5-flash`). Os campos `ai_summary` e `ai_summary_updated_at` da tabela `leads` já existem — vão ser reaproveitados, sem migração.
 
-### 1. Banco — 4 tabelas novas (sem tocar nas existentes)
+## O que será criado / alterado
 
-```text
-workspaces
-  - id, owner_id, name, icon (string), color (hex), position int
-  - active boolean (workspace selecionado por último)
+### 1. Edge function `ia-lead-insights`
 
-boards
-  - id, workspace_id, name, icon, color, position int
-  - kind: 'route' | 'task_board'
-  - route_path text (quando kind=route, ex.: '/admin/leads')
-  - created_by
+`supabase/functions/ia-lead-insights/index.ts` + entrada em `supabase/config.toml`.
 
-board_favorites
-  - user_id, board_id, position int
-  - PK (user_id, board_id)
+- Valida JWT (reusa `_shared/aiGateway.ts`).
+- Recebe `{ lead_id }`.
+- Lê o lead (RLS) e até 20 interações mais recentes.
+- Chama o gateway com **tool calling** (`lead_insight`) para garantir saída estruturada:
+  - `summary` (≤ ~220 chars, 2 linhas)
+  - `next_steps` (2 a 4 itens)
+  - `whatsapp_message` (PT-BR, ≤ ~280 chars)
+- Persiste em `leads.ai_summary` (JSON serializado) + `ai_summary_updated_at` (cache).
+- Retorna o JSON ao cliente.
+- Tratamento padronizado de 429/402 (já vem do helper).
 
--- Para o "1 board genérico de tarefas"
-task_board_items
-  - id, board_id, title, description
-  - status: 'todo' | 'doing' | 'done' | 'blocked'
-  - assignee_id, due_date, position int
-  - created_by, created_at, updated_at
-```
+### 2. Página `IAInsightsPage` reescrita
 
-RLS: workspaces/boards/items por `owner_id = auth.uid()` ou admin via `has_role`. Favoritos só do próprio user.
+Substitui o `ComingSoonStub` por:
 
-### 2. Seed inicial (insert tool, 1x por usuário no primeiro login)
+- **Toolbar** com:
+  - Busca por nome/telefone
+  - Filtro de status (reusa `APP_CONFIG.leadStatuses`)
+  - Filtro de prioridade (reusa `getLeadScore` → `hot/warm/cold`)
+  - Toggle "Apenas sem resumo"
+  - Botão "Gerar para visíveis" (lote, com barra de progresso, sequencial respeitando rate-limit)
+- **Lista densa** de cards de lead, cada card com:
+  - Nome, status, badge de prioridade, "atualizado há X"
+  - Resumo de 2 linhas (do cache `ai_summary`); placeholder se ainda não tem
+  - Chips com `next_steps`
+  - Botões: "Gerar / Regerar", "Copiar mensagem", "Abrir WhatsApp" (preenche `wa.me/?text=...`)
+- Realtime via `useRealtimeTable('leads', refetch)` (já existe no projeto) para refletir resumos novos.
+- Loading state dedicado por lead durante a geração.
+- Toasts para sucesso, rate-limit (429) e créditos esgotados (402) usando `sonner`.
 
-Workspace **"CRM Operacional"** com 4 boards `kind=route` apontando para Leads, Pipeline, Clientes, Automação. Workspace **"Importação IA"** com 8 boards route (cobre todos os `/admin/ia/*` atuais). Workspace **"Tarefas internas"** vazio com 1 board `kind=task_board` chamado "Minhas tarefas".
+### 3. Hook `useLeadInsights`
 
-Hook `useEnsureDefaultWorkspaces` roda no login: se `workspaces` do user = 0, faz seed.
+`src/hooks/useLeadInsights.ts` — encapsula `supabase.functions.invoke('ia-lead-insights', { body: { lead_id } })`, mapeia erros (`rate_limited`, `payment_required`) e expõe `generateOne(leadId)` + `generateMany(ids)` com progresso.
 
-### 3. Componentes novos
+### 4. Helper de parsing
+
+`src/lib/leadInsights.ts` — `parseInsight(ai_summary: string | null)` que retorna `{ summary, next_steps, whatsapp_message } | null` com try/catch (resumo legado em texto puro vira `summary`).
+
+## Detalhes técnicos
+
+- **Modelo**: `google/gemini-2.5-flash` (rápido + barato; bom o suficiente para resumo curto).
+- **Saída estruturada**: tool calling com `tool_choice` forçado para evitar resposta livre.
+- **Persistência**: `ai_summary` em texto JSON; `ai_summary_updated_at` como timestamp. Sem migração necessária.
+- **Lote**: cliente faz requisições sequenciais com 350 ms entre elas; progresso visível; cancelável via `AbortController`.
+- **Sem mocks**: tudo usa Lovable AI real.
+- **Sem alteração no CRM Monday clean** além desta página.
+- **Sem novos secrets** (LOVABLE_API_KEY já está provisionado).
+
+## Estrutura final
 
 ```text
-src/components/crm/sidebar/
-  MondaySidebar.tsx               → substitui AdminSidebar
-  SidebarProductHeader.tsx        → "cantim work management ▾"
-  SidebarStaticSection.tsx        → Página inicial / Meu trabalho / Mais
-  SidebarAISection.tsx            → bloco IA fixo
-  SidebarFavorites.tsx            → lista board_favorites
-  SidebarWorkspaceSelector.tsx    → dropdown de workspace ativo
-  SidebarWorkspaceList.tsx        → lista expansível de workspaces
-  SidebarWorkspaceItem.tsx        → linha workspace (▸/▾, ⭐, ⋯, +)
-  SidebarBoardItem.tsx            → linha board (NavLink, ⭐, ⋯)
-  SidebarSearch.tsx               → input filtra workspaces+boards
-  WorkspaceContextMenu.tsx        → renomear / mudar cor / duplicar / excluir
-  BoardContextMenu.tsx            → idem para board
-  CreateWorkspaceDialog.tsx       → modal + nome/ícone/cor
-  CreateBoardDialog.tsx           → modal + nome/ícone/cor + tipo (rota|tarefa)
+supabase/
+  functions/
+    ia-lead-insights/index.ts        (novo)
+  config.toml                        (+ bloco verify_jwt = true por padrão; sem alteração)
+
+src/
+  hooks/useLeadInsights.ts           (novo)
+  lib/leadInsights.ts                (novo)
+  pages/admin/ia/IAInsightsPage.tsx  (reescrita)
 ```
 
-DnD com `@dnd-kit/sortable` (já presente no projeto pelo Pipeline). Reordenar atualiza `position` em batch.
+## Fora de escopo
 
-### 4. Página nova `/admin/boards/:boardId` (board genérico de tarefas)
-
-Tela única que renderiza qualquer board `kind=task_board`. Layout Monday:
-- Header: nome do board, ícone, "Novo item" (+)
-- Tabela densa (`crm-dense-table` já existente) com colunas: Item · Status (status-cell colorida) · Responsável · Prazo · Tags
-- Agrupamento por status (`GroupSection` já existente — mesma do CRM)
-- DnD para reordenar e mover entre status
-- Edição inline de célula
-
-Página nova `/admin/my-work` agrega todos os `task_board_items` onde `assignee_id = me`.
-
-### 5. Serviços
-
-```text
-src/services/workspaceService.ts    → CRUD workspaces + reorder
-src/services/boardService.ts        → CRUD boards + reorder + favorite
-src/services/taskBoardService.ts    → CRUD task_board_items
-src/hooks/useWorkspaces.ts          → carrega + realtime
-src/hooks/useFavoriteBoards.ts
-src/hooks/useEnsureDefaultWorkspaces.ts
-```
-
-Realtime nas 4 tabelas para a sidebar atualizar entre abas.
-
-### 6. Visual / tokens
-
-A paleta Monday já está aplicada no projeto (sidebar branca, primária `#0073ea`, hover `#f5f6f8`). Vou ajustar só:
-- Header de produto com fundo levemente off-white e divisor
-- Linha ativa: trilho azul à esquerda + bg `#e6f1fd`
-- Cor do workspace = bolinha 8px à esquerda do nome
-- ⭐ aparece em hover (filled quando favoritado)
-- Badge `…` aparece em hover
-- Tooltip Monday-style nos itens quando colapsada
-
-### 7. O que NÃO muda
-- Rotas atuais: todas continuam funcionando exatamente iguais
-- `AdminNavbar`, todas as páginas (`LeadsPage`, `PipelinePage`, etc.)
-- `ReengagementQueue`, `WhatsAppQuickAction`, plano do Modo 2 anterior (régua WhatsApp) segue intacto
-- `useUserRole` / `ProtectedRoute` continuam protegendo tudo
-- A `AdminSidebar.tsx` antiga é removida do `CrmLayout.tsx`, mas o arquivo pode ficar como backup (`.bak`) por segurança
-
-### 8. Ordem de execução
-1. **Migração**: 4 tabelas + RLS + triggers `updated_at`
-2. Serviços + hooks + `useEnsureDefaultWorkspaces`
-3. `MondaySidebar` + subcomponentes (estática primeiro, depois conectada)
-4. Modais Criar / Renomear / Excluir + menus de contexto
-5. Drag-and-drop com dnd-kit
-6. Busca + favoritos + seletor de workspace
-7. Página `/admin/boards/:id` (board genérico) e `/admin/my-work`
-8. Trocar `AdminSidebar` por `MondaySidebar` no `CrmLayout`
-9. QA: navegação, persistência, RLS, colapsada/expandida, mobile
-
-Total estimado: ~16 arquivos novos, 2 editados (`App.tsx` p/ rotas, `CrmLayout.tsx` p/ trocar sidebar).
+- Geração agendada/cron de resumos.
+- Persistir `next_steps` em coluna própria (mantém-se serializado em `ai_summary` para evitar migração).
+- Alterações em outras páginas IA.
