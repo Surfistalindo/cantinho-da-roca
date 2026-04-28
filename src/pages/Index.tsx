@@ -1,5 +1,5 @@
 import Navbar from '@/components/landing/Navbar';
-import ScrollVideoHero from '@/components/landing/ScrollVideoHero';
+import StaticImageHero from '@/components/landing/StaticImageHero';
 import BenefitsSection from '@/components/landing/BenefitsSection';
 import ProductsSection from '@/components/landing/ProductsSection';
 import TestimonialsSection from '@/components/landing/TestimonialsSection';
@@ -14,7 +14,7 @@ export default function Index() {
     <div className="min-h-screen flex flex-col">
       <Navbar scrollY={scrollY} />
       <main className="flex-1">
-        <ScrollVideoHero />
+        <StaticImageHero />
         <BenefitsSection />
         <ProductsSection scrollY={scrollY} />
         <TestimonialsSection />
