@@ -188,9 +188,9 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="overflow-y-auto sm:max-w-xl p-0 flex flex-col bg-muted/30">
+        <SheetContent className="crm-smooth-scroll overflow-y-auto sm:max-w-xl p-0 flex flex-col bg-background">
           {/* HEADER */}
-          <SheetHeader className="px-7 pt-7 pb-6 border-b border-border bg-card sticky top-0 z-10 space-y-0">
+          <SheetHeader className="px-7 pt-6 pb-5 border-b border-border bg-card sticky top-0 z-10 space-y-0 shadow-sm">
             <div className="flex items-start gap-4">
               <InitialsAvatar name={lead.name} size="lg" />
               <div className="min-w-0 flex-1">
@@ -231,7 +231,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
             </div>
 
             {/* AÇÕES RÁPIDAS */}
-            <div className="flex flex-wrap items-center gap-2 mt-5">
+            <div className="flex flex-wrap items-center gap-2 mt-4">
               {lead.phone && (
                 <WhatsAppQuickAction
                   lead={lead}
@@ -280,7 +280,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
           </SheetHeader>
 
           {/* CONTEÚDO */}
-          <div className="px-6 py-6 space-y-5 flex-1">
+          <div className="px-6 py-5 space-y-4 flex-1">
             {/* Por que essa prioridade */}
             {scoreInfo && scoreInfo.level !== 'closed' && scoreInfo.reasons.length > 0 && (
               <section className={cn(
