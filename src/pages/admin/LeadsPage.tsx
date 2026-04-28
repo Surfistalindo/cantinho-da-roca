@@ -75,16 +75,12 @@ const VIEW_KEY = 'crm:leads:view';
 
 export default function LeadsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const url = useLeadsUrlState();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<Error | null>(null);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [originFilter, setOriginFilter] = useState('all');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [recencyFilter, setRecencyFilter] = useState<RecencyFilter>('all');
-  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
   const [sortBy, setSortBy] = useState<SortBy>('score');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [newOpen, setNewOpen] = useState(false);
@@ -104,6 +100,15 @@ export default function LeadsPage() {
     return (localStorage.getItem(VIEW_KEY) as LeadsView) || 'table';
   });
   const searchInputRef = useRef<HTMLDivElement>(null);
+
+  // Aliases legíveis
+  const search = url.search;
+  const statusFilter = url.status;
+  const originFilter = url.origin;
+  const recencyFilter = url.recency;
+  const priorityFilter = url.priority;
+  const dateFrom = url.from;
+  const dateTo = url.to;
 
   useEffect(() => { localStorage.setItem('crm:leads:density', density); }, [density]);
   useEffect(() => {
