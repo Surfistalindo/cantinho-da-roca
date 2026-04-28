@@ -280,20 +280,17 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
           </SheetHeader>
 
           {/* CONTEÚDO */}
-          <div className="px-6 py-6 space-y-4 flex-1">
+          <div className="px-6 py-6 space-y-5 flex-1">
             {/* Por que essa prioridade */}
             {scoreInfo && scoreInfo.level !== 'closed' && scoreInfo.reasons.length > 0 && (
               <section className={cn(
                 'rounded-2xl border p-5',
                 scoreInfo.urgent ? 'bg-destructive/5 border-destructive/20' : 'bg-card border-border',
               )}>
-                <div className="flex items-center justify-between mb-3">
-                  <SectionLabel>Por que essa prioridade</SectionLabel>
-                  <LeadScoreBadge lead={lead} interactionCount={interactionCount} size="lg" />
-                </div>
-                <ul className="space-y-1.5">
+                <SectionLabel>Por que essa prioridade</SectionLabel>
+                <ul className="space-y-2">
                   {scoreInfo.reasons.map((r, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-foreground/85">
+                    <li key={i} className="flex items-start gap-2.5 text-[13px] text-foreground/85 leading-relaxed">
                       <span className={cn('mt-1.5 h-1.5 w-1.5 rounded-full shrink-0', scoreInfo.dotClass)} />
                       <span>{r}</span>
                     </li>
@@ -305,35 +302,30 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
             {/* Status & Acompanhamento */}
             <section className="rounded-2xl bg-card border border-border p-5">
               <SectionLabel>Status & Acompanhamento</SectionLabel>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs text-muted-foreground">Status atual</span>
+              <div className="divide-y divide-border/60 -my-1">
+                <InfoRow label="Status atual">
                   <LeadStatusSelect leadId={lead.id} currentStatus={lead.status} onUpdated={() => onUpdated?.()} />
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs text-muted-foreground">Último contato</span>
-                  <div className="flex items-center gap-2 text-right">
-                    <ContactRecencyBadge
-                      lastContactAt={lead.last_contact_at}
-                      status={lead.status}
-                      createdAt={lead.created_at}
-                      size="sm"
-                    />
-                    {lead.last_contact_at && (
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(lead.last_contact_at), 'dd/MM HH:mm', { locale: ptBR })}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs text-muted-foreground">Próximo contato</span>
-                  <span className="text-xs font-medium">
+                </InfoRow>
+                <InfoRow label="Último contato">
+                  <ContactRecencyBadge
+                    lastContactAt={lead.last_contact_at}
+                    status={lead.status}
+                    createdAt={lead.created_at}
+                    size="sm"
+                  />
+                  {lead.last_contact_at && (
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {format(new Date(lead.last_contact_at), 'dd/MM HH:mm', { locale: ptBR })}
+                    </span>
+                  )}
+                </InfoRow>
+                <InfoRow label="Próximo contato">
+                  <span className="text-xs font-medium tabular-nums">
                     {lead.next_contact_at
                       ? format(new Date(lead.next_contact_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
                       : '—'}
                   </span>
-                </div>
+                </InfoRow>
               </div>
             </section>
 
