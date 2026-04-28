@@ -605,3 +605,57 @@ function CreateBoardDialog({
     </Dialog>
   );
 }
+
+function DroppableWorkspaceItem({
+  workspaceId,
+  children,
+}: {
+  workspaceId: string;
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: `ws:${workspaceId}` });
+  return (
+    <li
+      ref={setNodeRef}
+      className={cn(
+        'rounded-md transition-colors',
+        isOver && 'ring-1 ring-primary/50 bg-primary/5',
+      )}
+    >
+      {children}
+    </li>
+  );
+}
+
+function DraggableBoardRow({
+  board,
+  children,
+}: {
+  board: Board;
+  children: React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: board.id });
+  return (
+    <li
+      ref={setNodeRef}
+      className={cn(
+        'group/board rounded-md',
+        isDragging && 'opacity-40',
+      )}
+    >
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          className="h-6 w-4 inline-flex items-center justify-center text-muted-foreground/60 hover:text-sidebar-accent-foreground cursor-grab active:cursor-grabbing opacity-0 group-hover/board:opacity-100 transition-opacity"
+          aria-label="Arrastar"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical size={11} />
+        </button>
+        {children}
+      </div>
+    </li>
+  );
+}
+
