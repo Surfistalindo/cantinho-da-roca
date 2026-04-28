@@ -9,6 +9,7 @@ import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
 import WhatsAppQuickAction from '@/components/admin/WhatsAppQuickAction';
 import ReengagementQueue from '@/components/admin/ReengagementQueue';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { LEAD_STATUS } from '@/lib/leadStatus';
 import { getContactRecency } from '@/lib/contactRecency';
 import { getLeadScore, compareByScore } from '@/lib/leadScore';
@@ -16,23 +17,32 @@ import { getReengagementCandidates } from '@/lib/reengagement';
 import { useInteractionCounts } from '@/hooks/useInteractionCounts';
 import { MSym } from '@/components/crm/MSym';
 import { cn } from '@/lib/utils';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import KpiCard from '@/components/admin/dashboard/KpiCard';
 import FunnelDonut, { type FunnelSegment } from '@/components/admin/dashboard/FunnelDonut';
 import TrendArea from '@/components/admin/dashboard/TrendArea';
 import OriginBars, { type OriginRow } from '@/components/admin/dashboard/OriginBars';
 import DashboardFilters from '@/components/admin/dashboard/DashboardFilters';
+import ActivityHeatmap from '@/components/admin/dashboard/ActivityHeatmap';
+import FunnelVelocity from '@/components/admin/dashboard/FunnelVelocity';
+import ChannelPerformance from '@/components/admin/dashboard/ChannelPerformance';
+import RetentionCohort from '@/components/admin/dashboard/RetentionCohort';
+import ActivityFeed from '@/components/admin/dashboard/ActivityFeed';
 import {
   applyLeadFilters,
   bucketByDate,
   decodeFiltersFromParams,
   encodeFiltersToParams,
   DEFAULT_FILTERS,
-  getPeriodRange,
   getPreviousRange,
   PERIOD_LABEL,
 } from '@/lib/dashboardFilters';
+import {
+  buildHeatmap,
+  buildVelocity,
+  buildChannels,
+  buildCohort,
+  type WAMessageLite,
+} from '@/lib/dashboardAnalytics';
 import { toast } from 'sonner';
 
 interface LeadLite {
@@ -79,14 +89,25 @@ const STATUS_TONE: Record<string, string> = {
   lost: 'bg-muted text-muted-foreground',
 };
 
+const TABS = [
+  { key: 'overview', label: 'Visão geral', icon: 'dashboard' },
+  { key: 'funnel', label: 'Funil & Velocidade', icon: 'filter_alt' },
+  { key: 'channels', label: 'Canais', icon: 'hub' },
+  { key: 'activity', label: 'Atividade & Retenção', icon: 'pulse' },
+] as const;
+type TabKey = (typeof TABS)[number]['key'];
+
 export default function DashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [leads, setLeads] = useState<LeadLite[]>([]);
   const [customers, setCustomers] = useState<CustomerLite[]>([]);
   const [interactions, setInteractions] = useState<InteractionLite[]>([]);
+  const [waMessages, setWaMessages] = useState<WAMessageLite[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [filters, setFilters] = useState(() => decodeFiltersFromParams(searchParams));
+  const initialTab = (searchParams.get('tab') as TabKey) || 'overview';
+  const [tab, setTab] = useState<TabKey>(initialTab);
 
   const updateFilters = useCallback((next: typeof filters) => {
     setFilters(next);
@@ -97,10 +118,18 @@ export default function DashboardPage() {
     setSearchParams(newParams, { replace: true });
   }, [searchParams, setSearchParams]);
 
+  const updateTab = useCallback((next: TabKey) => {
+    setTab(next);
+    const newParams = new URLSearchParams(searchParams);
+    if (next === 'overview') newParams.delete('tab');
+    else newParams.set('tab', next);
+    setSearchParams(newParams, { replace: true });
+  }, [searchParams, setSearchParams]);
+
   const interactionCounts = useInteractionCounts(leads.map((l) => l.id));
 
   const fetchData = useCallback(async () => {
-    const [leadsRes, customersRes, interactionsRes] = await Promise.all([
+    const [leadsRes, customersRes, interactionsRes, waRes] = await Promise.all([
       supabase
         .from('leads')
         .select('id, name, phone, origin, product_interest, status, created_at, last_contact_at, next_contact_at')
@@ -113,11 +142,17 @@ export default function DashboardPage() {
         .from('interactions')
         .select('id, contact_type, description, interaction_date, lead_id, customer_id')
         .order('interaction_date', { ascending: false })
-        .limit(20),
+        .limit(500),
+      supabase
+        .from('whatsapp_messages')
+        .select('id, lead_id, direction, status, created_at')
+        .order('created_at', { ascending: false })
+        .limit(1000),
     ]);
     setLeads((leadsRes.data as LeadLite[]) ?? []);
     setCustomers((customersRes.data as CustomerLite[]) ?? []);
     setInteractions((interactionsRes.data as InteractionLite[]) ?? []);
+    setWaMessages((waRes.data as WAMessageLite[]) ?? []);
     setLoading(false);
   }, []);
 
@@ -126,7 +161,6 @@ export default function DashboardPage() {
   useRealtimeTable('customers', fetchData);
   useRealtimeTable('interactions', fetchData);
 
-  // Origens disponíveis (todos os leads, não filtrados)
   const availableOrigins = useMemo(() => {
     const set = new Set<string>();
     leads.forEach((l) => set.add(l.origin ?? '__none__'));
@@ -138,13 +172,11 @@ export default function DashboardPage() {
     return { level: s.level, urgent: s.urgent };
   }, [interactionCounts]);
 
-  // Leads filtrados (afeta KPIs/charts/listas)
   const filteredLeads = useMemo(
     () => applyLeadFilters(leads, filters, scoreOf),
     [leads, filters, scoreOf],
   );
 
-  // Período anterior para comparação
   const prevLeads = useMemo(() => {
     if (filters.period === 'all') return [];
     const { start, end } = getPreviousRange(filters.period);
@@ -154,7 +186,6 @@ export default function DashboardPage() {
     });
   }, [leads, filters.period]);
 
-  // STATS ----------------------------------------------------------
   const stats = useMemo(() => {
     const total = filteredLeads.length;
     const sold = filteredLeads.filter((l) => l.status === LEAD_STATUS.WON).length;
@@ -173,7 +204,6 @@ export default function DashboardPage() {
     }
 
     const conversionRate = total > 0 ? (sold / total) * 100 : 0;
-
     const prevTotal = prevLeads.length;
     const prevSold = prevLeads.filter((l) => l.status === LEAD_STATUS.WON).length;
     const totalDelta = prevTotal > 0 ? Math.round(((total - prevTotal) / prevTotal) * 100) : (total > 0 ? 100 : 0);
@@ -181,25 +211,16 @@ export default function DashboardPage() {
     const convDelta = conversionRate - prevConv;
 
     return {
-      total,
-      sold,
-      inProgress,
-      hot,
-      attention,
-      overdue,
-      noResponse,
-      conversionRate,
+      total, sold, inProgress, hot, attention, overdue, noResponse, conversionRate,
       newLeads: filteredLeads.filter((l) => l.status === LEAD_STATUS.NEW).length,
       contacting: filteredLeads.filter((l) => l.status === LEAD_STATUS.CONTACTING).length,
       negotiating: filteredLeads.filter((l) => l.status === LEAD_STATUS.NEGOTIATING).length,
       lostCount: filteredLeads.filter((l) => l.status === LEAD_STATUS.LOST).length,
-      totalDelta,
-      convDelta,
+      totalDelta, convDelta,
       customerCount: customers.length,
     };
   }, [filteredLeads, customers, interactionCounts, prevLeads]);
 
-  // Buckets para sparkline & trend
   const bucketsAll = useMemo(() => bucketByDate(filteredLeads, filters.period), [filteredLeads, filters.period]);
   const bucketsWon = useMemo(
     () => bucketByDate(filteredLeads.filter((l) => l.status === LEAD_STATUS.WON), filters.period),
@@ -224,20 +245,6 @@ export default function DashboardPage() {
       .slice(0, 4);
   }, [filteredLeads]);
 
-  const aiSuggestion = useMemo(() => {
-    if (hotLeads.length === 0) return null;
-    const top = hotLeads[0];
-    const days = top.last_contact_at
-      ? Math.floor((Date.now() - new Date(top.last_contact_at).getTime()) / 86400e3)
-      : null;
-    return {
-      lead: top,
-      text: days != null && days >= 3
-        ? `${top.name} é um lead quente sem retorno há ${days} dias. Reabrir contato hoje pode aumentar a chance de fechamento.`
-        : `${top.name} apresenta engajamento alto. Agende uma demonstração ou envio de proposta nas próximas 24h para acelerar o fechamento.`,
-    };
-  }, [hotLeads]);
-
   const funnelSegments: FunnelSegment[] = useMemo(() => ([
     { key: 'new', label: 'Novos', value: stats.newLeads, tone: 'info' },
     { key: 'contacting', label: 'Em contato', value: stats.contacting, tone: 'primary' },
@@ -246,7 +253,6 @@ export default function DashboardPage() {
     { key: 'lost', label: 'Perdido', value: stats.lostCount, tone: 'muted' },
   ]), [stats]);
 
-  // Origin rows
   const originRows: OriginRow[] = useMemo(() => {
     const map = new Map<string, Record<string, number>>();
     for (const l of filteredLeads) {
@@ -270,6 +276,16 @@ export default function DashboardPage() {
       .slice(0, 6);
   }, [filteredLeads]);
 
+  // ---- Novos analytics ----
+  const heatmap = useMemo(() => buildHeatmap(interactions), [interactions]);
+  const velocity = useMemo(() => buildVelocity(filteredLeads), [filteredLeads]);
+  const channels = useMemo(() => buildChannels(filteredLeads, waMessages), [filteredLeads, waMessages]);
+  const cohort = useMemo(() => buildCohort(leads, customers), [leads, customers]);
+
+  // Mapas de nomes para o feed
+  const leadNames = useMemo(() => Object.fromEntries(leads.map((l) => [l.id, l.name])), [leads]);
+  const customerNames = useMemo(() => Object.fromEntries(customers.map((c) => [c.id, c.name])), [customers]);
+
   // Export CSV
   const handleExport = useCallback(() => {
     if (filteredLeads.length === 0) {
@@ -278,10 +294,7 @@ export default function DashboardPage() {
     }
     const header = ['Nome', 'Telefone', 'Origem', 'Interesse', 'Status', 'Criado em', 'Último contato'];
     const rows = filteredLeads.map((l) => [
-      l.name,
-      l.phone ?? '',
-      l.origin ?? '',
-      l.product_interest ?? '',
+      l.name, l.phone ?? '', l.origin ?? '', l.product_interest ?? '',
       STATUS_LABEL_PT[l.status] ?? l.status,
       new Date(l.created_at).toLocaleString('pt-BR'),
       l.last_contact_at ? new Date(l.last_contact_at).toLocaleString('pt-BR') : '',
@@ -305,13 +318,13 @@ export default function DashboardPage() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="max-w-[1480px] mx-auto space-y-6">
+      <div className="max-w-[1480px] mx-auto space-y-5">
         {/* Header */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <h1 className="text-[26px] font-bold text-foreground tracking-tight">Dashboard</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Visão geral da operação comercial · <span className="text-foreground font-semibold">{periodLabel}</span>
+              Visão geral da operação · <span className="text-foreground font-semibold">{periodLabel}</span>
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -325,7 +338,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Filters bar (sticky) */}
+        {/* Filters */}
         <DashboardFilters
           filters={filters}
           availableOrigins={availableOrigins}
@@ -334,324 +347,269 @@ export default function DashboardPage() {
           onExport={handleExport}
         />
 
-        {/* KPI Cards (3D) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-up">
-          <KpiCard
-            label="Total de Leads"
-            icon="group"
-            value={stats.total.toString()}
-            delta={`${stats.totalDelta >= 0 ? '+' : ''}${stats.totalDelta}%`}
-            trend={stats.totalDelta >= 0 ? 'up' : 'down'}
-            sub={`${stats.customerCount} clientes ativos`}
-            sparkline={bucketsAll.values}
-            tone="info"
-          />
-          <KpiCard
-            label="Em andamento"
-            icon="autorenew"
-            value={stats.inProgress.toString()}
-            delta={`${stats.negotiating} negoc.`}
-            trend="flat"
-            sub={`${stats.contacting} em contato ativo`}
-            sparkline={[stats.newLeads, stats.contacting, stats.negotiating, stats.sold]}
-            tone="warning"
-          />
-          <KpiCard
-            label="Conversão"
-            icon="rocket_launch"
-            value={`${stats.conversionRate.toFixed(1)}%`}
-            delta={`${stats.convDelta >= 0 ? '+' : ''}${stats.convDelta.toFixed(1)}pp`}
-            trend={stats.convDelta >= 0 ? 'up' : 'down'}
-            sub="Meta: 18.0%"
-            sparkline={bucketsWon.values}
-            tone={stats.convDelta >= 0 ? 'success' : 'destructive'}
-            ringValue={(stats.conversionRate / 18) * 100}
-            ringTone="success"
-          />
-          <KpiCard
-            label="Sem resposta"
-            icon="warning"
-            value={stats.noResponse.toString()}
-            delta={`${stats.overdue} atrasados`}
-            trend={stats.noResponse > 0 ? 'down' : 'up'}
-            sub="Reengaje hoje"
-            sparkline={[0, stats.attention, stats.overdue, stats.noResponse]}
-            tone="destructive"
-          />
-        </div>
+        {/* Tabs */}
+        <Tabs value={tab} onValueChange={(v) => updateTab(v as TabKey)}>
+          <TabsList className="w-full sm:w-auto h-auto p-1 bg-muted/50 grid grid-cols-2 sm:flex">
+            {TABS.map((t) => (
+              <TabsTrigger
+                key={t.key}
+                value={t.key}
+                className="data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5 text-[12px] font-semibold"
+              >
+                <MSym name={t.icon} size={15} />
+                <span>{t.label}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        {/* Row 2: Trend + Funnel */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 bg-card rounded-2xl border border-border p-5 relative overflow-hidden">
-            <div
-              className="pointer-events-none absolute inset-0 opacity-60"
-              style={{ background: 'radial-gradient(600px circle at 80% 0%, hsl(var(--primary) / 0.08), transparent 60%)' }}
-            />
-            <div className="relative">
+          {/* ===== OVERVIEW ===== */}
+          <TabsContent value="overview" className="mt-5 space-y-5 animate-fade-in-up">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <KpiCard label="Total de Leads" icon="group" value={stats.total.toString()}
+                delta={`${stats.totalDelta >= 0 ? '+' : ''}${stats.totalDelta}%`}
+                trend={stats.totalDelta >= 0 ? 'up' : 'down'}
+                sub={`${stats.customerCount} clientes ativos`}
+                sparkline={bucketsAll.values} tone="info" />
+              <KpiCard label="Em andamento" icon="autorenew" value={stats.inProgress.toString()}
+                delta={`${stats.negotiating} negoc.`} trend="flat"
+                sub={`${stats.contacting} em contato ativo`}
+                sparkline={[stats.newLeads, stats.contacting, stats.negotiating, stats.sold]}
+                tone="warning" />
+              <KpiCard label="Conversão" icon="rocket_launch" value={`${stats.conversionRate.toFixed(1)}%`}
+                delta={`${stats.convDelta >= 0 ? '+' : ''}${stats.convDelta.toFixed(1)}pp`}
+                trend={stats.convDelta >= 0 ? 'up' : 'down'} sub="Meta: 18.0%"
+                sparkline={bucketsWon.values}
+                tone={stats.convDelta >= 0 ? 'success' : 'destructive'}
+                ringValue={(stats.conversionRate / 18) * 100} ringTone="success" />
+              <KpiCard label="Sem resposta" icon="warning" value={stats.noResponse.toString()}
+                delta={`${stats.overdue} atrasados`}
+                trend={stats.noResponse > 0 ? 'down' : 'up'}
+                sub="Reengaje hoje"
+                sparkline={[0, stats.attention, stats.overdue, stats.noResponse]}
+                tone="destructive" />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2 bg-card rounded-2xl border border-border p-5">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <MSym name="show_chart" size={18} className="text-primary" />
+                    Tendência de leads
+                  </h3>
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">{periodLabel}</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground mb-4">Volume diário comparado a conversões.</p>
+                <TrendArea
+                  labels={bucketsAll.labels}
+                  series={[
+                    { key: 'all', label: 'Todos os leads', values: bucketsAll.values, tone: 'primary' },
+                    { key: 'won', label: 'Ganhos', values: bucketsWon.values, tone: 'success' },
+                  ]}
+                />
+              </div>
+
+              <div className="bg-card rounded-2xl border border-border p-5">
+                <h3 className="text-sm font-bold text-foreground mb-4">Snapshot</h3>
+                <ul className="space-y-2.5">
+                  {[
+                    { label: 'Quentes', value: stats.hot, tone: 'text-warning', icon: 'local_fire_department' },
+                    { label: 'Atenção', value: stats.attention, tone: 'text-info', icon: 'visibility' },
+                    { label: 'Atrasados', value: stats.overdue, tone: 'text-destructive', icon: 'schedule' },
+                    { label: 'Reengajar', value: reengagementCandidates.length, tone: 'text-primary', icon: 'replay' },
+                  ].map((s) => (
+                    <li key={s.label} className="flex items-center gap-2.5">
+                      <MSym name={s.icon} size={16} className={s.tone} filled />
+                      <span className="text-[12px] text-foreground/90">{s.label}</span>
+                      <span className="ml-auto text-[14px] font-bold tabular-nums text-foreground">{s.value}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2 bg-card rounded-2xl border border-border overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                      <MSym name="local_fire_department" size={18} className="text-destructive" filled />
+                      Priority Leads
+                    </h3>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{hotLeads.length} leads quentes priorizados</p>
+                  </div>
+                </div>
+                {hotLeads.length === 0 ? (
+                  <div className="p-10 text-center">
+                    <p className="text-sm font-medium text-foreground">Nenhum lead quente</p>
+                    <p className="text-xs text-muted-foreground mt-1">Os leads mais promissores aparecerão aqui.</p>
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-border">
+                    {hotLeads.map((l) => {
+                      const meta = [l.origin, l.product_interest].filter(Boolean).join(' · ');
+                      const statusLabel = STATUS_LABEL_PT[l.status] ?? l.status;
+                      return (
+                        <li key={l.id}>
+                          <Link to={`/admin/leads?focus=${l.id}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition-colors">
+                            <InitialsAvatar name={l.name} size="md" />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-sm font-semibold text-foreground truncate">{l.name}</p>
+                                <span className={cn('inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full', STATUS_TONE[l.status] ?? 'bg-muted text-muted-foreground')}>
+                                  {statusLabel}
+                                </span>
+                                <LeadScoreBadge lead={l} interactionCount={interactionCounts[l.id] ?? 0} size="sm" />
+                              </div>
+                              {meta && (
+                                <p className="text-xs text-muted-foreground truncate mt-1">{meta}</p>
+                              )}
+                            </div>
+                            {l.phone && (
+                              <WhatsAppQuickAction lead={l} interactionCount={interactionCounts[l.id] ?? 0} variant="icon" size="sm" onSent={fetchData} />
+                            )}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+
+              <div className="bg-card rounded-2xl border border-border overflow-hidden">
+                <div className="px-5 py-4 border-b border-border">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <MSym name="calendar_today" size={18} className="text-primary" />
+                    Próximos contatos
+                  </h3>
+                </div>
+                {upcomingSchedule.length === 0 ? (
+                  <div className="p-10 text-center text-sm text-muted-foreground">Nenhum retorno agendado.</div>
+                ) : (
+                  <ul className="divide-y divide-border">
+                    {upcomingSchedule.map((l) => {
+                      const d = new Date(l.next_contact_at!);
+                      const month = d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase();
+                      const day = d.getDate();
+                      const hour = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                      return (
+                        <li key={l.id}>
+                          <Link to={`/admin/leads?focus=${l.id}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition-colors">
+                            <div className="shrink-0 w-12 h-12 rounded-lg bg-muted flex flex-col items-center justify-center leading-none">
+                              <span className="text-[9px] font-bold text-muted-foreground">{month}</span>
+                              <span className="text-[16px] font-bold text-foreground tabular-nums">{day}</span>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[13px] font-semibold text-foreground truncate">{l.name}</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">{hour} · {l.product_interest ?? 'Retorno'}</p>
+                            </div>
+                            <ContactRecencyBadge lastContactAt={l.last_contact_at} status={l.status} createdAt={l.created_at} size="sm" />
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* ===== FUNNEL & VELOCITY ===== */}
+          <TabsContent value="funnel" className="mt-5 space-y-5 animate-fade-in-up">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="bg-card rounded-2xl border border-border p-5">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <MSym name="donut_large" size={18} className="text-info" />
+                    Funil de conversão
+                  </h3>
+                  <Link to="/admin/pipeline" className="text-[11px] font-semibold text-primary hover:opacity-80">Pipeline →</Link>
+                </div>
+                <p className="text-[11px] text-muted-foreground mb-4">Distribuição por estágio.</p>
+                <FunnelDonut segments={funnelSegments} />
+              </div>
+
+              <div className="bg-card rounded-2xl border border-border p-5">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <MSym name="speed" size={18} className="text-warning" />
+                    Velocidade do funil
+                  </h3>
+                </div>
+                <p className="text-[11px] text-muted-foreground mb-4">Tempo médio em cada estágio. Quanto menor, melhor.</p>
+                <FunnelVelocity rows={velocity} />
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* ===== CHANNELS ===== */}
+          <TabsContent value="channels" className="mt-5 space-y-5 animate-fade-in-up">
+            <div className="bg-card rounded-2xl border border-border p-5">
               <div className="flex items-center justify-between mb-1">
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                  <MSym name="show_chart" size={18} className="text-primary" />
-                  Tendência de leads
+                  <MSym name="hub" size={18} className="text-primary" />
+                  Performance por canal
                 </h3>
-                <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">{periodLabel}</span>
+                <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">{channels.length} canais</span>
               </div>
-              <p className="text-[11px] text-muted-foreground mb-4">Volume diário comparado a conversões.</p>
-              <TrendArea
-                labels={bucketsAll.labels}
-                series={[
-                  { key: 'all', label: 'Todos os leads', values: bucketsAll.values, tone: 'primary' },
-                  { key: 'won', label: 'Ganhos', values: bucketsWon.values, tone: 'success' },
-                ]}
+              <p className="text-[11px] text-muted-foreground mb-4">Volume, conversão e taxa de resposta por origem do lead.</p>
+              <ChannelPerformance
+                rows={channels}
+                activeOrigin={filters.origins.length === 1 ? filters.origins[0] : null}
+                onSelect={(origin) => {
+                  const isActive = filters.origins.length === 1 && filters.origins[0] === origin;
+                  updateFilters({ ...filters, origins: isActive ? [] : [origin] });
+                }}
               />
             </div>
-          </div>
-
-          <div className="bg-card rounded-2xl border border-border p-5 relative overflow-hidden">
-            <div
-              className="pointer-events-none absolute inset-0 opacity-60"
-              style={{ background: 'radial-gradient(400px circle at 50% 100%, hsl(var(--info) / 0.08), transparent 60%)' }}
-            />
-            <div className="relative">
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                  <MSym name="donut_large" size={18} className="text-info" />
-                  Funil de conversão
-                </h3>
-                <Link to="/admin/pipeline" className="text-[11px] font-semibold text-primary hover:opacity-80">Pipeline →</Link>
-              </div>
-              <p className="text-[11px] text-muted-foreground mb-4">Distribuição por estágio.</p>
-              <FunnelDonut segments={funnelSegments} />
-            </div>
-          </div>
-        </div>
-
-        {/* Row 3: Origin bars + AI Suggestion */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 bg-card rounded-2xl border border-border p-5">
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                <MSym name="bar_chart" size={18} className="text-warning" />
-                Origem dos leads
-              </h3>
-              <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">{originRows.length} canais</span>
-            </div>
-            <p className="text-[11px] text-muted-foreground mb-4">Volume e composição por canal de origem.</p>
-            <OriginBars rows={originRows} />
-          </div>
-
-          <div className="space-y-4">
-            {aiSuggestion && (
-              <div className="relative rounded-2xl border border-primary/20 p-5 overflow-hidden bg-card">
-                <div
-                  className="pointer-events-none absolute inset-0"
-                  style={{ background: 'radial-gradient(400px circle at 0% 0%, hsl(var(--primary) / 0.18), transparent 60%)' }}
-                />
-                <div className="relative">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="h-8 w-8 rounded-lg bg-primary/15 text-primary flex items-center justify-center">
-                      <MSym name="tips_and_updates" size={18} filled />
-                    </div>
-                    <div>
-                      <p className="text-[11px] uppercase tracking-[0.14em] font-bold text-primary">AI Suggestion</p>
-                      <p className="text-[10px] text-muted-foreground">Recomendação automática</p>
-                    </div>
-                  </div>
-                  <p className="text-[13px] text-foreground/90 leading-relaxed italic">"{aiSuggestion.text}"</p>
-                  <Link
-                    to={`/admin/leads?focus=${aiSuggestion.lead.id}`}
-                    className="inline-flex items-center gap-1.5 mt-4 h-8 px-3 rounded-lg bg-primary text-primary-foreground text-[11px] font-semibold hover:opacity-90 transition-opacity"
-                  >
-                    <MSym name="bolt" size={14} filled />
-                    Agir agora
-                  </Link>
-                </div>
-              </div>
-            )}
 
             <div className="bg-card rounded-2xl border border-border p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold text-foreground">Snapshot</h3>
-                <Link to="/admin/pipeline" className="text-[11px] font-semibold text-primary hover:opacity-80">Pipeline →</Link>
-              </div>
-              <ul className="space-y-2.5">
-                {[
-                  { label: 'Quentes', value: stats.hot, tone: 'text-warning', icon: 'local_fire_department' },
-                  { label: 'Atenção', value: stats.attention, tone: 'text-info', icon: 'visibility' },
-                  { label: 'Atrasados', value: stats.overdue, tone: 'text-destructive', icon: 'schedule' },
-                  { label: 'Reengajar', value: reengagementCandidates.length, tone: 'text-primary', icon: 'replay' },
-                ].map((s) => (
-                  <li key={s.label} className="flex items-center gap-2.5">
-                    <MSym name={s.icon} size={16} className={s.tone} filled />
-                    <span className="text-[12px] text-foreground/90">{s.label}</span>
-                    <span className="ml-auto text-[14px] font-bold tabular-nums text-foreground">{s.value}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Row 4: Priority Leads + Próximos contatos */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 bg-card rounded-2xl border border-border overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-              <div>
+              <div className="flex items-center justify-between mb-1">
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                  <MSym name="local_fire_department" size={18} className="text-destructive" filled />
-                  Priority Leads
+                  <MSym name="bar_chart" size={18} className="text-warning" />
+                  Origem dos leads — composição por estágio
                 </h3>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{hotLeads.length} leads quentes priorizados</p>
               </div>
+              <p className="text-[11px] text-muted-foreground mb-4">Como os leads de cada origem se distribuem no funil.</p>
+              <OriginBars rows={originRows} />
             </div>
+          </TabsContent>
 
-            {hotLeads.length === 0 ? (
-              <div className="p-10 text-center">
-                <div className="w-12 h-12 rounded-2xl bg-muted mx-auto flex items-center justify-center mb-3">
-                  <MSym name="energy_savings_leaf" size={22} className="text-muted-foreground" />
+          {/* ===== ACTIVITY & RETENTION ===== */}
+          <TabsContent value="activity" className="mt-5 space-y-5 animate-fade-in-up">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="bg-card rounded-2xl border border-border p-5">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <MSym name="grid_on" size={18} className="text-primary" />
+                    Heatmap de atividade
+                  </h3>
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">{heatmap.total} interações</span>
                 </div>
-                <p className="text-sm font-medium text-foreground">Nenhum lead quente</p>
-                <p className="text-xs text-muted-foreground mt-1">Os leads mais promissores aparecerão aqui.</p>
+                <p className="text-[11px] text-muted-foreground mb-4">Quando seus leads mais respondem? Use para agendar contatos.</p>
+                <ActivityHeatmap cells={heatmap.cells} max={heatmap.max} total={heatmap.total} />
               </div>
-            ) : (
-              <ul className="divide-y divide-border">
-                {hotLeads.map((l) => {
-                  const meta = [l.origin, l.product_interest].filter(Boolean).join(' · ');
-                  const statusLabel = STATUS_LABEL_PT[l.status] ?? l.status;
-                  return (
-                    <li key={l.id}>
-                      <Link to={`/admin/leads?focus=${l.id}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition-colors">
-                        <InitialsAvatar name={l.name} size="md" />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-semibold text-foreground truncate">{l.name}</p>
-                            <span className={cn('inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full', STATUS_TONE[l.status] ?? 'bg-muted text-muted-foreground')}>
-                              {statusLabel}
-                            </span>
-                            <LeadScoreBadge lead={l} interactionCount={interactionCounts[l.id] ?? 0} size="sm" />
-                          </div>
-                          {meta && (
-                            <p className="text-xs text-muted-foreground truncate mt-1 flex items-center gap-1.5">
-                              <MSym name="storefront" size={13} className="opacity-60" />
-                              {meta}
-                            </p>
-                          )}
-                        </div>
-                        {l.phone && (
-                          <div className="shrink-0 flex items-center gap-1">
-                            <WhatsAppQuickAction
-                              lead={l}
-                              interactionCount={interactionCounts[l.id] ?? 0}
-                              variant="icon"
-                              size="sm"
-                              onSent={fetchData}
-                            />
-                          </div>
-                        )}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
 
-            <div className="px-5 py-3 border-t border-border bg-muted/30">
-              <Link to="/admin/leads" className="text-[12px] font-semibold text-primary hover:opacity-80 transition-opacity inline-flex items-center gap-1">
-                Ver todos os leads ({stats.total})
-                <MSym name="arrow_forward" size={14} />
-              </Link>
+              <div className="bg-card rounded-2xl border border-border p-5">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    <MSym name="timeline" size={18} className="text-success" />
+                    Cohort de conversão
+                  </h3>
+                </div>
+                <p className="text-[11px] text-muted-foreground mb-4">% de leads que viraram cliente, por semana de entrada.</p>
+                <RetentionCohort rows={cohort.rows} bucketLabels={cohort.bucketLabels} />
+              </div>
             </div>
-          </div>
 
-          <div className="bg-card rounded-2xl border border-border overflow-hidden">
-            <div className="px-5 py-4 border-b border-border">
-              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                <MSym name="calendar_today" size={18} className="text-primary" />
-                Próximos contatos
-              </h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Agenda de retornos programados</p>
-            </div>
-            {upcomingSchedule.length === 0 ? (
-              <div className="p-10 text-center text-sm text-muted-foreground">Nenhum retorno agendado.</div>
-            ) : (
-              <ul className="divide-y divide-border">
-                {upcomingSchedule.map((l) => {
-                  const d = new Date(l.next_contact_at!);
-                  const month = d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase();
-                  const day = d.getDate();
-                  const hour = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                  return (
-                    <li key={l.id}>
-                      <Link to={`/admin/leads?focus=${l.id}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/40 transition-colors">
-                        <div className="shrink-0 w-12 h-12 rounded-lg bg-muted flex flex-col items-center justify-center leading-none">
-                          <span className="text-[9px] font-bold text-muted-foreground">{month}</span>
-                          <span className="text-[16px] font-bold text-foreground tabular-nums">{day}</span>
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[13px] font-semibold text-foreground truncate">{l.name}</p>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">{hour} · {l.product_interest ?? 'Retorno'}</p>
-                        </div>
-                        <ContactRecencyBadge
-                          lastContactAt={l.last_contact_at}
-                          status={l.status}
-                          createdAt={l.created_at}
-                          size="sm"
-                        />
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        </div>
+            <ActivityFeed
+              items={interactions}
+              leadNames={leadNames}
+              customerNames={customerNames}
+            />
 
-        {/* Row 5: Activity Feed */}
-        <div className="bg-card rounded-2xl border border-border overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-            <h3 className="text-sm font-bold text-foreground">Activity Feed</h3>
-            <span className="text-[11px] text-muted-foreground">{interactions.length} interações recentes</span>
-          </div>
-          {interactions.length === 0 ? (
-            <div className="p-10 text-center text-sm text-muted-foreground">
-              Sem atividades recentes. Registre uma interação para começar.
-            </div>
-          ) : (
-            <ul className="divide-y divide-border">
-              {interactions.slice(0, 8).map((i) => {
-                const iconMap: Record<string, string> = {
-                  whatsapp: 'chat',
-                  ligação: 'call',
-                  ligacao: 'call',
-                  email: 'mail',
-                  'e-mail': 'mail',
-                  reunião: 'event',
-                  reuniao: 'event',
-                  observação: 'sticky_note_2',
-                  observacao: 'sticky_note_2',
-                };
-                const icon = iconMap[i.contact_type.toLowerCase()] ?? 'bolt';
-                return (
-                  <li key={i.id} className="flex items-start gap-3 px-5 py-3.5">
-                    <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0 mt-0.5">
-                      <MSym name={icon} size={16} className="text-muted-foreground" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[13px] text-foreground line-clamp-2 leading-relaxed">{i.description}</p>
-                      <p className="text-[11px] text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(i.interaction_date), { locale: ptBR, addSuffix: true })}
-                        <span className="mx-1.5">·</span>
-                        <span className="capitalize">{i.contact_type}</span>
-                      </p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-
-        {/* Reengajamento */}
-        <ReengagementQueue candidates={reengagementCandidates} onSent={fetchData} />
+            <ReengagementQueue candidates={reengagementCandidates} onSent={fetchData} />
+          </TabsContent>
+        </Tabs>
       </div>
     </TooltipProvider>
   );

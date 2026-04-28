@@ -1,38 +1,111 @@
-# Corrigir scroll do diálogo "Automações da Régua" + auditar CRM
+## Objetivo
 
-## 1. Bug confirmado — scroll quebrado no AutomationsDialog
+Modernizar o Dashboard com (1) Activity Feed **utilizável** (cada item leva ao lead/cliente correspondente, mostra nome do contato, evita preview de templates gigantes) e (2) novos dashboards **interativos, responsivos e atuais** organizados em abas — sem sobrecarregar a tela inicial.
 
-**Causa**: `DialogContent` do shadcn usa `display: grid` por padrão. O override `flex flex-col` é sobrescrito pelo `grid`, então o `flex-1` no `ScrollArea` interno não recebe altura limitada, e o conteúdo escapa de `max-h-[85vh]` sem rolar.
+---
 
-**Correção**:
-- `src/components/whatsapp/AutomationsDialog.tsx` linha 53:
-  - Trocar `className="max-w-2xl max-h-[85vh] flex flex-col"` por `className="max-w-2xl max-h-[85vh] !grid-rows-[auto_minmax(0,1fr)] grid-cols-1"`
-  - Garantir `min-h-0` no `ScrollArea` (linha 65) para que o filho do grid possa encolher e rolar.
+## 1. Activity Feed — torná-lo utilizável
 
-Resultado: o card de cada etapa rola dentro do diálogo; header e footer ficam fixos.
+Problemas atuais (visíveis no print):
+- Mostra só a descrição crua (template gigante "[Template: Primeiro contato] Olá Chef!...") sem identificar o lead.
+- Não é clicável.
+- Repete o mesmo template várias vezes sem diferenciação visual.
 
-## 2. Auditoria leve dos demais bugs do CRM
+Correções:
+- Resolver `lead_id`/`customer_id` → exibir **nome do contato** em destaque + ação ("Mensagem para **Chef**").
+- Resumir templates: detectar prefixo `[Template: X]` e mostrar como chip "Template · Primeiro contato" + 1 linha do corpo.
+- Cada item vira `<Link>` para `/admin/leads?focus={id}` ou `/admin/clients?focus={id}`.
+- Hover state, ícone tonal por tipo (whatsapp=verde, ligação=azul, etc).
+- Filtro rápido no topo: Todos · WhatsApp · Ligações · Notas.
+- "Ver tudo" → leva à página de telemetria/interações.
 
-Para não fazer mudanças invisíveis em massa, vou rodar uma varredura focada nestes pontos comuns e listar findings (não corrigir tudo às cegas):
+---
 
-- **Diálogos / Sheets**: outros casos do mesmo padrão `flex flex-col` dentro de `DialogContent`/`SheetContent` que não rolam.
-- **Listas longas sem virtualização ou scroll container**: páginas onde a lista cresce além do viewport.
-- **Realtime duplicado**: hooks que se inscrevem em `postgres_changes` sem cleanup correto, causando re-fetch em loop.
-- **Z-index de popovers/tooltips dentro de dialogs**: itens escondidos atrás do overlay.
-- **`onClick` em linhas de tabela** que disparam quando o usuário clica em botões internos sem `stopPropagation`.
+## 2. Reorganizar em abas (não empilhar tudo)
 
-Findings serão entregues no chat com:
-- arquivo e linha
-- descrição curta do bug
-- severidade (alta / média / baixa)
+Substituir a longa rolagem por `Tabs` no topo do dashboard:
 
-Você prioriza quais corrigir num próximo loop.
+```text
+[ Visão geral ] [ Funil & Velocidade ] [ Canais & Origem ] [ Atividade & Retenção ]
+```
 
-## Por que não corrigir tudo agora?
+- **Visão geral** (atual, enxuta): KPIs + Tendência + Priority Leads + Próximos contatos.
+- **Funil & Velocidade** (novo): donut do funil + novo gráfico de velocidade.
+- **Canais & Origem** (novo): OriginBars + novo gráfico de performance por canal.
+- **Atividade & Retenção** (novo): Activity Feed melhorado + heatmap + cohort.
 
-“Todos os bugs existentes” é escopo aberto. Sem listar findings primeiro, eu corro o risco de mexer em código que está intencionalmente daquele jeito (ex.: tooltips dentro de drawers, listas que devem rolar a página inteira). A auditoria é rápida e te devolve controle sobre o que muda.
+Filtros e período permanecem sticky no topo, válidos para todas as abas.
 
-## Entregável deste loop
+---
 
-1. Diálogo de Automações com scroll funcional.
-2. Lista de bugs encontrados na auditoria, com severidade, para você aprovar a próxima rodada de correções.
+## 3. Novos dashboards (4)
+
+### A. Heatmap de Atividade (Activity Heatmap)
+- Grid 7 dias × 24 horas mostrando volume de interações.
+- Cores em escala HSL com `--primary`.
+- Hover: tooltip com "Quarta 14h · 8 interações".
+- Útil para descobrir melhor horário de contato.
+- Fonte: `interactions.interaction_date`.
+
+### B. Velocidade do Funil (Funnel Velocity)
+- Barras horizontais com **tempo médio** que um lead passa em cada estágio (novo → em contato → negociação → ganho).
+- Comparação com período anterior (delta em verde/vermelho).
+- Identifica gargalos.
+- Fonte: histórico de `leads.status` + `created_at` + `last_contact_at` (aproximação a partir de interações).
+
+### C. Performance por Canal de WhatsApp
+- Cards interativos por origem com 4 mini-métricas: enviados / respondidos / convertidos / taxa.
+- Mini-sparkline em cada card.
+- Click → filtra o resto do dashboard por essa origem.
+- Fonte: `whatsapp_messages` cruzado com `leads.origin` e `leads.status`.
+
+### D. Cohort de Retenção / Conversão
+- Tabela cohort: linhas = semana de entrada do lead, colunas = semanas até conversão (W0, W1, W2, W3+).
+- Células coloridas por taxa de conversão acumulada.
+- Mostra quanto tempo leva para fechar e onde leads "morrem".
+- Fonte: `leads.created_at` + `customers.purchase_date`.
+
+Todos com:
+- SVG nativo (sem libs novas) seguindo o padrão de `TrendArea`/`FunnelDonut`.
+- Tooltip on hover, animação `fade-in-up` ao montar.
+- Skeleton enquanto carrega.
+- Responsivo: scroll horizontal em telas estreitas para tabela cohort/heatmap.
+
+---
+
+## 4. Responsividade
+
+- Tabs viram `Select` em `< sm`.
+- Heatmap: scroll horizontal em mobile, célula mínima 18px.
+- Cards de canal: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`.
+- Cohort: scroll horizontal com cabeçalho sticky.
+- Tooltips usam `Popover` em touch (long-press).
+
+---
+
+## Detalhes técnicos
+
+**Arquivos novos:**
+- `src/components/admin/dashboard/ActivityHeatmap.tsx`
+- `src/components/admin/dashboard/FunnelVelocity.tsx`
+- `src/components/admin/dashboard/ChannelPerformance.tsx`
+- `src/components/admin/dashboard/RetentionCohort.tsx`
+- `src/components/admin/dashboard/ActivityFeed.tsx` (extraído + melhorado, com resolução de leads/customers)
+- `src/lib/dashboardAnalytics.ts` (helpers puros: buildHeatmap, buildVelocity, buildChannels, buildCohort)
+
+**Arquivos editados:**
+- `src/pages/admin/DashboardPage.tsx`: introduzir `<Tabs>` (`@/components/ui/tabs` já existe), distribuir blocos atuais e novos pelas 4 abas, ampliar fetch para `whatsapp_messages` (limit ~500) e mais `interactions` (~500) usados pelos analytics.
+- Persistir aba ativa em `?tab=` na URL (mesmo padrão dos filtros).
+
+**Performance:**
+- Computações em `useMemo` por aba.
+- Paginar Activity Feed (20 + "carregar mais").
+
+**Sem libs novas** — tudo com SVG + Tailwind, mantendo a direção visual Monday-clean já estabelecida (sem gradientes purple, sem glassmorphism).
+
+---
+
+## Fora do escopo
+- Exportar PDF dos dashboards.
+- Criação de dashboards customizáveis pelo usuário.
+- Real-time push de novas interações no heatmap (já cobre via `useRealtimeTable`).
