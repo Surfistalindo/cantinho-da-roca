@@ -1,5 +1,4 @@
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
-import { useMouseTilt } from '@/hooks/useMouseTilt';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeartPulse, faCertificate, faSeedling, faTruckFast } from '@fortawesome/free-solid-svg-icons';
 import LeafSVG from './LeafSVG';
@@ -36,72 +35,32 @@ const benefits = [
 ];
 
 function BenefitCard({ b, index, isVisible }: { b: typeof benefits[0]; index: number; isVisible: boolean }) {
-  const { ref, tilt, onMouseMove, onMouseLeave } = useMouseTilt(15);
-
   return (
     <div
-      ref={ref}
-      className="group relative rounded-2xl overflow-hidden min-h-[220px] sm:min-h-[280px]"
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
+      className="group relative rounded-2xl overflow-hidden min-h-[220px] sm:min-h-[280px] transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_18px_40px_-20px_hsl(25_45%_22%/0.4)] shadow-[0_4px_15px_-8px_hsl(25_45%_22%/0.2)]"
       style={{
-        perspective: '800px',
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'translateY(0)' : 'translateY(40px)',
         transition: `opacity 0.6s ease ${index * 0.12}s, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.12}s`,
       }}
     >
-      <div
-        className="relative w-full h-full rounded-2xl overflow-hidden"
-        style={{
-          transform: `rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg) translateZ(0)`,
-          transition: tilt.rotateX === 0 ? 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)' : 'transform 0.1s linear',
-          transformStyle: 'preserve-3d',
-          boxShadow: tilt.rotateX !== 0
-            ? `${-tilt.rotateY * 1.5}px ${tilt.rotateX * 1.5}px 30px rgba(0,0,0,0.3)`
-            : '0 4px 15px rgba(0,0,0,0.1)',
-          willChange: 'transform',
-        }}
-      >
-        {/* Background image */}
-        <img
-          src={b.image}
-          alt=""
-          aria-hidden="true"
-          loading="lazy"
-          className="absolute inset-0 w-full h-full object-cover z-0 group-hover:scale-105 transition-transform duration-700"
-        />
+      <img
+        src={b.image}
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+        className="absolute inset-0 w-full h-full object-cover z-0 group-hover:scale-105 transition-transform duration-700"
+      />
 
-        {/* Dark overlay for text legibility */}
-        <div className="absolute inset-0 z-[2] bg-gradient-to-t from-black/75 via-black/45 to-black/30 group-hover:from-black/80 transition-colors duration-500" />
+      <div className="absolute inset-0 z-[2] bg-gradient-to-t from-[hsl(25_45%_15%/0.85)] via-[hsl(25_45%_15%/0.5)] to-[hsl(25_45%_15%/0.25)] group-hover:from-[hsl(25_45%_15%/0.9)] transition-colors duration-500" />
 
-        {/* Light reflection that follows mouse */}
-        <div
-          className="absolute inset-0 z-[3] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          style={{
-            background: `radial-gradient(circle at ${tilt.lightX}% ${tilt.lightY}%, rgba(255,255,255,0.2) 0%, transparent 60%)`,
-          }}
-        />
-
-        {/* Content */}
-        <div className="relative z-[4] flex flex-col justify-end h-full p-6 sm:p-8" style={{ transform: 'translateZ(30px)', transformStyle: 'preserve-3d' }}>
-          <div className="inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl mb-4 bg-white/15 text-white backdrop-blur-sm group-hover:bg-white/25 transition-all duration-500">
-            <FontAwesomeIcon icon={b.icon} className="text-xl sm:text-2xl" />
-          </div>
-
-          <h3 className="text-lg sm:text-xl font-bold mb-1.5 text-white">{b.title}</h3>
-          <p className="text-white/80 text-sm leading-relaxed">{b.description}</p>
-
-          <button
-            onClick={() => document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' })}
-            className="mt-3 flex items-center gap-2 text-white/70 hover:text-white text-sm font-medium opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 cursor-pointer"
-          >
-            Saiba mais
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="transition-transform group-hover:translate-x-1">
-              <path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
+      <div className="relative z-[4] flex flex-col justify-end h-full p-6 sm:p-8">
+        <div className="inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl mb-4 bg-[hsl(var(--honey)/0.9)] text-[hsl(var(--cocoa))] group-hover:bg-[hsl(var(--honey))] transition-all duration-500 shadow-[0_4px_14px_hsl(38_85%_30%/0.4)]">
+          <FontAwesomeIcon icon={b.icon} className="text-xl sm:text-2xl" />
         </div>
+
+        <h3 className="font-display-warm text-xl sm:text-2xl font-bold mb-1.5 text-white">{b.title}</h3>
+        <p className="font-body-warm text-white/85 text-sm leading-relaxed">{b.description}</p>
       </div>
     </div>
   );
@@ -127,13 +86,13 @@ export default function BenefitsSection() {
             transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
-          <p className="text-primary text-sm font-semibold tracking-widest uppercase text-center mb-3 py-0 pt-[40px]">
-            Por que nos escolher
+          <p className="font-hand text-clay text-2xl text-center mb-1 pt-[40px]">
+            por que nos escolher
           </p>
-          <h2 className="text-2xl sm:text-5xl font-serif text-center mb-4 text-foreground">
+          <h2 className="font-display-warm text-3xl sm:text-5xl text-center mb-4 text-foreground">
             Por que escolher o Cantim da Roça?
           </h2>
-          <p className="text-muted-foreground text-center mb-10 sm:mb-16 max-w-xl mx-auto text-base sm:text-lg">
+          <p className="font-body-warm text-muted-foreground text-center mb-10 sm:mb-16 max-w-xl mx-auto text-base sm:text-lg">
             Simplicidade, qualidade e resultado. É isso que a gente entrega.
           </p>
         </div>
