@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Satisfy&family=Oswald:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Josefin+Sans:wght@300;400;500;600;700&display=swap');
-/* CRM "Atelier OS" — Fraunces (display serif), Geist (UI), JetBrains Mono (numbers) */
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* CRM "Monday-style" — Inter (UI única em todos os pesos) + JetBrains Mono (números) + Caveat (acento) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Caveat:wght@500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -175,12 +175,12 @@
     --sidebar-border: 220 14% 91%;
     --sidebar-ring: 212 95% 46%;
 
-    /* Typography roles — Atelier OS */
-    --font-crm-display: 'Fraunces', 'Recoleta', Georgia, serif;
-    --font-crm-body: 'Geist', 'Public Sans', system-ui, sans-serif;
-    --font-crm-label: 'Geist', 'Epilogue', sans-serif;
-    --font-crm-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-    --font-crm-hand: 'Caveat', cursive;
+    /* Typography roles — CRM Monday-style: Inter unificada (hierarquia por peso), Mono p/ números */
+    --font-crm-display: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-crm-body:    'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-crm-label:   'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-crm-mono:    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-crm-hand:    'Caveat', cursive;
   }
 
   /* ============================================================
@@ -298,6 +298,15 @@
     font-size: 13px;
     line-height: 18px;
     letter-spacing: 0;
+    /* Inter stylistic sets — números tabulares, "a" simplificado, "l" com cauda (visual Linear/Vercel) */
+    font-feature-settings: "cv11", "ss01", "ss03", "cv02";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .font-crm table,
+  .font-crm .tabular-nums,
+  .font-crm [data-tabular] {
+    font-variant-numeric: tabular-nums;
   }
   .font-crm h1, .font-crm .text-h1 {
     font-family: var(--font-crm-display);
