@@ -1,14 +1,16 @@
 import { Outlet } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AdminNavbar from './AdminNavbar';
-import AdminSidebar from './AdminSidebar';
+import MondaySidebar from './MondaySidebar';
 import { TelemetryErrorBoundary } from '@/components/admin/TelemetryErrorBoundary';
+import { useEnsureDefaultWorkspaces } from '@/hooks/useEnsureDefaultWorkspaces';
 
 export default function CrmLayout() {
+  useEnsureDefaultWorkspaces();
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background font-crm text-foreground">
-        <AdminSidebar />
+        <MondaySidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <AdminNavbar />
           <main className="flex-1 overflow-y-auto bg-background">

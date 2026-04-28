@@ -5,6 +5,25 @@ import heroBg from '@/assets/hero-cantim-bg.webp';
 import heroLqip from '@/assets/hero-cantim-bg-lqip.webp';
 import { useReveal } from '@/hooks/useReveal';
 import { cn } from '@/lib/utils';
+import { Stamp } from './Stamp';
+
+const LeafAccent = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden>
+    <path
+      d="M8 56 C 14 28, 32 10, 56 8 C 56 32, 38 50, 12 56 Z"
+      fill="currentColor"
+      opacity="0.92"
+    />
+    <path
+      d="M10 54 C 22 42, 36 28, 52 14"
+      stroke="currentColor"
+      strokeOpacity="0.5"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      fill="none"
+    />
+  </svg>
+);
 
 const StaticImageHero: React.FC = () => {
   const [bgLoaded, setBgLoaded] = useState(false);
@@ -72,26 +91,30 @@ const StaticImageHero: React.FC = () => {
         <div className="w-full max-w-3xl text-center">
           <span
             ref={badge.ref}
-            className={cn(
-              'inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 backdrop-blur-sm px-4 py-1.5 text-[11px] sm:text-xs uppercase tracking-[3px] text-white/90',
-              reveal(badge.visible)
-            )}
+            className={cn('inline-block', reveal(badge.visible))}
           >
-            100% Natural
+            <Stamp className="text-base text-honey">
+              <LeafAccent className="h-4 w-4 text-moss" />
+              colhido na semana
+            </Stamp>
           </span>
 
           <h1
             ref={title.ref}
             className={cn(
-              'mt-5 text-pretty text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.55)]',
-              reveal(title.visible)
+              'mt-6 text-pretty font-display-warm text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.55)]',
+              reveal(title.visible),
             )}
-            style={{ fontFamily: "'Playfair Display', serif", transitionDelay: '120ms' }}
+            style={{ transitionDelay: '120ms' }}
           >
             Sabores e cuidados <br className="hidden sm:block" />
             direto da{' '}
-            <span className="italic" style={{ color: '#a7e08c' }}>
+            <span
+              className="font-hand text-honey not-italic inline-flex items-baseline gap-1 align-baseline"
+              style={{ fontWeight: 600 }}
+            >
               roça
+              <LeafAccent className="h-7 w-7 sm:h-9 sm:w-9 text-moss -translate-y-1 -rotate-12" />
             </span>{' '}
             para você
           </h1>
@@ -99,10 +122,10 @@ const StaticImageHero: React.FC = () => {
           <p
             ref={subtitle.ref}
             className={cn(
-              'mx-auto mt-5 max-w-xl text-sm sm:text-base md:text-lg text-white/85 leading-relaxed',
-              reveal(subtitle.visible)
+              'mx-auto mt-5 max-w-xl font-body-warm text-sm sm:text-base md:text-lg text-white/85 leading-relaxed',
+              reveal(subtitle.visible),
             )}
-            style={{ fontFamily: "'Source Sans 3', sans-serif", transitionDelay: '240ms' }}
+            style={{ transitionDelay: '240ms' }}
           >
             Chás artesanais, mel puro e suplementos naturais selecionados
             para trazer mais bem-estar ao seu dia a dia.
@@ -112,13 +135,13 @@ const StaticImageHero: React.FC = () => {
             ref={ctas.ref}
             className={cn(
               'mt-8 flex w-full flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center',
-              reveal(ctas.visible)
+              reveal(ctas.visible),
             )}
             style={{ transitionDelay: '360ms' }}
           >
             <Button
               size="lg"
-              className="h-14 uppercase tracking-wide px-8 shadow-lg shadow-black/30"
+              className="h-14 font-body-warm uppercase tracking-wide px-8 shadow-lg shadow-black/30 bg-clay hover:bg-clay/90 text-white"
               onClick={scrollToProducts}
             >
               Conhecer produtos
