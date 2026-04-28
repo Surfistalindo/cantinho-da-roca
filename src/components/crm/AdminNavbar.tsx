@@ -161,6 +161,8 @@ export default function AdminNavbar({ onOpenPalette, onShowHelp }: Props) {
 
           <ThemeToggle />
 
+          <HelpButton onOpenShortcuts={() => onShowHelp?.()} variant="navbar" />
+
           <Tooltip>
             <TooltipTrigger asChild>
               <button
