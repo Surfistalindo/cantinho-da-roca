@@ -562,7 +562,14 @@ export default function LeadsPage() {
           onSelect={applyKpi}
         />
 
-        <div className="board-panel p-3 space-y-3 min-w-0">
+        <div className="board-panel p-3 space-y-3 min-w-0 relative" aria-busy={isRefreshing}>
+          <div
+            aria-hidden="true"
+            className={cn(
+              'pointer-events-none absolute left-0 right-0 top-0 h-0.5 bg-primary/60 transition-opacity rounded-t-md',
+              isRefreshing ? 'opacity-100 animate-pulse' : 'opacity-0',
+            )}
+          />
           <div className="flex flex-wrap items-start gap-2">
             <div ref={searchInputRef} className="flex-1 min-w-0">
               <LeadFilters
