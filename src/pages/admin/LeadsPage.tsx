@@ -211,6 +211,19 @@ export default function LeadsPage() {
     setActiveKpi((prev) => (prev === key ? null : key));
   };
 
+  // Origens reais presentes nos leads (deduplicado case-insensitive, ordenado)
+  const availableOrigins = useMemo(() => {
+    const map = new Map<string, string>(); // key=lower, val=display
+    for (const l of leads) {
+      if (!l.origin) continue;
+      const trimmed = l.origin.trim();
+      if (!trimmed) continue;
+      const k = trimmed.toLowerCase();
+      if (!map.has(k)) map.set(k, trimmed);
+    }
+    return Array.from(map.values()).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }, [leads]);
+
   const filtered = useMemo(() => {
     const list = leads.filter((l) => {
       if (statusFilter !== 'all' && l.status !== statusFilter) return false;
