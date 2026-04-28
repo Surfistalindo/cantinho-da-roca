@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.ia-suggest-mapping]
 verify_jwt = false
+
+[functions.ia-lead-insights]
+verify_jwt = false
