@@ -89,16 +89,15 @@ const StaticImageHero: React.FC = () => {
       {/* Conteúdo */}
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-end pb-16 sm:pb-24 px-6 sm:px-10 pt-28 sm:pt-32">
         <div className="w-full max-w-3xl text-center">
-          <Stamp
-            ref={badge.ref as any}
-            className={cn(
-              'inline-flex items-center gap-2 text-base text-honey',
-              reveal(badge.visible),
-            )}
+          <span
+            ref={badge.ref}
+            className={cn('inline-block', reveal(badge.visible))}
           >
-            <LeafAccent className="h-4 w-4 text-moss" />
-            colhido na semana
-          </Stamp>
+            <Stamp className="text-base text-honey">
+              <LeafAccent className="h-4 w-4 text-moss" />
+              colhido na semana
+            </Stamp>
+          </span>
 
           <h1
             ref={title.ref}
