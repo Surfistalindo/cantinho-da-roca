@@ -11,3 +11,4 @@ export { default as TagCell, colorForLabel } from './TagCell';
 export type { TagColor } from './TagCell';
 export { default as GroupSection } from './GroupSection';
 export type { GroupColor } from './GroupSection';
+export { default as TableShell } from './TableShell';
