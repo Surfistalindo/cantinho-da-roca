@@ -14,7 +14,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
-import { MSym } from '../MSym';
+import { MSym } from './MSym';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
