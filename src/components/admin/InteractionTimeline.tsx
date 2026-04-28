@@ -28,9 +28,12 @@ interface Props {
   entityType: 'lead' | 'customer';
 }
 
+const PAGE_SIZE = 20;
+
 export default function InteractionTimeline({ entityId, entityType }: Props) {
   const { user } = useAuth();
   const [interactions, setInteractions] = useState<InteractionRow[]>([]);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [newType, setNewType] = useState('observação');
   const [newContent, setNewContent] = useState('');
   const [sending, setSending] = useState(false);
