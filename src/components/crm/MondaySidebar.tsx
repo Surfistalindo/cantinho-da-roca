@@ -333,7 +333,7 @@ export default function MondaySidebar() {
                     </div>
 
                     {isOpen && !collapsed && (
-                      <ul className="ml-5 pl-3 border-l border-sidebar-border/60 space-y-0.5 mt-0.5 mb-1">
+                      <ul className="ml-5 pl-3 border-l border-hairline space-y-0.5 mt-0.5 mb-1">
                         {wsBoards.length === 0 && (
                           <li className="text-[11px] text-muted-foreground/70 px-2 py-1 italic">
                             Sem boards ainda
