@@ -134,8 +134,8 @@ export default function InteractionTimeline({ entityId, entityType }: Props) {
         </div>
       ) : (
         <TooltipProvider delayDuration={200}>
-          <ol className="relative ml-3 border-l border-border space-y-4 pl-6 pt-1">
-            {interactions.map((item) => {
+          <ol className="relative ml-3 border-l border-border space-y-4 pl-6 pt-1" aria-label="Histórico de interações">
+            {interactions.slice(0, visibleCount).map((item) => {
               const cfg = getInteractionTypeConfig(item.contact_type);
               return (
                 <li key={item.id} className="relative">
@@ -144,6 +144,7 @@ export default function InteractionTimeline({ entityId, entityType }: Props) {
                       'absolute -left-[34px] flex h-7 w-7 items-center justify-center rounded-full ring-4 ring-card shadow-soft',
                       cfg.dotClass,
                     )}
+                    aria-hidden="true"
                   >
                     <FontAwesomeIcon icon={cfg.icon} className="h-3 w-3" />
                   </span>
@@ -172,6 +173,21 @@ export default function InteractionTimeline({ entityId, entityType }: Props) {
               );
             })}
           </ol>
+          {visibleCount < interactions.length && (
+            <div className="flex items-center justify-center gap-2 pt-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setVisibleCount((c) => Math.min(c + PAGE_SIZE, interactions.length))}
+                className="h-8 text-xs"
+              >
+                Ver mais {Math.min(PAGE_SIZE, interactions.length - visibleCount)} interações
+              </Button>
+              <span className="text-[11px] text-muted-foreground tabular-nums">
+                {visibleCount} de {interactions.length}
+              </span>
+            </div>
+          )}
         </TooltipProvider>
       )}
     </div>
