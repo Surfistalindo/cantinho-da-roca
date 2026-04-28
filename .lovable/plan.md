@@ -1,151 +1,143 @@
-## Modo 2 — Reativação automática de leads via WhatsApp Cloud API
+## Sidebar estilo Monday — workspaces dinâmicos + boards genéricos
 
-Camada **adicional** ao lado do Modo 1 (`ReengagementQueue` + `WhatsAppQuickAction` continuam funcionando como fallback manual). Nada do CRM atual é removido nem alterado em comportamento.
+Substitui visualmente a `AdminSidebar` atual pela estrutura da Monday (header de produto, bloco IA fixo, busca, Favoritos, Áreas de trabalho com seletor, workspaces expansíveis com boards aninhados, +, ⋯ e drag-and-drop). Tudo persistido por usuário no Supabase. **Nenhuma rota ou página atual é removida.**
 
-### Decisões confirmadas
-- **Provedor**: Meta WhatsApp Cloud API (oficial)
-- **Cron**: `pg_cron` a cada 5 min disparando edge function
-- **Status fonte**: `contacted` (lead que já recebeu 1º contato e ficou sem resposta)
-- **Status final**: mantém status atual + flag `regua_esgotada` registrada no histórico
+### Anatomia da nova sidebar (de cima pra baixo)
 
----
+```text
+┌──────────────────────────────────────┐
+│ 🌿 cantim work management        ▾   │ ← header de produto (substitui logo atual)
+├──────────────────────────────────────┤
+│ 🏠  Página inicial                   │ → /admin/dashboard
+│ 📥  Meu trabalho                     │ → /admin/my-work (novo)
+│ 🔔  Mais                             │ → menu (Telemetria, Auditoria…)
+├──────────────────────────────────────┤
+│ cantim IA                            │ ← bloco fixo (não editável)
+│ 🤖  Assistente de IA                 │ → /admin/ia/assistant
+│ ✨  Vibe (Insights)                  │ → /admin/ia/insights
+│ 🧠  Agentes de IA                    │ → /admin/ia (visão geral)
+│ 📝  Anotador de IA (Score)           │ → /admin/ia/score
+├──────────────────────────────────────┤
+│ Favoritos                       …    │
+│ ⭐ Pipeline de vendas                │ ← qualquer board favoritado
+├──────────────────────────────────────┤
+│ Áreas de trabalho             🔍 +   │
+│ ▾ [Vendas Cantim ▾]                  │ ← dropdown de workspace ativo
+│   ▾ 🟧 CRM Operacional      ⭐ ⋯ +   │ ← workspace expansível
+│       👥  Leads                       │
+│       📊  Pipeline                    │
+│       👤  Clientes                    │
+│       ⚡  Automação WhatsApp          │
+│   ▸ 🟦 Importação IA        ⭐ ⋯ +   │
+│   ▸ 🟪 Tarefas internas     ⭐ ⋯ +   │ ← workspace que usa o board genérico
+└──────────────────────────────────────┘
+```
 
 ### 1. Banco — 4 tabelas novas (sem tocar nas existentes)
 
 ```text
-reactivation_rules         → 1 regra ativa por vez (config global)
-  - active, source_status, days_step_1/2/3
-  - msg_template_1/2/3, send_window_start/end (HH:MM)
-  - daily_send_cap, final_action ('keep_status' | 'mark_lost')
-  - timezone (default 'America/Sao_Paulo')
+workspaces
+  - id, owner_id, name, icon (string), color (hex), position int
+  - active boolean (workspace selecionado por último)
 
-reactivation_queue         → fila de envios agendados
-  - id, lead_id, attempt_number (1|2|3)
-  - phone_e164, rendered_message
-  - scheduled_at, sent_at, status
-    ('pending'|'sent'|'failed'|'cancelled'|'replied')
-  - error_message, provider_message_id
-  - UNIQUE (lead_id, attempt_number)  ← idempotência
+boards
+  - id, workspace_id, name, icon, color, position int
+  - kind: 'route' | 'task_board'
+  - route_path text (quando kind=route, ex.: '/admin/leads')
+  - created_by
 
-whatsapp_message_logs      → todo POST/erro do provedor
-  - queue_id, request_payload, response_payload, http_status
+board_favorites
+  - user_id, board_id, position int
+  - PK (user_id, board_id)
 
-whatsapp_webhook_events    → eventos crus recebidos do Meta
-  - event_type, payload, processed_at, lead_id
-
-leads (apenas adicionar 2 colunas opcionais, não muda dados)
-  - automation_paused boolean default false
-  - automation_finished_at timestamptz
+-- Para o "1 board genérico de tarefas"
+task_board_items
+  - id, board_id, title, description
+  - status: 'todo' | 'doing' | 'done' | 'blocked'
+  - assignee_id, due_date, position int
+  - created_by, created_at, updated_at
 ```
 
-RLS: todas com `has_role admin/vendedor` para SELECT/UPDATE; INSERT da fila/logs apenas via service role (edge functions).
+RLS: workspaces/boards/items por `owner_id = auth.uid()` ou admin via `has_role`. Favoritos só do próprio user.
 
-### 2. Edge functions (4 novas)
+### 2. Seed inicial (insert tool, 1x por usuário no primeiro login)
+
+Workspace **"CRM Operacional"** com 4 boards `kind=route` apontando para Leads, Pipeline, Clientes, Automação. Workspace **"Importação IA"** com 8 boards route (cobre todos os `/admin/ia/*` atuais). Workspace **"Tarefas internas"** vazio com 1 board `kind=task_board` chamado "Minhas tarefas".
+
+Hook `useEnsureDefaultWorkspaces` roda no login: se `workspaces` do user = 0, faz seed.
+
+### 3. Componentes novos
 
 ```text
-reactivation-enqueue       → roda no pg_cron a cada 5 min
-  1. Lê reactivation_rules ativa
-  2. SELECT leads WHERE status = source_status
-       AND NOT automation_paused
-       AND last_contact_at <= now() - days_step_N
-       AND NOT EXISTS attempt N na queue
-  3. Insere linhas pending na queue (scheduled_at respeita send_window)
-
-reactivation-dispatch      → roda no pg_cron a cada 5 min
-  1. SELECT queue WHERE status='pending' AND scheduled_at<=now()
-  2. Respeita daily_send_cap (count sent hoje)
-  3. Respeita janela horária da regra
-  4. Renderiza template ({{nome}}, {{produto}}, {{origem}}, {{empresa}}, {{responsavel}}, {{link}})
-  5. Chama Meta Graph API /messages
-  6. Atualiza status sent/failed + provider_message_id
-  7. Grava log em whatsapp_message_logs
-  Lock: SELECT ... FOR UPDATE SKIP LOCKED
-
-whatsapp-webhook           → endpoint público (verify_jwt=false)
-  GET  → handshake hub.challenge do Meta
-  POST → valida X-Hub-Signature-256 (HMAC SHA256 com APP_SECRET)
-       Salva em whatsapp_webhook_events
-       Se message inbound: marca queue.status='replied', cancela
-       attempts futuros do mesmo lead, atualiza lead.last_contact_at
-       e lead.status='negotiating', cria interaction
-       Se status delivered/read: anexa ao log
-
-reactivation-cancel        → invocada do front
-  Cancela attempts pending de um lead (pause/convert/lost manual)
+src/components/crm/sidebar/
+  MondaySidebar.tsx               → substitui AdminSidebar
+  SidebarProductHeader.tsx        → "cantim work management ▾"
+  SidebarStaticSection.tsx        → Página inicial / Meu trabalho / Mais
+  SidebarAISection.tsx            → bloco IA fixo
+  SidebarFavorites.tsx            → lista board_favorites
+  SidebarWorkspaceSelector.tsx    → dropdown de workspace ativo
+  SidebarWorkspaceList.tsx        → lista expansível de workspaces
+  SidebarWorkspaceItem.tsx        → linha workspace (▸/▾, ⭐, ⋯, +)
+  SidebarBoardItem.tsx            → linha board (NavLink, ⭐, ⋯)
+  SidebarSearch.tsx               → input filtra workspaces+boards
+  WorkspaceContextMenu.tsx        → renomear / mudar cor / duplicar / excluir
+  BoardContextMenu.tsx            → idem para board
+  CreateWorkspaceDialog.tsx       → modal + nome/ícone/cor
+  CreateBoardDialog.tsx           → modal + nome/ícone/cor + tipo (rota|tarefa)
 ```
 
-### 3. pg_cron (via insert tool, não migration)
+DnD com `@dnd-kit/sortable` (já presente no projeto pelo Pipeline). Reordenar atualiza `position` em batch.
 
-```sql
-select cron.schedule('reactivation-enqueue', '*/5 * * * *', $$
-  select net.http_post(url:='…/reactivation-enqueue',
-    headers:='{"apikey":"…"}'::jsonb) $$);
-select cron.schedule('reactivation-dispatch', '*/5 * * * *', $$ … $$);
-```
+### 4. Página nova `/admin/boards/:boardId` (board genérico de tarefas)
 
-### 4. Cancelamento automático (trigger no banco)
+Tela única que renderiza qualquer board `kind=task_board`. Layout Monday:
+- Header: nome do board, ícone, "Novo item" (+)
+- Tabela densa (`crm-dense-table` já existente) com colunas: Item · Status (status-cell colorida) · Responsável · Prazo · Tags
+- Agrupamento por status (`GroupSection` já existente — mesma do CRM)
+- DnD para reordenar e mover entre status
+- Edição inline de célula
 
-Trigger `AFTER UPDATE ON leads`: se `status` muda para `converted | lost | negotiating` ou `automation_paused` vira true → `UPDATE reactivation_queue SET status='cancelled' WHERE lead_id = … AND status='pending'`. Garante que nem o front nem o cron precisam lembrar.
+Página nova `/admin/my-work` agrega todos os `task_board_items` onde `assignee_id = me`.
 
-### 5. Frontend (3 telas/componentes novos)
+### 5. Serviços
 
 ```text
-src/pages/admin/AutomationPage.tsx         (rota /admin/automation)
-  Tabs:
-    • "Em automação"  → leads ativos na régua
-        colunas: lead | tentativa atual | próx. mensagem |
-                 próx. envio | último envio | status | erro
-        ações por linha: pausar | retomar | enviar agora | abrir WhatsApp
-    • "Configurações" → form da reactivation_rules (toggle on/off,
-        dias por tentativa, editor de templates com preview de variáveis,
-        janela horária, cap diário, ação final)
-    • "Histórico"     → últimos eventos (queue + logs + webhook)
-
-src/components/admin/AutomationStatusBadge.tsx  (pendente/enviado/falhou/respondido)
-src/components/admin/MessageTemplateEditor.tsx  (textarea + chips de variáveis + preview)
-src/services/reactivationService.ts             (CRUD regra, pausa lead, lista fila)
+src/services/workspaceService.ts    → CRUD workspaces + reorder
+src/services/boardService.ts        → CRUD boards + reorder + favorite
+src/services/taskBoardService.ts    → CRUD task_board_items
+src/hooks/useWorkspaces.ts          → carrega + realtime
+src/hooks/useFavoriteBoards.ts
+src/hooks/useEnsureDefaultWorkspaces.ts
 ```
 
-Toggle no card do lead (`LeadDetailDrawer` existente): switch "Não enviar automação para este lead" → grava `automation_paused`. **Não toca no botão WhatsApp manual atual.**
+Realtime nas 4 tabelas para a sidebar atualizar entre abas.
 
-Sidebar: novo item "Automação" com ícone, abaixo de "Pipeline". Visual Monday já aplicado é reaproveitado (`board-panel`, `crm-dense-table`, `status-cell`).
+### 6. Visual / tokens
 
-### 6. Secrets necessários (vou pedir via add_secret na implementação)
+A paleta Monday já está aplicada no projeto (sidebar branca, primária `#0073ea`, hover `#f5f6f8`). Vou ajustar só:
+- Header de produto com fundo levemente off-white e divisor
+- Linha ativa: trilho azul à esquerda + bg `#e6f1fd`
+- Cor do workspace = bolinha 8px à esquerda do nome
+- ⭐ aparece em hover (filled quando favoritado)
+- Badge `…` aparece em hover
+- Tooltip Monday-style nos itens quando colapsada
 
-```text
-META_WA_PHONE_NUMBER_ID    → ID do número no business manager
-META_WA_ACCESS_TOKEN       → token permanente (System User)
-META_WA_APP_SECRET         → para validar HMAC do webhook
-META_WA_VERIFY_TOKEN       → string que você inventa, usada no handshake
-```
+### 7. O que NÃO muda
+- Rotas atuais: todas continuam funcionando exatamente iguais
+- `AdminNavbar`, todas as páginas (`LeadsPage`, `PipelinePage`, etc.)
+- `ReengagementQueue`, `WhatsAppQuickAction`, plano do Modo 2 anterior (régua WhatsApp) segue intacto
+- `useUserRole` / `ProtectedRoute` continuam protegendo tudo
+- A `AdminSidebar.tsx` antiga é removida do `CrmLayout.tsx`, mas o arquivo pode ficar como backup (`.bak`) por segurança
 
-URL do webhook que você cola no painel da Meta:
-`https://saaxgpfdziqdjhvvtarp.supabase.co/functions/v1/whatsapp-webhook`
+### 8. Ordem de execução
+1. **Migração**: 4 tabelas + RLS + triggers `updated_at`
+2. Serviços + hooks + `useEnsureDefaultWorkspaces`
+3. `MondaySidebar` + subcomponentes (estática primeiro, depois conectada)
+4. Modais Criar / Renomear / Excluir + menus de contexto
+5. Drag-and-drop com dnd-kit
+6. Busca + favoritos + seletor de workspace
+7. Página `/admin/boards/:id` (board genérico) e `/admin/my-work`
+8. Trocar `AdminSidebar` por `MondaySidebar` no `CrmLayout`
+9. QA: navegação, persistência, RLS, colapsada/expandida, mobile
 
-### 7. Segurança / anti-spam (já embutidos)
-
-- Token só em edge function, nunca no frontend
-- HMAC validado em todo POST do webhook
-- `UNIQUE(lead_id, attempt_number)` impede duplicata
-- `FOR UPDATE SKIP LOCKED` impede dois dispatches paralelos enviarem o mesmo
-- Janela horária e cap diário lidos da regra a cada dispatch
-- Telefone validado/normalizado para E.164 antes do enqueue (descarta inválido com `failed`)
-- Trigger cancela automaticamente se lead responder/converter/perder/pausar
-- RLS bloqueia leitura de logs para quem não é admin/vendedor
-
-### 8. O que NÃO muda
-- `ReengagementQueue.tsx`, `WhatsAppQuickAction.tsx`, `whatsappTemplates.ts`, `reengagement.ts` ficam intactos
-- Botão WhatsApp manual no drawer/tabelas continua igual
-- Status existentes (`new/contacted/negotiating/converted/lost`) não mudam
-- Nenhuma RLS atual é alterada
-
-### Ordem de execução (quando você aprovar)
-1. Migração: 4 tabelas + 2 colunas em leads + trigger de cancelamento + RLS
-2. Pedir os 4 secrets do Meta (`add_secret`)
-3. Edge functions: enqueue, dispatch, webhook, cancel
-4. Agendar pg_cron (insert tool)
-5. Frontend: serviço + página `/admin/automation` + item de menu + toggle no drawer
-6. Seed de uma `reactivation_rules` desativada com templates default
-7. QA: criar lead `contacted` com `last_contact_at` antigo, rodar enqueue manual, verificar fila e dispatch em modo dry-run antes de ativar
-
-Total estimado: ~12 arquivos novos, ~3 arquivos editados pontualmente.
+Total estimado: ~16 arquivos novos, 2 editados (`App.tsx` p/ rotas, `CrmLayout.tsx` p/ trocar sidebar).
