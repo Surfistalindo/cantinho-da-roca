@@ -989,6 +989,7 @@ export default function LeadsPage() {
                       </>
                     );
                   })()}
+                  </LeadsDndProvider>
                 </div>
 
                 {/* Mobile — usa visão de Cards */}
