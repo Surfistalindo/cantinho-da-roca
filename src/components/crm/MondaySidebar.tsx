@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Plus, Star, MoreHorizontal, Trash2, Search } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Star, MoreHorizontal, Trash2, Search, GripVertical } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useWorkspaces } from '@/hooks/useWorkspaces';
 import { useFavoriteBoards } from '@/hooks/useFavoriteBoards';
@@ -36,6 +36,15 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import cantimLogo from '@/assets/cantim-logo.png';
 import { toast } from 'sonner';
+import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDraggable,
+  useDroppable,
+  type DragEndEvent,
+} from '@dnd-kit/core';
 
 const STATIC_TOP = [
   { title: 'Página inicial', url: '/admin/dashboard', icon: 'home' },
@@ -67,6 +76,25 @@ export default function MondaySidebar() {
   const handleSignOut = async () => {
     await signOut();
     navigate('/admin/login');
+  };
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  const handleDragEnd = async (e: DragEndEvent) => {
+    const boardId = String(e.active.id);
+    const overId = e.over?.id ? String(e.over.id) : null;
+    if (!overId || !overId.startsWith('ws:')) return;
+    const targetWsId = overId.slice(3);
+    const board = boards.find((b) => b.id === boardId);
+    if (!board || board.workspace_id === targetWsId) return;
+    const targetWs = workspaces.find((w) => w.id === targetWsId);
+    try {
+      await boardService.moveToWorkspace(boardId, targetWsId);
+      toast.success(`Movido para "${targetWs?.name ?? 'área'}"`);
+      refresh();
+    } catch {
+      toast.error('Não foi possível mover');
+    }
   };
 
   const filteredWorkspaces = workspaces.filter((w) => {
@@ -218,99 +246,99 @@ export default function MondaySidebar() {
             </div>
           )}
 
-          <ul className="space-y-0.5">
-            {filteredWorkspaces.map((ws) => {
-              const isOpen = openWorkspaces[ws.id] ?? ws.is_active;
-              const wsBoards = boardsByWorkspace(ws.id);
-              return (
-                <li key={ws.id}>
-                  <div className="group flex items-center gap-1 h-8 px-1.5 rounded-md hover:bg-sidebar-accent/40 transition-colors">
-                    <button
-                      type="button"
-                      onClick={() => setOpenWorkspaces((s) => ({ ...s, [ws.id]: !isOpen }))}
-                      className="h-5 w-5 inline-flex items-center justify-center text-muted-foreground hover:text-sidebar-accent-foreground"
-                      aria-label={isOpen ? 'Recolher' : 'Expandir'}
-                    >
-                      {isOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
-                    </button>
-                    <span
-                      className="h-2 w-2 rounded-full shrink-0"
-                      style={{ backgroundColor: ws.color }}
-                    />
-                    {!collapsed && (
-                      <>
-                        <span className="flex-1 truncate text-[12.5px] font-medium text-sidebar-foreground">
-                          {ws.name}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setCreateBoardForWs(ws)}
-                          className="opacity-0 group-hover:opacity-100 h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/70 transition-all"
-                          aria-label="Novo board"
-                        >
-                          <Plus size={12} />
-                        </button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              type="button"
-                              className="opacity-0 group-hover:opacity-100 h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/70 transition-all"
-                              aria-label="Menu"
-                            >
-                              <MoreHorizontal size={13} />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-44">
-                            <DropdownMenuItem
-                              onClick={async () => {
-                                const name = window.prompt('Renomear área de trabalho', ws.name);
-                                if (!name?.trim()) return;
-                                await workspaceService.update(ws.id, { name: name.trim() });
-                                refresh();
-                              }}
-                            >
-                              Renomear
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={async () => {
-                                await workspaceService.setActive(ws.id);
-                                refresh();
-                              }}
-                            >
-                              Definir como ativa
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={async () => {
-                                if (!window.confirm(`Excluir "${ws.name}" e todos os boards?`)) return;
-                                try {
-                                  await workspaceService.remove(ws.id);
-                                  toast.success('Área de trabalho excluída');
+          <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+            <ul className="space-y-0.5">
+              {filteredWorkspaces.map((ws) => {
+                const isOpen = openWorkspaces[ws.id] ?? ws.is_active;
+                const wsBoards = boardsByWorkspace(ws.id);
+                return (
+                  <DroppableWorkspaceItem key={ws.id} workspaceId={ws.id}>
+                    <div className="group flex items-center gap-1 h-8 px-1.5 rounded-md hover:bg-sidebar-accent/40 transition-colors">
+                      <button
+                        type="button"
+                        onClick={() => setOpenWorkspaces((s) => ({ ...s, [ws.id]: !isOpen }))}
+                        className="h-5 w-5 inline-flex items-center justify-center text-muted-foreground hover:text-sidebar-accent-foreground"
+                        aria-label={isOpen ? 'Recolher' : 'Expandir'}
+                      >
+                        {isOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                      </button>
+                      <span
+                        className="h-2 w-2 rounded-full shrink-0"
+                        style={{ backgroundColor: ws.color }}
+                      />
+                      {!collapsed && (
+                        <>
+                          <span className="flex-1 truncate text-[12.5px] font-medium text-sidebar-foreground">
+                            {ws.name}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setCreateBoardForWs(ws)}
+                            className="opacity-0 group-hover:opacity-100 h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/70 transition-all"
+                            aria-label="Novo board"
+                          >
+                            <Plus size={12} />
+                          </button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="opacity-0 group-hover:opacity-100 h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/70 transition-all"
+                                aria-label="Menu"
+                              >
+                                <MoreHorizontal size={13} />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              <DropdownMenuItem
+                                onClick={async () => {
+                                  const name = window.prompt('Renomear área de trabalho', ws.name);
+                                  if (!name?.trim()) return;
+                                  await workspaceService.update(ws.id, { name: name.trim() });
                                   refresh();
-                                } catch (e) {
-                                  toast.error('Não foi possível excluir');
-                                }
-                              }}
-                            >
-                              <Trash2 size={13} className="mr-2" /> Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </>
-                    )}
-                  </div>
-
-                  {isOpen && !collapsed && (
-                    <ul className="ml-5 pl-3 border-l border-sidebar-border/60 space-y-0.5 mt-0.5 mb-1">
-                      {wsBoards.length === 0 && (
-                        <li className="text-[11px] text-muted-foreground/70 px-2 py-1 italic">
-                          Sem boards ainda
-                        </li>
+                                }}
+                              >
+                                Renomear
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={async () => {
+                                  await workspaceService.setActive(ws.id);
+                                  refresh();
+                                }}
+                              >
+                                Definir como ativa
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={async () => {
+                                  if (!window.confirm(`Excluir "${ws.name}" e todos os boards?`)) return;
+                                  try {
+                                    await workspaceService.remove(ws.id);
+                                    toast.success('Área de trabalho excluída');
+                                    refresh();
+                                  } catch (e) {
+                                    toast.error('Não foi possível excluir');
+                                  }
+                                }}
+                              >
+                                <Trash2 size={13} className="mr-2" /> Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </>
                       )}
-                      {wsBoards.map((b) => (
-                        <li key={b.id} className="group/board">
-                          <div className="flex items-center gap-1">
+                    </div>
+
+                    {isOpen && !collapsed && (
+                      <ul className="ml-5 pl-3 border-l border-sidebar-border/60 space-y-0.5 mt-0.5 mb-1">
+                        {wsBoards.length === 0 && (
+                          <li className="text-[11px] text-muted-foreground/70 px-2 py-1 italic">
+                            Sem boards ainda
+                          </li>
+                        )}
+                        {wsBoards.map((b) => (
+                          <DraggableBoardRow key={b.id} board={b}>
                             <NavLink
                               to={boardHref(b)}
                               end={b.kind === 'route'}
@@ -377,15 +405,15 @@ export default function MondaySidebar() {
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+                          </DraggableBoardRow>
+                        ))}
+                      </ul>
+                    )}
+                  </DroppableWorkspaceItem>
+                );
+              })}
+            </ul>
+          </DndContext>
         </SidebarGroup>
       </SidebarContent>
 
@@ -577,3 +605,57 @@ function CreateBoardDialog({
     </Dialog>
   );
 }
+
+function DroppableWorkspaceItem({
+  workspaceId,
+  children,
+}: {
+  workspaceId: string;
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: `ws:${workspaceId}` });
+  return (
+    <li
+      ref={setNodeRef}
+      className={cn(
+        'rounded-md transition-colors',
+        isOver && 'ring-1 ring-primary/50 bg-primary/5',
+      )}
+    >
+      {children}
+    </li>
+  );
+}
+
+function DraggableBoardRow({
+  board,
+  children,
+}: {
+  board: Board;
+  children: React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: board.id });
+  return (
+    <li
+      ref={setNodeRef}
+      className={cn(
+        'group/board rounded-md',
+        isDragging && 'opacity-40',
+      )}
+    >
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          className="h-6 w-4 inline-flex items-center justify-center text-muted-foreground/60 hover:text-sidebar-accent-foreground cursor-grab active:cursor-grabbing opacity-0 group-hover/board:opacity-100 transition-opacity"
+          aria-label="Arrastar"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical size={11} />
+        </button>
+        {children}
+      </div>
+    </li>
+  );
+}
+
