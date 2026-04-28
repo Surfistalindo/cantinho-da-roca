@@ -262,6 +262,7 @@ export default function IAExcelImportPage() {
           <Button variant="outline" onClick={im.reset}>Recomeçar</Button>
         </div>
       )}
+      </TooltipProvider>
     </IAPageShell>
   );
 }
