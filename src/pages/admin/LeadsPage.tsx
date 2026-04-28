@@ -271,15 +271,18 @@ export default function LeadsPage() {
             onPriorityChange={updatePriority}
           />
 
-          {loading ? (
-            <LoadingState />
-          ) : filtered.length === 0 ? (
-            <EmptyState
-              icon={faUserGroup}
-              title="Nenhum lead encontrado"
-              description="Ajuste os filtros ou aguarde novos cadastros pelo site."
-            />
-          ) : (
+          <ListState
+            loading={loading}
+            error={fetchError}
+            onRetry={fetchLeads}
+            totalCount={leads.length}
+            filteredCount={filtered.length}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={clearFilters}
+            emptyIcon={faUserGroup}
+            emptyTitle="Nenhum lead cadastrado ainda"
+            emptyDescription="Aguarde novos cadastros pelo site ou crie um lead manualmente."
+          >
             <>
               {/* Desktop */}
               <div className="hidden md:block overflow-x-auto -mx-5">
