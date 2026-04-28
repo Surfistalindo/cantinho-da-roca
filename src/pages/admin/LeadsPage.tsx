@@ -389,7 +389,9 @@ export default function LeadsPage() {
           description="Central comercial — acompanhe, filtre, mova e gerencie todos os leads."
           actions={
             <div className="flex items-center gap-1.5 flex-wrap">
-              <LeadsViewSwitcher view={view} onChange={setView} />
+              <div data-tour="leads-view-toggle">
+                <LeadsViewSwitcher view={view} onChange={setView} />
+              </div>
               {view === 'table' && (
                 <div className="hidden sm:flex items-center rounded-md border border-border p-0.5 bg-card">
                   <Tooltip>

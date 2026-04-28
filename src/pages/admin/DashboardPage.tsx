@@ -349,7 +349,7 @@ export default function DashboardPage() {
 
         {/* Tabs */}
         <Tabs value={tab} onValueChange={(v) => updateTab(v as TabKey)}>
-          <TabsList className="w-full sm:w-auto h-auto p-1 bg-muted/50 grid grid-cols-2 sm:flex">
+          <TabsList data-tour="dashboard-tabs" className="w-full sm:w-auto h-auto p-1 bg-muted/50 grid grid-cols-2 sm:flex">
             {TABS.map((t) => (
               <TabsTrigger
                 key={t.key}
@@ -364,7 +364,7 @@ export default function DashboardPage() {
 
           {/* ===== OVERVIEW ===== */}
           <TabsContent value="overview" className="mt-5 space-y-5 animate-fade-in-up">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div data-tour="dashboard-kpis" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <KpiCard label="Total de Leads" icon="group" value={stats.total.toString()}
                 delta={`${stats.totalDelta >= 0 ? '+' : ''}${stats.totalDelta}%`}
                 trend={stats.totalDelta >= 0 ? 'up' : 'down'}
@@ -390,7 +390,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2 bg-card rounded-2xl border border-border p-5">
+              <div data-tour="dashboard-chart" className="lg:col-span-2 bg-card rounded-2xl border border-border p-5">
                 <div className="flex items-center justify-between mb-1">
                   <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                     <MSym name="show_chart" size={18} className="text-primary" />
