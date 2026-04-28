@@ -258,7 +258,7 @@ export default function LeadsPage() {
       return sortDir === 'desc' ? db - da : da - db;
     });
     return list;
-  }, [leads, statusFilter, originFilter, search, recencyFilter, priorityFilter, sortBy, sortDir, interactionCounts, activeKpi]);
+  }, [leads, statusFilter, originFilter, search, recencyFilter, priorityFilter, sortBy, sortDir, interactionCounts, activeKpi, dateFrom, dateTo]);
 
   const grouped = useMemo(() => {
     const map: Record<string, typeof filtered> = {};
