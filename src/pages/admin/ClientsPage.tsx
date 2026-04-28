@@ -12,6 +12,7 @@ import CustomerDetailSheet from '@/components/admin/CustomerDetailSheet';
 import PageHeader from '@/components/admin/PageHeader';
 import EmptyState from '@/components/admin/EmptyState';
 import LoadingState from '@/components/admin/LoadingState';
+import ListState from '@/components/admin/ListState';
 import InitialsAvatar from '@/components/admin/InitialsAvatar';
 import CustomerLifecycleBadge from '@/components/admin/CustomerLifecycleBadge';
 import ClientFilters, {
@@ -50,6 +51,7 @@ export default function ClientsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<Error | null>(null);
   const [search, setSearch] = useState('');
   const [recencyFilter, setRecencyFilter] = useState<ClientRecencyFilter>('all');
   const [purchaseFilter, setPurchaseFilter] = useState<ClientPurchaseFilter>('all');
@@ -75,11 +77,17 @@ export default function ClientsPage() {
   };
 
   const fetchCustomers = useCallback(async () => {
-    const { data } = await supabase
+    setFetchError(null);
+    const { data, error } = await supabase
       .from('customers')
       .select('*')
       .order('created_at', { ascending: false });
-    setCustomers((data as Customer[]) ?? []);
+    if (error) {
+      const err = error as { message?: string };
+      setFetchError(new Error(err.message ?? 'Erro ao carregar clientes'));
+    } else {
+      setCustomers((data as Customer[]) ?? []);
+    }
     setLoading(false);
   }, []);
 
@@ -155,6 +163,21 @@ export default function ClientsPage() {
   }, [customers, search, stageFilter, recencyFilter, purchaseFilter, reactivationMode]);
 
   const openDetail = (c: Customer) => { setSelectedCustomer(c); setSheetOpen(true); };
+
+  const hasActiveFilters =
+    search.trim() !== '' ||
+    stageFilter !== 'all' ||
+    recencyFilter !== 'all' ||
+    purchaseFilter !== 'all' ||
+    reactivationMode;
+
+  const clearFilters = () => {
+    setSearch('');
+    setStageFilter('all');
+    setRecencyFilter('all');
+    setPurchaseFilter('all');
+    setReactivationModeWrapped(false);
+  };
 
   const addCustomer = async () => {
     if (!newCustomer.name.trim()) { toast.error('Nome é obrigatório'); return; }
@@ -236,17 +259,18 @@ export default function ClientsPage() {
             onReactivationToggle={setReactivationModeWrapped}
           />
 
-          {loading ? (
-            <LoadingState />
-          ) : filtered.length === 0 ? (
-            <EmptyState
-              icon={faUserCheck}
-              title="Nenhum cliente encontrado"
-              description={reactivationMode
-                ? 'Não há clientes para reativar com os critérios atuais.'
-                : 'Cadastre manualmente ou converta leads em clientes.'}
-            />
-          ) : (
+          <ListState
+            loading={loading}
+            error={fetchError}
+            onRetry={fetchCustomers}
+            totalCount={customers.length}
+            filteredCount={filtered.length}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={clearFilters}
+            emptyIcon={faUserCheck}
+            emptyTitle="Nenhum cliente cadastrado ainda"
+            emptyDescription="Cadastre manualmente ou converta leads em clientes."
+          >
             <div className="overflow-x-auto -mx-5">
               <Table>
                 <TableHeader>
@@ -326,7 +350,7 @@ export default function ClientsPage() {
                 </TableBody>
               </Table>
             </div>
-          )}
+          </ListState>
         </div>
 
         <CustomerDetailSheet customer={selectedCustomer} open={sheetOpen} onOpenChange={setSheetOpen} onUpdated={fetchCustomers} />

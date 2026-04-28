@@ -14,6 +14,7 @@ import NewLeadDialog from '@/components/admin/NewLeadDialog';
 import PageHeader from '@/components/admin/PageHeader';
 import EmptyState from '@/components/admin/EmptyState';
 import LoadingState from '@/components/admin/LoadingState';
+import ListState from '@/components/admin/ListState';
 import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
 import InitialsAvatar from '@/components/admin/InitialsAvatar';
 import LeadScoreBadge from '@/components/admin/LeadScoreBadge';
@@ -53,6 +54,7 @@ export default function LeadsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<Error | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [originFilter, setOriginFilter] = useState('all');
@@ -111,6 +113,26 @@ export default function LeadsPage() {
     setSearchParams(params, { replace: true });
   };
 
+  const hasActiveFilters =
+    search.trim() !== '' ||
+    statusFilter !== 'all' ||
+    originFilter !== 'all' ||
+    recencyFilter !== 'all' ||
+    priorityFilter !== 'all';
+
+  const clearFilters = () => {
+    setSearch('');
+    setStatusFilter('all');
+    setOriginFilter('all');
+    setRecencyFilter('all');
+    setPriorityFilter('all');
+    const params = new URLSearchParams(searchParams);
+    params.delete('recency');
+    params.delete('priority');
+    params.delete('followup');
+    setSearchParams(params, { replace: true });
+  };
+
   const toggleSort = () => {
     if (sortBy === 'score') {
       setSortBy('created');
@@ -126,11 +148,17 @@ export default function LeadsPage() {
   };
 
   const fetchLeads = useCallback(async () => {
-    const { data } = await supabase
+    setFetchError(null);
+    const { data, error } = await supabase
       .from('leads')
       .select('*')
       .order('created_at', { ascending: false });
-    setLeads((data as Lead[]) ?? []);
+    if (error) {
+      const err = error as { message?: string };
+      setFetchError(new Error(err.message ?? 'Erro ao carregar leads'));
+    } else {
+      setLeads((data as Lead[]) ?? []);
+    }
     setLoading(false);
   }, []);
 
@@ -243,15 +271,18 @@ export default function LeadsPage() {
             onPriorityChange={updatePriority}
           />
 
-          {loading ? (
-            <LoadingState />
-          ) : filtered.length === 0 ? (
-            <EmptyState
-              icon={faUserGroup}
-              title="Nenhum lead encontrado"
-              description="Ajuste os filtros ou aguarde novos cadastros pelo site."
-            />
-          ) : (
+          <ListState
+            loading={loading}
+            error={fetchError}
+            onRetry={fetchLeads}
+            totalCount={leads.length}
+            filteredCount={filtered.length}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={clearFilters}
+            emptyIcon={faUserGroup}
+            emptyTitle="Nenhum lead cadastrado ainda"
+            emptyDescription="Aguarde novos cadastros pelo site ou crie um lead manualmente."
+          >
             <>
               {/* Desktop */}
               <div className="hidden md:block overflow-x-auto -mx-5">
@@ -425,7 +456,7 @@ export default function LeadsPage() {
                 })}
               </div>
             </>
-          )}
+          </ListState>
         </div>
 
         <LeadDetailSheet lead={selectedLead} open={sheetOpen} onOpenChange={setSheetOpen} onUpdated={fetchLeads} />
