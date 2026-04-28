@@ -228,7 +228,7 @@ export default function MondaySidebar() {
               <button
                 type="button"
                 onClick={() => setCreateWsOpen(true)}
-                className="h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/60 transition-colors"
+                className="h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/60 transition-[background-color,color] duration-crm ease-crm"
                 aria-label="Nova área de trabalho"
               >
                 <Plus size={13} />
@@ -238,12 +238,12 @@ export default function MondaySidebar() {
 
           {!collapsed && (
             <div className="px-2.5 mb-2 relative">
-              <Search size={12} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Search size={12} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar..."
-                className="w-full h-7 pl-6 pr-2 rounded-md bg-sidebar-accent/40 text-[11.5px] text-sidebar-foreground placeholder:text-muted-foreground/70 outline-none focus:bg-sidebar-accent/70 transition-colors"
+                className="w-full h-7 pl-6 pr-2 rounded-md bg-card/40 border border-hairline text-[11.5px] text-sidebar-foreground placeholder:text-muted-foreground/70 outline-none focus:bg-card/70 focus:border-hairline-strong transition-[background-color,border-color] duration-crm ease-crm"
               />
             </div>
           )}
