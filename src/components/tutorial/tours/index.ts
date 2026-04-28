@@ -14,7 +14,6 @@ import { iaCsvTour, iaPasteTour, iaWhatsAppImportTour } from './ia-imports';
 import { whatsappTour } from './whatsapp';
 import { boardsTour } from './boards';
 import { myWorkTour } from './my-work';
-import { taskBoardTour } from './task-board';
 import { telemetryTour } from './telemetry';
 import { fallbackTour } from './shared';
 
