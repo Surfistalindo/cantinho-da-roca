@@ -164,6 +164,21 @@ export default function ClientsPage() {
     return list;
   }, [customers, search, stageFilter, recencyFilter, purchaseFilter, reactivationMode]);
 
+  // Agrupamento por estágio do ciclo (Monday-style)
+  const STAGE_GROUPS: { key: 'active' | 'watch' | 'inactive' | 'dormant'; title: string; color: GroupColor }[] = [
+    { key: 'active',   title: 'Ativos',      color: 'green'   },
+    { key: 'watch',    title: 'Em atenção',  color: 'orange'  },
+    { key: 'inactive', title: 'Inativos',    color: 'red'     },
+    { key: 'dormant',  title: 'Adormecidos', color: 'neutral' },
+  ];
+  const groupedClients = useMemo(() => {
+    const map: Record<string, typeof filtered> = { active: [], watch: [], inactive: [], dormant: [] };
+    for (const c of filtered) {
+      const stage = getCustomerLifecycle(c.last_contact_at, c.purchase_date).stage;
+      if (map[stage]) map[stage].push(c);
+    }
+    return map;
+  }, [filtered]);
   const openDetail = (c: Customer) => { setSelectedCustomer(c); setSheetOpen(true); };
 
   const hasActiveFilters =
