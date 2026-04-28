@@ -758,12 +758,14 @@ export default function LeadsPage() {
                             </TableCell>
                             <TableCell onClick={(e) => e.stopPropagation()}>
                               <div className="flex justify-end gap-0.5 opacity-70 group-hover:opacity-100 transition-opacity">
-                                <QuickActionsPopover
-                                  leadId={lead.id}
-                                  leadName={lead.name}
-                                  phone={lead.phone}
-                                  onUpdated={fetchLeads}
-                                />
+                                {density !== 'compact' && (
+                                  <QuickActionsPopover
+                                    leadId={lead.id}
+                                    leadName={lead.name}
+                                    phone={lead.phone}
+                                    onUpdated={fetchLeads}
+                                  />
+                                )}
                                 {lead.phone && (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
