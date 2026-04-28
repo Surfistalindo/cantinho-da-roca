@@ -69,6 +69,19 @@ export default function LeadsPage() {
   const [sortBy, setSortBy] = useState<SortBy>('score');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [newOpen, setNewOpen] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [density, setDensity] = useState<'comfortable' | 'compact'>(() => {
+    if (typeof window === 'undefined') return 'comfortable';
+    return (localStorage.getItem('crm:leads:density') as 'comfortable' | 'compact') || 'comfortable';
+  });
+  useEffect(() => { localStorage.setItem('crm:leads:density', density); }, [density]);
+
+  // Atalho global N → abrir novo lead
+  useEffect(() => {
+    const h = () => setNewOpen(true);
+    window.addEventListener('crm:new-lead', h);
+    return () => window.removeEventListener('crm:new-lead', h);
+  }, []);
 
   const interactionCounts = useInteractionCounts(leads.map((l) => l.id));
 
