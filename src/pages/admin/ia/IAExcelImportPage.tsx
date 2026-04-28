@@ -159,18 +159,41 @@ export default function IAExcelImportPage() {
       {/* ============= ETAPA 3 — MAPEAMENTO ============= */}
       {state.step === 'mapping' && state.parsed && (
         <div className="space-y-4">
-          <div className="grid gap-4 lg:grid-cols-[1fr_400px]">
-            <ExcelPreviewTable parsed={state.parsed} />
-            <ColumnMapper
-              mappings={state.mappings}
-              onChange={im.updateMapping}
-              onSaveTemplate={im.saveMappingTemplate}
-              onApplyTemplate={im.applyMappingTemplate}
-              onDeleteTemplate={im.removeMappingTemplate}
-              detectedTemplate={state.detectedTemplate}
-              onDismissDetected={im.dismissDetectedTemplate}
-              samplesByHeader={state.samplesByHeader}
-            />
+          <div className="surface-split">
+            <div className="surface-main surface-shell space-y-3">
+              <ExcelPreviewTable parsed={state.parsed} />
+              {/* Botão para abrir o painel de mapeamento como drawer no mobile/tablet */}
+              <details className="lg:hidden rounded-lg border border-border bg-card open:shadow-sm">
+                <summary className="cursor-pointer px-4 py-3 text-[13px] font-semibold flex items-center gap-2">
+                  <FontAwesomeIcon icon={faWandMagicSparkles} className="h-3.5 w-3.5 text-primary" />
+                  Mapeamento de colunas
+                </summary>
+                <div className="p-3 border-t border-border">
+                  <ColumnMapper
+                    mappings={state.mappings}
+                    onChange={im.updateMapping}
+                    onSaveTemplate={im.saveMappingTemplate}
+                    onApplyTemplate={im.applyMappingTemplate}
+                    onDeleteTemplate={im.removeMappingTemplate}
+                    detectedTemplate={state.detectedTemplate}
+                    onDismissDetected={im.dismissDetectedTemplate}
+                    samplesByHeader={state.samplesByHeader}
+                  />
+                </div>
+              </details>
+            </div>
+            <aside className="surface-side-panel hidden lg:block">
+              <ColumnMapper
+                mappings={state.mappings}
+                onChange={im.updateMapping}
+                onSaveTemplate={im.saveMappingTemplate}
+                onApplyTemplate={im.applyMappingTemplate}
+                onDeleteTemplate={im.removeMappingTemplate}
+                detectedTemplate={state.detectedTemplate}
+                onDismissDetected={im.dismissDetectedTemplate}
+                samplesByHeader={state.samplesByHeader}
+              />
+            </aside>
           </div>
           {!hasNameMapping && (
             <div className="rounded-lg border border-warning/40 bg-warning-soft px-4 py-3 text-[12.5px] text-warning flex items-center gap-2">
