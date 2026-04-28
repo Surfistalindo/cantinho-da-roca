@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import React, { forwardRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -48,9 +48,9 @@ const normalize = (name: string) => {
 };
 
 /** Lightweight wrapper around Google Material Symbols Outlined. */
-export const MSym = forwardRef<HTMLSpanElement, Props>(function MSym(
-  { name, className, filled, size },
-  ref,
+function MSymInner(
+  { name, className, filled, size }: Props,
+  ref: React.Ref<HTMLSpanElement>,
 ) {
   return (
     <span
@@ -62,4 +62,7 @@ export const MSym = forwardRef<HTMLSpanElement, Props>(function MSym(
       {normalize(name)}
     </span>
   );
-});
+}
+
+export const MSym = forwardRef<HTMLSpanElement, Props>(MSymInner);
+
