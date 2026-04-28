@@ -112,16 +112,16 @@ export default function MondaySidebar() {
     b.kind === 'route' && b.route_path ? b.route_path : `/admin/boards/${b.id}`;
 
   return (
-    <Sidebar collapsible="icon" data-tour="sidebar" className="border-r border-sidebar-border bg-sidebar">
+    <Sidebar collapsible="icon" data-tour="sidebar" className="border-r border-hairline bg-sidebar">
       {/* Product header */}
-      <SidebarHeader className="px-3 pt-3 pb-3 border-b border-sidebar-border bg-sidebar-accent/20">
+      <SidebarHeader className="px-3 pt-3 pb-3 border-b border-hairline">
         <div className={cn('flex items-center gap-2.5', collapsed && 'justify-center')}>
-          <div className={cn('shrink-0 rounded-lg bg-card ring-1 ring-sidebar-border flex items-center justify-center overflow-hidden p-1', collapsed ? 'h-9 w-9' : 'h-14 w-14')}>
+          <div className={cn('shrink-0 rounded-lg bg-card shadow-soft flex items-center justify-center overflow-hidden p-1', collapsed ? 'h-9 w-9' : 'h-12 w-12')}>
             <img src={cantimLogo} alt="Cantim da Roça" className="h-full w-full object-contain" />
           </div>
           {!collapsed && (
             <div className="min-w-0 leading-tight flex-1">
-              <p className="text-[12.5px] font-semibold text-sidebar-accent-foreground truncate">
+              <p className="text-[13px] font-semibold text-sidebar-accent-foreground truncate tracking-tight">
                 cantim work
               </p>
               <p className="text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground font-medium mt-0.5">
