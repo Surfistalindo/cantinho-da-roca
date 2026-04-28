@@ -25,6 +25,8 @@ import IAInsightsPage from "./pages/admin/ia/IAInsightsPage";
 import IAAssistantPage from "./pages/admin/ia/IAAssistantPage";
 import AuditUiPage from "./pages/admin/AuditUiPage";
 import TelemetryPage from "./pages/admin/TelemetryPage";
+import TaskBoardPage from "./pages/admin/TaskBoardPage";
+import MyWorkPage from "./pages/admin/MyWorkPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +67,8 @@ const App = () => (
               <Route path="ia/assistant" element={<IAAssistantPage />} />
               <Route path="audit-ui" element={<AuditUiPage />} />
               <Route path="telemetry" element={<TelemetryPage />} />
+              <Route path="my-work" element={<MyWorkPage />} />
+              <Route path="boards/:boardId" element={<TaskBoardPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
