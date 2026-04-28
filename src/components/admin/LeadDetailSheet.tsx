@@ -188,13 +188,6 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="overflow-y-auto sm:max-w-xl p-0 flex flex-col bg-background">
-          {/* HEADER */}
-          <SheetHeader className="px-6 pt-6 pb-5 border-b border-border bg-card sticky top-0 z-10 space-y-0">
-            <div className="flex items-start gap-4">
-              <InitialsAvatar name={lead.name} size="lg" />
-              <div className="min-w-0 flex-1">
-      <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent className="overflow-y-auto sm:max-w-xl p-0 flex flex-col bg-muted/30">
           {/* HEADER */}
           <SheetHeader className="px-7 pt-7 pb-6 border-b border-border bg-card sticky top-0 z-10 space-y-0">
