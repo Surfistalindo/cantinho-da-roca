@@ -50,12 +50,12 @@ export default function LeadCard({ lead, onClick, interactionCount }: Props) {
       {...listeners}
       onClick={onClick}
       className={cn(
-        'relative bg-card border border-border rounded-md p-2.5 pl-3 cursor-grab active:cursor-grabbing transition-all duration-150',
-        'hover:border-border-strong hover:bg-surface-3',
+        'relative bg-card border border-border rounded-md p-2.5 pl-3 cursor-grab active:cursor-grabbing transition-all duration-150 shadow-soft',
+        'hover:border-primary/40 hover:shadow-card',
         'before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-full',
         sideTone,
         score.urgent && 'ring-1 ring-destructive/40',
-        isDragging && 'opacity-50 shadow-pop ring-2 ring-primary/30',
+        isDragging && 'opacity-50 shadow-pop ring-2 ring-primary/40',
       )}
     >
       {score.level !== 'closed' && (
