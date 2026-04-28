@@ -29,7 +29,7 @@ export default function CrmLayout() {
         <div className="min-h-screen flex w-full bg-background font-crm text-foreground">
           <MondaySidebar />
           <div className="flex-1 flex flex-col min-w-0 crm-paper-bg">
-            <AdminNavbar onOpenPalette={() => setPaletteOpen(true)} />
+            <AdminNavbar onOpenPalette={() => setPaletteOpen(true)} onShowHelp={() => setHelpOpen(true)} />
             <main className="flex-1 overflow-y-auto min-w-0">
               <div className="px-3 sm:px-5 lg:px-7 py-4 sm:py-6 max-w-[1600px] mx-auto w-full min-w-0 crm-stagger">
                 <TelemetryErrorBoundary scope="admin-route">
