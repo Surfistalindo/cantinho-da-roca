@@ -276,7 +276,7 @@ export default function LeadsPage() {
   // Reseta páginas quando filtros/busca/ordenação mudam
   useResetPagesOn(paged.resetAll, [
     statusFilter, originFilter, search, recencyFilter, priorityFilter,
-    sortBy, sortDir, activeKpi,
+    sortBy, sortDir, activeKpi, dateFrom, dateTo,
   ]);
 
   const newestId = useMemo(() => {
