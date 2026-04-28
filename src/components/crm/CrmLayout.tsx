@@ -27,10 +27,13 @@ export default function CrmLayout() {
     <SidebarProvider>
       <TutorialProvider>
         <div className="min-h-screen flex w-full bg-surface-sunken font-crm text-foreground overflow-x-hidden">
-          <MondaySidebar />
+          {/* Sidebar fica fixa em viewport; documento todo é o scroller */}
+          <div className="sticky top-0 h-screen shrink-0 z-20">
+            <MondaySidebar />
+          </div>
           <div className="flex-1 flex flex-col min-w-0 bg-surface-1 crm-paper-bg">
             <AdminNavbar onOpenPalette={() => setPaletteOpen(true)} onShowHelp={() => setHelpOpen(true)} />
-            <main className="flex-1 overflow-y-auto crm-smooth-scroll crm-scrollbar-thin min-w-0">
+            <main className="flex-1 min-w-0">
               <div className="px-3 sm:px-5 lg:px-8 py-5 sm:py-7 max-w-[1600px] mx-auto w-full min-w-0 crm-stagger">
                 <TelemetryErrorBoundary scope="admin-route">
                   <Outlet />
