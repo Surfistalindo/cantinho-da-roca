@@ -192,26 +192,26 @@ export default function AdminSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-3">
+      <SidebarFooter className="border-t border-sidebar-border p-2">
         <TooltipProvider delayDuration={300}>
-          <div className={cn('flex items-center gap-3 rounded-lg', !collapsed && 'p-2 bg-sidebar-accent/40')}>
-            <div className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/70 text-sidebar-primary-foreground text-[12px] font-bold flex items-center justify-center">
+          <div className={cn('flex items-center gap-2.5 rounded-md', !collapsed && 'p-1.5 hover:bg-sidebar-accent/60 transition-colors')}>
+            <div className="h-8 w-8 shrink-0 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-[11px] font-bold flex items-center justify-center">
               {initials}
             </div>
             {!collapsed && (
               <>
                 <div className="flex-1 min-w-0 leading-tight">
                   <p className="text-[12px] font-semibold text-sidebar-accent-foreground truncate">{user?.email?.split('@')[0]}</p>
-                  <p className="text-[10px] text-sidebar-foreground/60 truncate">{user?.email}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
                 </div>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
                       onClick={handleSignOut}
-                      className="h-8 w-8 rounded-md flex items-center justify-center text-sidebar-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      className="h-7 w-7 rounded-md flex items-center justify-center text-sidebar-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                       aria-label="Sair"
                     >
-                      <MSym name="logout" size={18} />
+                      <MSym name="logout" size={16} />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="top">Sair</TooltipContent>
