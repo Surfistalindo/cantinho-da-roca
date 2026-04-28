@@ -28,7 +28,7 @@ import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTrashCan, faUserGroup, faArrowDownShortWide, faArrowUpShortWide,
-  faPlus, faTableCellsLarge, faTableList, faDownload,
+  faPlus, faDownload,
 } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { toast } from 'sonner';
@@ -90,10 +90,20 @@ export default function LeadsPage() {
   const [newDefaultStatus, setNewDefaultStatus] = useState('new');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [activeKpi, setActiveKpi] = useState<KpiKey | null>(null);
-  const [density, setDensity] = useState<'comfortable' | 'compact'>(() => {
-    if (typeof window === 'undefined') return 'comfortable';
-    return (localStorage.getItem('crm:leads:density') as 'comfortable' | 'compact') || 'comfortable';
+  // Altura de linha em px — substitui o booleano density (compatibilidade abaixo).
+  // Presets: 30 (compact) · 38 (cozy) · 52 (comfortable). Range: 26–72.
+  const [rowHeight, setRowHeight] = useState<number>(() => {
+    if (typeof window === 'undefined') return 38;
+    const saved = Number(localStorage.getItem('crm:leads:rowHeight'));
+    if (Number.isFinite(saved) && saved >= 26 && saved <= 72) return saved;
+    // Migração do valor antigo "density"
+    const legacy = localStorage.getItem('crm:leads:density');
+    return legacy === 'compact' ? 30 : 38;
   });
+  // density derivado mantém todas as condicionais existentes funcionando.
+  const density: 'comfortable' | 'compact' = rowHeight <= 32 ? 'compact' : 'comfortable';
+  const setRowHeightClamped = (v: number) =>
+    setRowHeight(Math.max(26, Math.min(72, Math.round(v))));
   const [view, setView] = useState<LeadsView>(() => {
     const fromUrl = (typeof window !== 'undefined'
       ? new URLSearchParams(window.location.search).get('view')
@@ -113,7 +123,7 @@ export default function LeadsPage() {
   const dateFrom = url.from;
   const dateTo = url.to;
 
-  useEffect(() => { localStorage.setItem('crm:leads:density', density); }, [density]);
+  useEffect(() => { localStorage.setItem('crm:leads:rowHeight', String(rowHeight)); }, [rowHeight]);
   useEffect(() => {
     localStorage.setItem(VIEW_KEY, view);
     const params = new URLSearchParams(searchParams);
@@ -485,7 +495,9 @@ export default function LeadsPage() {
     });
   }, [getVisibleTableScroller, view]);
 
-  const rowPad = density === 'compact' ? 'h-9' : 'h-12';
+  // Altura de linha agora vem de --row-h (CSS var). Mantemos rowPad vazio para
+  // não quebrar callers; classes h-9/h-12 sobrescreveriam a var.
+  const rowPad = '';
 
   if (loading) return <LoadingState />;
 
@@ -502,32 +514,58 @@ export default function LeadsPage() {
                   <LeadsViewSwitcher view={view} onChange={setView} />
                 </div>
                 {view === 'table' && (
-                  <div className="hidden sm:flex items-center rounded-md border border-border p-0.5 bg-card">
+                  <div className="hidden sm:flex items-center rounded-md border border-border bg-card overflow-hidden" data-tour="leads-row-height">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
-                          onClick={() => setDensity('comfortable')}
-                          className={cn('h-7 w-7 rounded flex items-center justify-center transition-colors',
-                            density === 'comfortable' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
-                          aria-label="Densidade confortável"
+                          onClick={() => setRowHeightClamped(rowHeight - 4)}
+                          className="h-7 w-7 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          aria-label="Diminuir altura da linha"
+                          disabled={rowHeight <= 26}
                         >
-                          <FontAwesomeIcon icon={faTableCellsLarge} className="h-3 w-3" />
+                          <span className="text-base leading-none">−</span>
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent>Densidade confortável</TooltipContent>
+                      <TooltipContent>Linha menor</TooltipContent>
                     </Tooltip>
+                    <div className="flex items-center border-x border-border">
+                      {[
+                        { v: 30, label: 'S', tip: 'Compacto' },
+                        { v: 38, label: 'M', tip: 'Cozy' },
+                        { v: 52, label: 'L', tip: 'Confortável' },
+                      ].map((p) => (
+                        <Tooltip key={p.v}>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={() => setRowHeight(p.v)}
+                              className={cn(
+                                'h-7 w-7 flex items-center justify-center text-[11px] font-medium transition-colors',
+                                rowHeight === p.v
+                                  ? 'bg-muted text-foreground'
+                                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/60',
+                              )}
+                              aria-label={`Altura ${p.tip}`}
+                              aria-pressed={rowHeight === p.v}
+                            >
+                              {p.label}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>{p.tip} ({p.v}px)</TooltipContent>
+                        </Tooltip>
+                      ))}
+                    </div>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
-                          onClick={() => setDensity('compact')}
-                          className={cn('h-7 w-7 rounded flex items-center justify-center transition-colors',
-                            density === 'compact' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
-                          aria-label="Compactar tabela para caber sem rolar lateral"
+                          onClick={() => setRowHeightClamped(rowHeight + 4)}
+                          className="h-7 w-7 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          aria-label="Aumentar altura da linha"
+                          disabled={rowHeight >= 72}
                         >
-                          <FontAwesomeIcon icon={faTableList} className="h-3 w-3" />
+                          <span className="text-base leading-none">+</span>
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent>Compactar (cabe sem rolar lateral)</TooltipContent>
+                      <TooltipContent>Linha maior</TooltipContent>
                     </Tooltip>
                   </div>
                 )}
@@ -818,10 +856,47 @@ export default function LeadsPage() {
                           <div
                             ref={(node) => { tableGroupScrollRefs.current[groupKey] = node; }}
                             className={cn(
-                              'overflow-y-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-sm',
+                              'crm-row-resize overflow-y-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-sm',
                               density === 'compact' ? 'crm-compact-table overflow-x-hidden' : 'overflow-x-auto',
                             )}
-                            style={{ maxHeight: 'calc(100vh - 280px)' }}
+                            style={{ maxHeight: 'calc(100vh - 280px)', ['--row-h' as any]: `${rowHeight}px` }}
+                            onPointerDown={(e) => {
+                              // Drag-resize: pointerdown nos últimos 5px da borda inferior de qualquer <tr>
+                              const tr = (e.target as HTMLElement)?.closest('tr');
+                              if (!tr || tr.parentElement?.tagName !== 'TBODY') return;
+                              const rect = tr.getBoundingClientRect();
+                              if (e.clientY < rect.bottom - 5 || e.clientY > rect.bottom + 2) return;
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const startY = e.clientY;
+                              const startH = rowHeight;
+                              const move = (ev: PointerEvent) => {
+                                setRowHeightClamped(startH + (ev.clientY - startY));
+                              };
+                              const up = () => {
+                                window.removeEventListener('pointermove', move);
+                                window.removeEventListener('pointerup', up);
+                                document.body.style.cursor = '';
+                                document.body.style.userSelect = '';
+                              };
+                              window.addEventListener('pointermove', move);
+                              window.addEventListener('pointerup', up);
+                              document.body.style.cursor = 'ns-resize';
+                              document.body.style.userSelect = 'none';
+                            }}
+                            onPointerMove={(e) => {
+                              // Cursor ns-resize quando perto da borda inferior de uma <tr>
+                              const tr = (e.target as HTMLElement)?.closest('tr');
+                              if (!tr || tr.parentElement?.tagName !== 'TBODY') {
+                                e.currentTarget.style.cursor = '';
+                                return;
+                              }
+                              const rect = tr.getBoundingClientRect();
+                              e.currentTarget.style.cursor =
+                                e.clientY >= rect.bottom - 5 && e.clientY <= rect.bottom + 2
+                                  ? 'ns-resize'
+                                  : '';
+                            }}
                             tabIndex={0}
                             role="region"
                             aria-label={`Tabela de leads — grupo ${groupKey}`}
