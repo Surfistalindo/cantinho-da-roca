@@ -11,6 +11,14 @@ const SECTIONS: { title: string; items: { keys: string[]; label: string }[] }[] 
     ],
   },
   {
+    title: 'Tela de Leads',
+    items: [
+      { keys: ['1'], label: 'Visão Tabela' },
+      { keys: ['2'], label: 'Visão Kanban' },
+      { keys: ['3'], label: 'Visão Cards' },
+    ],
+  },
+  {
     title: 'Navegação (g + tecla)',
     items: [
       { keys: ['G', 'D'], label: 'Página inicial' },

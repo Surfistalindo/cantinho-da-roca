@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -9,11 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import LeadFilters, { type RecencyFilter, type PriorityFilter } from '@/components/admin/LeadFilters';
 import LeadStatusSelect from '@/components/admin/LeadStatusSelect';
-import LeadStatusBadge from '@/components/admin/LeadStatusBadge';
 import LeadDetailSheet from '@/components/admin/LeadDetailSheet';
 import NewLeadDialog from '@/components/admin/NewLeadDialog';
 import PageHeader from '@/components/admin/PageHeader';
-import EmptyState from '@/components/admin/EmptyState';
 import LoadingState from '@/components/admin/LoadingState';
 import ListState from '@/components/admin/ListState';
 import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
@@ -27,8 +25,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faEye, faTrashCan, faUserGroup, faArrowDownShortWide, faArrowUpShortWide,
-  faCommentDots, faSeedling, faPlus, faTableCellsLarge, faTableList,
+  faTrashCan, faUserGroup, faArrowDownShortWide, faArrowUpShortWide,
+  faPlus, faTableCellsLarge, faTableList, faDownload,
 } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { toast } from 'sonner';
@@ -37,6 +35,13 @@ import { getLeadScore, compareByScore } from '@/lib/leadScore';
 import { cn } from '@/lib/utils';
 import { colorForLabel } from '@/components/crm/ui/TagCell';
 import GroupSection, { type GroupColor } from '@/components/crm/ui/GroupSection';
+import LeadsKpiStrip, { type KpiKey } from '@/components/admin/leads/LeadsKpiStrip';
+import LeadsViewSwitcher, { type LeadsView } from '@/components/admin/leads/LeadsViewSwitcher';
+import LeadsKanban from '@/components/admin/leads/LeadsKanban';
+import LeadsCards from '@/components/admin/leads/LeadsCards';
+import SavedFiltersMenu, { type SavedLeadFilter } from '@/components/admin/leads/SavedFiltersMenu';
+import QuickActionsPopover from '@/components/admin/leads/QuickActionsPopover';
+import { exportLeadsToCsv } from '@/components/admin/leads/exportLeadsCsv';
 
 interface Lead {
   id: string;
@@ -54,6 +59,17 @@ interface Lead {
 type SortDir = 'desc' | 'asc';
 type SortBy = 'score' | 'created';
 
+// Status canônicos do APP_CONFIG: new | contacting | negotiating | won | lost
+const STATUS_GROUPS: { key: string; title: string; color: GroupColor }[] = [
+  { key: 'new',         title: 'Novo lead',  color: 'blue'   },
+  { key: 'contacting',  title: 'Em contato', color: 'cyan'   },
+  { key: 'negotiating', title: 'Negociação', color: 'orange' },
+  { key: 'won',         title: 'Cliente',    color: 'green'  },
+  { key: 'lost',        title: 'Perdido',    color: 'red'    },
+];
+
+const VIEW_KEY = 'crm:leads:view';
+
 export default function LeadsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -69,12 +85,31 @@ export default function LeadsPage() {
   const [sortBy, setSortBy] = useState<SortBy>('score');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [newOpen, setNewOpen] = useState(false);
+  const [newDefaultStatus, setNewDefaultStatus] = useState('new');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [activeKpi, setActiveKpi] = useState<KpiKey | null>(null);
   const [density, setDensity] = useState<'comfortable' | 'compact'>(() => {
     if (typeof window === 'undefined') return 'comfortable';
     return (localStorage.getItem('crm:leads:density') as 'comfortable' | 'compact') || 'comfortable';
   });
+  const [view, setView] = useState<LeadsView>(() => {
+    const fromUrl = (typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('view')
+      : null) as LeadsView | null;
+    if (fromUrl && ['table', 'kanban', 'cards'].includes(fromUrl)) return fromUrl;
+    if (typeof window === 'undefined') return 'table';
+    return (localStorage.getItem(VIEW_KEY) as LeadsView) || 'table';
+  });
+  const searchInputRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => { localStorage.setItem('crm:leads:density', density); }, [density]);
+  useEffect(() => {
+    localStorage.setItem(VIEW_KEY, view);
+    const params = new URLSearchParams(searchParams);
+    if (view === 'table') params.delete('view'); else params.set('view', view);
+    setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
 
   // Atalho global N → abrir novo lead
   useEffect(() => {
@@ -131,37 +166,21 @@ export default function LeadsPage() {
   };
 
   const hasActiveFilters =
-    search.trim() !== '' ||
-    statusFilter !== 'all' ||
-    originFilter !== 'all' ||
-    recencyFilter !== 'all' ||
-    priorityFilter !== 'all';
+    search.trim() !== '' || statusFilter !== 'all' || originFilter !== 'all' ||
+    recencyFilter !== 'all' || priorityFilter !== 'all' || activeKpi !== null;
 
   const clearFilters = () => {
-    setSearch('');
-    setStatusFilter('all');
-    setOriginFilter('all');
-    setRecencyFilter('all');
-    setPriorityFilter('all');
+    setSearch(''); setStatusFilter('all'); setOriginFilter('all');
+    setRecencyFilter('all'); setPriorityFilter('all'); setActiveKpi(null);
     const params = new URLSearchParams(searchParams);
-    params.delete('recency');
-    params.delete('priority');
-    params.delete('followup');
+    ['recency', 'priority', 'followup'].forEach((k) => params.delete(k));
     setSearchParams(params, { replace: true });
   };
 
   const toggleSort = () => {
-    if (sortBy === 'score') {
-      setSortBy('created');
-      setSortDir('desc');
-    } else {
-      // ciclo: created desc → created asc → score desc
-      if (sortDir === 'desc') setSortDir('asc');
-      else { setSortBy('score'); setSortDir('desc'); }
-    }
-    const params = new URLSearchParams(searchParams);
-    params.set('sort', sortBy === 'score' ? 'created' : 'score');
-    setSearchParams(params, { replace: true });
+    if (sortBy === 'score') { setSortBy('created'); setSortDir('desc'); }
+    else if (sortDir === 'desc') setSortDir('asc');
+    else { setSortBy('score'); setSortDir('desc'); }
   };
 
   const fetchLeads = useCallback(async () => {
@@ -171,8 +190,7 @@ export default function LeadsPage() {
       .select('*')
       .order('created_at', { ascending: false });
     if (error) {
-      const err = error as { message?: string };
-      setFetchError(new Error(err.message ?? 'Erro ao carregar leads'));
+      setFetchError(new Error(error.message ?? 'Erro ao carregar leads'));
     } else {
       setLeads((data as Lead[]) ?? []);
     }
@@ -182,19 +200,30 @@ export default function LeadsPage() {
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
   useRealtimeTable('leads', fetchLeads);
 
+  // Aplica KPI selecionado como filtro virtual
+  const applyKpi = (key: KpiKey) => {
+    setActiveKpi((prev) => (prev === key ? null : key));
+  };
+
   const filtered = useMemo(() => {
     const list = leads.filter((l) => {
       if (statusFilter !== 'all' && l.status !== statusFilter) return false;
       if (originFilter !== 'all' && l.origin !== originFilter) return false;
       if (recencyFilter !== 'all') {
         const info = getContactRecency(l.last_contact_at, l.status, l.created_at);
-        if (recencyFilter === 'recent' && info.level !== 'recent') return false;
-        if (recencyFilter === 'attention' && info.level !== 'attention') return false;
-        if (recencyFilter === 'overdue' && info.level !== 'overdue') return false;
+        if (info.level !== recencyFilter) return false;
       }
       if (priorityFilter !== 'all') {
         const info = getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 });
         if (info.level !== priorityFilter) return false;
+      }
+      if (activeKpi) {
+        const score = getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 });
+        const rec = getContactRecency(l.last_contact_at, l.status, l.created_at);
+        if (activeKpi === 'today' && new Date(l.created_at).toDateString() !== new Date().toDateString()) return false;
+        if (activeKpi === 'waiting' && l.status !== 'new') return false;
+        if (activeKpi === 'hot' && !(score.level === 'hot' || score.urgent)) return false;
+        if (activeKpi === 'overdue' && rec.level !== 'overdue') return false;
       }
       if (search) {
         const q = search.toLowerCase();
@@ -216,16 +245,8 @@ export default function LeadsPage() {
       return sortDir === 'desc' ? db - da : da - db;
     });
     return list;
-  }, [leads, statusFilter, originFilter, search, recencyFilter, priorityFilter, sortBy, sortDir, interactionCounts]);
+  }, [leads, statusFilter, originFilter, search, recencyFilter, priorityFilter, sortBy, sortDir, interactionCounts, activeKpi]);
 
-  // Agrupamento por status — estilo Monday "Sprint 18 - …"
-  const STATUS_GROUPS: { key: string; title: string; color: GroupColor }[] = [
-    { key: 'new',         title: 'Novo',         color: 'blue'   },
-    { key: 'contacted',   title: 'Em contato',   color: 'cyan'   },
-    { key: 'negotiating', title: 'Negociação',   color: 'orange' },
-    { key: 'converted',   title: 'Convertido',   color: 'green'  },
-    { key: 'lost',        title: 'Perdido',      color: 'red'    },
-  ];
   const grouped = useMemo(() => {
     const map: Record<string, typeof filtered> = {};
     for (const g of STATUS_GROUPS) map[g.key] = [];
@@ -242,11 +263,7 @@ export default function LeadsPage() {
     return [...leads].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0].id;
   }, [leads]);
 
-  const isToday = (iso: string) => {
-    const d = new Date(iso);
-    const now = new Date();
-    return d.toDateString() === now.toDateString();
-  };
+  const isToday = (iso: string) => new Date(iso).toDateString() === new Date().toDateString();
 
   const openDetail = (lead: Lead) => { setSelectedLead(lead); setSheetOpen(true); };
 
@@ -267,7 +284,9 @@ export default function LeadsPage() {
     fetchLeads();
   };
 
-  // ----- Multi-select helpers -----
+  const openNewLeadAt = (status: string) => { setNewDefaultStatus(status); setNewOpen(true); };
+
+  // ----- Multi-select -----
   const toggleOne = (id: string) =>
     setSelected((prev) => {
       const next = new Set(prev);
@@ -302,48 +321,112 @@ export default function LeadsPage() {
     clearSelection();
     fetchLeads();
   };
+  const bulkScheduleFollowup = async (date: Date) => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    const { error } = await supabase
+      .from('leads')
+      .update({ next_contact_at: date.toISOString() })
+      .in('id', ids);
+    if (error) { toast.error('Erro ao agendar'); return; }
+    toast.success(`Follow-up agendado para ${ids.length} lead(s)`);
+    clearSelection();
+    fetchLeads();
+  };
+  const bulkCopyPhones = async () => {
+    const ids = new Set(selected);
+    const phones = leads.filter((l) => ids.has(l.id) && l.phone).map((l) => l.phone!);
+    if (phones.length === 0) { toast.error('Nenhum telefone disponível'); return; }
+    await navigator.clipboard.writeText(phones.join('\n'));
+    toast.success(`${phones.length} telefone(s) copiado(s)`);
+  };
+  const bulkExport = () => {
+    const ids = new Set(selected);
+    const items = leads.filter((l) => ids.has(l.id));
+    exportLeadsToCsv(items, 'leads-selecionados');
+    toast.success(`${items.length} lead(s) exportado(s)`);
+  };
+  const exportFiltered = () => {
+    exportLeadsToCsv(filtered, 'leads-filtrados');
+    toast.success(`${filtered.length} lead(s) exportado(s)`);
+  };
+
+  // ----- Atalhos / 1 2 3 -----
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable;
+      if (isTyping) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      if (e.key === '/') {
+        e.preventDefault();
+        const input = searchInputRef.current?.querySelector('input');
+        input?.focus();
+      } else if (e.key === '1') setView('table');
+      else if (e.key === '2') setView('kanban');
+      else if (e.key === '3') setView('cards');
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  const applySaved = (f: SavedLeadFilter) => {
+    setSearch(f.search); setStatusFilter(f.status); setOriginFilter(f.origin);
+    updateRecency(f.recency); updatePriority(f.priority);
+    toast.success(`Filtro "${f.name}" aplicado`);
+  };
 
   const rowPad = density === 'compact' ? 'h-9' : 'h-12';
+
+  if (loading) return <LoadingState />;
 
   return (
     <TooltipProvider delayDuration={200}>
       <div className="max-w-[1600px] mx-auto space-y-3">
         <PageHeader
           title="Leads"
-          description="Central comercial — acompanhe, filtre e gerencie todos os leads em um só lugar."
+          description="Central comercial — acompanhe, filtre, mova e gerencie todos os leads."
           actions={
-            <div className="flex items-center gap-1.5">
-              <div className="hidden sm:flex items-center rounded-md border border-border p-0.5 bg-card">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => setDensity('comfortable')}
-                      className={cn('h-7 w-7 rounded flex items-center justify-center transition-colors',
-                        density === 'comfortable' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
-                      aria-label="Densidade confortável"
-                    >
-                      <FontAwesomeIcon icon={faTableCellsLarge} className="h-3 w-3" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Densidade confortável</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => setDensity('compact')}
-                      className={cn('h-7 w-7 rounded flex items-center justify-center transition-colors',
-                        density === 'compact' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
-                      aria-label="Densidade compacta"
-                    >
-                      <FontAwesomeIcon icon={faTableList} className="h-3 w-3" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Densidade compacta</TooltipContent>
-                </Tooltip>
-              </div>
-              <Button onClick={() => setNewOpen(true)} size="sm" className="h-9 shadow-sm">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <LeadsViewSwitcher view={view} onChange={setView} />
+              {view === 'table' && (
+                <div className="hidden sm:flex items-center rounded-md border border-border p-0.5 bg-card">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setDensity('comfortable')}
+                        className={cn('h-7 w-7 rounded flex items-center justify-center transition-colors',
+                          density === 'comfortable' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
+                        aria-label="Densidade confortável"
+                      >
+                        <FontAwesomeIcon icon={faTableCellsLarge} className="h-3 w-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Densidade confortável</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setDensity('compact')}
+                        className={cn('h-7 w-7 rounded flex items-center justify-center transition-colors',
+                          density === 'compact' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
+                        aria-label="Densidade compacta"
+                      >
+                        <FontAwesomeIcon icon={faTableList} className="h-3 w-3" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Densidade compacta</TooltipContent>
+                  </Tooltip>
+                </div>
+              )}
+              <Button variant="outline" size="sm" className="h-9" onClick={exportFiltered}>
+                <FontAwesomeIcon icon={faDownload} className="h-3.5 w-3.5 mr-1.5" />
+                <span className="hidden sm:inline">Exportar</span>
+              </Button>
+              <Button onClick={() => { setNewDefaultStatus('new'); setNewOpen(true); }} size="sm" className="h-9 shadow-sm">
                 <FontAwesomeIcon icon={faPlus} className="h-3.5 w-3.5 mr-1.5" />
-                Novo contato
+                Novo
               </Button>
             </div>
           }
@@ -351,32 +434,52 @@ export default function LeadsPage() {
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="font-medium tabular-nums">{filtered.length}</span>
               <span>resultado{filtered.length === 1 ? '' : 's'}</span>
-              {leads.some((l) => isToday(l.created_at)) && (
-                <Badge variant="secondary" className="bg-success-soft text-success border-0 ml-1">
-                  <FontAwesomeIcon icon={faSeedling} className="h-3 w-3 mr-1" />
-                  {leads.filter((l) => isToday(l.created_at)).length} hoje
+              {activeKpi && (
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-0 ml-1">
+                  filtro ativo · {activeKpi}
                 </Badge>
               )}
             </div>
           }
         />
 
+        <LeadsKpiStrip
+          leads={leads}
+          interactionCounts={interactionCounts}
+          active={activeKpi}
+          onSelect={applyKpi}
+        />
+
         <div className="board-panel p-3 space-y-3">
-          <LeadFilters
-            search={search}
-            onSearchChange={setSearch}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
-            originFilter={originFilter}
-            onOriginChange={setOriginFilter}
-            recencyFilter={recencyFilter}
-            onRecencyChange={updateRecency}
-            priorityFilter={priorityFilter}
-            onPriorityChange={updatePriority}
-          />
+          <div className="flex flex-wrap items-start gap-2">
+            <div ref={searchInputRef} className="flex-1 min-w-0">
+              <LeadFilters
+                search={search}
+                onSearchChange={setSearch}
+                statusFilter={statusFilter}
+                onStatusChange={setStatusFilter}
+                originFilter={originFilter}
+                onOriginChange={setOriginFilter}
+                recencyFilter={recencyFilter}
+                onRecencyChange={updateRecency}
+                priorityFilter={priorityFilter}
+                onPriorityChange={updatePriority}
+              />
+            </div>
+            <SavedFiltersMenu
+              current={{
+                search,
+                status: statusFilter,
+                origin: originFilter,
+                recency: recencyFilter,
+                priority: priorityFilter,
+              }}
+              onApply={applySaved}
+            />
+          </div>
 
           <ListState
-            loading={loading}
+            loading={false}
             error={fetchError}
             onRetry={fetchLeads}
             totalCount={leads.length}
@@ -387,256 +490,235 @@ export default function LeadsPage() {
             emptyTitle="Nenhum lead cadastrado ainda"
             emptyDescription="Aguarde novos cadastros pelo site ou crie um lead manualmente."
           >
-            <>
-              {/* Desktop — agrupado por status estilo Monday */}
-              <div className="hidden md:block space-y-2">
-                {(() => {
-                  const renderHeader = (groupIds: string[]) => {
-                    const allChecked = groupIds.length > 0 && groupIds.every((id) => selected.has(id));
-                    const someChecked = !allChecked && groupIds.some((id) => selected.has(id));
-                    return (
-                      <TableHeader>
-                        <TableRow className="hover:bg-transparent border-border">
-                          <TableHead className="w-[36px] pl-3 pr-0">
-                            <Checkbox
-                              checked={allChecked ? true : someChecked ? 'indeterminate' : false}
-                              onCheckedChange={() => toggleGroup(groupIds, allChecked)}
-                              aria-label="Selecionar todos"
-                            />
-                          </TableHead>
-                          <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground min-w-[240px]">Lead</TableHead>
-                          <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Origem</TableHead>
-                          <TableHead className="hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[200px]">Interesse</TableHead>
-                          <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px]">Status</TableHead>
-                          <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[120px]">Prioridade</TableHead>
-                          <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Recência</TableHead>
-                          <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[100px]">
-                            <button
-                              onClick={toggleSort}
-                              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors uppercase"
-                              title={sortBy === 'score' ? 'Ordenado por prioridade' : 'Ordenado por data'}
-                            >
-                              {sortBy === 'score' ? 'Prioridade' : 'Entrada'}
-                              <FontAwesomeIcon
-                                icon={sortDir === 'desc' ? faArrowDownShortWide : faArrowUpShortWide}
-                                className="h-3 w-3"
-                              />
-                            </button>
-                          </TableHead>
-                          <TableHead className="w-[120px] text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Ações</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                    );
-                  };
+            {view === 'kanban' && (
+              <LeadsKanban
+                leads={filtered}
+                interactionCounts={interactionCounts}
+                onLeadClick={openDetail}
+                onAddLead={openNewLeadAt}
+                onChanged={fetchLeads}
+              />
+            )}
 
-                  const renderRows = (items: typeof filtered) =>
-                    items.map((lead) => {
-                      const isNewest = lead.id === newestId;
-                      const score = getLeadScore(lead, { interactionCount: interactionCounts[lead.id] ?? 0 });
-                      const isChecked = selected.has(lead.id);
+            {view === 'cards' && (
+              <LeadsCards
+                leads={filtered}
+                selected={selected}
+                onToggleOne={toggleOne}
+                newestId={newestId}
+                interactionCounts={interactionCounts}
+                onOpenDetail={openDetail}
+                onUpdated={fetchLeads}
+              />
+            )}
+
+            {view === 'table' && (
+              <>
+                {/* Desktop — agrupado por status */}
+                <div className="hidden md:block space-y-2">
+                  {(() => {
+                    const renderHeader = (groupIds: string[]) => {
+                      const allChecked = groupIds.length > 0 && groupIds.every((id) => selected.has(id));
+                      const someChecked = !allChecked && groupIds.some((id) => selected.has(id));
                       return (
-                        <TableRow
-                          key={lead.id}
-                          tabIndex={0}
-                          className={cn(
-                            'group cursor-pointer border-border/60 outline-none transition-colors',
-                            rowPad,
-                            isNewest && '!bg-primary/5 hover:!bg-primary/10',
-                            isChecked && '!bg-primary/[0.06] hover:!bg-primary/10',
-                            score.urgent && 'border-l-2 border-l-destructive',
-                          )}
-                          onClick={() => openDetail(lead)}
-                          onKeyDown={(e) => { if (e.key === 'Enter') openDetail(lead); }}
-                        >
-                          <TableCell className="pl-3 pr-0" onClick={(e) => e.stopPropagation()}>
-                            <Checkbox
-                              checked={isChecked}
-                              onCheckedChange={() => toggleOne(lead.id)}
-                              aria-label={`Selecionar ${lead.name}`}
-                            />
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-3">
-                              <InitialsAvatar name={lead.name} size={density === 'compact' ? 'sm' : 'md'} />
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                  {isNewest && (
-                                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" title="Lead mais recente" />
+                        <TableHeader>
+                          <TableRow className="hover:bg-transparent border-border">
+                            <TableHead className="w-[36px] pl-3 pr-0">
+                              <Checkbox
+                                checked={allChecked ? true : someChecked ? 'indeterminate' : false}
+                                onCheckedChange={() => toggleGroup(groupIds, allChecked)}
+                                aria-label="Selecionar todos"
+                              />
+                            </TableHead>
+                            <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground min-w-[240px]">Lead</TableHead>
+                            <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Origem</TableHead>
+                            <TableHead className="hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[200px]">Interesse</TableHead>
+                            <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px]">Status</TableHead>
+                            <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[120px]">Prioridade</TableHead>
+                            <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Recência</TableHead>
+                            <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[100px]">
+                              <button
+                                onClick={toggleSort}
+                                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors uppercase"
+                                title={sortBy === 'score' ? 'Ordenado por prioridade' : 'Ordenado por data'}
+                              >
+                                {sortBy === 'score' ? 'Prioridade' : 'Entrada'}
+                                <FontAwesomeIcon
+                                  icon={sortDir === 'desc' ? faArrowDownShortWide : faArrowUpShortWide}
+                                  className="h-3 w-3"
+                                />
+                              </button>
+                            </TableHead>
+                            <TableHead className="w-[140px] text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Ações</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                      );
+                    };
+
+                    const renderRows = (items: typeof filtered) =>
+                      items.map((lead) => {
+                        const isNewest = lead.id === newestId;
+                        const score = getLeadScore(lead, { interactionCount: interactionCounts[lead.id] ?? 0 });
+                        const isChecked = selected.has(lead.id);
+                        return (
+                          <TableRow
+                            key={lead.id}
+                            tabIndex={0}
+                            className={cn(
+                              'group cursor-pointer border-border/60 outline-none transition-colors',
+                              rowPad,
+                              isNewest && '!bg-primary/5 hover:!bg-primary/10',
+                              isChecked && '!bg-primary/[0.06] hover:!bg-primary/10',
+                              score.urgent && 'border-l-2 border-l-destructive',
+                            )}
+                            onClick={() => openDetail(lead)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') openDetail(lead); }}
+                          >
+                            <TableCell className="pl-3 pr-0" onClick={(e) => e.stopPropagation()}>
+                              <Checkbox
+                                checked={isChecked}
+                                onCheckedChange={() => toggleOne(lead.id)}
+                                aria-label={`Selecionar ${lead.name}`}
+                              />
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              <div className="flex items-center gap-3">
+                                <InitialsAvatar name={lead.name} size={density === 'compact' ? 'sm' : 'md'} />
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    {isNewest && (
+                                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" title="Lead mais recente" />
+                                    )}
+                                    <span className="text-sm font-semibold truncate">{lead.name}</span>
+                                  </div>
+                                  {density === 'comfortable' && (
+                                    <span className="text-[11px] text-muted-foreground font-mono">{lead.phone ?? '—'}</span>
                                   )}
-                                  <span className="text-sm font-semibold truncate">{lead.name}</span>
                                 </div>
-                                {density === 'comfortable' && (
-                                  <span className="text-[11px] text-muted-foreground font-mono">{lead.phone ?? '—'}</span>
-                                )}
                               </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden lg:table-cell">
-                            {lead.origin ? (
-                              <span className={cn('tag-cell', `tag-${colorForLabel(lead.origin)}`)}>{lead.origin}</span>
-                            ) : <span className="text-xs text-muted-foreground">—</span>}
-                          </TableCell>
-                          <TableCell className="hidden xl:table-cell text-xs text-muted-foreground max-w-[200px] truncate">
-                            {lead.product_interest ?? '—'}
-                          </TableCell>
-                          <TableCell onClick={(e) => e.stopPropagation()}>
-                            <LeadStatusSelect leadId={lead.id} currentStatus={lead.status} onUpdated={fetchLeads} />
-                          </TableCell>
-                          <TableCell>
-                            <LeadScoreBadge lead={lead} interactionCount={interactionCounts[lead.id] ?? 0} size="sm" />
-                          </TableCell>
-                          <TableCell className="hidden lg:table-cell">
-                            <ContactRecencyBadge
-                              lastContactAt={lead.last_contact_at}
-                              status={lead.status}
-                              createdAt={lead.created_at}
-                              size="sm"
-                            />
-                          </TableCell>
-                          <TableCell className="text-[11px] text-muted-foreground whitespace-nowrap font-mono">
-                            {format(new Date(lead.created_at), 'dd/MM/yy', { locale: ptBR })}
-                          </TableCell>
-                          <TableCell onClick={(e) => e.stopPropagation()}>
-                            <div className="flex justify-end gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openDetail(lead)}>
-                                    <FontAwesomeIcon icon={faEye} className="h-3.5 w-3.5" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Ver detalhes</TooltipContent>
-                              </Tooltip>
-                              {lead.phone && (
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell">
+                              {lead.origin ? (
+                                <span className={cn('tag-cell', `tag-${colorForLabel(lead.origin)}`)}>{lead.origin}</span>
+                              ) : <span className="text-xs text-muted-foreground">—</span>}
+                            </TableCell>
+                            <TableCell className="hidden xl:table-cell text-xs text-muted-foreground max-w-[200px] truncate">
+                              {lead.product_interest ?? '—'}
+                            </TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              <LeadStatusSelect leadId={lead.id} currentStatus={lead.status} onUpdated={fetchLeads} />
+                            </TableCell>
+                            <TableCell>
+                              <LeadScoreBadge lead={lead} interactionCount={interactionCounts[lead.id] ?? 0} size="sm" />
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell">
+                              <ContactRecencyBadge
+                                lastContactAt={lead.last_contact_at}
+                                status={lead.status}
+                                createdAt={lead.created_at}
+                                size="sm"
+                              />
+                            </TableCell>
+                            <TableCell className="text-[11px] text-muted-foreground whitespace-nowrap font-mono">
+                              {format(new Date(lead.created_at), 'dd/MM/yy', { locale: ptBR })}
+                            </TableCell>
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              <div className="flex justify-end gap-0.5 opacity-70 group-hover:opacity-100 transition-opacity">
+                                <QuickActionsPopover
+                                  leadId={lead.id}
+                                  leadName={lead.name}
+                                  phone={lead.phone}
+                                  onUpdated={fetchLeads}
+                                />
+                                {lead.phone && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:bg-success-soft" onClick={(e) => openWhatsApp(e, lead.phone)}>
+                                        <FontAwesomeIcon icon={faWhatsapp} className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>Abrir WhatsApp</TooltipContent>
+                                  </Tooltip>
+                                )}
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-success hover:bg-success-soft" onClick={(e) => openWhatsApp(e, lead.phone)}>
-                                      <FontAwesomeIcon icon={faWhatsapp} className="h-3.5 w-3.5" />
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={(e) => deleteLead(e, lead.id)}>
+                                      <FontAwesomeIcon icon={faTrashCan} className="h-3.5 w-3.5" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent>Abrir WhatsApp</TooltipContent>
+                                  <TooltipContent>Excluir</TooltipContent>
                                 </Tooltip>
-                              )}
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={(e) => deleteLead(e, lead.id)}>
-                                    <FontAwesomeIcon icon={faTrashCan} className="h-3.5 w-3.5" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Excluir</TooltipContent>
-                              </Tooltip>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    });
-
-                  const renderGroup = (items: typeof filtered) => (
-                    <div className="overflow-x-auto crm-dense-table">
-                      <Table>
-                        {renderHeader(items.map((i) => i.id))}
-                        <TableBody>{renderRows(items)}</TableBody>
-                      </Table>
-                    </div>
-                  );
-
-                  return (
-                    <>
-                      {STATUS_GROUPS.map((g) => {
-                        const items = grouped.map[g.key];
-                        if (items.length === 0) return null;
-                        const todayCount = items.filter((l) => isToday(l.created_at)).length;
-                        return (
-                          <GroupSection
-                            key={g.key}
-                            title={g.title}
-                            count={items.length}
-                            color={g.color}
-                            defaultOpen={g.key !== 'lost'}
-                            meta={todayCount > 0 ? `${todayCount} hoje` : undefined}
-                          >
-                            {renderGroup(items)}
-                          </GroupSection>
+                              </div>
+                            </TableCell>
+                          </TableRow>
                         );
-                      })}
-                      {grouped.other.length > 0 && (
-                        <GroupSection title="Outros" count={grouped.other.length} color="neutral" defaultOpen={false}>
-                          {renderGroup(grouped.other)}
-                        </GroupSection>
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
+                      });
 
-              {/* Mobile */}
-              <div className="md:hidden space-y-2.5">
-                {filtered.map((lead) => {
-                  const isNewest = lead.id === newestId;
-                  const score = getLeadScore(lead, { interactionCount: interactionCounts[lead.id] ?? 0 });
-                  return (
-                    <button
-                      key={lead.id}
-                      onClick={() => openDetail(lead)}
-                      className={cn(
-                        'w-full text-left bg-card border border-border rounded-2xl p-4 transition-all duration-150 hover:border-border-strong hover:shadow-card',
-                        isNewest && 'border-primary/40 bg-primary/[0.03]',
-                        score.urgent && 'border-l-2 border-l-destructive',
-                      )}
-                    >
-                      {score.level !== 'closed' && (
-                        <div className="mb-2">
-                          <LeadScoreBadge lead={lead} interactionCount={interactionCounts[lead.id] ?? 0} size="sm" />
-                        </div>
-                      )}
-                      <div className="flex items-start gap-3 mb-3">
-                        <InitialsAvatar name={lead.name} size="md" />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            {isNewest && <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse shrink-0" />}
-                            <h3 className="font-semibold text-sm truncate">{lead.name}</h3>
-                          </div>
-                          {lead.phone && <p className="text-xs font-mono text-muted-foreground">{lead.phone}</p>}
-                        </div>
-                        <LeadStatusBadge status={lead.status} />
+                    const renderGroup = (items: typeof filtered) => (
+                      <div className="overflow-x-auto crm-dense-table">
+                        <Table>
+                          {renderHeader(items.map((i) => i.id))}
+                          <TableBody>{renderRows(items)}</TableBody>
+                        </Table>
                       </div>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-                        {lead.origin && <span>{lead.origin}</span>}
-                        {lead.product_interest && <span className="truncate max-w-[200px]">· {lead.product_interest}</span>}
-                      </div>
-                      <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between gap-2">
-                        <ContactRecencyBadge
-                          lastContactAt={lead.last_contact_at}
-                          status={lead.status}
-                          createdAt={lead.created_at}
-                          size="sm"
-                        />
-                        <span className="text-[11px] text-muted-foreground font-mono">{format(new Date(lead.created_at), 'dd/MM/yy', { locale: ptBR })}</span>
-                      </div>
-                      {lead.phone && (
-                        <div className="mt-3 flex gap-2" onClick={(e) => e.stopPropagation()}>
-                          <Button variant="outline" size="sm" className="flex-1 text-success border-success/30" onClick={(e) => openWhatsApp(e, lead.phone)}>
-                            <FontAwesomeIcon icon={faWhatsapp} className="h-3.5 w-3.5 mr-1.5" /> WhatsApp
-                          </Button>
-                          <Button variant="outline" size="sm" className="flex-1" onClick={(e) => { e.stopPropagation(); openDetail(lead); }}>
-                            <FontAwesomeIcon icon={faCommentDots} className="h-3.5 w-3.5 mr-1.5" /> Interagir
-                          </Button>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </>
+                    );
+
+                    return (
+                      <>
+                        {STATUS_GROUPS.map((g) => {
+                          const items = grouped.map[g.key];
+                          if (items.length === 0) return null;
+                          const todayCount = items.filter((l) => isToday(l.created_at)).length;
+                          return (
+                            <GroupSection
+                              key={g.key}
+                              title={g.title}
+                              count={items.length}
+                              color={g.color}
+                              defaultOpen={g.key !== 'lost'}
+                              meta={todayCount > 0 ? `${todayCount} hoje` : undefined}
+                            >
+                              {renderGroup(items)}
+                            </GroupSection>
+                          );
+                        })}
+                        {grouped.other.length > 0 && (
+                          <GroupSection title="Outros" count={grouped.other.length} color="neutral" defaultOpen={false}>
+                            {renderGroup(grouped.other)}
+                          </GroupSection>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+
+                {/* Mobile — usa visão de Cards */}
+                <div className="md:hidden">
+                  <LeadsCards
+                    leads={filtered}
+                    selected={selected}
+                    onToggleOne={toggleOne}
+                    newestId={newestId}
+                    interactionCounts={interactionCounts}
+                    onOpenDetail={openDetail}
+                    onUpdated={fetchLeads}
+                  />
+                </div>
+              </>
+            )}
           </ListState>
         </div>
 
         <LeadDetailSheet lead={selectedLead} open={sheetOpen} onOpenChange={setSheetOpen} onUpdated={fetchLeads} />
-        <NewLeadDialog open={newOpen} onOpenChange={setNewOpen} onCreated={fetchLeads} />
+        <NewLeadDialog open={newOpen} onOpenChange={setNewOpen} onCreated={fetchLeads} defaultStatus={newDefaultStatus} />
         <BulkActionsBar
           count={selected.size}
           onClear={clearSelection}
           onChangeStatus={bulkChangeStatus}
           onDelete={bulkDelete}
+          onScheduleFollowup={bulkScheduleFollowup}
+          onCopyPhones={bulkCopyPhones}
+          onExport={bulkExport}
         />
       </div>
     </TooltipProvider>
