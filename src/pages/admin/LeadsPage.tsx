@@ -6,6 +6,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import LeadFilters, { type RecencyFilter, type PriorityFilter } from '@/components/admin/LeadFilters';
 import LeadStatusSelect from '@/components/admin/LeadStatusSelect';
 import LeadStatusBadge from '@/components/admin/LeadStatusBadge';
@@ -18,6 +19,7 @@ import ListState from '@/components/admin/ListState';
 import ContactRecencyBadge from '@/components/admin/ContactRecencyBadge';
 import InitialsAvatar from '@/components/admin/InitialsAvatar';
 import LeadScoreBadge from '@/components/admin/LeadScoreBadge';
+import BulkActionsBar from '@/components/admin/BulkActionsBar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import { useInteractionCounts } from '@/hooks/useInteractionCounts';
@@ -26,7 +28,7 @@ import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faEye, faTrashCan, faUserGroup, faArrowDownShortWide, faArrowUpShortWide,
-  faCommentDots, faSeedling, faPlus,
+  faCommentDots, faSeedling, faPlus, faTableCellsLarge, faTableList,
 } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { toast } from 'sonner';
