@@ -145,7 +145,9 @@ export default function IAExcelImportPage() {
 
       {/* ============= ETAPA 1 — UPLOAD ============= */}
       {state.step === 'idle' && (
-        <ExcelDropzone onFile={im.handleFile} />
+        <div data-tour="excel-dropzone">
+          <ExcelDropzone onFile={im.handleFile} />
+        </div>
       )}
 
       {/* ============= ETAPA 2 — PARSING ============= */}
