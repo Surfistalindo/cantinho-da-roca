@@ -756,8 +756,10 @@ export default function LeadsPage() {
                         const score = getLeadScore(lead, { interactionCount: interactionCounts[lead.id] ?? 0 });
                         const isChecked = selected.has(lead.id);
                         return (
+                          <DraggableRow key={lead.id} id={lead.id}>
+                            {({ setNodeRef, isDragging, grip, style }) => (
                           <TableRow
-                            key={lead.id}
+                            ref={setNodeRef as any}
                             tabIndex={0}
                             role="button"
                             aria-label={`Abrir detalhes de ${lead.name}, status ${lead.status}`}
@@ -769,11 +771,16 @@ export default function LeadsPage() {
                               isNewest && '!bg-primary/5 hover:!bg-primary/10',
                               isChecked && '!bg-primary/[0.06] hover:!bg-primary/10',
                               score.urgent && 'border-l-2 border-l-destructive',
+                              isDragging && 'opacity-40',
                             )}
+                            style={style}
                             onClick={() => openDetail(lead)}
                             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(lead); } }}
                           >
-                            <TableCell className="pl-3 pr-0" onClick={(e) => e.stopPropagation()}>
+                            <TableCell className="pl-2 pr-0 w-[20px]" onClick={(e) => e.stopPropagation()}>
+                              {grip}
+                            </TableCell>
+                            <TableCell className="pl-2 pr-0" onClick={(e) => e.stopPropagation()}>
                               <Checkbox
                                 checked={isChecked}
                                 onCheckedChange={() => toggleOne(lead.id)}
