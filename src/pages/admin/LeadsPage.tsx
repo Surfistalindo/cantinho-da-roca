@@ -881,12 +881,14 @@ export default function LeadsPage() {
                           <div
                             ref={(node) => { tableGroupScrollRefs.current[groupKey] = node; }}
                             className={cn(
-                              'crm-row-resize crm-smooth-scroll crm-dense-table min-w-0 max-w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-sm',
-                              density === 'compact'
-                                ? 'crm-compact-table overflow-x-hidden overflow-y-visible'
-                                : 'crm-x-scroll-always overflow-x-auto overflow-y-visible',
+                              'crm-row-resize crm-smooth-scroll crm-dense-table crm-x-scroll-always min-w-0 max-w-full overflow-x-auto overflow-y-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-sm',
+                              density === 'compact' && 'crm-compact-table',
                             )}
-                            style={{ ['--row-h' as any]: `${rowHeight}px` }}
+                            style={{
+                              ['--row-h' as any]: `${rowHeight}px`,
+                              maxHeight: 'calc(100vh - 320px)',
+                              minHeight: '180px',
+                            }}
                             onWheel={(e) => {
                               // Shift + scroll → rola horizontal (atalho clássico)
                               if (e.shiftKey && e.deltaY !== 0) {
