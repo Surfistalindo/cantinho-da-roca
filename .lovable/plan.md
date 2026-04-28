@@ -1,71 +1,96 @@
-## Objetivo
+## Redesign do CRM — abordagem em 4 fases
 
-Tornar o botão de **densidade compacta** (ícone de lista, ao lado do confortável) realmente útil em `/admin/leads`: quando ativado, **toda a tabela encolhe para caber na tela sem scroll horizontal**, mesmo em telas menores onde hoje aparece a barra horizontal.
+O documento que você anexou é grande (tokens, layout, navbar, sidebar, leads, kanban, dashboard) e algumas partes conflitam com regras antigas da memória. Você optou por **redesign completo + atualizar memória + adicionar pinned columns no comfortable**.
 
-## Estado atual
+Em vez de despejar tudo num único patch (alto risco de regressão visual e funcional), vou executar **uma fase por vez**, com aprovação no fim de cada uma. Este plano cobre **Fase 1** em detalhe + esboço das fases seguintes.
 
-- Toggle existe (`density: 'comfortable' | 'compact'`) e persiste em `localStorage`, mas hoje só altera:
-  - altura da linha (`h-9` vs `h-12`)
-  - tamanho do avatar (`sm` vs `md`)
-  - exibição do telefone abaixo do nome
-- O scroller usa `overflow-x-auto` sempre, então o usuário compacta a linha mas ainda precisa rolar lateralmente.
-- Colunas `Origem` (`hidden lg:table-cell`) e `Interesse` (`hidden xl:table-cell`) e `Recência` (`hidden lg:table-cell`) aparecem por viewport, não por densidade.
+---
 
-## Mudanças
+### Princípios que guiam todas as fases
 
-### 1. `src/index.css` — nova classe `.crm-compact-table`
+- Escopo do redesign = `.font-crm` (todo `/admin/*`). **Landing fica intocada.**
+- Mantém Lovable Cloud + RLS + paginação por grupo + filtros URL + bulk + tutorial FAB já existentes.
+- Sem novas libs. Sem `cursor` custom. Sem gradientes roxos. Sem mudar schema.
+- Performance: nenhuma fonte nova além das já carregadas (Inter / JetBrains Mono / Caveat / Material Symbols). Glassmorphism só onde pré-aprovado (navbar e popovers — leve, não decorativo).
+- Toda animação 150–220ms, ease-out. Respeita `prefers-reduced-motion`.
 
-Adicionar logo após `.crm-dense-table` (após linha 587), reaproveitando o sistema atual:
+---
 
-- `overflow-x: hidden` no scroller (some a barra horizontal).
-- `table-layout: auto; width: 100%` para Postgres-like fit ao container.
-- `thead th`: `height: 28px`, `padding: 0 .375rem`, `font-size: 10px`.
-- `tbody tr`: `height: 30px`.
-- `tbody td`: `padding: 2px 6px`, `font-size: 12px`, `.text-sm` cai para 12px.
-- Botões de ação na última coluna encolhem: `h-6 w-6`, ícones `h-3 w-3`.
+### Fase 1 — Memória + Design System global (esta fase)
 
-Mantém o `overflow-y-auto` e `maxHeight: calc(100vh - 280px)` intactos (scroll vertical preservado, plano anterior intocado).
+**1.1 Atualizar memórias** (a regra antiga proibia glassmorphism e troca de fonte; agora você liberou):
 
-### 2. `src/pages/admin/LeadsPage.tsx`
+- `mem://index.md` Core: trocar a linha "Sem purple gradients, glassmorphism, cursor custom..." por uma versão refinada: glass leve permitido só em navbar/popover, sem gradientes roxos, sem cursor custom.
+- `mem://design/crm-typography`: manter Inter como base, **adicionar permissão** para usar Geist (opcional) só em `text-display-*`. Mono = JetBrains Mono.
+- Novo `mem://design/crm-redesign-2026`: documenta tokens (paleta refinada, sombras `soft/pop/ringed`, raios, durações, scrollbar) para servir de fonte da verdade.
 
-**a) Scroller** (linhas ~795–815): alternar classes conforme densidade
+**1.2 `tailwind.config.ts`**
 
-```tsx
-className={cn(
-  'overflow-y-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-sm',
-  density === 'compact' ? 'crm-compact-table overflow-x-hidden' : 'overflow-x-auto',
-)}
-```
+- Refinar `boxShadow`: já tem `soft/card/pop/ringed` — adicionar `shadow-floating` (popovers) e `shadow-inset-hairline` (boards).
+- `transitionDuration` e `transitionTimingFunction`: presets `crm-fast` (120ms), `crm` (180ms), `crm-slow` (240ms) com `cubic-bezier(.2,.8,.2,1)`.
+- Não mudar paleta semântica (HSL já existe via vars). Apenas garantir que `--ring` no light tem alpha pronto pra focus-ring premium.
 
-**b) Esconder colunas auxiliares no compact** — header (linhas ~657, 661) e cells (linhas ~734, 748):
+**1.3 `src/index.css` — bloco global do CRM**
 
-- Coluna **Origem** e **Recência**: trocar `hidden lg:table-cell` por `cn('hidden lg:table-cell', density === 'compact' && 'lg:hidden')`.
-- Coluna **Interesse** (`xl:table-cell`): em compact, também ocultar com `density === 'compact' && 'xl:hidden'`.
+Sem renomear vars existentes (evita regressão). Adicionar:
 
-**c) Coluna "Lead"** (linha ~656): `min-w-[240px]` → em compact usar `min-w-[160px]` (cabe melhor). Aplicar via `cn`.
+- **Scrollbar utility refinada** (`.crm-smooth-scroll` já existe; criar `.crm-scrollbar-thin` complementar com 8px, hover 10px, cor `hsl(var(--hairline-strong))`).
+- **Focus-visible global** dentro de `.font-crm`: anel `0 0 0 3px hsl(var(--ring) / 0.35)` em botões, links, inputs, células, switches; remove halos default duplos.
+- **Skeleton premium** `.crm-skeleton`: shimmer 1.4s baseado em `surface-2 → surface-3 → surface-2`.
+- **Sticky/pinned helpers** (preparação p/ Fase 3):
+  - `.crm-pin-left { position: sticky; left: 0; background: hsl(var(--card)); z-index: 4; box-shadow: 1px 0 0 0 hsl(var(--hairline)); }`
+  - `.crm-pin-right { ...right: 0; box-shadow: -1px 0 0 0 hsl(var(--hairline)); }`
+  - Variante `.crm-pin-left-shadowed` com `clip-path` que evita sombra cortada na borda do scroller.
+- **Hover affordance em linhas de tabela**: `.font-crm .board-table tbody tr` ganha `--row-actions-opacity: 0` por padrão, `:hover { --row-actions-opacity: 1 }`. Ações de linha usam essa variável (preparação p/ Fase 3).
+- **Linear/Vercel hairlines**: `.font-crm .surface-card` ganha alternativa `.surface-card--hair` com `box-shadow: 0 0 0 1px hsl(var(--hairline)), 0 1px 2px hsl(220 25% 14% / .04)` (sem border, alinhamento perfeito a 1px).
 
-**d) Coluna "Ações"** (linha ~682): `w-[140px]` → em compact `w-[80px]` para acomodar 2 ícones menores. Truncar para mostrar só WhatsApp + Excluir (esconder `QuickActionsPopover` em compact, que tem ações secundárias).
+**1.4 Verificação Fase 1**
 
-**e) Score badge / Status select** ficam, mas Score já é `size="sm"` e Status select usa largura fluida do `w-[160px]` da coluna — em compact reduzir para `w-[120px]`.
+- Abrir `/admin/dashboard`, `/admin/leads`, `/admin/pipeline` no preview e confirmar: nada quebrou visualmente, focus-ring novo aparece com Tab, scroll fica mais fino. Skeleton ainda não foi adotado em telas — só está disponível.
 
-**f) Tooltip no botão** atualizar de `Densidade compacta` para `Compactar tabela (cabe sem rolar lateral)`.
+> Aprovado isto, parto para Fase 2.
 
-### 3. Verificação
+---
 
-Após aplicar, abrir `/admin/leads` no preview com viewport 1280×720:
+### Fase 2 — Layout + Navbar + Sidebar (próxima)
 
-1. Em **confortável** confirmar que o layout atual permanece idêntico.
-2. Clicar no ícone de **compacto**: barra de scroll horizontal desaparece; todas as linhas encolhem; colunas Origem/Recência/Interesse somem; Lead, Status, Prioridade, Entrada e Ações continuam visíveis e usáveis.
-3. Testar também em 1024×768 (apenas Lead/Status/Prioridade/Entrada/Ações em compact, sem scroll lateral).
-4. Voltar para confortável: layout volta ao normal.
+Resumo (vai virar plan próprio):
 
-## Não-objetivos
+- `CrmLayout`: surface ladder explícita (`surface-sunken` no shell, `surface-1` no main), padding e max-width revisados, garantir `overflow-x-hidden` no shell.
+- `AdminNavbar`: glass leve (`bg-card/80 backdrop-blur-md` + `border-b hairline`), realinhar grid (logo/breadcrumb | search | actions), avatar com ring `ringed`, search com `kbd-chip` refinado.
+- `MondaySidebar`: estados ativos com barra de acento à esquerda + bg `sidebar-accent/60`; ícones crisp 16px; transições 180ms; feedback DnD com `outline + ring + scale .98`.
 
-- Não mudar Kanban nem Cards (densidade só afeta a visão de tabela, como hoje).
-- Não alterar paginação por grupo, filtros URL, refresh strip ou navegação por teclado adicionados antes.
-- Sem novas libs, sem mudanças no schema.
+### Fase 3 — Leads (tabela + pinned columns + comfortable)
 
-## Arquivos afetados
+- Mantém modo **compact** atual (sem scroll).
+- Em **comfortable**: scroller volta a `overflow-x-auto`, mas coluna "Lead" fica `crm-pin-left` e "Ações" fica `crm-pin-right`. Header também sticky vertical (já é) e horizontal nas pinned.
+- Quick actions de linha: ícones aparecem só no hover via `--row-actions-opacity`.
+- Empty state ilustrado (já temos `EmptyState` warm) reutilizado quando filtros sem resultado.
+- Filtros e view switcher repintados com componentes do design system novo (segmented control mais Linear-like).
 
-- `src/index.css` — adicionar bloco `.crm-compact-table` (~30 linhas).
-- `src/pages/admin/LeadsPage.tsx` — classes condicionais nas colunas, scroller e ajustes no tooltip/QuickActions.
+### Fase 4 — Dashboard + Kanban + polish final
+
+- KPIs: card `surface-card--hair` + `hover: shadow-pop translate-y-[-1px]` 180ms; tipografia tabular-nums grande.
+- Charts: tooltip refinado (popover novo + sombra floating).
+- LeadsKanban + LeadCard: sombras suaves, estado dragging com `rotate-1 + shadow-pop`, badges status do design system, espaçamento 8px.
+- Auditoria visual final em mobile (375 e 768) e desktop (1280 e 1536).
+
+---
+
+### Arquivos da Fase 1
+
+- `mem://index.md` — atualizar Core
+- `mem://design/crm-typography` — atualizar
+- `mem://design/crm-redesign-2026` — novo
+- `tailwind.config.ts` — sombras + transições
+- `src/index.css` — utilitários (focus, skeleton, pinned helpers, hover affordance, hairlines)
+
+Nenhum componente/página é tocado nesta fase — risco mínimo, apenas tokens e utilitários novos prontos pra Fase 2/3.
+
+---
+
+### Não-objetivos (para todas as fases)
+
+- Não mexer em landing, schema, edge functions, hooks de dados, paginação, filtros URL, tutorial, IA.
+- Não trocar `Inter` como fonte base. Geist só fica como opção opcional em headings, sem ser default.
+- Não adicionar libs novas (sem framer-motion novo, sem nova icon lib).
