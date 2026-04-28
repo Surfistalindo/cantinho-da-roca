@@ -143,15 +143,15 @@ export default function MondaySidebar() {
                   className={({ isActive }) =>
                     cn(
                       'flex items-center gap-2.5 h-8 px-2.5 rounded-md text-[12.5px] font-medium',
-                      'transition-colors duration-crm ease-crm',
+                      'transition-[background-color,color] duration-crm ease-crm',
                       isActive
                         ? 'sidebar-item-active text-sidebar-accent-foreground'
-                        : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
+                        : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
                     )
                   }
                 >
-                  <MSym name={it.icon} size={17} />
-                  {!collapsed && <span>{it.title}</span>}
+                  <MSym name={it.icon} size={17} className="shrink-0" />
+                  {!collapsed && <span className="truncate">{it.title}</span>}
                 </NavLink>
               </li>
             ))}
