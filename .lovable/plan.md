@@ -1,201 +1,151 @@
+## Modo 2 — Reativação automática de leads via WhatsApp Cloud API
 
-# Reskin Monday.com — alinhamento visual fiel (sem mudar funcionalidades)
+Camada **adicional** ao lado do Modo 1 (`ReengagementQueue` + `WhatsAppQuickAction` continuam funcionando como fallback manual). Nada do CRM atual é removido nem alterado em comportamento.
 
-## Diagnóstico
+### Decisões confirmadas
+- **Provedor**: Meta WhatsApp Cloud API (oficial)
+- **Cron**: `pg_cron` a cada 5 min disparando edge function
+- **Status fonte**: `contacted` (lead que já recebeu 1º contato e ficou sem resposta)
+- **Status final**: mantém status atual + flag `regua_esgotada` registrada no histórico
 
-Comparando o estado atual (`/admin/pipeline` no print) com as referências do Monday Work Management:
+---
 
-| Aspecto | Hoje no app | Monday das referências |
-|---|---|---|
-| Tema | **Dark** (cinza quase preto) | **Light** (fundo cinza muito claro `#f6f7fb`, painéis brancos) |
-| Sidebar | Dark com texto claro | Branca, ícones cinza, item ativo com fundo `#e6e9ef` + texto preto |
-| Topbar | Dark com badge "On track" verde | Branca slim, ícones outline cinza, avatar à direita |
-| Tabela | Dark, badges arredondados pequenos | **Branca**, células de status são **blocos coloridos sólidos ocupando a célula inteira** (verde "concluído", azul "em andamento", vermelho "não iniciado", cinza "pausado") |
-| Agrupamento | Inexistente | **Grupos colapsáveis** com barra colorida lateral (laranja/amarelo/verde/vermelho) e título "Sprint X – data" |
-| Linhas | Hover sutil | Linhas brancas, `h-9`, divisor `#e0e3eb`, primeira coluna com checkbox + texto da tarefa |
-| Tags (Setor/Frente) | Pequenos badges | **Pílulas coloridas sólidas** (`fullstack`=cinza-azulado, `frontend`=rosa, `qualidade`=azul-claro, etc.) |
-| Botão primário | Azul Monday | Azul Monday `#0073ea` (manter) |
-
-O usuário quer que **pareça idêntico** ao Monday das fotos, mantendo 100% das funcionalidades, dados e fluxos atuais.
-
-## Princípios obrigatórios
-
-- **Zero** mudança em handlers, services, queries Supabase, hooks, rotas, autenticação, schemas Zod, edge functions, formulários (apenas classes podem mudar).
-- **Zero** mudança em `App.tsx`, `src/services/**`, `src/hooks/**` (exceto criar novos hooks puramente visuais), `AuthContext`, `ProtectedRoute`, tipos do Supabase.
-- Trabalho concentrado em: `src/index.css` (tokens), shell (`CrmLayout`, `AdminSidebar`, `AdminNavbar`), camada visual das páginas e novos primitivos de UI.
-- Mesmas colunas, mesmos campos, mesmas ordenações, mesmos modais/sheets, mesmas permissões.
-
-## Etapas
-
-### 1. Trocar a paleta `.font-crm` para Light Monday
-
-Em `src/index.css`, dentro do escopo `.font-crm`:
-
-- `--background`: `220 20% 97%` (fundo cinza levíssimo da área de conteúdo, ~`#f6f7fb`)
-- `--card`: `0 0% 100%` (painéis brancos puros)
-- `--foreground`: `222 25% 16%` (texto quase preto)
-- `--muted`: `220 15% 95%`, `--muted-foreground`: `220 10% 45%`
-- `--border`: `220 15% 90%`, `--border-strong`: `220 12% 80%`
-- `--primary`: `212 100% 46%` (azul Monday `#0073ea`)
-- `--surface-1..4`: tons claros progressivos (`100% → 96%`)
-- `--sidebar-background`: `0 0% 100%` (sidebar branca)
-- `--sidebar-foreground`: `222 15% 35%`
-- `--sidebar-accent`: `220 18% 93%` (fundo do item ativo, cinza claro)
-- `--sidebar-accent-foreground`: `222 30% 12%`
-- `--sidebar-primary`: `212 100% 46%` (barra azul à esquerda do item ativo)
-- Manter tokens `--tag-*` (já existem) — eles serão usados como cores das células inteiras de status/setor/frente.
-
-Adicionar tokens novos para os **status sólidos** estilo Monday:
-- `--status-done`: `142 70% 45%` (verde "concluído")
-- `--status-progress`: `212 95% 55%` (azul "em andamento")
-- `--status-blocked`: `0 80% 60%` (vermelho "não iniciado / cancelado")
-- `--status-paused`: `38 95% 56%` (laranja "pausado")
-- `--status-neutral`: `220 10% 70%` (cinza)
-
-Manter o tema do landing page (`/`) intocado — escopo `.font-crm` continua isolado.
-
-### 2. Sidebar branca estilo Monday
-
-`src/components/crm/AdminSidebar.tsx` — apenas classes:
-- Fundo branco, borda direita `border-r border-border`.
-- Header com logo + "Cantim da Roça / WORKSPACE" em texto cinza-escuro.
-- Itens: `h-9`, padding lateral, ícone outline `text-[#676879]`, hover `bg-[hsl(220_18%_95%)]`.
-- Item ativo: fundo `bg-sidebar-accent` (cinza claro), texto preto bold, **barra azul à esquerda 3px** (já existe via `.sidebar-item-active::before`, ajustar cor para `--sidebar-primary` light).
-- Subitens IA: indentação, divisor cinza claro vertical.
-- Footer com avatar circular azul + nome + ícone logout.
-- **Sem mudar lógica** de `overdueCount`, expand/collapse, realtime, signOut.
-
-### 3. Topbar slim estilo Monday Work Management
-
-`src/components/crm/AdminNavbar.tsx`:
-- Fundo branco, `h-12`, borda inferior fina.
-- Esquerda: trigger sidebar + breadcrumb "Workspace › Pipeline" em cinza, badge "On track" verde pílula.
-- Centro: input de busca arredondado cinza-claro com lupa à esquerda.
-- Direita: "Ask AI" pílula azul translúcida, sino notificações outline, abrir site outline, avatar circular gradient azul + nome.
-- Manter dropdown e signOut intactos.
-
-### 4. Novo primitivo: `BoardTable` com células coloridas sólidas
-
-Criar `src/components/crm/ui/BoardTable.tsx` — componente de tabela puramente visual:
-- `<table class="board-table">` branca, header cinza-claro `bg-[hsl(220_18%_96%)]`, sticky.
-- Linhas `h-9`, divisor `border-b border-[hsl(220_15%_92%)]`, **bordas verticais finas entre células** `border-r border-[hsl(220_15%_94%)]` (visual Monday).
-- Primeira coluna com checkbox + texto.
-- Suporta "células de status" via prop `<StatusCell variant="done|progress|blocked|paused|neutral">concluído</StatusCell>` — renderiza `<td>` inteiro pintado da cor + texto branco centralizado bold.
-- Suporta "células de tag" via `<TagCell color="pink|cyan|purple|blue|orange">qualidade</TagCell>` — pílula sólida colorida dentro da célula.
-- Suporta "célula de avatar" `<AvatarCell name="..." />` — círculo gradient com iniciais.
-- Suporta "célula de progresso" `<ProgressCell value={80} />` — barra colorida + `80%`.
-- Suporta "célula de prioridade" — bloco colorido (Alto/Médio/Baixo) que ocupa célula inteira.
-
-Criar também `src/components/crm/ui/GroupSection.tsx`:
-- Cabeçalho colapsável `▼ Sprint 18 – 22/04 a 11/05` com **barra lateral colorida 4px** (verde/laranja/vermelho/azul conforme prop).
-- Estado open/close local; opcional contagem.
-
-Esses primitivos são **puramente apresentacionais**. As páginas decidem se os usam.
-
-### 5. Atualizar `LeadStatusBadge` e `StatusBadge` para o visual sólido
-
-- `src/components/admin/LeadStatusBadge.tsx`: adicionar variante `solid` (default) que renderiza pílula colorida sólida (fundo cheio + texto branco) usando os tokens `--status-*`. Manter API atual (`status`, `className`) — sem quebrar usos existentes.
-- `src/components/crm/ui/StatusBadge.tsx`: idem.
-- Mapear status do `leadStatus.ts` para as cores Monday:
-  - `novo_lead` → azul (`progress`)
-  - `em_contato` → roxo/cyan
-  - `negociacao` → laranja (`paused`)
-  - `cliente` → verde (`done`)
-  - `perdido` → vermelho (`blocked`)
-
-### 6. Aplicar nas páginas (apenas wrappers/classes)
-
-**`PipelinePage` / `PipelineBoard` / `PipelineColumn` / `LeadCard`:**
-- Painel de fundo branco com bordas finas.
-- Colunas: cabeçalho colorido com **fundo da cor do status** (não só texto), título em branco bold, contador pílula branca.
-- Cards: brancos com `border` cinza claro, hover `border-primary/40 shadow-sm`, badges sólidos.
-- DnD intacto (zero mudança em handlers).
-
-**`LeadsPage`:**
-- Trocar `Table` shadcn por `BoardTable` novo (mesmas colunas, mesmos handlers — só wrapper visual).
-- Coluna "Status" usa `StatusCell` (célula inteira colorida).
-- Coluna "Prioridade" usa `StatusCell` colorido.
-- Coluna "Origem" usa `TagCell` colorido (mapear origens fixas para cores).
-- Filtros mantidos (`LeadFilters` recebe ajuste de classes para visual claro).
-- Modais (`LeadDetailSheet`, `NewLeadDialog`) reestilizados visualmente — fundo branco, inputs com borda cinza, botões azuis Monday — **sem mudar nenhum handler/schema**.
-
-**`ClientsPage`:** idem LeadsPage.
-
-**`DashboardPage`:** KPI cards brancos com bordas finas, ícone colorido à esquerda em fundo translúcido, número grande preto, label cinza, mini-trend abaixo. Charts (`FunnelDonut`, `OriginBars`, `MetaRing`, `TrendArea`) ganham paleta light + acentos azul/verde/laranja Monday.
-
-**Páginas IA (`IAHomePage`, `IAExcelImportPage`, etc.):** containers brancos com `board-panel`, cards de feature com mesma estrutura, só skin claro.
-
-### 7. Densidade e responsividade
-
-- Tabelas `text-[12.5px]`, linhas `h-9`, padding lateral `px-3`, divisores `border-[hsl(220_15%_92%)]`.
-- Botões compactos `h-8 text-[12px]`, primários azul Monday.
-- Mobile: sidebar continua via `SidebarProvider` (drawer), tabelas em `overflow-x-auto`, células de status mantêm cor sólida.
-
-## O que NÃO será alterado
-
-- `src/App.tsx` (rotas)
-- `src/integrations/supabase/**`
-- `src/services/**`, `src/hooks/**` existentes (apenas hooks novos puramente visuais), `src/contexts/**`
-- Schemas Zod, validações, lógica de formulários
-- Estrutura de dados, nomes de colunas exibidas, filtros de domínio
-- Comportamento dos modais, sheets, dropdowns, DnD do pipeline
-- Funcionalidades do landing page (`/`) e tema light atual da home
-- `ProtectedRoute`, `useUserRole`, telemetria, rotas privadas
-
-## Detalhes técnicos
-
-**Arquivos a editar (apenas classes/skin):**
-- `src/index.css` — paleta light Monday + novos tokens `--status-*`
-- `src/components/crm/CrmLayout.tsx` — fundo light
-- `src/components/crm/AdminSidebar.tsx` — sidebar branca
-- `src/components/crm/AdminNavbar.tsx` — topbar branca slim
-- `src/components/admin/LeadStatusBadge.tsx` — variante sólida
-- `src/components/crm/ui/StatusBadge.tsx` — variante sólida
-- `src/components/admin/PageHeader.tsx` — espaçamento Monday
-- `src/components/admin/LeadFilters.tsx`, `ClientFilters.tsx` — inputs claros
-- `src/pages/admin/LeadsPage.tsx`, `ClientsPage.tsx`, `DashboardPage.tsx`, `PipelinePage.tsx`
-- `src/components/pipeline/PipelineBoard.tsx`, `PipelineColumn.tsx`, `LeadCard.tsx`
-- `src/components/admin/dashboard/KpiCard.tsx`, `FunnelDonut.tsx`, `OriginBars.tsx`, `MetaRing.tsx`, `TrendArea.tsx`
-- `src/components/ia/IAPageShell.tsx`, `IAFeatureCard.tsx`
-
-**Arquivos novos (primitivos visuais):**
-- `src/components/crm/ui/BoardTable.tsx`
-- `src/components/crm/ui/StatusCell.tsx`
-- `src/components/crm/ui/TagCell.tsx`
-- `src/components/crm/ui/AvatarCell.tsx`
-- `src/components/crm/ui/ProgressCell.tsx`
-- `src/components/crm/ui/GroupSection.tsx`
-
-**Mapeamento de cores (Monday-style):**
+### 1. Banco — 4 tabelas novas (sem tocar nas existentes)
 
 ```text
-Status cell (célula inteira):
-  done       → verde   #00c875
-  progress   → azul    #0086c0
-  blocked    → vermelho #e2445c
-  paused     → laranja #fdab3d
-  neutral    → cinza   #c4c4c4
+reactivation_rules         → 1 regra ativa por vez (config global)
+  - active, source_status, days_step_1/2/3
+  - msg_template_1/2/3, send_window_start/end (HH:MM)
+  - daily_send_cap, final_action ('keep_status' | 'mark_lost')
+  - timezone (default 'America/Sao_Paulo')
 
-Tag cell (pílula):
-  fullstack  → cinza-azulado
-  frontend   → rosa #ff158a
-  dados      → roxo #a25ddc
-  qualidade  → azul-claro #579bfc
-  geral      → cinza
-  inovação   → amarelo
-  preventiva → verde-claro
-  corretiva  → vermelho-claro
+reactivation_queue         → fila de envios agendados
+  - id, lead_id, attempt_number (1|2|3)
+  - phone_e164, rendered_message
+  - scheduled_at, sent_at, status
+    ('pending'|'sent'|'failed'|'cancelled'|'replied')
+  - error_message, provider_message_id
+  - UNIQUE (lead_id, attempt_number)  ← idempotência
+
+whatsapp_message_logs      → todo POST/erro do provedor
+  - queue_id, request_payload, response_payload, http_status
+
+whatsapp_webhook_events    → eventos crus recebidos do Meta
+  - event_type, payload, processed_at, lead_id
+
+leads (apenas adicionar 2 colunas opcionais, não muda dados)
+  - automation_paused boolean default false
+  - automation_finished_at timestamptz
 ```
 
-## Resultado esperado
+RLS: todas com `has_role admin/vendedor` para SELECT/UPDATE; INSERT da fila/logs apenas via service role (edge functions).
 
-CRM com aparência **idêntica ao Monday Work Management** das referências:
-- Light theme com fundo cinza muito claro e painéis brancos
-- Sidebar branca com item ativo cinza-claro + barra azul à esquerda
-- Topbar slim branca com breadcrumb, busca, Ask AI e avatar
-- Tabelas brancas com **células de status pintadas sólido** ocupando a célula inteira
-- Pipeline com colunas coloridas no topo, cards brancos, DnD funcionando
-- Tags coloridas sólidas para origem/setor/frente
-- Agrupamentos colapsáveis disponíveis como primitivo (uso opcional onde fizer sentido)
+### 2. Edge functions (4 novas)
 
-E **todas** as funcionalidades, dados reais, integrações Supabase, RLS, autenticação, telemetria, rotas, modais, filtros, ordenações, DnD do pipeline, IA, importação Excel/CSV/WhatsApp continuam funcionando exatamente como hoje.
+```text
+reactivation-enqueue       → roda no pg_cron a cada 5 min
+  1. Lê reactivation_rules ativa
+  2. SELECT leads WHERE status = source_status
+       AND NOT automation_paused
+       AND last_contact_at <= now() - days_step_N
+       AND NOT EXISTS attempt N na queue
+  3. Insere linhas pending na queue (scheduled_at respeita send_window)
+
+reactivation-dispatch      → roda no pg_cron a cada 5 min
+  1. SELECT queue WHERE status='pending' AND scheduled_at<=now()
+  2. Respeita daily_send_cap (count sent hoje)
+  3. Respeita janela horária da regra
+  4. Renderiza template ({{nome}}, {{produto}}, {{origem}}, {{empresa}}, {{responsavel}}, {{link}})
+  5. Chama Meta Graph API /messages
+  6. Atualiza status sent/failed + provider_message_id
+  7. Grava log em whatsapp_message_logs
+  Lock: SELECT ... FOR UPDATE SKIP LOCKED
+
+whatsapp-webhook           → endpoint público (verify_jwt=false)
+  GET  → handshake hub.challenge do Meta
+  POST → valida X-Hub-Signature-256 (HMAC SHA256 com APP_SECRET)
+       Salva em whatsapp_webhook_events
+       Se message inbound: marca queue.status='replied', cancela
+       attempts futuros do mesmo lead, atualiza lead.last_contact_at
+       e lead.status='negotiating', cria interaction
+       Se status delivered/read: anexa ao log
+
+reactivation-cancel        → invocada do front
+  Cancela attempts pending de um lead (pause/convert/lost manual)
+```
+
+### 3. pg_cron (via insert tool, não migration)
+
+```sql
+select cron.schedule('reactivation-enqueue', '*/5 * * * *', $$
+  select net.http_post(url:='…/reactivation-enqueue',
+    headers:='{"apikey":"…"}'::jsonb) $$);
+select cron.schedule('reactivation-dispatch', '*/5 * * * *', $$ … $$);
+```
+
+### 4. Cancelamento automático (trigger no banco)
+
+Trigger `AFTER UPDATE ON leads`: se `status` muda para `converted | lost | negotiating` ou `automation_paused` vira true → `UPDATE reactivation_queue SET status='cancelled' WHERE lead_id = … AND status='pending'`. Garante que nem o front nem o cron precisam lembrar.
+
+### 5. Frontend (3 telas/componentes novos)
+
+```text
+src/pages/admin/AutomationPage.tsx         (rota /admin/automation)
+  Tabs:
+    • "Em automação"  → leads ativos na régua
+        colunas: lead | tentativa atual | próx. mensagem |
+                 próx. envio | último envio | status | erro
+        ações por linha: pausar | retomar | enviar agora | abrir WhatsApp
+    • "Configurações" → form da reactivation_rules (toggle on/off,
+        dias por tentativa, editor de templates com preview de variáveis,
+        janela horária, cap diário, ação final)
+    • "Histórico"     → últimos eventos (queue + logs + webhook)
+
+src/components/admin/AutomationStatusBadge.tsx  (pendente/enviado/falhou/respondido)
+src/components/admin/MessageTemplateEditor.tsx  (textarea + chips de variáveis + preview)
+src/services/reactivationService.ts             (CRUD regra, pausa lead, lista fila)
+```
+
+Toggle no card do lead (`LeadDetailDrawer` existente): switch "Não enviar automação para este lead" → grava `automation_paused`. **Não toca no botão WhatsApp manual atual.**
+
+Sidebar: novo item "Automação" com ícone, abaixo de "Pipeline". Visual Monday já aplicado é reaproveitado (`board-panel`, `crm-dense-table`, `status-cell`).
+
+### 6. Secrets necessários (vou pedir via add_secret na implementação)
+
+```text
+META_WA_PHONE_NUMBER_ID    → ID do número no business manager
+META_WA_ACCESS_TOKEN       → token permanente (System User)
+META_WA_APP_SECRET         → para validar HMAC do webhook
+META_WA_VERIFY_TOKEN       → string que você inventa, usada no handshake
+```
+
+URL do webhook que você cola no painel da Meta:
+`https://saaxgpfdziqdjhvvtarp.supabase.co/functions/v1/whatsapp-webhook`
+
+### 7. Segurança / anti-spam (já embutidos)
+
+- Token só em edge function, nunca no frontend
+- HMAC validado em todo POST do webhook
+- `UNIQUE(lead_id, attempt_number)` impede duplicata
+- `FOR UPDATE SKIP LOCKED` impede dois dispatches paralelos enviarem o mesmo
+- Janela horária e cap diário lidos da regra a cada dispatch
+- Telefone validado/normalizado para E.164 antes do enqueue (descarta inválido com `failed`)
+- Trigger cancela automaticamente se lead responder/converter/perder/pausar
+- RLS bloqueia leitura de logs para quem não é admin/vendedor
+
+### 8. O que NÃO muda
+- `ReengagementQueue.tsx`, `WhatsAppQuickAction.tsx`, `whatsappTemplates.ts`, `reengagement.ts` ficam intactos
+- Botão WhatsApp manual no drawer/tabelas continua igual
+- Status existentes (`new/contacted/negotiating/converted/lost`) não mudam
+- Nenhuma RLS atual é alterada
+
+### Ordem de execução (quando você aprovar)
+1. Migração: 4 tabelas + 2 colunas em leads + trigger de cancelamento + RLS
+2. Pedir os 4 secrets do Meta (`add_secret`)
+3. Edge functions: enqueue, dispatch, webhook, cancel
+4. Agendar pg_cron (insert tool)
+5. Frontend: serviço + página `/admin/automation` + item de menu + toggle no drawer
+6. Seed de uma `reactivation_rules` desativada com templates default
+7. QA: criar lead `contacted` com `last_contact_at` antigo, rodar enqueue manual, verificar fila e dispatch em modo dry-run antes de ativar
+
+Total estimado: ~12 arquivos novos, ~3 arquivos editados pontualmente.
