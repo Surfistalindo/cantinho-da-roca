@@ -20,7 +20,11 @@ const ROUTE_LABELS: Record<string, string> = {
   ia: 'IA',
 };
 
-export default function AdminNavbar() {
+interface Props {
+  onOpenPalette?: () => void;
+}
+
+export default function AdminNavbar({ onOpenPalette }: Props) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,6 +37,7 @@ export default function AdminNavbar() {
   const segment = location.pathname.split('/').filter(Boolean)[1] ?? 'dashboard';
   const currentLabel = ROUTE_LABELS[segment] ?? 'Dashboard';
   const initials = (user?.email ?? '?').split('@')[0].slice(0, 2).toUpperCase();
+  const isMac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform);
 
   return (
     <header className="h-12 border-b border-border bg-card flex items-center justify-between px-3 sm:px-4 shrink-0 sticky top-0 z-30">
@@ -48,16 +53,20 @@ export default function AdminNavbar() {
           </span>
         </div>
 
-        {/* Search */}
+        {/* Command palette trigger (substitui o input de busca solto) */}
         <div className="hidden md:flex items-center gap-2 ml-3 flex-1 max-w-md">
-          <div className="relative flex-1">
-            <MSym name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Buscar leads, clientes…"
-              className="w-full h-8 pl-9 pr-3 rounded-md bg-surface-3 border border-transparent focus:border-primary/40 focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 text-[12.5px] placeholder:text-muted-foreground transition-colors"
-            />
-          </div>
+          <button
+            type="button"
+            onClick={onOpenPalette}
+            className="group flex items-center gap-2 w-full h-8 pl-3 pr-2 rounded-md bg-surface-3 border border-transparent hover:border-border-strong hover:bg-card text-left transition-colors"
+            aria-label="Abrir paleta de comandos"
+          >
+            <MSym name="search" size={16} className="text-muted-foreground" />
+            <span className="flex-1 text-[12.5px] text-muted-foreground">Buscar ou navegar…</span>
+            <kbd className="hidden lg:inline-flex items-center gap-0.5 px-1.5 h-5 rounded border border-border bg-background text-[10px] font-mono font-semibold text-muted-foreground">
+              {isMac ? '⌘' : 'Ctrl'} K
+            </kbd>
+          </button>
         </div>
       </div>
 
