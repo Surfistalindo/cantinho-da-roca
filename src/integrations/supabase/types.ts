@@ -285,6 +285,7 @@ export type Database = {
           ai_suggested_status: string | null
           ai_summary: string | null
           ai_summary_updated_at: string | null
+          assigned_to: string | null
           cadence_exhausted: boolean
           cadence_last_sent_at: string | null
           cadence_next_at: string | null
@@ -313,6 +314,7 @@ export type Database = {
           ai_suggested_status?: string | null
           ai_summary?: string | null
           ai_summary_updated_at?: string | null
+          assigned_to?: string | null
           cadence_exhausted?: boolean
           cadence_last_sent_at?: string | null
           cadence_next_at?: string | null
@@ -341,6 +343,7 @@ export type Database = {
           ai_suggested_status?: string | null
           ai_summary?: string | null
           ai_summary_updated_at?: string | null
+          assigned_to?: string | null
           cadence_exhausted?: boolean
           cadence_last_sent_at?: string | null
           cadence_next_at?: string | null

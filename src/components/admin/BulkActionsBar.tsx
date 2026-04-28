@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { ChevronUp, Trash2, X, Tag, CalendarPlus, Copy, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import AssigneePicker from './AssigneePicker';
 
 interface Props {
   count: number;
@@ -18,19 +19,24 @@ interface Props {
   onScheduleFollowup?: (date: Date) => void;
   onCopyPhones?: () => void;
   onExport?: () => void;
+  onAssign?: (userId: string | null, name: string | null) => void;
 }
 
 export default function BulkActionsBar({
   count, onClear, onChangeStatus, onDelete,
-  onScheduleFollowup, onCopyPhones, onExport,
+  onScheduleFollowup, onCopyPhones, onExport, onAssign,
 }: Props) {
   const [calOpen, setCalOpen] = useState(false);
   if (count === 0) return null;
 
   return (
-    <div className="fixed left-1/2 -translate-x-1/2 bottom-3 sm:bottom-5 z-50 animate-in slide-in-from-bottom-4 duration-150 max-w-[calc(100vw-1rem)]">
+    <div
+      className="fixed left-1/2 -translate-x-1/2 bottom-3 sm:bottom-5 z-50 animate-in slide-in-from-bottom-4 duration-150 max-w-[calc(100vw-1rem)]"
+      role="region"
+      aria-label={`Ações em lote — ${count} lead${count === 1 ? '' : 's'} selecionado${count === 1 ? '' : 's'}`}
+    >
       <div className="flex items-center gap-1.5 sm:gap-2 h-12 pl-3 pr-2 rounded-xl border border-border-strong bg-card shadow-elegant overflow-x-auto">
-        <span className="inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-md bg-primary text-primary-foreground text-[12px] font-bold tabular-nums shrink-0">
+        <span className="inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-md bg-primary text-primary-foreground text-[12px] font-bold tabular-nums shrink-0" aria-hidden="true">
           {count}
         </span>
         <span className="text-[13px] text-foreground/90 mr-1 sm:mr-2 shrink-0 hidden sm:inline">
@@ -55,6 +61,14 @@ export default function BulkActionsBar({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {onAssign && (
+          <AssigneePicker
+            triggerLabel="Atribuir"
+            triggerSrLabel={`Atribuir responsável a ${count} lead(s)`}
+            onSelect={onAssign}
+          />
+        )}
 
         {onScheduleFollowup && (
           <Popover open={calOpen} onOpenChange={setCalOpen}>

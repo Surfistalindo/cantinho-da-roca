@@ -44,6 +44,7 @@ import LeadsCards from '@/components/admin/leads/LeadsCards';
 import SavedFiltersMenu, { type SavedLeadFilter } from '@/components/admin/leads/SavedFiltersMenu';
 import QuickActionsPopover from '@/components/admin/leads/QuickActionsPopover';
 import { exportLeadsToCsv } from '@/components/admin/leads/exportLeadsCsv';
+import { useLeadsUrlState } from '@/hooks/useLeadsUrlState';
 
 interface Lead {
   id: string;
@@ -56,6 +57,7 @@ interface Lead {
   last_contact_at: string | null;
   next_contact_at: string | null;
   notes: string | null;
+  assigned_to?: string | null;
 }
 
 type SortDir = 'desc' | 'asc';
@@ -74,16 +76,12 @@ const VIEW_KEY = 'crm:leads:view';
 
 export default function LeadsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const url = useLeadsUrlState();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<Error | null>(null);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [originFilter, setOriginFilter] = useState('all');
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [recencyFilter, setRecencyFilter] = useState<RecencyFilter>('all');
-  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
   const [sortBy, setSortBy] = useState<SortBy>('score');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [newOpen, setNewOpen] = useState(false);
@@ -104,6 +102,15 @@ export default function LeadsPage() {
   });
   const searchInputRef = useRef<HTMLDivElement>(null);
 
+  // Aliases legíveis
+  const search = url.search;
+  const statusFilter = url.status;
+  const originFilter = url.origin;
+  const recencyFilter = url.recency;
+  const priorityFilter = url.priority;
+  const dateFrom = url.from;
+  const dateTo = url.to;
+
   useEffect(() => { localStorage.setItem('crm:leads:density', density); }, [density]);
   useEffect(() => {
     localStorage.setItem(VIEW_KEY, view);
@@ -123,19 +130,10 @@ export default function LeadsPage() {
   const leadIds = useMemo(() => leads.map((l) => l.id), [leads]);
   const interactionCounts = useInteractionCounts(leadIds);
 
+  // sort vem da URL (não migrado para o hook por simplicidade)
   useEffect(() => {
-    const recency = searchParams.get('recency') as RecencyFilter | null;
-    if (recency && ['recent', 'attention', 'overdue', 'all'].includes(recency)) {
-      setRecencyFilter(recency);
-    } else if (searchParams.get('followup') === '1') {
-      setRecencyFilter('overdue');
-    }
     const sort = searchParams.get('sort');
     if (sort === 'created' || sort === 'score') setSortBy(sort);
-    const priority = searchParams.get('priority') as PriorityFilter | null;
-    if (priority && ['hot', 'warm', 'cold', 'all'].includes(priority)) {
-      setPriorityFilter(priority);
-    }
   }, [searchParams]);
 
   useEffect(() => {
@@ -151,33 +149,20 @@ export default function LeadsPage() {
     }
   }, [searchParams, leads, setSearchParams]);
 
-  const updateRecency = (v: RecencyFilter) => {
-    setRecencyFilter(v);
-    const params = new URLSearchParams(searchParams);
-    params.delete('followup');
-    if (v === 'all') params.delete('recency');
-    else params.set('recency', v);
-    setSearchParams(params, { replace: true });
-  };
-
-  const updatePriority = (v: PriorityFilter) => {
-    setPriorityFilter(v);
-    const params = new URLSearchParams(searchParams);
-    if (v === 'all') params.delete('priority');
-    else params.set('priority', v);
-    setSearchParams(params, { replace: true });
-  };
+  const updateRecency = (v: RecencyFilter) => url.set({ recency: v });
+  const updatePriority = (v: PriorityFilter) => url.set({ priority: v });
 
   const hasActiveFilters =
     search.trim() !== '' || statusFilter !== 'all' || originFilter !== 'all' ||
-    recencyFilter !== 'all' || priorityFilter !== 'all' || activeKpi !== null;
+    recencyFilter !== 'all' || priorityFilter !== 'all' || activeKpi !== null ||
+    !!dateFrom || !!dateTo;
 
   const clearFilters = () => {
-    setSearch(''); setStatusFilter('all'); setOriginFilter('all');
-    setRecencyFilter('all'); setPriorityFilter('all'); setActiveKpi(null);
-    const params = new URLSearchParams(searchParams);
-    ['recency', 'priority', 'followup'].forEach((k) => params.delete(k));
-    setSearchParams(params, { replace: true });
+    url.set({
+      search: '', status: 'all', origin: 'all',
+      recency: 'all', priority: 'all', from: null, to: null,
+    });
+    setActiveKpi(null);
   };
 
   const toggleSort = () => {
@@ -191,7 +176,7 @@ export default function LeadsPage() {
     const { data, error } = await supabase
       .from('leads')
       .select(
-        'id,name,phone,status,origin,product_interest,last_contact_at,next_contact_at,notes,created_at,updated_at,ai_score,ai_priority,ai_score_reason,ai_summary',
+        'id,name,phone,status,origin,product_interest,last_contact_at,next_contact_at,notes,created_at,updated_at,ai_score,ai_priority,ai_score_reason,ai_summary,assigned_to',
       )
       .order('created_at', { ascending: false })
       .limit(2000);
@@ -244,9 +229,18 @@ export default function LeadsPage() {
         if (activeKpi === 'hot' && !(score.level === 'hot' || score.urgent)) return false;
         if (activeKpi === 'overdue' && rec.level !== 'overdue') return false;
       }
+      if (dateFrom) {
+        if (new Date(l.created_at) < dateFrom) return false;
+      }
+      if (dateTo) {
+        if (new Date(l.created_at) > dateTo) return false;
+      }
       if (search) {
-        const q = search.toLowerCase();
-        if (!l.name.toLowerCase().includes(q) && !(l.phone ?? '').includes(q)) return false;
+        const q = search.toLowerCase().trim();
+        const onlyDigits = q.replace(/\D/g, '');
+        const phoneDigits = (l.phone ?? '').replace(/\D/g, '');
+        const phoneHit = onlyDigits.length >= 3 ? phoneDigits.includes(onlyDigits) : false;
+        if (!l.name.toLowerCase().includes(q) && !phoneHit && !(l.phone ?? '').toLowerCase().includes(q)) return false;
       }
       return true;
     });
@@ -264,7 +258,7 @@ export default function LeadsPage() {
       return sortDir === 'desc' ? db - da : da - db;
     });
     return list;
-  }, [leads, statusFilter, originFilter, search, recencyFilter, priorityFilter, sortBy, sortDir, interactionCounts, activeKpi]);
+  }, [leads, statusFilter, originFilter, search, recencyFilter, priorityFilter, sortBy, sortDir, interactionCounts, activeKpi, dateFrom, dateTo]);
 
   const grouped = useMemo(() => {
     const map: Record<string, typeof filtered> = {};
@@ -282,7 +276,7 @@ export default function LeadsPage() {
   // Reseta páginas quando filtros/busca/ordenação mudam
   useResetPagesOn(paged.resetAll, [
     statusFilter, originFilter, search, recencyFilter, priorityFilter,
-    sortBy, sortDir, activeKpi,
+    sortBy, sortDir, activeKpi, dateFrom, dateTo,
   ]);
 
   const newestId = useMemo(() => {
@@ -373,6 +367,15 @@ export default function LeadsPage() {
     exportLeadsToCsv(items, 'leads-selecionados');
     toast.success(`${items.length} lead(s) exportado(s)`);
   };
+  const bulkAssign = async (userId: string | null, name: string | null) => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    const { error } = await supabase.from('leads').update({ assigned_to: userId }).in('id', ids);
+    if (error) { toast.error('Erro ao atribuir responsável'); return; }
+    toast.success(userId ? `${ids.length} lead(s) atribuído(s) a ${name ?? 'usuário'}` : `${ids.length} lead(s) sem responsável`);
+    clearSelection();
+    fetchLeads();
+  };
   const exportFiltered = () => {
     exportLeadsToCsv(filtered, 'leads-filtrados');
     toast.success(`${filtered.length} lead(s) exportado(s)`);
@@ -412,8 +415,10 @@ export default function LeadsPage() {
   }, [grouped, paged]);
 
   const applySaved = (f: SavedLeadFilter) => {
-    setSearch(f.search); setStatusFilter(f.status); setOriginFilter(f.origin);
-    updateRecency(f.recency); updatePriority(f.priority);
+    url.set({
+      search: f.search, status: f.status, origin: f.origin,
+      recency: f.recency, priority: f.priority,
+    });
     toast.success(`Filtro "${f.name}" aplicado`);
   };
 
@@ -497,16 +502,19 @@ export default function LeadsPage() {
             <div ref={searchInputRef} className="flex-1 min-w-0">
               <LeadFilters
                 search={search}
-                onSearchChange={setSearch}
+                onSearchChange={(v) => url.set({ search: v })}
                 statusFilter={statusFilter}
-                onStatusChange={setStatusFilter}
+                onStatusChange={(v) => url.set({ status: v })}
                 originFilter={originFilter}
-                onOriginChange={setOriginFilter}
+                onOriginChange={(v) => url.set({ origin: v })}
                 recencyFilter={recencyFilter}
                 onRecencyChange={updateRecency}
                 priorityFilter={priorityFilter}
                 onPriorityChange={updatePriority}
                 availableOrigins={availableOrigins}
+                dateFrom={dateFrom}
+                dateTo={dateTo}
+                onDateRangeChange={(f, t) => url.set({ from: f, to: t })}
               />
             </div>
             <SavedFiltersMenu
@@ -566,33 +574,40 @@ export default function LeadsPage() {
                       return (
                         <TableHeader className="sticky top-0 z-20 bg-card shadow-[0_1px_0_0_hsl(var(--border))]">
                           <TableRow className="hover:bg-transparent border-border [&>th]:bg-card">
-                            <TableHead className="w-[36px] pl-3 pr-0">
+                            <TableHead scope="col" className="w-[36px] pl-3 pr-0">
                               <Checkbox
                                 checked={allChecked ? true : someChecked ? 'indeterminate' : false}
                                 onCheckedChange={() => toggleGroup(groupIds, allChecked)}
-                                aria-label="Selecionar todos"
+                                aria-label={`Selecionar todos os ${groupIds.length} leads visíveis deste grupo`}
                               />
                             </TableHead>
-                            <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground min-w-[240px]">Lead</TableHead>
-                            <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Origem</TableHead>
-                            <TableHead className="hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[200px]">Interesse</TableHead>
-                            <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px]">Status</TableHead>
-                            <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[120px]">Prioridade</TableHead>
-                            <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Recência</TableHead>
-                            <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[100px]">
+                            <TableHead scope="col" className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground min-w-[240px]">Lead</TableHead>
+                            <TableHead scope="col" className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Origem</TableHead>
+                            <TableHead scope="col" className="hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[200px]">Interesse</TableHead>
+                            <TableHead scope="col" className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px]">Status</TableHead>
+                            <TableHead scope="col" className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[120px]">Prioridade</TableHead>
+                            <TableHead scope="col" className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Recência</TableHead>
+                            <TableHead
+                              scope="col"
+                              aria-sort={sortBy === 'score' ? 'none' : (sortDir === 'desc' ? 'descending' : 'ascending')}
+                              className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[100px]"
+                            >
                               <button
+                                type="button"
                                 onClick={toggleSort}
-                                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors uppercase"
+                                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring rounded-sm"
                                 title={sortBy === 'score' ? 'Ordenado por prioridade' : 'Ordenado por data'}
+                                aria-label={`Alternar ordenação. Atual: ${sortBy === 'score' ? 'prioridade' : sortDir === 'desc' ? 'mais recentes' : 'mais antigos'}`}
                               >
                                 {sortBy === 'score' ? 'Prioridade' : 'Entrada'}
                                 <FontAwesomeIcon
                                   icon={sortDir === 'desc' ? faArrowDownShortWide : faArrowUpShortWide}
                                   className="h-3 w-3"
+                                  aria-hidden="true"
                                 />
                               </button>
                             </TableHead>
-                            <TableHead className="w-[140px] text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Ações</TableHead>
+                            <TableHead scope="col" className="w-[140px] text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Ações</TableHead>
                           </TableRow>
                         </TableHeader>
                       );
@@ -607,15 +622,19 @@ export default function LeadsPage() {
                           <TableRow
                             key={lead.id}
                             tabIndex={0}
+                            role="button"
+                            aria-label={`Abrir detalhes de ${lead.name}, status ${lead.status}`}
+                            aria-selected={isChecked}
                             className={cn(
                               'group cursor-pointer border-border/60 outline-none transition-colors',
+                              'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                               rowPad,
                               isNewest && '!bg-primary/5 hover:!bg-primary/10',
                               isChecked && '!bg-primary/[0.06] hover:!bg-primary/10',
                               score.urgent && 'border-l-2 border-l-destructive',
                             )}
                             onClick={() => openDetail(lead)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') openDetail(lead); }}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(lead); } }}
                           >
                             <TableCell className="pl-3 pr-0" onClick={(e) => e.stopPropagation()}>
                               <Checkbox
@@ -803,6 +822,7 @@ export default function LeadsPage() {
           onScheduleFollowup={bulkScheduleFollowup}
           onCopyPhones={bulkCopyPhones}
           onExport={bulkExport}
+          onAssign={bulkAssign}
         />
       </div>
     </TooltipProvider>
