@@ -33,6 +33,7 @@ import { toast } from 'sonner';
 import { getContactRecency } from '@/lib/contactRecency';
 import { getLeadScore, compareByScore } from '@/lib/leadScore';
 import { cn } from '@/lib/utils';
+import { colorForLabel } from '@/components/crm/ui/TagCell';
 
 interface Lead {
   id: string;
