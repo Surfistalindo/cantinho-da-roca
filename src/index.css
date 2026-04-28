@@ -586,6 +586,39 @@
   }
   .font-crm .crm-dense-table table tbody td:last-child { border-right: 0; }
 
+  /* ─── Modo compacto: tudo encolhe pra caber sem scroll horizontal ─── */
+  .font-crm .crm-compact-table {
+    overflow-x: hidden !important;
+  }
+  .font-crm .crm-compact-table table {
+    table-layout: auto;
+    width: 100%;
+  }
+  .font-crm .crm-compact-table table thead th {
+    height: 28px !important;
+    padding: 0 0.375rem !important;
+    font-size: 10px !important;
+  }
+  .font-crm .crm-compact-table table tbody tr {
+    height: 30px;
+  }
+  .font-crm .crm-compact-table table tbody td {
+    padding: 0.125rem 0.375rem !important;
+    font-size: 12px;
+  }
+  .font-crm .crm-compact-table table tbody td .text-sm {
+    font-size: 12px !important;
+  }
+  /* Encolhe coluna de ações no compact */
+  .font-crm .crm-compact-table table tbody td:last-child .h-8 {
+    height: 1.5rem !important;
+    width: 1.5rem !important;
+  }
+  .font-crm .crm-compact-table table tbody td:last-child svg {
+    height: 0.75rem !important;
+    width: 0.75rem !important;
+  }
+
   /* Spinner reduzido para skeletons em painéis densos */
   .font-crm .dense-skeleton {
     padding: 0.5rem;

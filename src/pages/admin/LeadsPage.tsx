@@ -522,12 +522,12 @@ export default function LeadsPage() {
                           onClick={() => setDensity('compact')}
                           className={cn('h-7 w-7 rounded flex items-center justify-center transition-colors',
                             density === 'compact' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
-                          aria-label="Densidade compacta"
+                          aria-label="Compactar tabela para caber sem rolar lateral"
                         >
                           <FontAwesomeIcon icon={faTableList} className="h-3 w-3" />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent>Densidade compacta</TooltipContent>
+                      <TooltipContent>Compactar (cabe sem rolar lateral)</TooltipContent>
                     </Tooltip>
                   </div>
                 )}
@@ -653,12 +653,12 @@ export default function LeadsPage() {
                                 aria-label={`Selecionar todos os ${groupIds.length} leads visíveis deste grupo`}
                               />
                             </TableHead>
-                            <TableHead scope="col" className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground min-w-[240px]">Lead</TableHead>
-                            <TableHead scope="col" className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Origem</TableHead>
-                            <TableHead scope="col" className="hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[200px]">Interesse</TableHead>
-                            <TableHead scope="col" className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px]">Status</TableHead>
+                            <TableHead scope="col" className={cn('text-[11px] uppercase tracking-wider font-semibold text-muted-foreground', density === 'compact' ? 'min-w-[160px]' : 'min-w-[240px]')}>Lead</TableHead>
+                            <TableHead scope="col" className={cn('hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]', density === 'compact' && 'lg:hidden')}>Origem</TableHead>
+                            <TableHead scope="col" className={cn('hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[200px]', density === 'compact' && 'xl:hidden')}>Interesse</TableHead>
+                            <TableHead scope="col" className={cn('text-[11px] uppercase tracking-wider font-semibold text-muted-foreground', density === 'compact' ? 'w-[120px]' : 'w-[160px]')}>Status</TableHead>
                             <TableHead scope="col" className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[120px]">Prioridade</TableHead>
-                            <TableHead scope="col" className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Recência</TableHead>
+                            <TableHead scope="col" className={cn('hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]', density === 'compact' && 'lg:hidden')}>Recência</TableHead>
                             <TableHead
                               scope="col"
                               aria-sort={sortBy === 'score' ? 'none' : (sortDir === 'desc' ? 'descending' : 'ascending')}
@@ -679,7 +679,7 @@ export default function LeadsPage() {
                                 />
                               </button>
                             </TableHead>
-                            <TableHead scope="col" className="w-[140px] text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Ações</TableHead>
+                            <TableHead scope="col" className={cn('text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground', density === 'compact' ? 'w-[80px]' : 'w-[140px]')}>Ações</TableHead>
                           </TableRow>
                         </TableHeader>
                       );
@@ -731,12 +731,12 @@ export default function LeadsPage() {
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell className="hidden lg:table-cell">
+                            <TableCell className={cn('hidden lg:table-cell', density === 'compact' && 'lg:hidden')}>
                               {lead.origin ? (
                                 <span className={cn('tag-cell', `tag-${colorForLabel(lead.origin)}`)}>{lead.origin}</span>
                               ) : <span className="text-xs text-muted-foreground">—</span>}
                             </TableCell>
-                            <TableCell className="hidden xl:table-cell text-xs text-muted-foreground max-w-[200px] truncate">
+                            <TableCell className={cn('hidden xl:table-cell text-xs text-muted-foreground max-w-[200px] truncate', density === 'compact' && 'xl:hidden')}>
                               {lead.product_interest ?? '—'}
                             </TableCell>
                             <TableCell onClick={(e) => e.stopPropagation()}>
@@ -745,7 +745,7 @@ export default function LeadsPage() {
                             <TableCell>
                               <LeadScoreBadge lead={lead} interactionCount={interactionCounts[lead.id] ?? 0} size="sm" />
                             </TableCell>
-                            <TableCell className="hidden lg:table-cell">
+                            <TableCell className={cn('hidden lg:table-cell', density === 'compact' && 'lg:hidden')}>
                               <ContactRecencyBadge
                                 lastContactAt={lead.last_contact_at}
                                 status={lead.status}
@@ -758,12 +758,14 @@ export default function LeadsPage() {
                             </TableCell>
                             <TableCell onClick={(e) => e.stopPropagation()}>
                               <div className="flex justify-end gap-0.5 opacity-70 group-hover:opacity-100 transition-opacity">
-                                <QuickActionsPopover
-                                  leadId={lead.id}
-                                  leadName={lead.name}
-                                  phone={lead.phone}
-                                  onUpdated={fetchLeads}
-                                />
+                                {density !== 'compact' && (
+                                  <QuickActionsPopover
+                                    leadId={lead.id}
+                                    leadName={lead.name}
+                                    phone={lead.phone}
+                                    onUpdated={fetchLeads}
+                                  />
+                                )}
                                 {lead.phone && (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
@@ -794,7 +796,10 @@ export default function LeadsPage() {
                         <>
                           <div
                             ref={(node) => { tableGroupScrollRefs.current[groupKey] = node; }}
-                            className="overflow-x-auto overflow-y-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-sm"
+                            className={cn(
+                              'overflow-y-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-sm',
+                              density === 'compact' ? 'crm-compact-table overflow-x-hidden' : 'overflow-x-auto',
+                            )}
                             style={{ maxHeight: 'calc(100vh - 280px)' }}
                             tabIndex={0}
                             role="region"
