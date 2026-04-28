@@ -134,15 +134,15 @@ export default function AdminSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
-      <SidebarHeader className="px-3 pt-4 pb-3 border-b border-sidebar-border/60">
+      <SidebarHeader className="px-3 pt-3 pb-3 border-b border-sidebar-border">
         <div className={cn('flex items-center gap-2.5', collapsed && 'justify-center')}>
-          <div className="h-9 w-9 shrink-0 rounded-lg bg-white/95 ring-1 ring-sidebar-border flex items-center justify-center overflow-hidden p-0.5">
+          <div className="h-9 w-9 shrink-0 rounded-lg bg-card ring-1 ring-sidebar-border flex items-center justify-center overflow-hidden p-0.5">
             <img src={cantimLogo} alt="Cantim da Roça" className="h-full w-full object-contain" />
           </div>
           {!collapsed && (
             <div className="min-w-0 leading-tight">
-              <p className="text-[13px] font-bold text-sidebar-accent-foreground truncate">Cantim da Roça</p>
-              <p className="text-[9px] uppercase tracking-[0.2em] text-sidebar-primary font-semibold">Workspace</p>
+              <p className="text-[13.5px] font-bold text-sidebar-accent-foreground truncate">Cantim da Roça</p>
+              <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground font-semibold mt-0.5">Workspace</p>
             </div>
           )}
         </div>
