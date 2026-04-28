@@ -113,6 +113,26 @@ export default function LeadsPage() {
     setSearchParams(params, { replace: true });
   };
 
+  const hasActiveFilters =
+    search.trim() !== '' ||
+    statusFilter !== 'all' ||
+    originFilter !== 'all' ||
+    recencyFilter !== 'all' ||
+    priorityFilter !== 'all';
+
+  const clearFilters = () => {
+    setSearch('');
+    setStatusFilter('all');
+    setOriginFilter('all');
+    setRecencyFilter('all');
+    setPriorityFilter('all');
+    const params = new URLSearchParams(searchParams);
+    params.delete('recency');
+    params.delete('priority');
+    params.delete('followup');
+    setSearchParams(params, { replace: true });
+  };
+
   const toggleSort = () => {
     if (sortBy === 'score') {
       setSortBy('created');
