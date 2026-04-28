@@ -45,7 +45,6 @@ export default function CrmLayout() {
           onNewLead={() => window.dispatchEvent(new CustomEvent('crm:new-lead'))}
         />
         <ShortcutsHelp open={helpOpen} onOpenChange={setHelpOpen} />
-        <HelpButton onOpenShortcuts={() => setHelpOpen(true)} />
         <TourOverlay />
       </TutorialProvider>
     </SidebarProvider>
