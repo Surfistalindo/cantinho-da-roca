@@ -12,6 +12,7 @@ import CustomerDetailSheet from '@/components/admin/CustomerDetailSheet';
 import PageHeader from '@/components/admin/PageHeader';
 import EmptyState from '@/components/admin/EmptyState';
 import LoadingState from '@/components/admin/LoadingState';
+import ListState from '@/components/admin/ListState';
 import InitialsAvatar from '@/components/admin/InitialsAvatar';
 import CustomerLifecycleBadge from '@/components/admin/CustomerLifecycleBadge';
 import ClientFilters, {
@@ -50,6 +51,7 @@ export default function ClientsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<Error | null>(null);
   const [search, setSearch] = useState('');
   const [recencyFilter, setRecencyFilter] = useState<ClientRecencyFilter>('all');
   const [purchaseFilter, setPurchaseFilter] = useState<ClientPurchaseFilter>('all');
@@ -75,11 +77,17 @@ export default function ClientsPage() {
   };
 
   const fetchCustomers = useCallback(async () => {
-    const { data } = await supabase
+    setFetchError(null);
+    const { data, error } = await supabase
       .from('customers')
       .select('*')
       .order('created_at', { ascending: false });
-    setCustomers((data as Customer[]) ?? []);
+    if (error) {
+      const err = error as { message?: string };
+      setFetchError(new Error(err.message ?? 'Erro ao carregar clientes'));
+    } else {
+      setCustomers((data as Customer[]) ?? []);
+    }
     setLoading(false);
   }, []);
 
