@@ -382,7 +382,7 @@ export default function MondaySidebar() {
                                   <MoreHorizontal size={12} />
                                 </button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-40">
+                              <DropdownMenuContent align="end" className="w-40 border-hairline shadow-floating">
                                 <DropdownMenuItem
                                   onClick={async () => {
                                     const name = window.prompt('Renomear board', b.name);
