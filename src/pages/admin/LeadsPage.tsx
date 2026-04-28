@@ -28,7 +28,7 @@ import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTrashCan, faUserGroup, faArrowDownShortWide, faArrowUpShortWide,
-  faPlus, faTableCellsLarge, faTableList, faDownload,
+  faPlus, faDownload,
 } from '@fortawesome/free-solid-svg-icons';
 import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 import { toast } from 'sonner';
