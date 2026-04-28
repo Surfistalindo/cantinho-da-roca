@@ -112,16 +112,16 @@ export default function MondaySidebar() {
     b.kind === 'route' && b.route_path ? b.route_path : `/admin/boards/${b.id}`;
 
   return (
-    <Sidebar collapsible="icon" data-tour="sidebar" className="border-r border-sidebar-border bg-sidebar">
+    <Sidebar collapsible="icon" data-tour="sidebar" className="border-r border-hairline bg-sidebar">
       {/* Product header */}
-      <SidebarHeader className="px-3 pt-3 pb-3 border-b border-sidebar-border bg-sidebar-accent/20">
+      <SidebarHeader className="px-3 pt-3 pb-3 border-b border-hairline">
         <div className={cn('flex items-center gap-2.5', collapsed && 'justify-center')}>
-          <div className={cn('shrink-0 rounded-lg bg-card ring-1 ring-sidebar-border flex items-center justify-center overflow-hidden p-1', collapsed ? 'h-9 w-9' : 'h-14 w-14')}>
+          <div className={cn('shrink-0 rounded-lg bg-card shadow-soft flex items-center justify-center overflow-hidden p-1', collapsed ? 'h-9 w-9' : 'h-12 w-12')}>
             <img src={cantimLogo} alt="Cantim da Roça" className="h-full w-full object-contain" />
           </div>
           {!collapsed && (
             <div className="min-w-0 leading-tight flex-1">
-              <p className="text-[12.5px] font-semibold text-sidebar-accent-foreground truncate">
+              <p className="text-[13px] font-semibold text-sidebar-accent-foreground truncate tracking-tight">
                 cantim work
               </p>
               <p className="text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground font-medium mt-0.5">
@@ -143,15 +143,15 @@ export default function MondaySidebar() {
                   className={({ isActive }) =>
                     cn(
                       'flex items-center gap-2.5 h-8 px-2.5 rounded-md text-[12.5px] font-medium',
-                      'transition-colors duration-crm ease-crm',
+                      'transition-[background-color,color] duration-crm ease-crm',
                       isActive
                         ? 'sidebar-item-active text-sidebar-accent-foreground'
-                        : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
+                        : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
                     )
                   }
                 >
-                  <MSym name={it.icon} size={17} />
-                  {!collapsed && <span>{it.title}</span>}
+                  <MSym name={it.icon} size={17} className="shrink-0" />
+                  {!collapsed && <span className="truncate">{it.title}</span>}
                 </NavLink>
               </li>
             ))}
@@ -174,15 +174,15 @@ export default function MondaySidebar() {
                   className={({ isActive }) =>
                     cn(
                       'flex items-center gap-2.5 h-8 px-2.5 rounded-md text-[12.5px] font-medium',
-                      'transition-colors duration-crm ease-crm',
+                      'transition-[background-color,color] duration-crm ease-crm',
                       isActive
                         ? 'sidebar-item-active text-sidebar-accent-foreground'
-                        : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
+                        : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
                     )
                   }
                 >
-                  <MSym name={it.icon} size={17} />
-                  {!collapsed && <span>{it.title}</span>}
+                  <MSym name={it.icon} size={17} className="shrink-0" />
+                  {!collapsed && <span className="truncate">{it.title}</span>}
                 </NavLink>
               </li>
             ))}
@@ -202,14 +202,14 @@ export default function MondaySidebar() {
                     to={boardHref(b)}
                     className={({ isActive }) =>
                       cn(
-                        'group flex items-center gap-2 h-7 px-2.5 rounded-md text-[12px] transition-colors',
+                        'group flex items-center gap-2 h-7 px-2.5 rounded-md text-[12px] transition-[background-color,color] duration-crm ease-crm',
                         isActive
                           ? 'sidebar-item-active text-sidebar-accent-foreground'
-                          : 'text-sidebar-foreground hover:bg-sidebar-accent/40',
+                          : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
                       )
                     }
                   >
-                    <Star size={12} className="fill-[hsl(var(--honey))] text-[hsl(var(--honey))]" />
+                    <Star size={12} className="fill-[hsl(var(--honey))] text-[hsl(var(--honey))] shrink-0" />
                     <span className="truncate flex-1">{b.name}</span>
                   </NavLink>
                 </li>
@@ -228,7 +228,7 @@ export default function MondaySidebar() {
               <button
                 type="button"
                 onClick={() => setCreateWsOpen(true)}
-                className="h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/60 transition-colors"
+                className="h-5 w-5 inline-flex items-center justify-center rounded text-muted-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/60 transition-[background-color,color] duration-crm ease-crm"
                 aria-label="Nova área de trabalho"
               >
                 <Plus size={13} />
@@ -238,12 +238,12 @@ export default function MondaySidebar() {
 
           {!collapsed && (
             <div className="px-2.5 mb-2 relative">
-              <Search size={12} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Search size={12} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar..."
-                className="w-full h-7 pl-6 pr-2 rounded-md bg-sidebar-accent/40 text-[11.5px] text-sidebar-foreground placeholder:text-muted-foreground/70 outline-none focus:bg-sidebar-accent/70 transition-colors"
+                className="w-full h-7 pl-6 pr-2 rounded-md bg-card/40 border border-hairline text-[11.5px] text-sidebar-foreground placeholder:text-muted-foreground/70 outline-none focus:bg-card/70 focus:border-hairline-strong transition-[background-color,border-color] duration-crm ease-crm"
               />
             </div>
           )}
@@ -255,7 +255,7 @@ export default function MondaySidebar() {
                 const wsBoards = boardsByWorkspace(ws.id);
                 return (
                   <DroppableWorkspaceItem key={ws.id} workspaceId={ws.id}>
-                    <div className="group flex items-center gap-1 h-8 px-1.5 rounded-md hover:bg-sidebar-accent/40 transition-colors">
+                    <div className="group flex items-center gap-1 h-8 px-1.5 rounded-md hover:bg-sidebar-accent/60 transition-[background-color] duration-crm ease-crm">
                       <button
                         type="button"
                         onClick={() => setOpenWorkspaces((s) => ({ ...s, [ws.id]: !isOpen }))}
@@ -291,7 +291,7 @@ export default function MondaySidebar() {
                                 <MoreHorizontal size={13} />
                               </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuContent align="end" className="w-44 border-hairline shadow-floating">
                               <DropdownMenuItem
                                 onClick={async () => {
                                   const name = window.prompt('Renomear área de trabalho', ws.name);
@@ -333,7 +333,7 @@ export default function MondaySidebar() {
                     </div>
 
                     {isOpen && !collapsed && (
-                      <ul className="ml-5 pl-3 border-l border-sidebar-border/60 space-y-0.5 mt-0.5 mb-1">
+                      <ul className="ml-5 pl-3 border-l border-hairline space-y-0.5 mt-0.5 mb-1">
                         {wsBoards.length === 0 && (
                           <li className="text-[11px] text-muted-foreground/70 px-2 py-1 italic">
                             Sem boards ainda
@@ -346,14 +346,14 @@ export default function MondaySidebar() {
                               end={b.kind === 'route'}
                               className={({ isActive }) =>
                                 cn(
-                                  'flex-1 flex items-center gap-2 h-7 px-2 rounded-md text-[12px] transition-colors',
+                                  'flex-1 flex items-center gap-2 h-7 px-2 rounded-md text-[12px] transition-[background-color,color] duration-crm ease-crm',
                                   isActive
                                     ? 'sidebar-item-active text-sidebar-accent-foreground'
-                                    : 'text-sidebar-foreground hover:bg-sidebar-accent/40',
+                                    : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
                                 )
                               }
                             >
-                              <MSym name={b.icon || 'square'} size={14} className="opacity-70" />
+                              <MSym name={b.icon || 'square'} size={14} className="opacity-70 shrink-0" />
                               <span className="truncate">{b.name}</span>
                             </NavLink>
                             <button
@@ -382,7 +382,7 @@ export default function MondaySidebar() {
                                   <MoreHorizontal size={12} />
                                 </button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-40">
+                              <DropdownMenuContent align="end" className="w-40 border-hairline shadow-floating">
                                 <DropdownMenuItem
                                   onClick={async () => {
                                     const name = window.prompt('Renomear board', b.name);
@@ -420,15 +420,15 @@ export default function MondaySidebar() {
       </SidebarContent>
 
       {/* Footer */}
-      <SidebarFooter className="border-t border-sidebar-border p-2">
+      <SidebarFooter className="border-t border-hairline p-2">
         <TooltipProvider delayDuration={300}>
           <div
             className={cn(
               'flex items-center gap-2.5 rounded-md',
-              !collapsed && 'p-1.5 hover:bg-sidebar-accent/60 transition-colors',
+              !collapsed && 'p-1.5 hover:bg-sidebar-accent/60 transition-[background-color] duration-crm ease-crm',
             )}
           >
-            <div className="h-7 w-7 shrink-0 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+            <div className="h-7 w-7 shrink-0 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center ring-1 ring-hairline">
               {initials}
             </div>
             {!collapsed && (
@@ -443,7 +443,7 @@ export default function MondaySidebar() {
                   <TooltipTrigger asChild>
                     <button
                       onClick={handleSignOut}
-                      className="h-6 w-6 rounded-md flex items-center justify-center text-sidebar-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                      className="h-6 w-6 rounded-md flex items-center justify-center text-sidebar-foreground hover:text-destructive hover:bg-destructive/10 transition-[background-color,color] duration-crm ease-crm"
                       aria-label="Sair"
                     >
                       <MSym name="logout" size={14} />
@@ -621,7 +621,7 @@ function DroppableWorkspaceItem({
       ref={setNodeRef}
       className={cn(
         'rounded-md transition-[background-color,box-shadow,outline] duration-crm ease-crm',
-        isOver && 'outline outline-2 outline-primary/60 outline-offset-[-2px] bg-primary/8 shadow-soft',
+        isOver && 'outline outline-2 outline-primary/50 outline-offset-[-2px] bg-primary/10 shadow-soft',
       )}
     >
       {children}
