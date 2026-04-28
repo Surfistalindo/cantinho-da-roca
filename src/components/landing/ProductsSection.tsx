@@ -1,7 +1,6 @@
 import logoImg from '@/assets/logo-cantim.png';
 import { Button } from '@/components/ui/button';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
-import { Warp } from '@paper-design/shaders-react';
 import LeafSVG from './LeafSVG';
 import FeatureCarousel from '@/components/ui/feature-carousel';
 
@@ -16,10 +15,15 @@ export default function ProductsSection({ scrollY = 0 }: ProductsSectionProps) {
   };
 
   return (
-    <section id="produtos" className="py-16 sm:py-24 bg-card relative overflow-hidden">
-      <div className="absolute inset-0 z-0 opacity-10">
-        <Warp speed={0.3} scale={0.7} colors={['#d4a373', '#e9c46a', '#f4e8c1']} />
-      </div>
+    <section id="produtos" className="py-16 sm:py-24 bg-paper relative overflow-hidden">
+      <div
+        className="absolute inset-0 z-0 pointer-events-none opacity-60"
+        style={{
+          backgroundImage:
+            'radial-gradient(at 18% 12%, hsl(var(--honey) / 0.10) 0px, transparent 55%), radial-gradient(at 88% 78%, hsl(var(--clay) / 0.08) 0px, transparent 50%)',
+        }}
+        aria-hidden="true"
+      />
 
       <div className="absolute top-16 left-6 pointer-events-none animate-leaf-float opacity-15 z-[1]" style={{ animationDelay: '2s' }}>
         <LeafSVG size={20} id="prod1" style={{ transform: 'rotate(55deg)' }} />
@@ -48,13 +52,13 @@ export default function ProductsSection({ scrollY = 0 }: ProductsSectionProps) {
             transition: 'all 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
-          <p className="text-primary text-sm font-semibold tracking-widest uppercase mb-3">
-            Nossos produtos
+          <p className="font-hand text-clay text-2xl mb-1">
+            colhidos & curados
           </p>
-          <h2 className="text-3xl sm:text-5xl font-serif text-foreground mb-4">
+          <h2 className="font-display-warm text-3xl sm:text-5xl text-foreground mb-4">
             Conheça nossos produtos
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto text-lg">
+          <p className="font-body-warm text-muted-foreground max-w-xl mx-auto text-lg">
             Tudo pensado pra quem quer viver melhor de forma simples e natural.
           </p>
         </div>
