@@ -35,6 +35,7 @@ const primaryItems: NavItem[] = [
   { title: 'Leads', url: '/admin/leads', icon: 'person_search', key: 'leads', badgeKey: 'overdue' },
   { title: 'Pipeline', url: '/admin/pipeline', icon: 'view_kanban', key: 'pipeline' },
   { title: 'Clientes', url: '/admin/clients', icon: 'group', key: 'clients' },
+  { title: 'WhatsApp', url: '/admin/whatsapp', icon: 'chat', key: 'whatsapp' },
   { title: 'IA', url: '/admin/ia', icon: 'auto_awesome', key: 'ia' },
 ];
 
