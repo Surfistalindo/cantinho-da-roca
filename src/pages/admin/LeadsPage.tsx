@@ -693,7 +693,8 @@ export default function LeadsPage() {
                       return (
                         <TableHeader className="sticky top-0 z-20 bg-card shadow-[0_1px_0_0_hsl(var(--border))]">
                           <TableRow className="hover:bg-transparent border-border [&>th]:bg-card">
-                            <TableHead scope="col" className="w-[36px] pl-3 pr-0">
+                            <TableHead scope="col" className="w-[20px] pl-2 pr-0" aria-hidden="true" />
+                            <TableHead scope="col" className="w-[36px] pl-2 pr-0">
                               <Checkbox
                                 checked={allChecked ? true : someChecked ? 'indeterminate' : false}
                                 onCheckedChange={() => toggleGroup(groupIds, allChecked)}
