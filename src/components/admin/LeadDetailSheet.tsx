@@ -188,7 +188,14 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="crm-smooth-scroll overflow-y-auto sm:max-w-xl p-0 flex flex-col bg-background">
+        <SheetContent
+          className="crm-smooth-scroll overflow-y-auto sm:max-w-xl p-0 flex flex-col bg-background"
+          aria-describedby="lead-detail-desc"
+        >
+          <SheetDescription id="lead-detail-desc" className="sr-only">
+            Painel de detalhes do lead {lead.name}, status atual {lead.status}
+            {lead.phone ? `, telefone ${lead.phone}` : ''}. Use Tab para navegar e Esc para fechar.
+          </SheetDescription>
           {/* HEADER */}
           <SheetHeader className="px-7 pt-6 pb-5 border-b border-border bg-card sticky top-0 z-10 space-y-0 shadow-sm">
             <div className="flex items-start gap-4">
