@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Plus, Star, MoreHorizontal, Trash2, Search } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Star, MoreHorizontal, Trash2, Search, GripVertical } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useWorkspaces } from '@/hooks/useWorkspaces';
 import { useFavoriteBoards } from '@/hooks/useFavoriteBoards';
@@ -36,6 +36,15 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import cantimLogo from '@/assets/cantim-logo.png';
 import { toast } from 'sonner';
+import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDraggable,
+  useDroppable,
+  type DragEndEvent,
+} from '@dnd-kit/core';
 
 const STATIC_TOP = [
   { title: 'Página inicial', url: '/admin/dashboard', icon: 'home' },
