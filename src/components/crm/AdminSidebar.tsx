@@ -155,16 +155,16 @@ export default function AdminSidebar() {
               {primaryItems.map(renderItem)}
 
               {!collapsed && iaOpen && (
-                <div className="ml-4 mt-1 mb-1 pl-3 border-l border-sidebar-border space-y-0.5">
+                <div className="ml-3 mt-0.5 mb-1 pl-3 border-l border-sidebar-border/70 space-y-0.5">
                   {iaSubItems.map((sub) => (
                     <SidebarMenuItem key={sub.url}>
-                      <SidebarMenuButton asChild className="h-8 rounded-md px-2.5 text-[12px] text-sidebar-foreground/75 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-colors">
+                      <SidebarMenuButton asChild className="h-7 rounded-md px-2 text-[11.5px] text-sidebar-foreground/70 hover:bg-sidebar-accent/40 hover:text-sidebar-accent-foreground transition-colors">
                         <NavLink
                           to={sub.url}
                           end
-                          activeClassName="!bg-sidebar-accent !text-sidebar-accent-foreground [&_.material-symbols-outlined]:text-sidebar-primary"
+                          activeClassName="sidebar-item-active !text-sidebar-accent-foreground [&_.material-symbols-outlined]:text-sidebar-primary"
                         >
-                          <MSym name={sub.icon} size={16} className="opacity-70" />
+                          <MSym name={sub.icon} size={14} className="opacity-70" />
                           <span>{sub.title}</span>
                         </NavLink>
                       </SidebarMenuButton>
@@ -176,13 +176,13 @@ export default function AdminSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="mt-4">
+        <SidebarGroup className="mt-3">
           <SidebarGroupContent>
-            <SidebarMenu className="gap-1">
+            <SidebarMenu className="gap-0.5">
               <SidebarMenuItem>
-                <SidebarMenuButton asChild className="h-10 rounded-lg px-3 text-[13px] text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground transition-colors">
+                <SidebarMenuButton asChild className="h-9 rounded-md px-3 text-[12.5px] text-sidebar-foreground hover:bg-sidebar-accent/40 hover:text-sidebar-accent-foreground transition-colors">
                   <a href="/" target="_blank" rel="noopener noreferrer">
-                    <MSym name="open_in_new" size={20} />
+                    <MSym name="open_in_new" size={18} />
                     {!collapsed && <span>Site público</span>}
                   </a>
                 </SidebarMenuButton>
