@@ -859,9 +859,13 @@ export default function LeadsPage() {
                             )}
                             style={{ maxHeight: 'calc(100vh - 280px)', ['--row-h' as any]: `${rowHeight}px` }}
                             onPointerDown={(e) => {
-                              const target = e.target as HTMLElement;
-                              if (!target.classList.contains('crm-row-grip')) return;
+                              // Drag-resize: pointerdown nos últimos 5px da borda inferior de qualquer <tr>
+                              const tr = (e.target as HTMLElement)?.closest('tr');
+                              if (!tr || tr.parentElement?.tagName !== 'TBODY') return;
+                              const rect = tr.getBoundingClientRect();
+                              if (e.clientY < rect.bottom - 5 || e.clientY > rect.bottom + 2) return;
                               e.preventDefault();
+                              e.stopPropagation();
                               const startY = e.clientY;
                               const startH = rowHeight;
                               const move = (ev: PointerEvent) => {
@@ -877,6 +881,19 @@ export default function LeadsPage() {
                               window.addEventListener('pointerup', up);
                               document.body.style.cursor = 'ns-resize';
                               document.body.style.userSelect = 'none';
+                            }}
+                            onPointerMove={(e) => {
+                              // Cursor ns-resize quando perto da borda inferior de uma <tr>
+                              const tr = (e.target as HTMLElement)?.closest('tr');
+                              if (!tr || tr.parentElement?.tagName !== 'TBODY') {
+                                e.currentTarget.style.cursor = '';
+                                return;
+                              }
+                              const rect = tr.getBoundingClientRect();
+                              e.currentTarget.style.cursor =
+                                e.clientY >= rect.bottom - 5 && e.clientY <= rect.bottom + 2
+                                  ? 'ns-resize'
+                                  : '';
                             }}
                             tabIndex={0}
                             role="region"
