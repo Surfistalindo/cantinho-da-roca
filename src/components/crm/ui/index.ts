@@ -9,3 +9,5 @@ export { default as StatusCell } from './StatusCell';
 export type { StatusCellVariant } from './StatusCell';
 export { default as TagCell, colorForLabel } from './TagCell';
 export type { TagColor } from './TagCell';
+export { default as GroupSection } from './GroupSection';
+export type { GroupColor } from './GroupSection';

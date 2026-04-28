@@ -29,6 +29,7 @@ import { faEye, faUserCheck, faPlus, faCircleCheck, faClock, faTriangleExclamati
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { colorForLabel } from '@/components/crm/ui/TagCell';
+import GroupSection, { type GroupColor } from '@/components/crm/ui/GroupSection';
 import { getCustomerLifecycle, purchaseRecencyLabel } from '@/lib/customerLifecycle';
 
 interface Customer {
@@ -163,6 +164,21 @@ export default function ClientsPage() {
     return list;
   }, [customers, search, stageFilter, recencyFilter, purchaseFilter, reactivationMode]);
 
+  // Agrupamento por estágio do ciclo (Monday-style)
+  const STAGE_GROUPS: { key: 'active' | 'watch' | 'inactive' | 'dormant'; title: string; color: GroupColor }[] = [
+    { key: 'active',   title: 'Ativos',      color: 'green'   },
+    { key: 'watch',    title: 'Em atenção',  color: 'orange'  },
+    { key: 'inactive', title: 'Inativos',    color: 'red'     },
+    { key: 'dormant',  title: 'Adormecidos', color: 'neutral' },
+  ];
+  const groupedClients = useMemo(() => {
+    const map: Record<string, typeof filtered> = { active: [], watch: [], inactive: [], dormant: [] };
+    for (const c of filtered) {
+      const stage = getCustomerLifecycle(c.last_contact_at, c.purchase_date).stage;
+      if (map[stage]) map[stage].push(c);
+    }
+    return map;
+  }, [filtered]);
   const openDetail = (c: Customer) => { setSelectedCustomer(c); setSheetOpen(true); };
 
   const hasActiveFilters =
@@ -246,7 +262,7 @@ export default function ClientsPage() {
           </div>
         )}
 
-        <div className="board-panel crm-dense-table p-3">
+        <div className="board-panel p-3 space-y-3">
           <ClientFilters
             search={search}
             onSearchChange={setSearch}
@@ -272,89 +288,120 @@ export default function ClientsPage() {
             emptyTitle="Nenhum cliente cadastrado ainda"
             emptyDescription="Cadastre manualmente ou converta leads em clientes."
           >
-            <div className="overflow-x-auto -mx-5">
-              <Table>
+            {(() => {
+              const renderHeader = () => (
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-border">
-                    <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Cliente</TableHead>
-                    <TableHead className="hidden md:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Produto</TableHead>
-                    <TableHead className="hidden sm:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Última compra</TableHead>
-                    <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Status</TableHead>
+                    <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground min-w-[240px]">Cliente</TableHead>
+                    <TableHead className="hidden md:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[180px]">Produto</TableHead>
+                    <TableHead className="hidden sm:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px]">Última compra</TableHead>
+                    <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Status</TableHead>
                     <TableHead className="w-[100px] text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
-                  {filtered.map((c, idx) => {
-                    const purchaseDays = daysSince(c.purchase_date);
+              );
+
+              const renderRows = (items: typeof filtered) =>
+                items.map((c) => {
+                  const purchaseDays = daysSince(c.purchase_date);
+                  return (
+                    <TableRow
+                      key={c.id}
+                      tabIndex={0}
+                      className={cn('group cursor-pointer border-border/60 outline-none')}
+                      onClick={() => openDetail(c)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') openDetail(c); }}
+                    >
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-3">
+                          <InitialsAvatar name={c.name} size="md" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold truncate">{c.name}</p>
+                            <p className="text-[11px] text-muted-foreground font-mono">{c.phone ?? '—'}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {c.product_bought ? (
+                          <span className={cn('tag-cell', `tag-${colorForLabel(c.product_bought)}`)}>{c.product_bought}</span>
+                        ) : <span className="text-xs text-muted-foreground">—</span>}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell text-[11px] text-muted-foreground">
+                        {c.purchase_date ? (
+                          <div>
+                            <div className="font-mono">{format(new Date(c.purchase_date), 'dd/MM/yy', { locale: ptBR })}</div>
+                            <div className="text-[10px] mt-0.5">{purchaseRecencyLabel(purchaseDays)}</div>
+                          </div>
+                        ) : '—'}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        <CustomerLifecycleBadge
+                          lastContactAt={c.last_contact_at}
+                          purchaseDate={c.purchase_date}
+                          size="sm"
+                        />
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <div className="flex justify-end gap-0.5 items-center">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openDetail(c)}>
+                                <FontAwesomeIcon icon={faEye} className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Ver detalhes</TooltipContent>
+                          </Tooltip>
+                          {c.phone && (
+                            <WhatsAppQuickAction
+                              lead={{
+                                id: c.id,
+                                name: c.name,
+                                phone: c.phone,
+                                product_bought: c.product_bought,
+                                status: 'customer',
+                                last_contact_at: c.last_contact_at,
+                                created_at: c.purchase_date ?? c.created_at,
+                              }}
+                              variant="icon"
+                              size="sm"
+                              onSent={fetchCustomers}
+                            />
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                });
+
+              const renderGroup = (items: typeof filtered) => (
+                <div className="overflow-x-auto crm-dense-table">
+                  <Table>
+                    {renderHeader()}
+                    <TableBody>{renderRows(items)}</TableBody>
+                  </Table>
+                </div>
+              );
+
+              return (
+                <div className="space-y-2">
+                  {STAGE_GROUPS.map((g) => {
+                    const items = groupedClients[g.key] ?? [];
+                    if (items.length === 0) return null;
                     return (
-                      <TableRow
-                        key={c.id}
-                        className={cn('group cursor-pointer border-border/60')}
-                        onClick={() => openDetail(c)}
+                      <GroupSection
+                        key={g.key}
+                        title={g.title}
+                        count={items.length}
+                        color={g.color}
+                        defaultOpen={g.key === 'active' || g.key === 'watch'}
                       >
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-3">
-                            <InitialsAvatar name={c.name} size="md" />
-                            <div className="min-w-0">
-                              <p className="text-sm font-semibold truncate">{c.name}</p>
-                              <p className="text-[11px] text-muted-foreground font-mono">{c.phone ?? '—'}</p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          {c.product_bought ? (
-                            <span className={cn('tag-cell', `tag-${colorForLabel(c.product_bought)}`)}>{c.product_bought}</span>
-                          ) : <span className="text-xs text-muted-foreground">—</span>}
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell text-[11px] text-muted-foreground">
-                          {c.purchase_date ? (
-                            <div>
-                              <div className="font-mono">{format(new Date(c.purchase_date), 'dd/MM/yy', { locale: ptBR })}</div>
-                              <div className="text-[10px] mt-0.5">{purchaseRecencyLabel(purchaseDays)}</div>
-                            </div>
-                          ) : '—'}
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          <CustomerLifecycleBadge
-                            lastContactAt={c.last_contact_at}
-                            purchaseDate={c.purchase_date}
-                            size="sm"
-                          />
-                        </TableCell>
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          <div className="flex justify-end gap-0.5 items-center">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openDetail(c)}>
-                                  <FontAwesomeIcon icon={faEye} className="h-3.5 w-3.5" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Ver detalhes</TooltipContent>
-                            </Tooltip>
-                            {c.phone && (
-                              <WhatsAppQuickAction
-                                lead={{
-                                  id: c.id,
-                                  name: c.name,
-                                  phone: c.phone,
-                                  product_bought: c.product_bought,
-                                  status: 'customer',
-                                  last_contact_at: c.last_contact_at,
-                                  created_at: c.purchase_date ?? c.created_at,
-                                }}
-                                variant="icon"
-                                size="sm"
-                                onSent={fetchCustomers}
-                              />
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                        {renderGroup(items)}
+                      </GroupSection>
                     );
                   })}
-                </TableBody>
-              </Table>
-            </div>
+                </div>
+              );
+            })()}
           </ListState>
         </div>
 
