@@ -608,6 +608,41 @@
     background: hsl(var(--primary) / 0.18);
   }
 
+  /* ─── Scrollbar horizontal SEMPRE visível (não esconde quando ocioso) ───
+     Browsers tendem a auto-hide scrollbars overlay; isso atrapalha quando
+     a tabela tem scroll lateral, pois o usuário só percebe ao chegar no
+     fim. Forçamos uma trilha persistente, fina e elegante. */
+  .font-crm .crm-x-scroll-always {
+    scrollbar-gutter: stable;
+  }
+  .font-crm .crm-x-scroll-always::-webkit-scrollbar {
+    height: 10px;  /* eixo X */
+    width: 8px;    /* eixo Y */
+  }
+  .font-crm .crm-x-scroll-always::-webkit-scrollbar-track:horizontal {
+    background: hsl(var(--surface-2));
+    border-top: 1px solid hsl(var(--border));
+  }
+  .font-crm .crm-x-scroll-always::-webkit-scrollbar-thumb:horizontal {
+    background: hsl(var(--hairline-strong) / 0.7);
+    border-radius: 999px;
+    border: 2px solid hsl(var(--surface-2));
+    background-clip: padding-box;
+    min-width: 40px;
+  }
+  .font-crm .crm-x-scroll-always::-webkit-scrollbar-thumb:horizontal:hover {
+    background: hsl(var(--muted-foreground) / 0.7);
+    border-color: hsl(var(--surface-2));
+    background-clip: padding-box;
+  }
+  /* Firefox — scrollbar fina nativa, sempre presente */
+  @supports (scrollbar-width: thin) {
+    .font-crm .crm-x-scroll-always {
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--hairline-strong) / 0.7) hsl(var(--surface-2));
+    }
+  }
+
   /* ─── Modo compacto: tudo encolhe pra caber sem scroll horizontal ─── */
   .font-crm .crm-compact-table {
     overflow-x: hidden !important;
