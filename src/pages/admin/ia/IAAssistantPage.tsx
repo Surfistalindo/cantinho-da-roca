@@ -81,7 +81,7 @@ export default function IAAssistantPage() {
           </div>
 
           {/* Mensagens */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4 min-h-0">
+          <div ref={scrollRef} className="flex-1 crm-scroll-area px-4 py-4 space-y-4 min-h-0">
             {empty ? (
               <div className="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto space-y-4 py-6">
                 <span className="h-14 w-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
