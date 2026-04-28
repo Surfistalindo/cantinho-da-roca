@@ -95,7 +95,7 @@ export default function NewLeadDialog({ open, onOpenChange, onCreated, defaultSt
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl shadow-pop p-6">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] crm-scroll-area rounded-2xl shadow-pop p-6">
         <DialogHeader className="space-y-1.5">
           <DialogTitle className="text-xl font-semibold tracking-tight">Novo contato</DialogTitle>
           <DialogDescription className="text-xs">

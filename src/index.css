@@ -827,22 +827,103 @@
   }
 
   /* Quando o CRM está montado, o documento inteiro é o scroller —
-     aplica o mesmo scrollbar premium ao html/body. */
-  html:has(.font-crm) {
+     aplica o mesmo scrollbar premium ao html/body.
+     Usa :has() onde suportado; o fallback (.crm-active) cobre
+     navegadores antigos e é setado via JS no mount do CrmLayout. */
+  html:has(.font-crm),
+  html.crm-active {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--hairline-strong) / 0.6) transparent;
+    /* Evita "salto" horizontal quando scrollbar aparece/desaparece (ex.: dialog) */
+    scrollbar-gutter: stable;
+    /* Sem chaining no root: corta bounce/pull-to-refresh no fim do documento. */
+    overscroll-behavior-y: none;
   }
-  html:has(.font-crm)::-webkit-scrollbar { width: 10px; height: 10px; }
-  html:has(.font-crm)::-webkit-scrollbar-track { background: transparent; }
-  html:has(.font-crm)::-webkit-scrollbar-thumb {
+  html:has(.font-crm)::-webkit-scrollbar,
+  html.crm-active::-webkit-scrollbar { width: 10px; height: 10px; }
+  html:has(.font-crm)::-webkit-scrollbar-track,
+  html.crm-active::-webkit-scrollbar-track { background: transparent; }
+  html:has(.font-crm)::-webkit-scrollbar-thumb,
+  html.crm-active::-webkit-scrollbar-thumb {
     background-color: hsl(var(--hairline-strong) / 0.5);
     border-radius: 999px;
     border: 2px solid transparent;
     background-clip: padding-box;
     transition: background-color 180ms cubic-bezier(.2,.8,.2,1);
   }
-  html:has(.font-crm)::-webkit-scrollbar-thumb:hover {
+  html:has(.font-crm)::-webkit-scrollbar-thumb:hover,
+  html.crm-active::-webkit-scrollbar-thumb:hover {
     background-color: hsl(var(--muted-foreground) / 0.6);
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * Scroll containers padronizados.
+   * Regra: "interno" só onde o conteúdo PRECISA ficar fixo (sheets,
+   * dialogs, painéis em split, chats). Telas inteiras deixam o
+   * documento rolar.
+   * ────────────────────────────────────────────────────────────── */
+
+  /* Confina o scroll dentro do elemento. Para sheets, dialogs, chats. */
+  .crm-scroll-area {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--hairline-strong) / 0.6) transparent;
+    scrollbar-gutter: stable;
+    contain: paint;
+  }
+  .crm-scroll-area::-webkit-scrollbar { width: 8px; height: 8px; }
+  .crm-scroll-area::-webkit-scrollbar-track { background: transparent; }
+  .crm-scroll-area::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--hairline-strong) / 0.5);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  .crm-scroll-area::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.6);
+  }
+
+  /* Rola por dentro mas, ao esgotar, entrega pro documento (chaining). */
+  .crm-scroll-passthrough {
+    overflow-y: auto;
+    overscroll-behavior-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--hairline-strong) / 0.6) transparent;
+    contain: paint;
+  }
+  .crm-scroll-passthrough::-webkit-scrollbar { width: 8px; height: 8px; }
+  .crm-scroll-passthrough::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--hairline-strong) / 0.5);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  /* Performance: sticky/fixed do CRM viram camada de compositing própria,
+     evitando repaint do conteúdo atrás a cada frame de scroll. */
+  .font-crm .crm-sticky-layer {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .font-crm .crm-sticky-layer { will-change: auto; }
+  }
+
+  /* Mobile: a sidebar do shadcn vira Sheet (offcanvas).
+     O wrapper sticky h-screen do CrmLayout não deve ocupar espaço. */
+  @media (max-width: 767px) {
+    .crm-sidebar-shell {
+      position: static !important;
+      height: auto !important;
+      z-index: auto;
+    }
+    /* Momentum scroll nativo do iOS no documento */
+    html.crm-active,
+    html:has(.font-crm) {
+      -webkit-overflow-scrolling: touch;
+    }
   }
 
   /* Focus-ring premium dentro do CRM (substitui halos default duplos) */

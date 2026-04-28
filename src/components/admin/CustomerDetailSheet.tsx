@@ -139,7 +139,7 @@ export default function CustomerDetailSheet({ customer, open, onOpenChange, onUp
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="overflow-y-auto sm:max-w-xl p-0 flex flex-col bg-background">
+        <SheetContent className="crm-scroll-area sm:max-w-xl p-0 flex flex-col bg-background">
           <SheetHeader className="px-6 pt-6 pb-5 border-b border-border bg-card sticky top-0 z-10 space-y-0">
             <div className="flex items-start gap-4">
               <InitialsAvatar name={customer.name} size="lg" />

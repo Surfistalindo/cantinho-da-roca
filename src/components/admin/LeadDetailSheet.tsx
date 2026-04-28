@@ -189,7 +189,7 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
-          className="crm-smooth-scroll overflow-y-auto sm:max-w-xl p-0 flex flex-col bg-background"
+          className="crm-scroll-area sm:max-w-xl p-0 flex flex-col bg-background"
           aria-describedby="lead-detail-desc"
         >
           <SheetDescription id="lead-detail-desc" className="sr-only">

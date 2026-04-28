@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import AdminNavbar from './AdminNavbar';
@@ -17,6 +17,14 @@ export default function CrmLayout() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
 
+  // Fallback para navegadores sem :has() — marca <html> com .crm-active
+  // para que o scrollbar fino premium e as regras root sejam aplicados.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add('crm-active');
+    return () => root.classList.remove('crm-active');
+  }, []);
+
   useGlobalShortcuts({
     onOpenPalette: () => setPaletteOpen(true),
     onShowHelp: () => setHelpOpen(true),
@@ -27,8 +35,10 @@ export default function CrmLayout() {
     <SidebarProvider>
       <TutorialProvider>
         <div className="min-h-screen flex w-full bg-surface-sunken font-crm text-foreground overflow-x-hidden">
-          {/* Sidebar fica fixa em viewport; documento todo é o scroller */}
-          <div className="sticky top-0 h-screen shrink-0 z-20">
+          {/* Sidebar fica fixa em viewport; documento todo é o scroller.
+              No mobile, .crm-sidebar-shell anula o sticky/h-screen para
+              não interferir com o scroll do documento (Sheet do shadcn assume). */}
+          <div className="crm-sidebar-shell crm-sticky-layer sticky top-0 h-screen shrink-0 z-20">
             <MondaySidebar />
           </div>
           <div className="flex-1 flex flex-col min-w-0 bg-surface-1 crm-paper-bg">
