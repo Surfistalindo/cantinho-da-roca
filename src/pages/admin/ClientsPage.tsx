@@ -29,6 +29,7 @@ import { faEye, faUserCheck, faPlus, faCircleCheck, faClock, faTriangleExclamati
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { colorForLabel } from '@/components/crm/ui/TagCell';
+import GroupSection, { type GroupColor } from '@/components/crm/ui/GroupSection';
 import { getCustomerLifecycle, purchaseRecencyLabel } from '@/lib/customerLifecycle';
 
 interface Customer {
