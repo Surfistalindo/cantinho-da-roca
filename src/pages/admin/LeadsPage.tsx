@@ -456,7 +456,7 @@ export default function LeadsPage() {
                 })}
               </div>
             </>
-          )}
+          </ListState>
         </div>
 
         <LeadDetailSheet lead={selectedLead} open={sheetOpen} onOpenChange={setSheetOpen} onUpdated={fetchLeads} />
