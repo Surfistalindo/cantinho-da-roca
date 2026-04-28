@@ -160,6 +160,7 @@ export default function LeadsPage() {
     !!dateFrom || !!dateTo;
 
   const clearFilters = () => {
+    logger.debug('[leads] filters cleared');
     url.set({
       search: '', status: 'all', origin: 'all',
       recency: 'all', priority: 'all', from: null, to: null,
