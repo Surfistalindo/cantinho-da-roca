@@ -28,6 +28,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faUserCheck, faPlus, faCircleCheck, faClock, faTriangleExclamation, faMoon } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { colorForLabel } from '@/components/crm/ui/TagCell';
 import { getCustomerLifecycle, purchaseRecencyLabel } from '@/lib/customerLifecycle';
 
 interface Customer {
