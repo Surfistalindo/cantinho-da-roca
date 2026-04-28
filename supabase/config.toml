@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.ia-lead-insights]
 verify_jwt = false
+
+[functions.ia-classify-status]
+verify_jwt = false
