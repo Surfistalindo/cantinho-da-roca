@@ -130,10 +130,20 @@ export default {
         card: "0 4px 12px -2px hsl(220 25% 14% / 0.06), 0 2px 6px -2px hsl(220 25% 14% / 0.04)",
         pop: "0 24px 48px -12px hsl(220 25% 14% / 0.18), 0 8px 16px -8px hsl(220 25% 14% / 0.12)",
         ringed: "0 0 0 4px hsl(var(--ring) / 0.12)",
+        floating: "0 12px 32px -8px hsl(220 25% 14% / 0.18), 0 4px 8px -4px hsl(220 25% 14% / 0.10), 0 0 0 1px hsl(220 14% 14% / 0.04)",
+        "inset-hairline": "inset 0 0 0 1px hsl(var(--hairline))",
         "crm-xs": "var(--shadow-xs)",
         "crm-sm": "var(--shadow-sm)",
         "crm-md": "var(--shadow-md)",
         "crm-pop": "var(--shadow-pop)",
+      },
+      transitionDuration: {
+        "crm-fast": "120ms",
+        crm: "180ms",
+        "crm-slow": "240ms",
+      },
+      transitionTimingFunction: {
+        crm: "cubic-bezier(.2,.8,.2,1)",
       },
       keyframes: {
         "accordion-down": {
