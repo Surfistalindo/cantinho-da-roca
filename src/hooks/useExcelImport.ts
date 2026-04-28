@@ -41,6 +41,8 @@ export interface UseExcelImportState {
   mappings: ColumnMapping[];
   /** Mapeamento por aba (usado internamente para normalizar). */
   mappingsBySheet: Record<string, ColumnMapping[]>;
+  /** Amostras de valores por header (até 8), mescladas de todas as abas — usado em tooltips e legendas da UI. */
+  samplesByHeader: Record<string, unknown[]>;
   defaultStrategy: DuplicateStrategy;
   normalized: NormalizedLeadRow[];
   duplicates: DuplicateMatch[];
@@ -52,6 +54,7 @@ export interface UseExcelImportState {
 
 const INITIAL: UseExcelImportState = {
   step: 'idle', file: null, parsed: null, mappings: [], mappingsBySheet: {},
+  samplesByHeader: {},
   defaultStrategy: 'skip',
   normalized: [], duplicates: [], progress: null, result: null, error: null,
   detectedTemplate: null,
@@ -146,8 +149,18 @@ export function useExcelImport(options: UseExcelImportOptions = {}) {
       }];
 
       const bySheet: Record<string, ColumnMapping[]> = {};
+      const samplesByHeader: Record<string, unknown[]> = {};
       for (const sheet of sheets) {
         const samples = buildSamplesByHeader(sheet.headers, sheet.rows, 8);
+        // mescla amostras de todas as abas (primeiras encontradas vencem se já preenchidas)
+        for (const h of sheet.headers) {
+          if (h === '__sheet') continue;
+          const existing = samplesByHeader[h] ?? [];
+          const incoming = (samples[h] ?? []).filter((v) => v !== null && v !== undefined && String(v).trim() !== '');
+          if (existing.length < 8) {
+            samplesByHeader[h] = [...existing, ...incoming].slice(0, 8);
+          }
+        }
         let m = heuristicMap(sheet.headers, samples);
         try {
           m = await aiAssistMap(sheet.headers, sheet.rawRows.slice(0, 3), m);
@@ -162,6 +175,7 @@ export function useExcelImport(options: UseExcelImportOptions = {}) {
 
       setState((s) => ({
         ...s, step: 'mapping', parsed, mappings, mappingsBySheet: bySheet,
+        samplesByHeader,
         detectedTemplate: match?.template ?? null,
       }));
     } catch (e) {

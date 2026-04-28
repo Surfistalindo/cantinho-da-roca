@@ -16,6 +16,7 @@ import ImportProgress from '@/components/ia/excel/ImportProgress';
 import ImportResultView from '@/components/ia/excel/ImportResult';
 import ImportHistoryBanner from '@/components/ia/excel/ImportHistoryBanner';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useExcelImport } from '@/hooks/useExcelImport';
 import { cn } from '@/lib/utils';
 
@@ -24,16 +25,17 @@ interface StepDef {
   label: string;
   short: string;
   icon: IconDefinition;
+  hint: string;
 }
 
 const STEPS: StepDef[] = [
-  { key: 'upload',    label: 'Upload do arquivo',         short: 'Upload',     icon: faCloudArrowUp },
-  { key: 'preview',   label: 'Leitura e preview',         short: 'Preview',    icon: faTableList },
-  { key: 'mapping',   label: 'Mapeamento inteligente',    short: 'Mapeamento', icon: faWandMagicSparkles },
-  { key: 'strategy',  label: 'Estratégia de duplicados',  short: 'Estratégia', icon: faSitemap },
-  { key: 'review',    label: 'Revisão linha-a-linha',     short: 'Revisão',    icon: faShieldHalved },
-  { key: 'duplicate', label: 'Análise de duplicados',     short: 'Duplicados', icon: faClone },
-  { key: 'confirm',   label: 'Confirmação e relatório',   short: 'Resultado',  icon: faCircleCheck },
+  { key: 'upload',    label: 'Upload do arquivo',         short: 'Upload',     icon: faCloudArrowUp,        hint: 'Envie sua planilha .xlsx, .xls ou .csv.' },
+  { key: 'preview',   label: 'Leitura e preview',         short: 'Preview',    icon: faTableList,           hint: 'A IA lê e mostra um preview das primeiras linhas.' },
+  { key: 'mapping',   label: 'Mapeamento inteligente',    short: 'Mapeamento', icon: faWandMagicSparkles,   hint: 'Confira a qual campo do CRM cada coluna corresponde.' },
+  { key: 'strategy',  label: 'Estratégia de duplicados',  short: 'Estratégia', icon: faSitemap,             hint: 'Escolha o que fazer quando o telefone já existir no CRM.' },
+  { key: 'review',    label: 'Revisão linha-a-linha',     short: 'Revisão',    icon: faShieldHalved,        hint: 'Veja erros e avisos por linha e ajuste se necessário.' },
+  { key: 'duplicate', label: 'Análise de duplicados',     short: 'Duplicados', icon: faClone,               hint: 'Decida individualmente o que fazer com cada lead duplicado.' },
+  { key: 'confirm',   label: 'Confirmação e relatório',   short: 'Resultado',  icon: faCircleCheck,         hint: 'Importação concluída — veja o relatório final.' },
 ];
 
 function stepIndex(s: string): number {
@@ -69,12 +71,13 @@ export default function IAExcelImportPage() {
         ) : null
       }
     >
+      <TooltipProvider delayDuration={150}>
       {/* ============= BANNER PERSISTENTE DE HISTÓRICO ============= */}
       <ImportHistoryBanner />
 
       {/* ============= STEPPER ============= */}
       <div className="mb-6 rounded-2xl border bg-card p-4 sm:p-5">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <span className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <FontAwesomeIcon icon={currentStep.icon} className="h-4 w-4" />
@@ -84,9 +87,10 @@ export default function IAExcelImportPage() {
                 Etapa {idx + 1} de {STEPS.length}
               </div>
               <div className="text-[14px] font-semibold text-foreground truncate">{currentStep.label}</div>
+              <div className="text-[11.5px] text-muted-foreground mt-0.5 hidden sm:block">{currentStep.hint}</div>
             </div>
           </div>
-          <div className="text-[11px] font-mono text-muted-foreground hidden sm:block">
+          <div className="text-[11px] font-mono text-muted-foreground hidden sm:block shrink-0">
             {Math.round(((idx + 1) / STEPS.length) * 100)}%
           </div>
         </div>
@@ -96,34 +100,41 @@ export default function IAExcelImportPage() {
             const active = i === idx;
             const done = i < idx;
             return (
-              <li
-                key={s.key}
-                className={cn(
-                  'flex items-center gap-2 rounded-lg px-2.5 py-2 border transition-colors',
-                  active && 'border-primary/40 bg-primary/5',
-                  done && 'border-success/30 bg-success-soft/40',
-                  !active && !done && 'border-border bg-muted/20',
-                )}
-              >
-                <span
-                  className={cn(
-                    'h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-mono font-semibold shrink-0',
-                    active && 'bg-primary text-primary-foreground',
-                    done && 'bg-success text-success-foreground',
-                    !active && !done && 'bg-muted text-muted-foreground',
-                  )}
-                >
-                  {done ? <FontAwesomeIcon icon={faCircleCheck} className="h-2.5 w-2.5" /> : i + 1}
-                </span>
-                <span
-                  className={cn(
-                    'text-[11px] font-medium truncate',
-                    active ? 'text-foreground' : done ? 'text-success' : 'text-muted-foreground',
-                  )}
-                >
-                  {s.short}
-                </span>
-              </li>
+              <Tooltip key={s.key}>
+                <TooltipTrigger asChild>
+                  <li
+                    className={cn(
+                      'flex items-center gap-2 rounded-lg px-2.5 py-2 border transition-colors cursor-help',
+                      active && 'border-primary/40 bg-primary/5',
+                      done && 'border-success/30 bg-success-soft/40',
+                      !active && !done && 'border-border bg-muted/20',
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-mono font-semibold shrink-0',
+                        active && 'bg-primary text-primary-foreground',
+                        done && 'bg-success text-success-foreground',
+                        !active && !done && 'bg-muted text-muted-foreground',
+                      )}
+                    >
+                      {done ? <FontAwesomeIcon icon={faCircleCheck} className="h-2.5 w-2.5" /> : i + 1}
+                    </span>
+                    <span
+                      className={cn(
+                        'text-[11px] font-medium truncate',
+                        active ? 'text-foreground' : done ? 'text-success' : 'text-muted-foreground',
+                      )}
+                    >
+                      {s.short}
+                    </span>
+                  </li>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[260px] text-xs">
+                  <div className="font-semibold mb-0.5">{s.label}</div>
+                  <div className="text-muted-foreground">{s.hint}</div>
+                </TooltipContent>
+              </Tooltip>
             );
           })}
         </ol>
@@ -158,6 +169,7 @@ export default function IAExcelImportPage() {
               onDeleteTemplate={im.removeMappingTemplate}
               detectedTemplate={state.detectedTemplate}
               onDismissDetected={im.dismissDetectedTemplate}
+              samplesByHeader={state.samplesByHeader}
             />
           </div>
           {!hasNameMapping && (
@@ -170,8 +182,10 @@ export default function IAExcelImportPage() {
             backLabel="Trocar arquivo"
             onBack={im.back}
             nextLabel="Definir estratégia"
+            nextHint="Próximo: escolher o que fazer quando o telefone do lead já existir no CRM."
             onNext={im.goToStrategy}
             nextDisabled={!hasNameMapping}
+            disabledReason="Mapeie ao menos uma coluna como Nome para continuar."
           />
         </div>
       )}
@@ -198,6 +212,7 @@ export default function IAExcelImportPage() {
             mappings={state.mappings}
             onUpdateField={im.updateRowField}
             onRemap={im.remapAndRevalidate}
+            samplesByHeader={state.samplesByHeader}
           />
           <FlowActions
             backLabel="Voltar à estratégia"
@@ -247,29 +262,50 @@ export default function IAExcelImportPage() {
           <Button variant="outline" onClick={im.reset}>Recomeçar</Button>
         </div>
       )}
+      </TooltipProvider>
     </IAPageShell>
   );
 }
 
 function FlowActions({
-  backLabel, onBack, nextLabel, onNext, nextDisabled,
+  backLabel, onBack, nextLabel, onNext, nextDisabled, nextHint, disabledReason,
 }: {
   backLabel: string;
   onBack: () => void;
   nextLabel: string;
   onNext: () => void;
   nextDisabled?: boolean;
+  nextHint?: string;
+  disabledReason?: string;
 }) {
+  const button = (
+    <Button onClick={onNext} disabled={nextDisabled} className="gap-2">
+      {nextLabel}
+      <FontAwesomeIcon icon={faArrowRight} className="h-3.5 w-3.5" />
+    </Button>
+  );
+  const tooltipText = nextDisabled && disabledReason ? disabledReason : nextHint;
   return (
     <div className="flex items-center justify-between gap-3 pt-1">
       <Button variant="ghost" onClick={onBack} className="gap-2">
         <FontAwesomeIcon icon={faArrowLeft} className="h-3 w-3" />
         {backLabel}
       </Button>
-      <Button onClick={onNext} disabled={nextDisabled} className="gap-2">
-        {nextLabel}
-        <FontAwesomeIcon icon={faArrowRight} className="h-3.5 w-3.5" />
-      </Button>
+      <div className="flex flex-col items-end gap-1">
+        {tooltipText ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-block">{button}</span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[280px] text-xs">
+              {tooltipText}
+            </TooltipContent>
+          </Tooltip>
+        ) : button}
+        {nextHint && !nextDisabled && (
+          <span className="text-[10.5px] text-muted-foreground hidden sm:inline">{nextHint}</span>
+        )}
+      </div>
     </div>
   );
 }

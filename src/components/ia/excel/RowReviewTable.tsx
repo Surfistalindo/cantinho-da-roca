@@ -18,6 +18,7 @@ interface RowReviewTableProps {
   mappings: ColumnMapping[];
   onUpdateField: (rowIndex: number, field: keyof NormalizedLeadRow['data'], value: unknown) => void;
   onRemap: (mappings: ColumnMapping[]) => void;
+  samplesByHeader?: Record<string, unknown[]>;
 }
 
 type Filter = 'all' | 'errors' | 'warnings' | 'valid';
@@ -51,7 +52,7 @@ function getCellState(row: NormalizedLeadRow, field: keyof NormalizedLeadRow['da
 }
 
 export default function RowReviewTable({
-  rows, duplicates, mappings, onUpdateField, onRemap,
+  rows, duplicates, mappings, onUpdateField, onRemap, samplesByHeader,
 }: RowReviewTableProps) {
   const [filter, setFilter] = useState<Filter>('all');
   const [panelOpen, setPanelOpen] = useState(false);
@@ -210,6 +211,7 @@ export default function RowReviewTable({
         onOpenChange={setPanelOpen}
         mappings={mappings}
         onApply={onRemap}
+        samplesByHeader={samplesByHeader}
       />
     </div>
   );

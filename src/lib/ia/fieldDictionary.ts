@@ -24,6 +24,18 @@ export const CRM_FIELD_LABELS: Record<CrmFieldKey, string> = {
   ignore: 'Ignorar',
 };
 
+/** Descrição curta de cada campo do CRM, usada em tooltips e itens de Select. */
+export const CRM_FIELD_DESCRIPTIONS: Record<CrmFieldKey, string> = {
+  name: 'Nome principal do lead. Aparece no card e nas mensagens de WhatsApp.',
+  phone: 'WhatsApp ou celular. Será normalizado para o formato +55 automaticamente.',
+  origin: 'Canal de captação do lead (loja, marca, campanha, mídia).',
+  product_interest: 'O que o lead quer comprar ou pediu informações sobre.',
+  status: 'Etapa atual no funil (novo, em contato, negociação, vendido…).',
+  next_contact_at: 'Data agendada para o próximo contato ou follow-up.',
+  notes: 'Observações livres do vendedor sobre o lead.',
+  ignore: 'Esta coluna não será importada para o CRM.',
+};
+
 export const FIELD_DICTIONARY: Record<Exclude<CrmFieldKey, 'ignore'>, string[]> = {
   name: [
     'nome', 'cliente', 'clientes', 'lead', 'razaosocial', 'comprador', 'pessoa',

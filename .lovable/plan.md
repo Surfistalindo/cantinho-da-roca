@@ -1,47 +1,93 @@
-## Problema
 
-Em telas largas (1920×1080), a hero `StaticImageHero` apresenta dois problemas visíveis no print do usuário:
+# Mapeamento autoexplicativo — Importação Excel
 
-1. **Conteúdo sobrepõe os produtos da imagem**: o texto + CTAs ficam centralizados (`max-w-3xl` + `justify-center`) bem em cima do bule, do pote de mel e da sacola "Cantim da Roça" — protagonistas visuais do hero.
-2. **Quebra de linha forçada esquisita**: `<br className="hidden sm:block">` força "Sabores e cuidados" / "direto da roça para você" em duas linhas, o que em desktop deixa a linha 2 muito longa e desalinhada.
-3. **`bg-center` em ultrawide** mantém os produtos à direita parcialmente cortados, e a parte esquerda (janela com luz) some sob o overlay escuro.
-4. **`sm:justify-end`** ancora tudo no rodapé deixando metade da tela vazia em monitores 1080p.
+Objetivo: qualquer usuário (mesmo sem treino) deve entender, só de olhar a tela, **o que cada coluna significa, por que a IA sugeriu aquele campo e o que vai acontecer ao clicar em "Definir estratégia"**. Sem precisar perguntar nada.
 
-## Correções
+## O que muda
 
-Editar **`src/components/landing/StaticImageHero.tsx`**:
+### 1. Cabeçalho do painel "Mapeamento de colunas" (mais informativo)
+- Título mantido, mas com **ícone de info** ao lado abrindo tooltip explicando: "Cada linha representa uma coluna da sua planilha. Escolha qual campo do CRM ela vai preencher."
+- Substituir "11 m" truncado por **chip claro**: `11/12 mapeadas` + tooltip "1 coluna será ignorada na importação".
+- Adicionar **mini-legenda** logo abaixo do subtítulo (uma linha, ícones pequenos):
+  - 🟢 Auto ≥ 85% — alta confiança
+  - 🔵 Auto 60–84% — confira
+  - 🟡 Auto < 60% — revise
+  - ✦ IA — sugerido pelo modelo
+  - ✱ Obrigatório — necessário para importar
 
-### A. Layout split em desktop (`lg:` ≥ 1024px)
-- Texto, CTAs e hint passam a alinhar à **esquerda** em `lg+`, deixando o lado direito livre para os produtos da foto respirarem.
-- `items-center justify-center sm:justify-end` em mobile/tablet vira `lg:items-start lg:justify-center` em desktop.
-- `max-w-3xl text-center` em mobile vira `lg:max-w-2xl lg:text-left`.
-- Padding lateral aumenta no desktop: `lg:px-16 xl:px-24`.
+### 2. Cada linha de coluna (CLIENTE, CONTATO, LOJA…) ganha:
+- **Amostra de valores reais** (até 3 exemplos da planilha) em fonte mono cinza, logo abaixo do nome da coluna. Ex.: `"João Silva", "Maria Costa", "Pedro Lima"`. É o que mais ajuda a entender de relance.
+- **Tooltip ao passar o mouse no badge de confiança** explicando *por que* aquele percentual: "Header 'CLIENTE' bate com sinônimos de Nome (cliente, lead, comprador). Conteúdo confirma: textos com nomes próprios."
+- **Tooltip ao passar o mouse no campo destino (Select)** explicando o campo escolhido: ex. `Nome` → "Nome principal do lead. Aparece no card e no WhatsApp."
+- **Badge "IA" vs "Auto"** com tooltip: Auto = casamento por dicionário; IA = sugerido pelo modelo Lovable AI analisando os valores.
+- Linhas **ignoradas** ganham texto cinza explicativo: "Esta coluna não será importada" + link "Mapear mesmo assim".
 
-### B. Background reposicionado em wide
-- Mantém `bg-center` em ≤ md.
-- Em `lg+` muda para `bg-[position:75%_center]` (xl: `80%_center`) — empurra a câmera para a direita, deixando a janela e o produto da direita melhor enquadrados, e abre a região esquerda como "área para o texto".
+### 3. Tooltips nos itens do Select de destino
+Cada `SelectItem` (Nome, Telefone, Origem, Produto/Interesse, Status, Próximo contato, Observações, Ignorar) com micro-descrição cinza abaixo do label dentro do menu:
+- **Nome** — Nome do lead/cliente
+- **Telefone** — WhatsApp ou celular (será normalizado para +55)
+- **Origem** — Canal de captação (loja, marca, campanha)
+- **Produto / Interesse** — O que o lead quer comprar
+- **Status** — Etapa do funil (novo, negociação, vendido…)
+- **Próximo contato** — Data de retorno/follow-up
+- **Observações** — Notas livres do vendedor
+- **Ignorar** — Não importar esta coluna
 
-### C. Overlay direcional
-- Em mobile permanece o gradiente vertical atual (`from-black/15 via-black/25 to-black/75`).
-- Em `lg+` adiciona um gradiente **horizontal** (`lg:bg-gradient-to-r lg:from-black/70 lg:via-black/45 lg:to-transparent`) que escurece só o lado esquerdo onde o texto vive, mantendo os produtos à direita totalmente visíveis sem véu.
+### 4. Botão "Definir estratégia" autoexplicativo
+- Adicionar **subtítulo** abaixo do botão (ou tooltip): "Próximo passo: escolher o que fazer com leads duplicados (telefone repetido)."
+- Quando desabilitado por falta de Nome, **tooltip explica o motivo** ao passar o mouse no botão.
 
-### D. Tipografia
-- Remover o `<br className="hidden sm:block">` forçado — deixar o título quebrar naturalmente respeitando `max-w-2xl`.
-- Reduzir um passo no desktop: `lg:text-6xl xl:text-7xl` (estava `lg:text-7xl`) para caber bem em duas linhas alinhadas à esquerda.
+### 5. Stepper no topo (já existe) ganha tooltips
+Cada item do stepper (Upload, Preview, Mapeamento, Estratégia, Revisão, Duplicados, Resultado) com tooltip de 1 linha descrevendo o que acontece naquela etapa. Útil para o usuário saber o que vem depois.
 
-### E. Pequenos ajustes de espaçamento
-- `pb-12 sm:pb-24 lg:pb-0` (sem ancorar no rodapé em desktop, o `justify-center` cuida).
-- `mt-12 sm:mt-16 lg:mt-20` no hint "Role para descobrir", justificado à esquerda em desktop.
+### 6. Painel lateral "Ajustar mapeamento" (InlineMappingPanel)
+Mesmas melhorias: amostras de valores + tooltips nos campos, para manter consistência quando o usuário reabre na revisão.
 
-## Resultado esperado
+## Arquivos afetados
 
-| Breakpoint | Resultado |
-|---|---|
-| Mobile / tablet | Sem mudança visual — mesmo layout centralizado atual. |
-| Desktop ≥1024 | Texto à esquerda com gradiente escurecendo só esse lado; produtos da direita 100% visíveis e protagonizando. |
-| Ultrawide 1920+ | Foto reenquadrada (75–80%), produtos respirando, conteúdo numa coluna confortável à esquerda. |
+- `src/components/ia/excel/ColumnMapper.tsx` — cabeçalho, legenda, amostras por linha, tooltips de confiança e destino, tratamento visual de "ignorar"
+- `src/components/ia/excel/InlineMappingPanel.tsx` — mesmas amostras + tooltips
+- `src/pages/admin/ia/IAExcelImportPage.tsx` — tooltips no stepper, subtítulo/tooltip no botão "Definir estratégia"
+- `src/lib/ia/fieldDictionary.ts` — adicionar `CRM_FIELD_DESCRIPTIONS` (mapa de descrições curtas usadas nos tooltips e itens do Select)
+- `src/hooks/useExcelImport.ts` — expor `samplesByHeader` (já é montado internamente para a heurística) para o `ColumnMapper` consumir
 
-## Fora do escopo
-- Trocar a imagem do hero.
-- Refatorar outras seções (BenefitsSection, ProductsSection etc).
-- Adicionar variação de hero por dispositivo.
+## Detalhes técnicos
+
+- Usar `<Tooltip>` do `@/components/ui/tooltip` (já presente no projeto). Wrapper único em volta do painel para evitar múltiplos providers.
+- `samplesByHeader` já é construído por `buildSamplesByHeader` em `columnMapper.ts`. Persistir em `state.samplesByHeader` no hook e passar ao `ColumnMapper` como prop opcional. Fallback: derivar on-demand de `state.parsed.rows`.
+- Descrições centralizadas:
+  ```ts
+  export const CRM_FIELD_DESCRIPTIONS: Record<CrmFieldKey, string> = {
+    name: 'Nome do lead/cliente',
+    phone: 'WhatsApp ou celular (normalizado para +55)',
+    origin: 'Canal de captação (loja, marca, campanha)',
+    product_interest: 'O que o lead quer comprar',
+    status: 'Etapa do funil (novo, negociação, vendido…)',
+    next_contact_at: 'Data de retorno/follow-up',
+    notes: 'Notas livres do vendedor',
+    ignore: 'Não importar esta coluna',
+  };
+  ```
+- Geração da explicação do badge de confiança:
+  - Se `suggestedBy === 'heuristic'`: "Casou com sinônimos de **{Campo}** no dicionário."
+  - Se `suggestedBy === 'ai'`: "Sugerido pela IA analisando o conteúdo."
+  - Se `suggestedBy === 'manual'`: "Definido manualmente."
+- Amostras: pegar até 3 valores não vazios, truncar cada um em 28 chars com `…`.
+- Sem novas dependências. Sem mudanças no backend.
+
+## Layout (linha de mapeamento, depois)
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│ CLIENTE                                    [Auto · 100% ⓘ]  │
+│ "João Silva", "Maria Costa", "Pedro Lima"   [✱ Obrigatório] │
+│                                            ┌──────────────┐ │
+│                                            │ Nome      ⓘ │ │
+│                                            └──────────────┘ │
+└──────────────────────────────────────────────────────────────┘
+```
+
+## Fora de escopo
+- Não alterar a heurística nem o edge function `ia-suggest-mapping`.
+- Não mudar o fluxo de etapas nem o visual do stepper além dos tooltips.
+- Sem mudanças nas demais telas do CRM.
