@@ -533,7 +533,7 @@ export default function LeadsPage() {
                   const renderGroup = (items: typeof filtered) => (
                     <div className="overflow-x-auto crm-dense-table">
                       <Table>
-                        {renderHeader()}
+                        {renderHeader(items.map((i) => i.id))}
                         <TableBody>{renderRows(items)}</TableBody>
                       </Table>
                     </div>
