@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MSym } from './MSym';
 import ThemeToggle from './ThemeToggle';
+import HelpButton from '@/components/tutorial/HelpButton';
 import { cn } from '@/lib/utils';
 
 const ROUTE_LABELS: Record<string, string> = {
@@ -40,9 +41,10 @@ const IA_SUB_LABELS: Record<string, string> = {
 
 interface Props {
   onOpenPalette?: () => void;
+  onShowHelp?: () => void;
 }
 
-export default function AdminNavbar({ onOpenPalette }: Props) {
+export default function AdminNavbar({ onOpenPalette, onShowHelp }: Props) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -159,6 +161,8 @@ export default function AdminNavbar({ onOpenPalette }: Props) {
           </Tooltip>
 
           <ThemeToggle />
+
+          <HelpButton onOpenShortcuts={() => onShowHelp?.()} variant="navbar" />
 
           <Tooltip>
             <TooltipTrigger asChild>

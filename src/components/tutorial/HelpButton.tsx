@@ -7,9 +7,11 @@ import Glossary from './Glossary';
 interface Props {
   /** Abre o painel de atalhos (compartilhado com Cmd+/) */
   onOpenShortcuts: () => void;
+  /** Variante visual: 'navbar' (discreto, inline) ou 'floating' (FAB) */
+  variant?: 'navbar' | 'floating';
 }
 
-export default function HelpButton({ onOpenShortcuts }: Props) {
+export default function HelpButton({ onOpenShortcuts, variant = 'navbar' }: Props) {
   const { currentTour, start, isCompleted } = useTutorial();
   const [open, setOpen] = useState(false);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
@@ -19,9 +21,15 @@ export default function HelpButton({ onOpenShortcuts }: Props) {
 
   const handleStartTour = () => {
     setOpen(false);
-    // pequeno delay para o popover fechar antes do overlay subir
     setTimeout(() => start(currentTour), 50);
   };
+
+  const triggerClass =
+    variant === 'floating'
+      ? 'fixed bottom-4 right-4 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-primary/40 hover:scale-105 hover:shadow-xl transition-all'
+      : 'relative h-9 w-9 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors';
+
+  const iconSize = variant === 'floating' ? 'h-5 w-5' : 'h-4 w-4';
 
   return (
     <>
@@ -31,13 +39,18 @@ export default function HelpButton({ onOpenShortcuts }: Props) {
             type="button"
             data-tour="help-button"
             aria-label="Ajuda e tutoriais"
-            className="fixed bottom-4 right-4 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-primary/40 hover:scale-105 hover:shadow-xl transition-all"
+            title="Ajuda e tutoriais"
+            className={triggerClass}
           >
-            <HelpCircle className="h-5 w-5" strokeWidth={2.25} />
+            <HelpCircle className={iconSize} strokeWidth={2.25} />
             {isNew && (
               <span
                 aria-hidden
-                className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-orange-500 ring-2 ring-background"
+                className={
+                  variant === 'floating'
+                    ? 'absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-orange-500 ring-2 ring-background'
+                    : 'absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-orange-500 ring-1 ring-background'
+                }
               />
             )}
           </button>
@@ -45,8 +58,8 @@ export default function HelpButton({ onOpenShortcuts }: Props) {
 
         <PopoverContent
           align="end"
-          side="top"
-          sideOffset={12}
+          side="bottom"
+          sideOffset={8}
           className="w-[300px] p-2 rounded-xl border-border shadow-xl"
         >
           <div className="px-2 pt-1.5 pb-2">
