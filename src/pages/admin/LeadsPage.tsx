@@ -21,6 +21,8 @@ import BulkActionsBar from '@/components/admin/BulkActionsBar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import { useInteractionCounts } from '@/hooks/useInteractionCounts';
+import { useLeadsPaged, useResetPagesOn } from '@/hooks/useLeadsPaged';
+import LeadsPagination from '@/components/admin/leads/LeadsPagination';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -118,7 +120,8 @@ export default function LeadsPage() {
     return () => window.removeEventListener('crm:new-lead', h);
   }, []);
 
-  const interactionCounts = useInteractionCounts(leads.map((l) => l.id));
+  const leadIds = useMemo(() => leads.map((l) => l.id), [leads]);
+  const interactionCounts = useInteractionCounts(leadIds);
 
   useEffect(() => {
     const recency = searchParams.get('recency') as RecencyFilter | null;
@@ -187,8 +190,11 @@ export default function LeadsPage() {
     setFetchError(null);
     const { data, error } = await supabase
       .from('leads')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select(
+        'id,name,phone,status,origin,product_interest,last_contact_at,next_contact_at,notes,created_at,updated_at,ai_score,ai_priority,ai_score_reason,ai_summary',
+      )
+      .order('created_at', { ascending: false })
+      .limit(2000);
     if (error) {
       setFetchError(new Error(error.message ?? 'Erro ao carregar leads'));
     } else {
