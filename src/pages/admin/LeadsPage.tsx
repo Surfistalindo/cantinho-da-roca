@@ -205,7 +205,7 @@ export default function LeadsPage() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="max-w-7xl mx-auto space-y-7">
+      <div className="max-w-[1600px] mx-auto space-y-3">
         <PageHeader
           title="Leads"
           description="Central comercial — acompanhe, filtre e gerencie todos os leads em um só lugar."
@@ -229,7 +229,7 @@ export default function LeadsPage() {
           }
         />
 
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
+        <div className="board-panel crm-dense-table p-3">
           <LeadFilters
             search={search}
             onSearchChange={setSearch}
@@ -288,8 +288,7 @@ export default function LeadsPage() {
                         <TableRow
                           key={lead.id}
                           className={cn(
-                            'group cursor-pointer h-14 border-border/60',
-                            idx % 2 === 1 && 'bg-muted/30',
+                            'group cursor-pointer border-border/60',
                             isNewest && '!bg-primary/5 hover:!bg-primary/10',
                             score.urgent && 'border-l-2 border-l-destructive',
                           )}

@@ -180,7 +180,7 @@ export default function ClientsPage() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="max-w-7xl mx-auto space-y-7">
+      <div className="max-w-[1600px] mx-auto space-y-3">
         <PageHeader
           title={reactivationMode ? 'Painel de reativação' : 'Clientes'}
           description={
@@ -203,17 +203,17 @@ export default function ClientsPage() {
 
         {/* KPIs de ciclo de vida */}
         {customers.length > 0 && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
             {kpiCards.map((c) => (
-              <div key={c.label} className="bg-card rounded-2xl border border-border p-4 shadow-soft">
-                <div className="flex items-center gap-3">
-                  <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', c.accent)}>
-                    <FontAwesomeIcon icon={c.icon} className="w-4 h-4" />
+              <div key={c.label} className="bg-card rounded-lg border border-border p-3">
+                <div className="flex items-center gap-2.5">
+                  <div className={cn('w-8 h-8 rounded-md flex items-center justify-center', c.accent)}>
+                    <FontAwesomeIcon icon={c.icon} className="w-3.5 h-3.5" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{c.label}</p>
-                    <p className="text-xl font-semibold tabular-nums leading-tight">
-                      {c.value} <span className="text-xs font-normal text-muted-foreground">({c.pct}%)</span>
+                    <p className="text-[16px] font-semibold tabular-nums leading-tight">
+                      {c.value} <span className="text-[11px] font-normal text-muted-foreground">({c.pct}%)</span>
                     </p>
                   </div>
                 </div>
@@ -222,7 +222,7 @@ export default function ClientsPage() {
           </div>
         )}
 
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
+        <div className="board-panel crm-dense-table p-3">
           <ClientFilters
             search={search}
             onSearchChange={setSearch}
@@ -264,7 +264,7 @@ export default function ClientsPage() {
                     return (
                       <TableRow
                         key={c.id}
-                        className={cn('group cursor-pointer h-14 border-border/60', idx % 2 === 1 && 'bg-muted/30')}
+                        className={cn('group cursor-pointer border-border/60')}
                         onClick={() => openDetail(c)}
                       >
                         <TableCell className="font-medium">
