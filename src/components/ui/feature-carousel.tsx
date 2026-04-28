@@ -172,7 +172,7 @@ export function FeatureCarousel() {
                       "relative flex items-center gap-4 px-6 md:px-10 lg:px-8 py-3.5 md:py-5 lg:py-4 rounded-full transition-all duration-700 text-left group border w-full",
                       isActive
                         ? "bg-primary text-primary-foreground border-primary z-10 shadow-lg"
-                        : "bg-card/60 text-foreground/70 border-border hover:bg-card hover:border-primary/50 hover:text-foreground"
+                        : "bg-transparent text-foreground/60 border-border/40 hover:border-primary/40 hover:text-foreground"
                     )}
                   >
                     <span className={cn(
