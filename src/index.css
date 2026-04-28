@@ -209,16 +209,16 @@
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
-  /* CRM typography scale — exact spec from Premium CRM System */
+  /* CRM typography scale — densificada estilo Monday/Linear */
   .font-crm {
     font-family: var(--font-crm-body);
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 13px;
+    line-height: 18px;
     letter-spacing: 0;
   }
   .font-crm h1, .font-crm .text-h1 {
     font-family: var(--font-crm-display);
-    font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -0.01em;
+    font-size: 18px; line-height: 24px; font-weight: 600; letter-spacing: -0.01em;
   }
   .font-crm h2, .font-crm .text-h2 {
     font-family: var(--font-crm-display);
