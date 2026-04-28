@@ -43,12 +43,12 @@ export default function Navbar({ scrollY }: NavbarProps) {
         className="absolute inset-0 bg-[#f7f5f0]/85 backdrop-blur-xl shadow-lg shadow-black/[0.03]"
         style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}
       />
-      <div className="section-container relative flex items-center justify-between h-16 sm:h-20">
-        <div className="flex items-center h-full">
+      <div className="section-container relative flex items-center justify-between h-16 sm:h-20 overflow-visible">
+        <div className="flex items-center justify-start h-full shrink-0">
           <img
             src={logo}
             alt="Cantinho da Roça"
-            className="h-32 sm:h-40 md:h-48 w-auto -my-8"
+            className="h-24 sm:h-32 md:h-40 w-auto block object-contain origin-left"
             style={{
               opacity: showNavbar ? 1 : 0,
               transform: showNavbar ? 'scale(1)' : 'scale(0.8)',
