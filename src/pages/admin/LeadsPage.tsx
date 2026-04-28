@@ -632,6 +632,12 @@ export default function LeadsPage() {
 
         <LeadDetailSheet lead={selectedLead} open={sheetOpen} onOpenChange={setSheetOpen} onUpdated={fetchLeads} />
         <NewLeadDialog open={newOpen} onOpenChange={setNewOpen} onCreated={fetchLeads} />
+        <BulkActionsBar
+          count={selected.size}
+          onClear={clearSelection}
+          onChangeStatus={bulkChangeStatus}
+          onDelete={bulkDelete}
+        />
       </div>
     </TooltipProvider>
   );
