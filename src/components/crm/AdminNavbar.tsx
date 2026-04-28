@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MSym } from './MSym';
 import ThemeToggle from './ThemeToggle';
+import HelpButton from '@/components/tutorial/HelpButton';
 import { cn } from '@/lib/utils';
 
 const ROUTE_LABELS: Record<string, string> = {
