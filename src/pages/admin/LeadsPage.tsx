@@ -77,6 +77,7 @@ const VIEW_KEY = 'crm:leads:view';
 export default function LeadsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const url = useLeadsUrlState();
+  const tableGroupScrollRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<Error | null>(null);
@@ -422,6 +423,43 @@ export default function LeadsPage() {
     toast.success(`Filtro "${f.name}" aplicado`);
   };
 
+  const getVisibleTableScroller = useCallback(() => {
+    if (typeof window === 'undefined') return null;
+
+    return Object.values(tableGroupScrollRefs.current)
+      .filter((node): node is HTMLDivElement => Boolean(node && node.offsetParent !== null))
+      .map((node) => ({
+        node,
+        rect: node.getBoundingClientRect(),
+      }))
+      .filter(({ rect }) => rect.bottom > 0 && rect.top < window.innerHeight)
+      .sort((a, b) => Math.abs(a.rect.top) - Math.abs(b.rect.top))[0]?.node ?? null;
+  }, []);
+
+  const forwardWheelToLeadTable = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+    if (view !== 'table') return;
+
+    const scroller = getVisibleTableScroller();
+    if (!scroller) return;
+
+    const canScrollY = event.deltaY < 0
+      ? scroller.scrollTop > 0
+      : scroller.scrollTop + scroller.clientHeight < scroller.scrollHeight - 1;
+
+    const canScrollX = event.deltaX < 0
+      ? scroller.scrollLeft > 0
+      : scroller.scrollLeft + scroller.clientWidth < scroller.scrollWidth - 1;
+
+    if (!canScrollY && !canScrollX) return;
+
+    event.preventDefault();
+    scroller.scrollBy({
+      top: event.deltaY,
+      left: event.deltaX,
+      behavior: 'auto',
+    });
+  }, [getVisibleTableScroller, view]);
+
   const rowPad = density === 'compact' ? 'h-9' : 'h-12';
 
   if (loading) return <LoadingState />;
@@ -429,66 +467,68 @@ export default function LeadsPage() {
   return (
     <TooltipProvider delayDuration={200}>
       <div className="max-w-[1600px] mx-auto space-y-3">
-        <PageHeader
-          title="Leads"
-          description="Central comercial — acompanhe, filtre, mova e gerencie todos os leads."
-          actions={
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <div data-tour="leads-view-toggle">
-                <LeadsViewSwitcher view={view} onChange={setView} />
-              </div>
-              {view === 'table' && (
-                <div className="hidden sm:flex items-center rounded-md border border-border p-0.5 bg-card">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => setDensity('comfortable')}
-                        className={cn('h-7 w-7 rounded flex items-center justify-center transition-colors',
-                          density === 'comfortable' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
-                        aria-label="Densidade confortável"
-                      >
-                        <FontAwesomeIcon icon={faTableCellsLarge} className="h-3 w-3" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Densidade confortável</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => setDensity('compact')}
-                        className={cn('h-7 w-7 rounded flex items-center justify-center transition-colors',
-                          density === 'compact' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
-                        aria-label="Densidade compacta"
-                      >
-                        <FontAwesomeIcon icon={faTableList} className="h-3 w-3" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Densidade compacta</TooltipContent>
-                  </Tooltip>
+        <div onWheel={forwardWheelToLeadTable}>
+          <PageHeader
+            title="Leads"
+            description="Central comercial — acompanhe, filtre, mova e gerencie todos os leads."
+            actions={
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <div data-tour="leads-view-toggle">
+                  <LeadsViewSwitcher view={view} onChange={setView} />
                 </div>
-              )}
-              <Button variant="outline" size="sm" className="h-9" onClick={exportFiltered}>
-                <FontAwesomeIcon icon={faDownload} className="h-3.5 w-3.5 mr-1.5" />
-                <span className="hidden sm:inline">Exportar</span>
-              </Button>
-              <Button onClick={() => { setNewDefaultStatus('new'); setNewOpen(true); }} size="sm" className="h-9 shadow-sm">
-                <FontAwesomeIcon icon={faPlus} className="h-3.5 w-3.5 mr-1.5" />
-                Novo
-              </Button>
-            </div>
-          }
-          meta={
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="font-medium tabular-nums">{filtered.length}</span>
-              <span>resultado{filtered.length === 1 ? '' : 's'}</span>
-              {activeKpi && (
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-0 ml-1">
-                  filtro ativo · {activeKpi}
-                </Badge>
-              )}
-            </div>
-          }
-        />
+                {view === 'table' && (
+                  <div className="hidden sm:flex items-center rounded-md border border-border p-0.5 bg-card">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => setDensity('comfortable')}
+                          className={cn('h-7 w-7 rounded flex items-center justify-center transition-colors',
+                            density === 'comfortable' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
+                          aria-label="Densidade confortável"
+                        >
+                          <FontAwesomeIcon icon={faTableCellsLarge} className="h-3 w-3" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Densidade confortável</TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => setDensity('compact')}
+                          className={cn('h-7 w-7 rounded flex items-center justify-center transition-colors',
+                            density === 'compact' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground')}
+                          aria-label="Densidade compacta"
+                        >
+                          <FontAwesomeIcon icon={faTableList} className="h-3 w-3" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>Densidade compacta</TooltipContent>
+                    </Tooltip>
+                  </div>
+                )}
+                <Button variant="outline" size="sm" className="h-9" onClick={exportFiltered}>
+                  <FontAwesomeIcon icon={faDownload} className="h-3.5 w-3.5 mr-1.5" />
+                  <span className="hidden sm:inline">Exportar</span>
+                </Button>
+                <Button onClick={() => { setNewDefaultStatus('new'); setNewOpen(true); }} size="sm" className="h-9 shadow-sm">
+                  <FontAwesomeIcon icon={faPlus} className="h-3.5 w-3.5 mr-1.5" />
+                  Novo
+                </Button>
+              </div>
+            }
+            meta={
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="font-medium tabular-nums">{filtered.length}</span>
+                <span>resultado{filtered.length === 1 ? '' : 's'}</span>
+                {activeKpi && (
+                  <Badge variant="secondary" className="bg-primary/10 text-primary border-0 ml-1">
+                    filtro ativo · {activeKpi}
+                  </Badge>
+                )}
+              </div>
+            }
+          />
+        </div>
 
         <LeadsKpiStrip
           leads={leads}
@@ -721,6 +761,7 @@ export default function LeadsPage() {
                       return (
                         <>
                           <div
+                            ref={(node) => { tableGroupScrollRefs.current[groupKey] = node; }}
                             className="overflow-x-auto overflow-y-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full"
                             style={{ maxHeight: 'calc(100vh - 280px)' }}
                           >
