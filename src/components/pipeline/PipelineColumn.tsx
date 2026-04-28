@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faFire } from '@fortawesome/free-solid-svg-icons';
 import { APP_CONFIG } from '@/config/app';
-import { getLeadStatusConfig } from '@/lib/leadStatus';
 import { compareByScore, getLeadScore } from '@/lib/leadScore';
 import { cn } from '@/lib/utils';
 
@@ -30,10 +29,21 @@ interface Props {
   interactionCounts?: Record<string, number>;
 }
 
+/** Cor sólida da coluna (Monday-style: cabeçalho pintado inteiro). */
+const HEADER_COLOR: Record<string, string> = {
+  new:         'bg-[hsl(var(--status-working))]',  // azul claro
+  contacting:  'bg-[hsl(var(--status-progress))]', // azul
+  negotiating: 'bg-[hsl(var(--status-paused))]',   // laranja
+  won:         'bg-[hsl(var(--status-done))]',     // verde
+  lost:        'bg-[hsl(var(--status-blocked))]',  // vermelho
+};
+
 export default function PipelineColumn({ status, leads, onLeadClick, onAddLead, interactionCounts }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
-  const cfg = getLeadStatusConfig(status);
   const label = APP_CONFIG.leadStatuses.find((s) => s.value === status)?.label ?? status;
+  const headerColor = HEADER_COLOR[status] ?? 'bg-[hsl(var(--status-neutral))]';
+  // negotiating uses dark text since orange is light
+  const isLightHeader = status === 'negotiating';
 
   const { sortedLeads, hotCount } = useMemo(() => {
     const enriched = leads.map((l) => ({
@@ -50,22 +60,33 @@ export default function PipelineColumn({ status, leads, onLeadClick, onAddLead, 
       ref={setNodeRef}
       aria-label={`Coluna ${label}, ${leads.length} ${leads.length === 1 ? 'lead' : 'leads'}`}
       className={cn(
-        'rounded-lg border border-border bg-surface-2 transition-all duration-150 flex flex-col min-h-[320px]',
-        isOver && 'bg-primary/5 ring-2 ring-primary/20 border-primary/30',
+        'rounded-md border border-border bg-surface-2 transition-all duration-150 flex flex-col min-h-[320px] overflow-hidden shadow-soft',
+        isOver && 'ring-2 ring-primary/40 border-primary/40',
       )}
     >
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-2 px-2.5 py-2 border-b border-border bg-surface-3/90 backdrop-blur rounded-t-lg">
+      <div
+        className={cn(
+          'flex items-center justify-between gap-2 px-3 h-9',
+          headerColor,
+          isLightHeader ? 'text-[hsl(30_80%_14%)]' : 'text-white',
+        )}
+      >
         <div className="flex items-center gap-2 min-w-0">
-          <span className={cn('inline-flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-wide', cfg.color.replace(/bg-[^\s]+/g, ''))}>
-            <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />
+          <span className="text-[12px] font-bold uppercase tracking-wide truncate">
             {label}
           </span>
-          <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-card border border-border text-[10px] font-mono font-semibold text-muted-foreground">
+          <span className={cn(
+            'inline-flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-full text-[10.5px] font-bold tabular-nums',
+            isLightHeader ? 'bg-black/15 text-[hsl(30_80%_14%)]' : 'bg-white/25 text-white',
+          )}>
             {leads.length}
           </span>
           {hotCount > 0 && (
             <span
-              className="inline-flex items-center gap-1 h-5 px-1.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-mono font-semibold"
+              className={cn(
+                'inline-flex items-center gap-1 h-5 px-1.5 rounded-full text-[10px] font-bold',
+                isLightHeader ? 'bg-black/15 text-[hsl(30_80%_14%)]' : 'bg-white/25 text-white',
+              )}
               title={`${hotCount} lead${hotCount === 1 ? '' : 's'} de alta prioridade`}
             >
               <FontAwesomeIcon icon={faFire} className="h-2.5 w-2.5" />
@@ -77,7 +98,10 @@ export default function PipelineColumn({ status, leads, onLeadClick, onAddLead, 
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 text-muted-foreground hover:text-primary hover:bg-card"
+            className={cn(
+              'h-6 w-6 hover:bg-white/25',
+              isLightHeader ? 'text-[hsl(30_80%_14%)] hover:text-[hsl(30_80%_14%)]' : 'text-white hover:text-white',
+            )}
             onClick={() => onAddLead(status)}
             title={`Novo lead em ${label}`}
             aria-label={`Adicionar lead em ${label}`}
@@ -88,10 +112,10 @@ export default function PipelineColumn({ status, leads, onLeadClick, onAddLead, 
       </div>
 
       <SortableContext items={sortedLeads.map((l) => l.id)} strategy={verticalListSortingStrategy}>
-        <div className="space-y-2 max-h-[65vh] overflow-y-auto p-2.5">
+        <div className="space-y-2 max-h-[65vh] overflow-y-auto p-2.5 bg-surface-2">
           {sortedLeads.length === 0 && (
             <div className="text-center py-10">
-              <p className="text-xs text-muted-foreground/70">Nenhum lead</p>
+              <p className="text-xs text-muted-foreground">Nenhum lead</p>
             </div>
           )}
           {sortedLeads.map((lead) => (
