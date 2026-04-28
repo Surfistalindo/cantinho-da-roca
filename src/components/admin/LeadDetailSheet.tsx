@@ -72,7 +72,7 @@ interface Props {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h4 className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-3">
+    <h4 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/80 mb-4">
       {children}
     </h4>
   );
@@ -80,9 +80,18 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="space-y-0.5">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="text-sm font-medium text-foreground break-words">{value}</p>
+    <div className="space-y-1">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">{label}</p>
+      <p className="text-sm font-medium text-foreground break-words leading-snug">{value}</p>
+    </div>
+  );
+}
+
+function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-2.5 border-b border-border/50 last:border-0 last:pb-0 first:pt-0">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <div className="flex items-center gap-2 text-right">{children}</div>
     </div>
   );
 }
@@ -179,36 +188,44 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="overflow-y-auto sm:max-w-xl p-0 flex flex-col bg-background">
+        <SheetContent className="overflow-y-auto sm:max-w-xl p-0 flex flex-col bg-muted/30">
           {/* HEADER */}
-          <SheetHeader className="px-6 pt-6 pb-5 border-b border-border bg-card sticky top-0 z-10 space-y-0">
+          <SheetHeader className="px-7 pt-7 pb-6 border-b border-border bg-card sticky top-0 z-10 space-y-0">
             <div className="flex items-start gap-4">
               <InitialsAvatar name={lead.name} size="lg" />
               <div className="min-w-0 flex-1">
-                <SheetTitle className="text-xl font-semibold tracking-tight flex flex-wrap items-center gap-2">
-                  <span className="truncate">{lead.name}</span>
-                  <LeadStatusBadge status={lead.status} />
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <SheetTitle className="text-[22px] leading-tight font-semibold tracking-tight truncate">
+                      {lead.name}
+                    </SheetTitle>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-muted-foreground">
+                      {lead.phone && (
+                        <span className="inline-flex items-center gap-1.5">
+                          <FontAwesomeIcon icon={faPhone} className="h-3 w-3" />
+                          <span className="font-medium font-mono">{lead.phone}</span>
+                        </span>
+                      )}
+                      {lead.phone && <span className="text-border">·</span>}
+                      <span className="text-muted-foreground/80">há {createdRelative}</span>
+                    </div>
+                  </div>
                   <LeadScoreBadge lead={lead} interactionCount={interactionCount} size="md" />
-                  {lead.cadence_exhausted && (
-                    <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-destructive/10 text-destructive border border-destructive/20">
-                      Régua esgotada
-                    </span>
-                  )}
-                </SheetTitle>
-                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
-                  {lead.phone && (
-                    <span className="inline-flex items-center gap-1.5">
-                      <FontAwesomeIcon icon={faPhone} className="h-3 w-3" />
-                      <span className="font-medium font-mono">{lead.phone}</span>
-                    </span>
-                  )}
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  <LeadStatusBadge status={lead.status} />
                   <ContactRecencyBadge
                     lastContactAt={lead.last_contact_at}
                     status={lead.status}
                     createdAt={lead.created_at}
                     size="sm"
                   />
-                  <span className="text-muted-foreground/70">· Lead há {createdRelative}</span>
+                  {lead.cadence_exhausted && (
+                    <span className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide bg-destructive/10 text-destructive border border-destructive/20">
+                      Régua esgotada
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -263,20 +280,17 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
           </SheetHeader>
 
           {/* CONTEÚDO */}
-          <div className="px-6 py-6 space-y-4 flex-1">
+          <div className="px-6 py-6 space-y-5 flex-1">
             {/* Por que essa prioridade */}
             {scoreInfo && scoreInfo.level !== 'closed' && scoreInfo.reasons.length > 0 && (
               <section className={cn(
                 'rounded-2xl border p-5',
                 scoreInfo.urgent ? 'bg-destructive/5 border-destructive/20' : 'bg-card border-border',
               )}>
-                <div className="flex items-center justify-between mb-3">
-                  <SectionLabel>Por que essa prioridade</SectionLabel>
-                  <LeadScoreBadge lead={lead} interactionCount={interactionCount} size="lg" />
-                </div>
-                <ul className="space-y-1.5">
+                <SectionLabel>Por que essa prioridade</SectionLabel>
+                <ul className="space-y-2">
                   {scoreInfo.reasons.map((r, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-foreground/85">
+                    <li key={i} className="flex items-start gap-2.5 text-[13px] text-foreground/85 leading-relaxed">
                       <span className={cn('mt-1.5 h-1.5 w-1.5 rounded-full shrink-0', scoreInfo.dotClass)} />
                       <span>{r}</span>
                     </li>
@@ -288,35 +302,30 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
             {/* Status & Acompanhamento */}
             <section className="rounded-2xl bg-card border border-border p-5">
               <SectionLabel>Status & Acompanhamento</SectionLabel>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs text-muted-foreground">Status atual</span>
+              <div className="divide-y divide-border/60 -my-1">
+                <InfoRow label="Status atual">
                   <LeadStatusSelect leadId={lead.id} currentStatus={lead.status} onUpdated={() => onUpdated?.()} />
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs text-muted-foreground">Último contato</span>
-                  <div className="flex items-center gap-2 text-right">
-                    <ContactRecencyBadge
-                      lastContactAt={lead.last_contact_at}
-                      status={lead.status}
-                      createdAt={lead.created_at}
-                      size="sm"
-                    />
-                    {lead.last_contact_at && (
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(lead.last_contact_at), 'dd/MM HH:mm', { locale: ptBR })}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs text-muted-foreground">Próximo contato</span>
-                  <span className="text-xs font-medium">
+                </InfoRow>
+                <InfoRow label="Último contato">
+                  <ContactRecencyBadge
+                    lastContactAt={lead.last_contact_at}
+                    status={lead.status}
+                    createdAt={lead.created_at}
+                    size="sm"
+                  />
+                  {lead.last_contact_at && (
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {format(new Date(lead.last_contact_at), 'dd/MM HH:mm', { locale: ptBR })}
+                    </span>
+                  )}
+                </InfoRow>
+                <InfoRow label="Próximo contato">
+                  <span className="text-xs font-medium tabular-nums">
                     {lead.next_contact_at
                       ? format(new Date(lead.next_contact_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
                       : '—'}
                   </span>
-                </div>
+                </InfoRow>
               </div>
             </section>
 
