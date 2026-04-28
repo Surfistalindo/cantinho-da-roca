@@ -621,7 +621,7 @@ function DroppableWorkspaceItem({
       ref={setNodeRef}
       className={cn(
         'rounded-md transition-[background-color,box-shadow,outline] duration-crm ease-crm',
-        isOver && 'outline outline-2 outline-primary/60 outline-offset-[-2px] bg-primary/8 shadow-soft',
+        isOver && 'outline outline-2 outline-primary/50 outline-offset-[-2px] bg-primary/10 shadow-soft',
       )}
     >
       {children}
