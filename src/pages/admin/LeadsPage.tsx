@@ -214,7 +214,7 @@ export default function LeadsPage() {
   const filtered = useMemo(() => {
     const list = leads.filter((l) => {
       if (statusFilter !== 'all' && l.status !== statusFilter) return false;
-      if (originFilter !== 'all' && l.origin !== originFilter) return false;
+      if (originFilter !== 'all' && (l.origin ?? '').trim().toLowerCase() !== originFilter.trim().toLowerCase()) return false;
       if (recencyFilter !== 'all') {
         const info = getContactRecency(l.last_contact_at, l.status, l.created_at);
         if (info.level !== recencyFilter) return false;
