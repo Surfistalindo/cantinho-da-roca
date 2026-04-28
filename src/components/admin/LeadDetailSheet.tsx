@@ -72,7 +72,7 @@ interface Props {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h4 className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-3">
+    <h4 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/80 mb-4">
       {children}
     </h4>
   );
@@ -80,9 +80,18 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="space-y-0.5">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="text-sm font-medium text-foreground break-words">{value}</p>
+    <div className="space-y-1">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">{label}</p>
+      <p className="text-sm font-medium text-foreground break-words leading-snug">{value}</p>
+    </div>
+  );
+}
+
+function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-2.5 border-b border-border/50 last:border-0 last:pb-0 first:pt-0">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <div className="flex items-center gap-2 text-right">{children}</div>
     </div>
   );
 }
