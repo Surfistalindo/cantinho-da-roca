@@ -1,3 +1,4 @@
+import React from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 
 interface Props {
@@ -16,7 +17,7 @@ const TERMS: Array<{ term: string; def: string }> = [
   { term: 'Board (Quadro)', def: 'Tabela rica com colunas tipadas e grupos colapsáveis, estilo Monday.' },
 ];
 
-export default function Glossary({ open, onOpenChange }: Props) {
+const Glossary = React.forwardRef<HTMLDivElement, Props>(function Glossary({ open, onOpenChange }, _ref) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-[380px] sm:w-[420px] overflow-y-auto">
