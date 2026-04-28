@@ -367,6 +367,15 @@ export default function LeadsPage() {
     exportLeadsToCsv(items, 'leads-selecionados');
     toast.success(`${items.length} lead(s) exportado(s)`);
   };
+  const bulkAssign = async (userId: string | null, name: string | null) => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    const { error } = await supabase.from('leads').update({ assigned_to: userId }).in('id', ids);
+    if (error) { toast.error('Erro ao atribuir responsável'); return; }
+    toast.success(userId ? `${ids.length} lead(s) atribuído(s) a ${name ?? 'usuário'}` : `${ids.length} lead(s) sem responsável`);
+    clearSelection();
+    fetchLeads();
+  };
   const exportFiltered = () => {
     exportLeadsToCsv(filtered, 'leads-filtrados');
     toast.success(`${filtered.length} lead(s) exportado(s)`);
