@@ -20,6 +20,8 @@ interface Props {
   onRecencyChange?: (v: RecencyFilter) => void;
   priorityFilter?: PriorityFilter;
   onPriorityChange?: (v: PriorityFilter) => void;
+  /** Lista de origens reais presentes nos dados (sobrepõe APP_CONFIG.leadOrigins) */
+  availableOrigins?: string[];
 }
 
 export default function LeadFilters({
@@ -28,6 +30,7 @@ export default function LeadFilters({
   originFilter, onOriginChange,
   recencyFilter, onRecencyChange,
   priorityFilter, onPriorityChange,
+  availableOrigins,
 }: Props) {
   const hasFilters =
     search.length > 0 ||
@@ -102,7 +105,7 @@ export default function LeadFilters({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todas origens</SelectItem>
-          {APP_CONFIG.leadOrigins.map((o) => (
+          {(availableOrigins && availableOrigins.length > 0 ? availableOrigins : APP_CONFIG.leadOrigins).map((o) => (
             <SelectItem key={o} value={o}>{o}</SelectItem>
           ))}
         </SelectContent>

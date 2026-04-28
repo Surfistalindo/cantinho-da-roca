@@ -181,10 +181,16 @@ export function normalizeRow(
   }
 
   // Fallback: origem = nome da aba quando não veio mapeada e __sheet existe
+  // Mas evita gravar nomes de meses/datas como origem (poluiria o filtro de origem)
   if (!data.origin) {
     const sheetMeta = row['__sheet'];
     if (typeof sheetMeta === 'string' && sheetMeta.trim()) {
-      data.origin = sheetMeta.trim();
+      const candidate = sheetMeta.trim();
+      const monthRe = /^(janeiro|fevereiro|mar[çc]o|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\s*\.?\s*\/?\s*\d{0,4}/i;
+      const dateRe = /^\d{1,2}[\/\-.]\d{1,2}([\/\-.]\d{2,4})?$/;
+      if (!monthRe.test(candidate) && !dateRe.test(candidate)) {
+        data.origin = candidate;
+      }
     }
   }
 

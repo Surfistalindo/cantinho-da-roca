@@ -211,10 +211,23 @@ export default function LeadsPage() {
     setActiveKpi((prev) => (prev === key ? null : key));
   };
 
+  // Origens reais presentes nos leads (deduplicado case-insensitive, ordenado)
+  const availableOrigins = useMemo(() => {
+    const map = new Map<string, string>(); // key=lower, val=display
+    for (const l of leads) {
+      if (!l.origin) continue;
+      const trimmed = l.origin.trim();
+      if (!trimmed) continue;
+      const k = trimmed.toLowerCase();
+      if (!map.has(k)) map.set(k, trimmed);
+    }
+    return Array.from(map.values()).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }, [leads]);
+
   const filtered = useMemo(() => {
     const list = leads.filter((l) => {
       if (statusFilter !== 'all' && l.status !== statusFilter) return false;
-      if (originFilter !== 'all' && l.origin !== originFilter) return false;
+      if (originFilter !== 'all' && (l.origin ?? '').trim().toLowerCase() !== originFilter.trim().toLowerCase()) return false;
       if (recencyFilter !== 'all') {
         const info = getContactRecency(l.last_contact_at, l.status, l.created_at);
         if (info.level !== recencyFilter) return false;
@@ -493,6 +506,7 @@ export default function LeadsPage() {
                 onRecencyChange={updateRecency}
                 priorityFilter={priorityFilter}
                 onPriorityChange={updatePriority}
+                availableOrigins={availableOrigins}
               />
             </div>
             <SavedFiltersMenu
