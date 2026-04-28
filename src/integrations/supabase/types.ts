@@ -285,6 +285,12 @@ export type Database = {
           ai_suggested_status: string | null
           ai_summary: string | null
           ai_summary_updated_at: string | null
+          cadence_exhausted: boolean
+          cadence_last_sent_at: string | null
+          cadence_next_at: string | null
+          cadence_started_at: string | null
+          cadence_state: string
+          cadence_step: number
           created_at: string
           id: string
           last_contact_at: string | null
@@ -296,6 +302,7 @@ export type Database = {
           product_interest: string | null
           status: string
           updated_at: string
+          whatsapp_opt_out: boolean
         }
         Insert: {
           ai_priority?: string | null
@@ -306,6 +313,12 @@ export type Database = {
           ai_suggested_status?: string | null
           ai_summary?: string | null
           ai_summary_updated_at?: string | null
+          cadence_exhausted?: boolean
+          cadence_last_sent_at?: string | null
+          cadence_next_at?: string | null
+          cadence_started_at?: string | null
+          cadence_state?: string
+          cadence_step?: number
           created_at?: string
           id?: string
           last_contact_at?: string | null
@@ -317,6 +330,7 @@ export type Database = {
           product_interest?: string | null
           status?: string
           updated_at?: string
+          whatsapp_opt_out?: boolean
         }
         Update: {
           ai_priority?: string | null
@@ -327,6 +341,12 @@ export type Database = {
           ai_suggested_status?: string | null
           ai_summary?: string | null
           ai_summary_updated_at?: string | null
+          cadence_exhausted?: boolean
+          cadence_last_sent_at?: string | null
+          cadence_next_at?: string | null
+          cadence_started_at?: string | null
+          cadence_state?: string
+          cadence_step?: number
           created_at?: string
           id?: string
           last_contact_at?: string | null
@@ -338,6 +358,7 @@ export type Database = {
           product_interest?: string | null
           status?: string
           updated_at?: string
+          whatsapp_opt_out?: boolean
         }
         Relationships: []
       }
@@ -430,6 +451,96 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          body: string | null
+          cadence_step: number | null
+          created_at: string
+          direction: string
+          error_code: string | null
+          error_message: string | null
+          id: string
+          lead_id: string | null
+          status: string
+          template_name: string | null
+          updated_at: string
+          wa_message_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          cadence_step?: number | null
+          created_at?: string
+          direction: string
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          lead_id?: string | null
+          status?: string
+          template_name?: string | null
+          updated_at?: string
+          wa_message_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          cadence_step?: number | null
+          created_at?: string
+          direction?: string
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          lead_id?: string | null
+          status?: string
+          template_name?: string | null
+          updated_at?: string
+          wa_message_id?: string | null
+        }
+        Relationships: []
+      }
+      whatsapp_templates: {
+        Row: {
+          body_preview: string
+          category: string
+          created_at: string
+          delay_hours: number | null
+          id: string
+          is_active: boolean
+          language: string
+          meta_name: string
+          name: string
+          step_order: number | null
+          updated_at: string
+          variables: Json
+        }
+        Insert: {
+          body_preview: string
+          category?: string
+          created_at?: string
+          delay_hours?: number | null
+          id?: string
+          is_active?: boolean
+          language?: string
+          meta_name: string
+          name: string
+          step_order?: number | null
+          updated_at?: string
+          variables?: Json
+        }
+        Update: {
+          body_preview?: string
+          category?: string
+          created_at?: string
+          delay_hours?: number | null
+          id?: string
+          is_active?: boolean
+          language?: string
+          meta_name?: string
+          name?: string
+          step_order?: number | null
+          updated_at?: string
+          variables?: Json
         }
         Relationships: []
       }
