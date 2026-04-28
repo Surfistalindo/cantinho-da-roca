@@ -685,6 +685,7 @@ export default function LeadsPage() {
               <>
                 {/* Desktop — agrupado por status */}
                 <div className="hidden md:block space-y-2">
+                  <LeadsDndProvider leadIndex={leadIndex} onChanged={fetchLeads}>
                   {(() => {
                     const renderHeader = (groupIds: string[]) => {
                       const allChecked = groupIds.length > 0 && groupIds.every((id) => selected.has(id));
