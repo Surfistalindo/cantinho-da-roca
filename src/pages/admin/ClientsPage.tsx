@@ -259,17 +259,18 @@ export default function ClientsPage() {
             onReactivationToggle={setReactivationModeWrapped}
           />
 
-          {loading ? (
-            <LoadingState />
-          ) : filtered.length === 0 ? (
-            <EmptyState
-              icon={faUserCheck}
-              title="Nenhum cliente encontrado"
-              description={reactivationMode
-                ? 'Não há clientes para reativar com os critérios atuais.'
-                : 'Cadastre manualmente ou converta leads em clientes.'}
-            />
-          ) : (
+          <ListState
+            loading={loading}
+            error={fetchError}
+            onRetry={fetchCustomers}
+            totalCount={customers.length}
+            filteredCount={filtered.length}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={clearFilters}
+            emptyIcon={faUserCheck}
+            emptyTitle="Nenhum cliente cadastrado ainda"
+            emptyDescription="Cadastre manualmente ou converta leads em clientes."
+          >
             <div className="overflow-x-auto -mx-5">
               <Table>
                 <TableHeader>
