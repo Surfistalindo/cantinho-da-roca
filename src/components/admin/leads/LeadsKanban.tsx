@@ -118,9 +118,9 @@ export default function LeadsKanban({ leads, interactionCounts, onLeadClick, onA
       </div>
       <DragOverlay>
         {active ? (
-          <div className="bg-card border border-primary rounded-lg p-3 shadow-pop opacity-95 w-56">
+          <div className="surface-card--hair p-3 shadow-floating ring-2 ring-primary/40 ring-offset-1 ring-offset-background opacity-95 w-56">
             <p className="font-medium text-sm truncate">{active.name}</p>
-            <p className="text-[11px] text-muted-foreground font-mono truncate">{active.phone ?? '—'}</p>
+            <p className="text-[11px] text-muted-foreground font-mono tabular-nums truncate">{active.phone ?? '—'}</p>
           </div>
         ) : null}
       </DragOverlay>
