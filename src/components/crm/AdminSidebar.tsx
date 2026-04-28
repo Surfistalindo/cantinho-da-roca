@@ -93,15 +93,15 @@ export default function AdminSidebar() {
             type="button"
             onClick={() => setIaOpen((v) => !v)}
             className={cn(
-              'group flex items-center w-full h-10 rounded-lg px-3 text-[13px] font-medium gap-3 transition-colors',
+              'group relative flex items-center w-full h-9 rounded-md px-3 text-[12.5px] font-medium gap-3 transition-colors',
               isOnIA
-                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
+                ? 'sidebar-item-active text-sidebar-accent-foreground'
+                : 'text-sidebar-foreground hover:bg-sidebar-accent/40 hover:text-sidebar-accent-foreground',
             )}
           >
-            <MSym name={item.icon} size={20} className={cn(isOnIA && 'text-sidebar-primary')} filled={isOnIA} />
+            <MSym name={item.icon} size={18} className={cn(isOnIA && 'text-sidebar-primary')} filled={isOnIA} />
             <span className="flex-1 text-left">{item.title}</span>
-            <MSym name="expand_more" size={18} className={cn('transition-transform opacity-60', iaOpen && 'rotate-180')} />
+            <MSym name="expand_more" size={16} className={cn('transition-transform opacity-60', iaOpen && 'rotate-180')} />
           </button>
         </SidebarMenuItem>
       );
