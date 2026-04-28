@@ -32,7 +32,7 @@ export function useWhatsAppData() {
       supabase.from('whatsapp_templates')
         .select('*').not('step_order', 'is', null).order('step_order'),
       supabase.from('whatsapp_config')
-        .select('instance_id,is_configured,updated_at').eq('provider', 'zapi').maybeSingle(),
+        .select('is_configured,updated_at').eq('provider', 'zapi').maybeSingle(),
     ]);
 
     const msgs = (msgRes.data ?? []) as WAMessage[];

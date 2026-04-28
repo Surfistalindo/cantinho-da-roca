@@ -29,18 +29,21 @@ const steps = [
 
 export default function SetupDialog({ open, onOpenChange, config, onSaved }: Props) {
   const [step, setStep] = useState(config?.is_configured ? 3 : 1);
-  const [instanceId, setInstanceId] = useState(config?.instance_id ?? '');
+  const [instanceId, setInstanceId] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open) {
-      setInstanceId(config?.instance_id ?? '');
+      setInstanceId('');
       setStep(config?.is_configured ? 3 : 1);
     }
   }, [open, config]);
 
   const save = async () => {
-    if (!instanceId.trim()) { toast.error('Cole o Instance ID'); return; }
+    if (!instanceId.trim() || instanceId.trim().length < 4) {
+      toast.error('Cole o Instance ID');
+      return;
+    }
     setSaving(true);
     try {
       const { data, error } = await supabase.functions.invoke('wa-config-save', {
