@@ -1277,3 +1277,38 @@ body {
   }
 }
 
+
+/* ============================================
+   Minimal scrollbars (CRM + global)
+   ============================================ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--foreground) / 0.18) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--foreground) / 0.16);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.2s ease;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: hsl(var(--foreground) / 0.32);
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+/* Hide arrow buttons (macOS-style) */
+*::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
+}
