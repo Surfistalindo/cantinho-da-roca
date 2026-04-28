@@ -255,7 +255,7 @@ export default function MondaySidebar() {
                 const wsBoards = boardsByWorkspace(ws.id);
                 return (
                   <DroppableWorkspaceItem key={ws.id} workspaceId={ws.id}>
-                    <div className="group flex items-center gap-1 h-8 px-1.5 rounded-md hover:bg-sidebar-accent/40 transition-colors">
+                    <div className="group flex items-center gap-1 h-8 px-1.5 rounded-md hover:bg-sidebar-accent/60 transition-[background-color] duration-crm ease-crm">
                       <button
                         type="button"
                         onClick={() => setOpenWorkspaces((s) => ({ ...s, [ws.id]: !isOpen }))}
