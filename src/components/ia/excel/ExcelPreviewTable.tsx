@@ -27,7 +27,7 @@ export default function ExcelPreviewTable({ parsed, rows = 8 }: ExcelPreviewTabl
   const headerRowIdx = parsed.sheets.find((s) => s.name === active.name)?.headerRowIndex;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 min-w-0 max-w-full">
       {parsed.sheets.length > 1 && (
         <div className="rounded-xl border bg-muted/20 px-4 py-3">
           <div className="text-[12px] font-semibold text-foreground mb-2">
