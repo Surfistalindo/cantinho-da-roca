@@ -158,13 +158,13 @@ export default function LeadFormSection() {
             transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
-          <p className="text-primary text-sm font-semibold tracking-widest uppercase text-center mb-3">
-            Cadastre-se
+          <p className="font-hand text-clay text-2xl text-center mb-1">
+            fica em contato
           </p>
-          <h2 className="text-3xl sm:text-5xl font-serif text-center mb-3 text-foreground">
+          <h2 className="font-display-warm text-3xl sm:text-5xl text-center mb-3 text-foreground">
             Receba ofertas e novidades no WhatsApp
           </h2>
-          <p className="text-muted-foreground text-center mb-10 text-lg">
+          <p className="font-body-warm text-muted-foreground text-center mb-10 text-lg">
             Deixe seu nome e WhatsApp pra receber dicas, lançamentos e promoções dos nossos produtos naturais. <img src={logo} alt="" className="inline h-5 w-5 align-text-bottom" />
           </p>
 
