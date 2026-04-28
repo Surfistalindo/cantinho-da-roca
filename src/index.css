@@ -312,48 +312,58 @@
   .font-crm .board-panel {
     background-color: hsl(var(--card));
     border: 1px solid hsl(var(--border));
-    border-radius: 0.625rem;
+    border-radius: 0.5rem;
     overflow: hidden;
+    box-shadow: 0 1px 2px 0 hsl(220 25% 14% / 0.04);
   }
   .font-crm .board-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
     font-size: 12.5px;
+    background-color: hsl(var(--card));
   }
   .font-crm .board-table thead th {
-    background-color: hsl(var(--surface-2));
+    background-color: hsl(var(--surface-3));
     color: hsl(var(--muted-foreground));
     font-weight: 600;
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 0.4rem 0.625rem;
+    font-size: 11px;
+    text-transform: none;
+    letter-spacing: 0.01em;
+    padding: 0.5rem 0.625rem;
     border-bottom: 1px solid hsl(var(--border));
+    border-right: 1px solid hsl(var(--border));
     text-align: left;
     white-space: nowrap;
     position: sticky;
     top: 0;
     z-index: 5;
   }
+  .font-crm .board-table thead th:last-child { border-right: 0; }
   .font-crm .board-table tbody td {
-    padding: 0.375rem 0.625rem;
-    border-bottom: 1px solid hsl(var(--border) / 0.55);
+    padding: 0;
+    border-bottom: 1px solid hsl(var(--border));
+    border-right: 1px solid hsl(var(--border));
     height: 36px;
     color: hsl(var(--foreground));
     vertical-align: middle;
+    background-color: hsl(var(--card));
+  }
+  .font-crm .board-table tbody td:last-child { border-right: 0; }
+  .font-crm .board-table tbody td > .cell-pad {
+    padding: 0.375rem 0.625rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
   }
   .font-crm .board-table tbody tr {
     transition: background-color 140ms ease;
   }
   .font-crm .board-table tbody tr:hover td {
-    background-color: hsl(var(--muted) / 0.6);
-  }
-  .font-crm .board-table tbody tr:active td {
-    background-color: hsl(var(--primary) / 0.10);
+    background-color: hsl(var(--muted) / 0.7);
   }
   .font-crm .board-row-active td {
-    background-color: hsl(var(--primary) / 0.08);
+    background-color: hsl(var(--primary) / 0.06);
   }
 
   /* Density helpers — opt-in compact controls */
@@ -377,7 +387,7 @@
     width: 80px;
     height: 6px;
     border-radius: 999px;
-    background: hsl(var(--muted));
+    background: hsl(var(--surface-4));
     overflow: hidden;
   }
   .font-crm .progress-cell > span {
@@ -388,12 +398,37 @@
     transition: width 200ms ease;
   }
 
+  /* Status cells (célula inteira pintada — Monday Work Management) */
+  .font-crm .status-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    padding: 0 0.5rem;
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 600;
+    text-align: center;
+    text-transform: lowercase;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    min-height: 32px;
+  }
+  .font-crm .status-done     { background-color: hsl(var(--status-done)); }
+  .font-crm .status-progress { background-color: hsl(var(--status-progress)); }
+  .font-crm .status-blocked  { background-color: hsl(var(--status-blocked)); }
+  .font-crm .status-paused   { background-color: hsl(var(--status-paused)); }
+  .font-crm .status-working  { background-color: hsl(var(--status-working)); }
+  .font-crm .status-review   { background-color: hsl(var(--status-review)); }
+  .font-crm .status-neutral  { background-color: hsl(var(--status-neutral)); color: hsl(222 26% 14%); }
+
   /* Tag/badge palette helpers (Monday-style cells) */
   .font-crm .tag-cell {
     display: inline-flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0.125rem 0.5rem;
+    padding: 0.18rem 0.55rem;
     border-radius: 0.375rem;
     font-size: 11px;
     font-weight: 600;
@@ -404,8 +439,8 @@
   .font-crm .tag-blue   { background-color: hsl(var(--tag-blue)); }
   .font-crm .tag-cyan   { background-color: hsl(var(--tag-cyan)); }
   .font-crm .tag-green  { background-color: hsl(var(--tag-green)); }
-  .font-crm .tag-yellow { background-color: hsl(var(--tag-yellow)); color: hsl(30 80% 12%); }
-  .font-crm .tag-orange { background-color: hsl(var(--tag-orange)); }
+  .font-crm .tag-yellow { background-color: hsl(var(--tag-yellow)); color: hsl(30 80% 14%); }
+  .font-crm .tag-orange { background-color: hsl(var(--tag-orange)); color: hsl(30 80% 14%); }
   .font-crm .tag-red    { background-color: hsl(var(--tag-red)); }
   .font-crm .tag-pink   { background-color: hsl(var(--tag-pink)); }
   .font-crm .tag-purple { background-color: hsl(var(--tag-purple)); }
@@ -419,6 +454,7 @@
     position: relative;
     background-color: hsl(var(--sidebar-accent));
     color: hsl(var(--sidebar-accent-foreground));
+    font-weight: 600;
   }
   .font-crm [data-sidebar="menu-button"][data-active="true"]::before,
   .font-crm .sidebar-item-active::before {
@@ -437,32 +473,35 @@
     border-bottom: 1px solid hsl(var(--border));
   }
   .font-crm .crm-dense-table table thead th {
-    background-color: hsl(var(--surface-2));
-    height: 32px !important;
+    background-color: hsl(var(--surface-3));
+    height: 34px !important;
     padding: 0 0.625rem !important;
-    font-size: 10.5px !important;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: 11px !important;
+    text-transform: none;
+    letter-spacing: 0.01em;
     color: hsl(var(--muted-foreground)) !important;
+    font-weight: 600;
     position: sticky;
     top: 0;
     z-index: 5;
+    border-right: 1px solid hsl(var(--border));
   }
+  .font-crm .crm-dense-table table thead th:last-child { border-right: 0; }
   .font-crm .crm-dense-table table tbody tr {
-    height: 36px;
-    border-bottom: 1px solid hsl(var(--border) / 0.55);
+    height: 38px;
+    border-bottom: 1px solid hsl(var(--border));
     transition: background-color 140ms ease;
+    background-color: hsl(var(--card));
   }
   .font-crm .crm-dense-table table tbody tr:hover {
-    background-color: hsl(var(--muted) / 0.6) !important;
-  }
-  .font-crm .crm-dense-table table tbody tr:active {
-    background-color: hsl(var(--primary) / 0.10) !important;
+    background-color: hsl(var(--muted) / 0.7) !important;
   }
   .font-crm .crm-dense-table table tbody td {
     padding: 0.375rem 0.625rem !important;
     vertical-align: middle;
+    border-right: 1px solid hsl(var(--border));
   }
+  .font-crm .crm-dense-table table tbody td:last-child { border-right: 0; }
 
   /* Spinner reduzido para skeletons em painéis densos */
   .font-crm .dense-skeleton {
