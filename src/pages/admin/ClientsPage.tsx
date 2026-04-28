@@ -164,6 +164,21 @@ export default function ClientsPage() {
 
   const openDetail = (c: Customer) => { setSelectedCustomer(c); setSheetOpen(true); };
 
+  const hasActiveFilters =
+    search.trim() !== '' ||
+    stageFilter !== 'all' ||
+    recencyFilter !== 'all' ||
+    purchaseFilter !== 'all' ||
+    reactivationMode;
+
+  const clearFilters = () => {
+    setSearch('');
+    setStageFilter('all');
+    setRecencyFilter('all');
+    setPurchaseFilter('all');
+    setReactivationModeWrapped(false);
+  };
+
   const addCustomer = async () => {
     if (!newCustomer.name.trim()) { toast.error('Nome é obrigatório'); return; }
     const { error } = await supabase.from('customers').insert({
