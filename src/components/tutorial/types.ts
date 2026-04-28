@@ -7,6 +7,8 @@ export interface TourStep {
   title: string;
   /** Suporta texto + tags simples (<strong>, <em>, <br/>, <ul>/<li>). */
   body: string;
+  /** Explicação detalhada opcional, exibida ao clicar em "Não entendi". Mesmas tags de body. */
+  details?: string;
   placement?: TourPlacement;
   /** Aguarda até retornar true antes de mostrar o passo. Útil pra esperar render. */
   waitFor?: () => boolean;
