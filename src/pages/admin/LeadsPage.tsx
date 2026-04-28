@@ -854,10 +854,30 @@ export default function LeadsPage() {
                           <div
                             ref={(node) => { tableGroupScrollRefs.current[groupKey] = node; }}
                             className={cn(
-                              'overflow-y-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-sm',
+                              'crm-row-resize overflow-y-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-sm',
                               density === 'compact' ? 'crm-compact-table overflow-x-hidden' : 'overflow-x-auto',
                             )}
-                            style={{ maxHeight: 'calc(100vh - 280px)' }}
+                            style={{ maxHeight: 'calc(100vh - 280px)', ['--row-h' as any]: `${rowHeight}px` }}
+                            onPointerDown={(e) => {
+                              const target = e.target as HTMLElement;
+                              if (!target.classList.contains('crm-row-grip')) return;
+                              e.preventDefault();
+                              const startY = e.clientY;
+                              const startH = rowHeight;
+                              const move = (ev: PointerEvent) => {
+                                setRowHeightClamped(startH + (ev.clientY - startY));
+                              };
+                              const up = () => {
+                                window.removeEventListener('pointermove', move);
+                                window.removeEventListener('pointerup', up);
+                                document.body.style.cursor = '';
+                                document.body.style.userSelect = '';
+                              };
+                              window.addEventListener('pointermove', move);
+                              window.addEventListener('pointerup', up);
+                              document.body.style.cursor = 'ns-resize';
+                              document.body.style.userSelect = 'none';
+                            }}
                             tabIndex={0}
                             role="region"
                             aria-label={`Tabela de leads — grupo ${groupKey}`}
