@@ -100,7 +100,7 @@ const StaticImageHero: React.FC = () => {
             className={cn('inline-block', reveal(badge.visible))}
             style={{ transitionDelay: '60ms' }}
           >
-            <Stamp className="text-base text-honey">
+            <Stamp className="text-sm font-semibold tracking-wide text-[hsl(var(--cocoa))]">
               <LeafAccent className="h-4 w-4 text-moss" />
               colhido na semana
             </Stamp>
