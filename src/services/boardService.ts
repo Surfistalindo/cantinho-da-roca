@@ -81,11 +81,32 @@ export const boardService = {
     return data as Board;
   },
 
-  async update(id: string, patch: Partial<Pick<Board, 'name' | 'icon' | 'color' | 'position' | 'route_path'>>) {
+  async update(
+    id: string,
+    patch: Partial<Pick<Board, 'name' | 'icon' | 'color' | 'position' | 'route_path' | 'workspace_id'>>,
+  ) {
     const { data, error } = await supabase
       .from('boards')
       .update(patch)
       .eq('id', id)
+      .select('*')
+      .single();
+    if (error) throw error;
+    return data as Board;
+  },
+
+  async moveToWorkspace(board_id: string, target_workspace_id: string) {
+    const { data: existing } = await supabase
+      .from('boards')
+      .select('position')
+      .eq('workspace_id', target_workspace_id)
+      .order('position', { ascending: false })
+      .limit(1);
+    const nextPos = (existing?.[0]?.position ?? -1) + 1;
+    const { data, error } = await supabase
+      .from('boards')
+      .update({ workspace_id: target_workspace_id, position: nextPos })
+      .eq('id', board_id)
       .select('*')
       .single();
     if (error) throw error;
