@@ -1,62 +1,71 @@
 ## Objetivo
 
-Tornar `/admin/leads` mais diagnosticável e acessível, sem mexer no scroll interno restaurado (cabeçalho + filtros fixos, tabela com `overflow-y-auto` e `maxHeight: calc(100vh - 280px)`).
+Tornar o botão de **densidade compacta** (ícone de lista, ao lado do confortável) realmente útil em `/admin/leads`: quando ativado, **toda a tabela encolhe para caber na tela sem scroll horizontal**, mesmo em telas menores onde hoje aparece a barra horizontal.
 
-## Escopo (4 entregas)
+## Estado atual
 
-### 1. Logs simples de filtros e erro de carregamento
+- Toggle existe (`density: 'comfortable' | 'compact'`) e persiste em `localStorage`, mas hoje só altera:
+  - altura da linha (`h-9` vs `h-12`)
+  - tamanho do avatar (`sm` vs `md`)
+  - exibição do telefone abaixo do nome
+- O scroller usa `overflow-x-auto` sempre, então o usuário compacta a linha mas ainda precisa rolar lateralmente.
+- Colunas `Origem` (`hidden lg:table-cell`) e `Interesse` (`hidden xl:table-cell`) e `Recência` (`hidden lg:table-cell`) aparecem por viewport, não por densidade.
 
-Usar o `logger` existente em `src/lib/logger.ts` (silencia em produção), sem nenhuma lib nova.
+## Mudanças
 
-Em `src/pages/admin/LeadsPage.tsx`:
+### 1. `src/index.css` — nova classe `.crm-compact-table`
 
-- Em `fetchLeads` (linha ~175):
-  - Antes do fetch: `logger.debug('[leads] fetch start')`.
-  - Em sucesso: `logger.debug('[leads] fetch ok', { count: data?.length ?? 0 })`.
-  - Em erro: `logger.error('[leads] fetch error', { code: error.code, message: error.message })` + manter `setFetchError`.
-- Novo `useEffect` que observa filtros (`statusFilter`, `originFilter`, `recencyFilter`, `priorityFilter`, `activeKpi`, `dateFrom`, `dateTo`, `search`, `sortBy`, `sortDir`) e emite `logger.debug('[leads] filters', { ... })` com debounce simples (250ms via `setTimeout`/cleanup) para não poluir no digitar.
-- Em `clearFilters`: `logger.debug('[leads] filters cleared')`.
+Adicionar logo após `.crm-dense-table` (após linha 587), reaproveitando o sistema atual:
 
-### 2. Skeleton/loader ao reaplicar filtros e ordenação (sem quebrar scroll)
+- `overflow-x: hidden` no scroller (some a barra horizontal).
+- `table-layout: auto; width: 100%` para Postgres-like fit ao container.
+- `thead th`: `height: 28px`, `padding: 0 .375rem`, `font-size: 10px`.
+- `tbody tr`: `height: 30px`.
+- `tbody td`: `padding: 2px 6px`, `font-size: 12px`, `.text-sm` cai para 12px.
+- Botões de ação na última coluna encolhem: `h-6 w-6`, ícones `h-3 w-3`.
 
-Hoje `LoadingState` só aparece no carregamento inicial (`if (loading) return <LoadingState />`). Trocaremos por um indicador "in-place" que NÃO desmonta o container scrollável.
+Mantém o `overflow-y-auto` e `maxHeight: calc(100vh - 280px)` intactos (scroll vertical preservado, plano anterior intocado).
 
-- Adicionar estado `isRefreshing` (ligado por 250–400ms quando filtros/ordenação mudam, via `useEffect` debounced sobre as mesmas deps de `useResetPagesOn`). Ignorar a primeira execução para não disparar no mount.
-- Renderizar uma faixa fina sticky no topo do `board-panel` (acima dos filtros, dentro do mesmo wrapper) com `<div className="h-0.5 bg-primary/60 animate-pulse" />` enquanto `isRefreshing`.
-- Adicionar `aria-busy={isRefreshing}` no wrapper do `board-panel` e `data-refreshing` no container scrollável (sem alterar classes de overflow/maxHeight).
-- Opcional: quando `isRefreshing && filtered.length === 0`, sobrepor placeholder skeleton dentro do `<TableBody>` (linhas com `bg-muted/40 animate-pulse`) — sem trocar o container, mantendo `scrollTop` preservado.
+### 2. `src/pages/admin/LeadsPage.tsx`
 
-Resultado: o scroll interno e a posição do scroll permanecem intactos durante refresh.
+**a) Scroller** (linhas ~795–815): alternar classes conforme densidade
 
-### 3. Navegação por teclado
+```tsx
+className={cn(
+  'overflow-y-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-sm',
+  density === 'compact' ? 'crm-compact-table overflow-x-hidden' : 'overflow-x-auto',
+)}
+```
 
-Confirmar/ajustar acessibilidade sem alterar layout:
+**b) Esconder colunas auxiliares no compact** — header (linhas ~657, 661) e cells (linhas ~734, 748):
 
-- Garantir `tabIndex={0}` e `role="region"` + `aria-label="Tabela de leads"` no container scrollável (linhas ~763–767), para que setas funcionem após focar com Tab.
-- Adicionar `aria-label`s nos botões de densidade (já existem) e revisar `LeadsViewSwitcher` e `LeadsKpiStrip` para que cada ação exposta seja focável (verificar se KPIs são `<button>` com `aria-pressed`).
-- Adicionar handler `onKeyDown` no container da tabela: PageUp/PageDown rola ±80% da altura visível; Home/End vai para topo/fim. Não interceptar se o foco estiver em `input`/`select`.
-- Garantir que o atalho global "N" (já existente) não dispare quando o foco está em campos de texto (checar `event.target` em `useEffect` de `crm:new-lead` se aplicável — se já estiver tratado em outro lugar, deixar nota e não duplicar).
+- Coluna **Origem** e **Recência**: trocar `hidden lg:table-cell` por `cn('hidden lg:table-cell', density === 'compact' && 'lg:hidden')`.
+- Coluna **Interesse** (`xl:table-cell`): em compact, também ocultar com `density === 'compact' && 'xl:hidden'`.
 
-### 4. Checklist de testes manuais (executados na entrega)
+**c) Coluna "Lead"** (linha ~656): `min-w-[240px]` → em compact usar `min-w-[160px]` (cabe melhor). Aplicar via `cn`.
 
-Após implementar, abrir o preview em `/admin/leads` via browser tools e validar:
+**d) Coluna "Ações"** (linha ~682): `w-[140px]` → em compact `w-[80px]` para acomodar 2 ícones menores. Truncar para mostrar só WhatsApp + Excluir (esconder `QuickActionsPopover` em compact, que tem ações secundárias).
 
-1. **Scroll interno**: roda do mouse sobre cabeçalho/filtros faz a tabela rolar (forwarding wheel já existe); scroll direto sobre a tabela também funciona; `body` não rola.
-2. **Ordenação**: clicar no toggle de sort alterna `score → created desc → created asc → score`; lista reordena sem reset visual indesejado e com o skeleton-strip aparecendo brevemente.
-3. **Paginação**: navegar entre páginas em um grupo NÃO altera a página dos outros grupos (já é por grupo via `useLeadsPaged`); trocar `pageSize` reseta páginas.
-4. **Filtros**: aplicar status, origem, recency, priority, KPI, intervalo de datas e busca textual; cada um produz `logger.debug('[leads] filters', ...)` no console e reseta páginas.
-5. **Erro de carregamento**: simular falha desligando rede no DevTools e recarregar; verificar que `logger.error` aparece e o `ListState` mostra o erro sem travar a UI.
-6. **Teclado**: Tab atravessa filtros → switcher → tabela; com tabela focada, setas/PageDown/Home/End rolam o container; nenhum atalho global dispara digitando em inputs.
+**e) Score badge / Status select** ficam, mas Score já é `size="sm"` e Status select usa largura fluida do `w-[160px]` da coluna — em compact reduzir para `w-[120px]`.
 
-Os resultados de cada item ficam reportados na resposta final.
+**f) Tooltip no botão** atualizar de `Densidade compacta` para `Compactar tabela (cabe sem rolar lateral)`.
 
-## Arquivos afetados
+### 3. Verificação
 
-- `src/pages/admin/LeadsPage.tsx` — logs, estado `isRefreshing`, faixa de loading, atributos de acessibilidade e handlers de teclado.
-- (Sem novos arquivos, sem novas libs, sem mudanças em CSS de scroll.)
+Após aplicar, abrir `/admin/leads` no preview com viewport 1280×720:
+
+1. Em **confortável** confirmar que o layout atual permanece idêntico.
+2. Clicar no ícone de **compacto**: barra de scroll horizontal desaparece; todas as linhas encolhem; colunas Origem/Recência/Interesse somem; Lead, Status, Prioridade, Entrada e Ações continuam visíveis e usáveis.
+3. Testar também em 1024×768 (apenas Lead/Status/Prioridade/Entrada/Ações em compact, sem scroll lateral).
+4. Voltar para confortável: layout volta ao normal.
 
 ## Não-objetivos
 
-- Não alterar `overflow`, `maxHeight` ou `forwardWheelToLeadTable`.
-- Não tocar em `useLeadsPaged`, `useLeadsUrlState`, RLS ou queries.
-- Não adicionar telemetria remota (apenas `logger` local em DEV).
+- Não mudar Kanban nem Cards (densidade só afeta a visão de tabela, como hoje).
+- Não alterar paginação por grupo, filtros URL, refresh strip ou navegação por teclado adicionados antes.
+- Sem novas libs, sem mudanças no schema.
+
+## Arquivos afetados
+
+- `src/index.css` — adicionar bloco `.crm-compact-table` (~30 linhas).
+- `src/pages/admin/LeadsPage.tsx` — classes condicionais nas colunas, scroller e ajustes no tooltip/QuickActions.
