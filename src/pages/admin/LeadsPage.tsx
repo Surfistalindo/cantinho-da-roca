@@ -130,19 +130,10 @@ export default function LeadsPage() {
   const leadIds = useMemo(() => leads.map((l) => l.id), [leads]);
   const interactionCounts = useInteractionCounts(leadIds);
 
+  // sort vem da URL (não migrado para o hook por simplicidade)
   useEffect(() => {
-    const recency = searchParams.get('recency') as RecencyFilter | null;
-    if (recency && ['recent', 'attention', 'overdue', 'all'].includes(recency)) {
-      setRecencyFilter(recency);
-    } else if (searchParams.get('followup') === '1') {
-      setRecencyFilter('overdue');
-    }
     const sort = searchParams.get('sort');
     if (sort === 'created' || sort === 'score') setSortBy(sort);
-    const priority = searchParams.get('priority') as PriorityFilter | null;
-    if (priority && ['hot', 'warm', 'cold', 'all'].includes(priority)) {
-      setPriorityFilter(priority);
-    }
   }, [searchParams]);
 
   useEffect(() => {
@@ -158,33 +149,20 @@ export default function LeadsPage() {
     }
   }, [searchParams, leads, setSearchParams]);
 
-  const updateRecency = (v: RecencyFilter) => {
-    setRecencyFilter(v);
-    const params = new URLSearchParams(searchParams);
-    params.delete('followup');
-    if (v === 'all') params.delete('recency');
-    else params.set('recency', v);
-    setSearchParams(params, { replace: true });
-  };
-
-  const updatePriority = (v: PriorityFilter) => {
-    setPriorityFilter(v);
-    const params = new URLSearchParams(searchParams);
-    if (v === 'all') params.delete('priority');
-    else params.set('priority', v);
-    setSearchParams(params, { replace: true });
-  };
+  const updateRecency = (v: RecencyFilter) => url.set({ recency: v });
+  const updatePriority = (v: PriorityFilter) => url.set({ priority: v });
 
   const hasActiveFilters =
     search.trim() !== '' || statusFilter !== 'all' || originFilter !== 'all' ||
-    recencyFilter !== 'all' || priorityFilter !== 'all' || activeKpi !== null;
+    recencyFilter !== 'all' || priorityFilter !== 'all' || activeKpi !== null ||
+    !!dateFrom || !!dateTo;
 
   const clearFilters = () => {
-    setSearch(''); setStatusFilter('all'); setOriginFilter('all');
-    setRecencyFilter('all'); setPriorityFilter('all'); setActiveKpi(null);
-    const params = new URLSearchParams(searchParams);
-    ['recency', 'priority', 'followup'].forEach((k) => params.delete(k));
-    setSearchParams(params, { replace: true });
+    url.set({
+      search: '', status: 'all', origin: 'all',
+      recency: 'all', priority: 'all', from: null, to: null,
+    });
+    setActiveKpi(null);
   };
 
   const toggleSort = () => {
