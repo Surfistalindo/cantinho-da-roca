@@ -212,6 +212,7 @@ export default function IAExcelImportPage() {
             mappings={state.mappings}
             onUpdateField={im.updateRowField}
             onRemap={im.remapAndRevalidate}
+            samplesByHeader={state.samplesByHeader}
           />
           <FlowActions
             backLabel="Voltar à estratégia"
