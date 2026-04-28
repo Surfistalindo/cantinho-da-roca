@@ -622,15 +622,19 @@ export default function LeadsPage() {
                           <TableRow
                             key={lead.id}
                             tabIndex={0}
+                            role="button"
+                            aria-label={`Abrir detalhes de ${lead.name}, status ${lead.status}`}
+                            aria-selected={isChecked}
                             className={cn(
                               'group cursor-pointer border-border/60 outline-none transition-colors',
+                              'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                               rowPad,
                               isNewest && '!bg-primary/5 hover:!bg-primary/10',
                               isChecked && '!bg-primary/[0.06] hover:!bg-primary/10',
                               score.urgent && 'border-l-2 border-l-destructive',
                             )}
                             onClick={() => openDetail(lead)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') openDetail(lead); }}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(lead); } }}
                           >
                             <TableCell className="pl-3 pr-0" onClick={(e) => e.stopPropagation()}>
                               <Checkbox
