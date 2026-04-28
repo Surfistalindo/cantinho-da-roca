@@ -721,8 +721,8 @@ export default function LeadsPage() {
                       return (
                         <>
                           <div
-                            className="overflow-x-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full"
-                            style={{ overscrollBehaviorX: 'contain' }}
+                            className="overflow-x-auto overflow-y-auto crm-smooth-scroll crm-dense-table min-w-0 max-w-full"
+                            style={{ maxHeight: 'calc(100vh - 280px)' }}
                           >
                             <Table>
                               {renderHeader(info.pageItems.map((i) => i.id))}
