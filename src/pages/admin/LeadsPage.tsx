@@ -495,7 +495,9 @@ export default function LeadsPage() {
     });
   }, [getVisibleTableScroller, view]);
 
-  const rowPad = density === 'compact' ? 'h-9' : 'h-12';
+  // Altura de linha agora vem de --row-h (CSS var). Mantemos rowPad vazio para
+  // não quebrar callers; classes h-9/h-12 sobrescreveriam a var.
+  const rowPad = '';
 
   if (loading) return <LoadingState />;
 
