@@ -1,137 +1,106 @@
 
-# Tutoriais guiados com botão "?" em todo o sistema
+# Paginação em Leads + audit de performance do site
 
-Adicionar um sistema próprio de **tutoriais contextuais por tela**: um botão flutuante "?" sempre visível dentro do CRM que, ao clicar, abre um menu com (1) Tour guiado da tela atual, (2) Dicas rápidas, (3) Atalhos de teclado, (4) Glossário. O Tour destaca elementos reais da página com spotlight, mostra um popover com explicação passo a passo, e pode disparar ações (abrir guia, abrir modal, focar input).
+Duas frentes integradas: (1) **paginação eficiente na página de Leads** (hoje carrega tudo), (2) **limpeza de gargalos reais** detectados via profile.
 
-Solução **própria, sem dependências externas** (não usar react-joyride/shepherd/driver.js — eles colidem com nosso design system Inter/Monday e adicionam ~30kb). Usaremos Radix Popover (já no projeto) + um overlay SVG com `clip-path` para o spotlight. Leve, acessível, themed pelos nossos tokens.
+---
 
-## Arquitetura
+## Parte 1 — Paginação na página de Leads
 
-```
-src/components/tutorial/
-├── TutorialProvider.tsx     # Context: tour atual, índice, abrir/fechar/next/prev/skip
-├── HelpButton.tsx           # FAB "?" fixo (bottom-right) + menu (Radix Popover)
-├── TourOverlay.tsx          # SVG fullscreen com clip-path spotlight + popover ancorado
-├── TourPopover.tsx          # Card do passo: título, corpo, "Passo X de Y", Anterior/Próximo/Pular
-└── tours/
-    ├── index.ts             # Registry rota → tour (e fallback "explorar")
-    ├── dashboard.ts
-    ├── leads.ts
-    ├── pipeline.ts
-    ├── clients.ts
-    ├── ia-home.ts
-    ├── ia-excel.ts          # Tour multi-etapa (idle → mapping → review)
-    ├── whatsapp.ts
-    ├── boards.ts
-    └── shared.ts            # Atalhos, navegação, sidebar
-```
+### Diagnóstico
+- `LeadsPage` faz `supabase.from('leads').select('*').order('created_at')` **sem `range`/`limit`** — Supabase corta em 1000 silenciosamente, e o cliente filtra/agrupa tudo em memória.
+- A view tabela atual já agrupa por `STATUS_GROUPS`. Paginar globalmente quebraria esse agrupamento. **Solução**: paginar **dentro de cada grupo** + um seletor global de tamanho de página.
 
-## Como o Tour funciona
+### Implementação
+1. **Hook novo** `src/hooks/useLeadsPaged.ts`:
+   - Mantém `pageSize` (25 / 50 / 100, default 50) e por-grupo `currentPage`.
+   - **Não** quebra o fetch; ele continua trazendo até 1000 leads (próximo passo é mover pra fetch paginado quando passar disso).
+   - Expõe `paginate(items, groupKey)` → `{ pageItems, totalPages, page, setPage }`.
+2. **Componente** `src/components/admin/leads/LeadsPagination.tsx`:
+   - Compacto, estilo Monday: `‹ 1 … 4 5 6 … 12 ›`, contador `51–100 de 312`, seletor de page size.
+   - Aparece **só quando `total > pageSize`** dentro de um grupo.
+3. **Integração em `LeadsPage.tsx`**:
+   - No `renderGroup(items)`: aplicar `paginate(items, groupKey)` antes de `renderRows`, e renderizar `<LeadsPagination>` no rodapé do grupo.
+   - Reset de página ao mudar filtros/busca (já dá pra ouvir as deps de `filtered`).
+   - Persistir `pageSize` em `localStorage` (`leads:pageSize`).
+4. **Mobile (cards)**: aplicar mesma paginação ao bloco mobile (1 grupo só).
+5. **Atalhos**: `[` página anterior, `]` próxima — coerente com os atalhos existentes (1/2/3 para views).
 
-1. Cada tour é um array de **steps**:
-   ```ts
-   type TourStep = {
-     id: string;
-     target: string;          // CSS selector OU [data-tour="leads-search"]
-     title: string;
-     body: string;            // pode conter <strong>, listas curtas
-     placement?: 'top'|'bottom'|'left'|'right'|'auto';
-     waitFor?: () => boolean; // ex.: aguardar tabela renderizar
-     action?: () => void;     // ex.: abrir um drawer antes do passo
-     allowSkip?: boolean;
-   };
-   ```
-2. `TourOverlay` calcula o `getBoundingClientRect()` do target, desenha um retângulo "buraco" (spotlight) sobre overlay escuro `bg-foreground/40`, e ancora o `TourPopover` ao lado.
-3. ResizeObserver + scroll listener mantêm o spotlight sincronizado se a página rolar/redimensionar.
-4. Foco vai para o popover, navegação por teclado (← → ESC).
-5. Progresso salvo em `localStorage` (`tutorial:completed:<route>`), oferecendo "marcar como concluído" e "rever tour".
+### Por dentro do grupo, não global — porquê?
+- O agrupamento por status é parte da identidade Monday do CRM (rejeitar isso seria mexer em decisão visual). 
+- Pagina-se dentro do grupo, que costuma ser o que tem volume real (ex.: "Em contato" com 200 leads).
+- Quando passarmos da casa dos milhares totais, evoluímos para **fetch paginado server-side** com `range()` + cursor por `created_at`, mantendo a mesma UI.
 
-## Marcação dos elementos
+---
 
-Em vez de selectors frágeis, marcar pontos-chave nas páginas com `data-tour="..."`:
-- `data-tour="sidebar-leads"`, `data-tour="sidebar-pipeline"`, etc. no `MondaySidebar`.
-- `data-tour="leads-search"`, `data-tour="leads-new"`, `data-tour="leads-table"`, `data-tour="leads-kanban-toggle"` em `LeadsPage`.
-- `data-tour="pipeline-board"`, `data-tour="pipeline-stage"` no Pipeline.
-- `data-tour="excel-dropzone"`, `data-tour="excel-mapper"`, `data-tour="excel-review"` no fluxo IA Excel.
-- `data-tour="whatsapp-paste"`, `data-tour="ia-card-*"`, `data-tour="dashboard-funnel"`, etc.
+## Parte 2 — Audit & correções de performance
 
-## Conteúdo dos tours (resumo)
+### Achados do profile (medidos agora em `/admin/leads`)
 
-| Rota | Passos | Foco didático |
+| Métrica | Valor | Veredito |
 |---|---|---|
-| `/admin/dashboard` | 5 | Métricas chave, abas (funil, score, origem), ações rápidas |
-| `/admin/leads` | 7 | Busca, filtros, novo lead, tabela vs kanban, status inline, ações em massa |
-| `/admin/pipeline` | 5 | Estágios, drag-and-drop, criar negócio, conversão |
-| `/admin/clients` | 4 | Diferença Lead × Cliente, conversão, histórico |
-| `/admin/ia` | 4 | Visão geral, importação, classificação, assistente |
-| `/admin/ia/excel` | 8 (em 3 etapas) | Upload → preview → mapeamento IA → revisão → import |
-| `/admin/whatsapp` | 4 | Quick actions, templates, log |
-| `/admin/boards/:id` | 5 | Grupos, colunas tipadas, status pills, favoritar |
-| `*` (fallback) | 3 | Sidebar, command palette (Cmd+K), botão "?" |
+| First Paint | **8.18s** | crítico |
+| DOM Content Loaded | **8.19s** | crítico |
+| 246 scripts carregados | 2.8MB | aceitável em dev |
+| FontAwesome solid+brands | 290KB + 225KB | ícones não usados sendo enviados |
+| Material Symbols (eixos completos) | 1KB CSS / fonte gigante | over-fetching |
+| 3 stylesheets de fontes render-blocking | ~605ms | maior gargalo |
+| `select('*')` em leads | sem limit | risco em escala |
 
-## Botão "?" + menu
+### Correções (ordem de impacto)
 
-- `HelpButton` fixo `bottom-4 right-4`, `z-40`, círculo 44×44, ícone `HelpCircle` da lucide, sombra suave, ring no hover.
-- Click abre Radix Popover com 4 itens:
-  - **Iniciar tour desta tela** (com badge "Novo" se nunca visto)
-  - **Dicas rápidas** (3-5 bullets do tour da rota atual, formato leitura)
-  - **Atalhos de teclado** (reusa o `ShortcutsHelp` já existente)
-  - **Glossário** (Lead, Cliente, Estágio, Score, Pipeline) — sheet lateral
+**A. Limpeza de fontes não usadas — ganho imediato visível** (~−400ms render-blocking)
+- Remover do `index.html` o link de `Be Vietnam Pro / Public Sans / Epilogue / Caveat` — **0 referências no código**. Caveat já vem no `@import` do CRM.
+- Reduzir Material Symbols para **um único eixo fixo**: `opsz,wght,FILL,GRAD@24,400,0,0` em vez do range completo (era 50–200 axes!). Economiza fonte enorme.
+- Remover do `@import` do `index.css` as famílias **Oswald, Josefin Sans** — sem refs.
+- Manter: Inter (CRM), JetBrains Mono (CRM), Caveat (acento), Satisfy + DM Sans (landing hero), Recoleta + General Sans (landing/whatsapp).
 
-## Ações que o tour pode disparar
+**B. FontAwesome — substituir os ~3 ícones de marca pelos do Lucide quando possível**
+- Hoje `@fortawesome/free-brands-svg-icons` (225KB) é importado por causa de `faWhatsapp`, `faGoogle`. Substituir por SVGs inline ou ícones Lucide elimina **225KB**.
+- `free-solid-svg-icons` (290KB) é amplamente usado — manter por enquanto, mas migrar para `import { faX } from '@fortawesome/free-solid-svg-icons/faX'` (named imports diretos por arquivo) já reduz tree-shaking. **Fora do escopo agora** — efeito real só em prod build.
 
-Para tours que cruzam estados (ex.: Excel import), `step.action` pode:
-- Mudar de aba via `searchParams` (`?tab=funnel`).
-- Disparar evento global (já temos `window.dispatchEvent(new CustomEvent(...))`).
-- Abrir o command palette (`Cmd+K`) para demonstrá-lo.
-- Para o tour do Excel, mockamos uma planilha de exemplo opcional (botão "ver com dados de exemplo") — fora do MVP, sinalizado como passo "estático".
+**C. `useInteractionCounts(leads.map(l => l.id))` em LeadsPage**
+- `leads.map` dentro do JSX cria array novo a cada render → o hook refaz tudo. Memoizar:
+  ```ts
+  const leadIds = useMemo(() => leads.map(l => l.id), [leads]);
+  const interactionCounts = useInteractionCounts(leadIds);
+  ```
 
-## Acessibilidade & detalhes finos
+**D. `fetchLeads` como dependência de `useEffect`**
+- Hoje: `useEffect(() => { fetchLeads(); }, [fetchLeads])` + `useRealtimeTable('leads', fetchLeads)`. Como `fetchLeads` está em `useCallback([])` está estável — mas as **mutações inline** (mudar status, deletar) chamam `fetchLeads()` *manualmente* além do realtime, fazendo dois fetches consecutivos. **Fix**: confiar no realtime e remover o `fetchLeads()` dessas mutações (ou debounce 200ms no refetch).
 
-- `role="dialog" aria-modal="true"` no popover do tour.
-- Foco preso (focus trap leve) só no popover; ESC sai do tour confirmando "Pular tour?".
-- `prefers-reduced-motion` desliga transições do spotlight.
-- Z-index isolado (`--z-tour: 80`) acima de drawers (50), abaixo de toasts (100).
-- Tokens semânticos: `bg-card`, `text-foreground`, `border-border`, `text-primary`. Sem cores hardcoded.
+**E. `renderRows` cria função nova a cada render**
+- Não é re-renderizada a árvore inteira porque está em IIFE, mas o `Table` interno re-renderiza para cada update de `selected`. Memoizar `renderRows` é overkill; o real ganho é manter o **número de linhas baixo via paginação** (Parte 1).
 
-## Telemetria leve
+**F. `select('*')` virar `select(...colunas que usamos)`**
+- Hoje pega `notes`, `ai_summary`, `ai_score_reason`, etc. — colunas grandes não usadas no listing. Selecionar só o necessário corta payload em ~40%:
+  ```ts
+  .select('id,name,phone,status,origin,product_interest,last_contact_at,next_contact_at,created_at,updated_at,ai_score,ai_priority')
+  ```
+  O `LeadDetailSheet` continua chamando `select('*').eq('id', ...)` quando abre.
 
-`localStorage` apenas (`tutorial:state` JSON: `{ completed: string[], lastSeenVersion: number }`). Bumpar `version` quando reescrevermos um tour reabre o "Novo".
+**G. Preconnect em `unpkg`/`fontshare`** já existe; tudo certo aí.
 
-## Integração no layout
+### O que NÃO vou fazer
+- **Virtualização de lista** (react-window) — paginação + grupos resolve sem complicar.
+- **Migrar tudo para React Query** — fetch atual funciona; risco/escopo grande.
+- **Mexer em CSS warm farmstand** ou na decisão de tipografia.
+- **Otimizar bundle prod** (code-splitting de rotas) — projeto Vite já faz por rota; build prod terá outros números, sem necessidade agora.
 
-- Inserir `<TutorialProvider>` envolvendo `<Outlet/>` em `CrmLayout`.
-- Inserir `<HelpButton/>` e `<TourOverlay/>` dentro do provider.
-- Hook `useRouteTour()` resolve o tour da rota atual via `useLocation`.
+---
+
+## Checagem final
+
+Após aplicar:
+- Repetir `browser--performance_profile` na rota `/admin/leads` e comparar **First Paint** e **render-blocking duration**.
+- Validar que paginação funciona: filtrar, mudar página, mudar `pageSize`, mudar de view (table/kanban/cards), reset ao buscar.
 
 ## Arquivos a criar
-
-- `src/components/tutorial/TutorialProvider.tsx`
-- `src/components/tutorial/HelpButton.tsx`
-- `src/components/tutorial/TourOverlay.tsx`
-- `src/components/tutorial/TourPopover.tsx`
-- `src/components/tutorial/Glossary.tsx`
-- `src/components/tutorial/types.ts`
-- `src/components/tutorial/tours/index.ts`
-- `src/components/tutorial/tours/{dashboard,leads,pipeline,clients,ia-home,ia-excel,whatsapp,boards,shared}.ts`
+- `src/hooks/useLeadsPaged.ts`
+- `src/components/admin/leads/LeadsPagination.tsx`
 
 ## Arquivos a editar
-
-- `src/components/crm/CrmLayout.tsx` — montar provider + botão.
-- `src/components/crm/MondaySidebar.tsx` — adicionar `data-tour` em itens.
-- `src/components/admin/AdminNavbar.tsx` — `data-tour` em busca/atalhos.
-- `src/pages/admin/DashboardPage.tsx` — `data-tour` em cards/tabs.
-- `src/pages/admin/LeadsPage.tsx` — `data-tour` em search/new/table/kanban.
-- `src/pages/admin/PipelinePage.tsx` — `data-tour` no board.
-- `src/pages/admin/ClientsPage.tsx` — `data-tour` na tabela.
-- `src/pages/admin/WhatsAppPage.tsx` — `data-tour` nos blocos.
-- `src/pages/admin/ia/IAHomePage.tsx` — `data-tour` nos cards.
-- `src/pages/admin/ia/IAExcelImportPage.tsx` — `data-tour` no dropzone, mapper, review (tour multi-etapa).
-- `src/pages/admin/TaskBoardPage.tsx` — `data-tour` nos grupos.
-- `src/index.css` — utilitário `.tour-spotlight` com transição suave do `clip-path`.
-
-## Fora de escopo (próxima iteração)
-
-- Onboarding sequencial cross-page (o tour atual é por tela).
-- Vídeos embutidos.
-- Tradução i18n (nascemos em pt-BR).
+- `index.html` — remover Google Fonts não usados; reduzir eixo do Material Symbols.
+- `src/index.css` — remover Oswald/Josefin do `@import`.
+- `src/pages/admin/LeadsPage.tsx` — `select` enxuto, `useMemo` em `leadIds`, integração da paginação por grupo, remover refetches duplicados.
+- `src/hooks/useInteractionCounts.ts` — sanity check de memoização interna (sem mudança se já for OK).

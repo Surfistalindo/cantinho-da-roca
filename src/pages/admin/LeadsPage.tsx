@@ -21,6 +21,8 @@ import BulkActionsBar from '@/components/admin/BulkActionsBar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import { useInteractionCounts } from '@/hooks/useInteractionCounts';
+import { useLeadsPaged, useResetPagesOn } from '@/hooks/useLeadsPaged';
+import LeadsPagination from '@/components/admin/leads/LeadsPagination';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -118,7 +120,8 @@ export default function LeadsPage() {
     return () => window.removeEventListener('crm:new-lead', h);
   }, []);
 
-  const interactionCounts = useInteractionCounts(leads.map((l) => l.id));
+  const leadIds = useMemo(() => leads.map((l) => l.id), [leads]);
+  const interactionCounts = useInteractionCounts(leadIds);
 
   useEffect(() => {
     const recency = searchParams.get('recency') as RecencyFilter | null;
@@ -187,8 +190,11 @@ export default function LeadsPage() {
     setFetchError(null);
     const { data, error } = await supabase
       .from('leads')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select(
+        'id,name,phone,status,origin,product_interest,last_contact_at,next_contact_at,notes,created_at,updated_at,ai_score,ai_priority,ai_score_reason,ai_summary',
+      )
+      .order('created_at', { ascending: false })
+      .limit(2000);
     if (error) {
       setFetchError(new Error(error.message ?? 'Erro ao carregar leads'));
     } else {
@@ -257,6 +263,14 @@ export default function LeadsPage() {
     }
     return { map, other };
   }, [filtered]);
+
+  // Paginação por grupo
+  const paged = useLeadsPaged();
+  // Reseta páginas quando filtros/busca/ordenação mudam
+  useResetPagesOn(paged.resetAll, [
+    statusFilter, originFilter, search, recencyFilter, priorityFilter,
+    sortBy, sortDir, activeKpi,
+  ]);
 
   const newestId = useMemo(() => {
     if (leads.length === 0) return null;
@@ -351,7 +365,7 @@ export default function LeadsPage() {
     toast.success(`${filtered.length} lead(s) exportado(s)`);
   };
 
-  // ----- Atalhos / 1 2 3 -----
+  // ----- Atalhos / 1 2 3 [ ] -----
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement)?.tagName;
@@ -366,10 +380,23 @@ export default function LeadsPage() {
       } else if (e.key === '1') setView('table');
       else if (e.key === '2') setView('kanban');
       else if (e.key === '3') setView('cards');
+      else if (e.key === '[' || e.key === ']') {
+        // Navega no primeiro grupo paginável visível
+        const dir = e.key === ']' ? 1 : -1;
+        for (const g of STATUS_GROUPS) {
+          const items = grouped.map[g.key];
+          if (items && items.length > paged.pageSize) {
+            const info = paged.paginate(items, g.key);
+            const next = Math.min(Math.max(1, info.page + dir), info.totalPages);
+            if (next !== info.page) info.setPage(next);
+            break;
+          }
+        }
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, []);
+  }, [grouped, paged]);
 
   const applySaved = (f: SavedLeadFilter) => {
     setSearch(f.search); setStatusFilter(f.status); setOriginFilter(f.origin);
@@ -656,24 +683,44 @@ export default function LeadsPage() {
                         );
                       });
 
-                    const renderGroup = (items: typeof filtered) => (
-                      <div
-                        className="overflow-x-auto overflow-y-auto crm-dense-table min-w-0 max-w-full"
-                        style={{ maxHeight: 'calc(100vh - 280px)' }}
-                      >
-                        <Table>
-                          {renderHeader(items.map((i) => i.id))}
-                          <TableBody>{renderRows(items)}</TableBody>
-                        </Table>
-                      </div>
-                    );
+                    const renderGroup = (items: typeof filtered, groupKey: string, showSizer: boolean) => {
+                      const info = paged.paginate(items, groupKey);
+                      return (
+                        <>
+                          <div
+                            className="overflow-x-auto overflow-y-auto crm-dense-table min-w-0 max-w-full"
+                            style={{ maxHeight: 'calc(100vh - 280px)' }}
+                          >
+                            <Table>
+                              {renderHeader(info.pageItems.map((i) => i.id))}
+                              <TableBody>{renderRows(info.pageItems)}</TableBody>
+                            </Table>
+                          </div>
+                          <LeadsPagination
+                            page={info.page}
+                            totalPages={info.totalPages}
+                            rangeStart={info.rangeStart}
+                            rangeEnd={info.rangeEnd}
+                            total={info.total}
+                            pageSize={paged.pageSize}
+                            onPageChange={info.setPage}
+                            onPageSizeChange={paged.setPageSize}
+                            showPageSize={showSizer}
+                          />
+                        </>
+                      );
+                    };
 
+                    // Marca o primeiro grupo visível para mostrar o seletor "por página"
+                    let sizerShown = false;
                     return (
                       <>
                         {STATUS_GROUPS.map((g) => {
                           const items = grouped.map[g.key];
                           if (items.length === 0) return null;
                           const todayCount = items.filter((l) => isToday(l.created_at)).length;
+                          const showSizer = !sizerShown;
+                          sizerShown = true;
                           return (
                             <GroupSection
                               key={g.key}
@@ -683,13 +730,13 @@ export default function LeadsPage() {
                               defaultOpen={g.key !== 'lost'}
                               meta={todayCount > 0 ? `${todayCount} hoje` : undefined}
                             >
-                              {renderGroup(items)}
+                              {renderGroup(items, g.key, showSizer)}
                             </GroupSection>
                           );
                         })}
                         {grouped.other.length > 0 && (
                           <GroupSection title="Outros" count={grouped.other.length} color="neutral" defaultOpen={false}>
-                            {renderGroup(grouped.other)}
+                            {renderGroup(grouped.other, '__other__', !sizerShown)}
                           </GroupSection>
                         )}
                       </>
@@ -699,15 +746,33 @@ export default function LeadsPage() {
 
                 {/* Mobile — usa visão de Cards */}
                 <div className="md:hidden">
-                  <LeadsCards
-                    leads={filtered}
-                    selected={selected}
-                    onToggleOne={toggleOne}
-                    newestId={newestId}
-                    interactionCounts={interactionCounts}
-                    onOpenDetail={openDetail}
-                    onUpdated={fetchLeads}
-                  />
+                  {(() => {
+                    const info = paged.paginate(filtered, '__mobile__');
+                    return (
+                      <>
+                        <LeadsCards
+                          leads={info.pageItems}
+                          selected={selected}
+                          onToggleOne={toggleOne}
+                          newestId={newestId}
+                          interactionCounts={interactionCounts}
+                          onOpenDetail={openDetail}
+                          onUpdated={fetchLeads}
+                        />
+                        <LeadsPagination
+                          page={info.page}
+                          totalPages={info.totalPages}
+                          rangeStart={info.rangeStart}
+                          rangeEnd={info.rangeEnd}
+                          total={info.total}
+                          pageSize={paged.pageSize}
+                          onPageChange={info.setPage}
+                          onPageSizeChange={paged.setPageSize}
+                          showPageSize
+                        />
+                      </>
+                    );
+                  })()}
                 </div>
               </>
             )}
