@@ -554,8 +554,11 @@ export default function DashboardPage() {
               <p className="text-[11px] text-muted-foreground mb-4">Volume, conversão e taxa de resposta por origem do lead.</p>
               <ChannelPerformance
                 rows={channels}
-                activeOrigin={filters.origin === 'all' ? null : filters.origin}
-                onSelect={(origin) => updateFilters({ ...filters, origin })}
+                activeOrigin={filters.origins.length === 1 ? filters.origins[0] : null}
+                onSelect={(origin) => {
+                  const isActive = filters.origins.length === 1 && filters.origins[0] === origin;
+                  updateFilters({ ...filters, origins: isActive ? [] : [origin] });
+                }}
               />
             </div>
 
