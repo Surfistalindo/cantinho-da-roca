@@ -287,7 +287,12 @@ export default function LeadDetailSheet({ lead, open, onOpenChange, onUpdated }:
           </SheetHeader>
 
           {/* CONTEÚDO */}
-          <div className="px-6 py-5 space-y-4 flex-1">
+          <div
+            className="px-6 py-5 space-y-4 flex-1"
+            role="region"
+            aria-label="Detalhes e histórico do lead"
+            tabIndex={0}
+          >
             {/* Por que essa prioridade */}
             {scoreInfo && scoreInfo.level !== 'closed' && scoreInfo.reasons.length > 0 && (
               <section className={cn(
