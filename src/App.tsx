@@ -23,6 +23,7 @@ import IAClassifyPage from "./pages/admin/ia/IAClassifyPage";
 import IAScorePage from "./pages/admin/ia/IAScorePage";
 import IAInsightsPage from "./pages/admin/ia/IAInsightsPage";
 import IAAssistantPage from "./pages/admin/ia/IAAssistantPage";
+import AuditUiPage from "./pages/admin/AuditUiPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ const App = () => (
               <Route path="ia/score" element={<IAScorePage />} />
               <Route path="ia/insights" element={<IAInsightsPage />} />
               <Route path="ia/assistant" element={<IAAssistantPage />} />
+              <Route path="audit-ui" element={<AuditUiPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
