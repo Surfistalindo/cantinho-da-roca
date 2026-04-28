@@ -93,15 +93,15 @@ export default function AdminSidebar() {
             type="button"
             onClick={() => setIaOpen((v) => !v)}
             className={cn(
-              'group flex items-center w-full h-10 rounded-lg px-3 text-[13px] font-medium gap-3 transition-colors',
+              'group relative flex items-center w-full h-9 rounded-md px-3 text-[12.5px] font-medium gap-3 transition-colors',
               isOnIA
-                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
+                ? 'sidebar-item-active text-sidebar-accent-foreground'
+                : 'text-sidebar-foreground hover:bg-sidebar-accent/40 hover:text-sidebar-accent-foreground',
             )}
           >
-            <MSym name={item.icon} size={20} className={cn(isOnIA && 'text-sidebar-primary')} filled={isOnIA} />
+            <MSym name={item.icon} size={18} className={cn(isOnIA && 'text-sidebar-primary')} filled={isOnIA} />
             <span className="flex-1 text-left">{item.title}</span>
-            <MSym name="expand_more" size={18} className={cn('transition-transform opacity-60', iaOpen && 'rotate-180')} />
+            <MSym name="expand_more" size={16} className={cn('transition-transform opacity-60', iaOpen && 'rotate-180')} />
           </button>
         </SidebarMenuItem>
       );
@@ -109,18 +109,18 @@ export default function AdminSidebar() {
 
     return (
       <SidebarMenuItem key={item.key}>
-        <SidebarMenuButton asChild className="h-10 rounded-lg px-3 text-[13px] font-medium text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground transition-colors">
+        <SidebarMenuButton asChild className="h-9 rounded-md px-3 text-[12.5px] font-medium text-sidebar-foreground hover:bg-sidebar-accent/40 hover:text-sidebar-accent-foreground transition-colors">
           <NavLink
             to={item.url}
             end={item.key !== 'ia'}
-            activeClassName="!bg-sidebar-accent !text-sidebar-accent-foreground [&_.material-symbols-outlined]:text-sidebar-primary"
+            activeClassName="sidebar-item-active !text-sidebar-accent-foreground [&_.material-symbols-outlined]:text-sidebar-primary"
           >
-            <MSym name={item.icon} size={20} />
+            <MSym name={item.icon} size={18} />
             {!collapsed && (
               <span className="flex-1 flex items-center justify-between">
                 <span>{item.title}</span>
                 {badgeValue > 0 && (
-                  <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-destructive/20 text-destructive text-[10px] font-semibold">
+                  <span className="inline-flex items-center justify-center min-w-[18px] h-4 px-1.5 rounded-full bg-destructive/20 text-destructive text-[10px] font-semibold">
                     {badgeValue}
                   </span>
                 )}
@@ -134,15 +134,15 @@ export default function AdminSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
-      <SidebarHeader className="px-4 pt-5 pb-4">
-        <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
-          <div className="h-10 w-10 shrink-0 rounded-xl bg-white/95 ring-1 ring-sidebar-border flex items-center justify-center overflow-hidden p-1">
+      <SidebarHeader className="px-3 pt-4 pb-3 border-b border-sidebar-border/60">
+        <div className={cn('flex items-center gap-2.5', collapsed && 'justify-center')}>
+          <div className="h-9 w-9 shrink-0 rounded-lg bg-white/95 ring-1 ring-sidebar-border flex items-center justify-center overflow-hidden p-0.5">
             <img src={cantimLogo} alt="Cantim da Roça" className="h-full w-full object-contain" />
           </div>
           {!collapsed && (
             <div className="min-w-0 leading-tight">
-              <p className="text-[15px] font-bold text-sidebar-accent-foreground truncate">Cantim da Roça</p>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-sidebar-primary font-semibold">CRM Enterprise</p>
+              <p className="text-[13px] font-bold text-sidebar-accent-foreground truncate">Cantim da Roça</p>
+              <p className="text-[9px] uppercase tracking-[0.2em] text-sidebar-primary font-semibold">Workspace</p>
             </div>
           )}
         </div>
@@ -155,16 +155,16 @@ export default function AdminSidebar() {
               {primaryItems.map(renderItem)}
 
               {!collapsed && iaOpen && (
-                <div className="ml-4 mt-1 mb-1 pl-3 border-l border-sidebar-border space-y-0.5">
+                <div className="ml-3 mt-0.5 mb-1 pl-3 border-l border-sidebar-border/70 space-y-0.5">
                   {iaSubItems.map((sub) => (
                     <SidebarMenuItem key={sub.url}>
-                      <SidebarMenuButton asChild className="h-8 rounded-md px-2.5 text-[12px] text-sidebar-foreground/75 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-colors">
+                      <SidebarMenuButton asChild className="h-7 rounded-md px-2 text-[11.5px] text-sidebar-foreground/70 hover:bg-sidebar-accent/40 hover:text-sidebar-accent-foreground transition-colors">
                         <NavLink
                           to={sub.url}
                           end
-                          activeClassName="!bg-sidebar-accent !text-sidebar-accent-foreground [&_.material-symbols-outlined]:text-sidebar-primary"
+                          activeClassName="sidebar-item-active !text-sidebar-accent-foreground [&_.material-symbols-outlined]:text-sidebar-primary"
                         >
-                          <MSym name={sub.icon} size={16} className="opacity-70" />
+                          <MSym name={sub.icon} size={14} className="opacity-70" />
                           <span>{sub.title}</span>
                         </NavLink>
                       </SidebarMenuButton>
@@ -176,13 +176,13 @@ export default function AdminSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="mt-4">
+        <SidebarGroup className="mt-3">
           <SidebarGroupContent>
-            <SidebarMenu className="gap-1">
+            <SidebarMenu className="gap-0.5">
               <SidebarMenuItem>
-                <SidebarMenuButton asChild className="h-10 rounded-lg px-3 text-[13px] text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground transition-colors">
+                <SidebarMenuButton asChild className="h-9 rounded-md px-3 text-[12.5px] text-sidebar-foreground hover:bg-sidebar-accent/40 hover:text-sidebar-accent-foreground transition-colors">
                   <a href="/" target="_blank" rel="noopener noreferrer">
-                    <MSym name="open_in_new" size={20} />
+                    <MSym name="open_in_new" size={18} />
                     {!collapsed && <span>Site público</span>}
                   </a>
                 </SidebarMenuButton>
