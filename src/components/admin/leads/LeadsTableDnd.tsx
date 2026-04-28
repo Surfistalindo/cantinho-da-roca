@@ -156,9 +156,6 @@ export function DraggableRow({
   const grip = (
     <button
       type="button"
-      ref={(el) => {
-        // só liga ref aqui (no handle)
-      }}
       {...listeners}
       {...attributes}
       onClick={(e) => e.stopPropagation()}
