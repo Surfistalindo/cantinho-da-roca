@@ -774,8 +774,11 @@ export default function LeadsPage() {
                             <TableCell className="text-[11px] text-muted-foreground whitespace-nowrap font-mono">
                               {format(new Date(lead.created_at), 'dd/MM/yy', { locale: ptBR })}
                             </TableCell>
-                            <TableCell onClick={(e) => e.stopPropagation()}>
-                              <div className="flex justify-end gap-0.5 opacity-70 group-hover:opacity-100 transition-opacity">
+                            <TableCell
+                              onClick={(e) => e.stopPropagation()}
+                              className={cn(density === 'comfortable' && 'crm-pin-right')}
+                            >
+                              <div className="crm-row-actions flex justify-end gap-0.5">
                                 {density !== 'compact' && (
                                   <QuickActionsPopover
                                     leadId={lead.id}
