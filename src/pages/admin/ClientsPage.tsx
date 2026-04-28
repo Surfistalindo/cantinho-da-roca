@@ -262,7 +262,7 @@ export default function ClientsPage() {
           </div>
         )}
 
-        <div className="board-panel p-3 space-y-3">
+        <div className="board-panel p-3 space-y-3 min-w-0">
           <ClientFilters
             search={search}
             onSearchChange={setSearch}
@@ -374,7 +374,10 @@ export default function ClientsPage() {
                 });
 
               const renderGroup = (items: typeof filtered) => (
-                <div className="overflow-x-auto crm-dense-table">
+                <div
+                  className="overflow-x-auto overflow-y-auto crm-dense-table min-w-0 max-w-full"
+                  style={{ maxHeight: 'calc(100vh - 320px)' }}
+                >
                   <Table>
                     {renderHeader()}
                     <TableBody>{renderRows(items)}</TableBody>

@@ -450,7 +450,7 @@ export default function LeadsPage() {
           onSelect={applyKpi}
         />
 
-        <div className="board-panel p-3 space-y-3">
+        <div className="board-panel p-3 space-y-3 min-w-0">
           <div className="flex flex-wrap items-start gap-2">
             <div ref={searchInputRef} className="flex-1 min-w-0">
               <LeadFilters
@@ -655,7 +655,10 @@ export default function LeadsPage() {
                       });
 
                     const renderGroup = (items: typeof filtered) => (
-                      <div className="overflow-x-auto crm-dense-table">
+                      <div
+                        className="overflow-x-auto overflow-y-auto crm-dense-table min-w-0 max-w-full"
+                        style={{ maxHeight: 'calc(100vh - 280px)' }}
+                      >
                         <Table>
                           {renderHeader(items.map((i) => i.id))}
                           <TableBody>{renderRows(items)}</TableBody>
