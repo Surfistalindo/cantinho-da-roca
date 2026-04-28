@@ -268,24 +268,44 @@ export default function IAExcelImportPage() {
 }
 
 function FlowActions({
-  backLabel, onBack, nextLabel, onNext, nextDisabled,
+  backLabel, onBack, nextLabel, onNext, nextDisabled, nextHint, disabledReason,
 }: {
   backLabel: string;
   onBack: () => void;
   nextLabel: string;
   onNext: () => void;
   nextDisabled?: boolean;
+  nextHint?: string;
+  disabledReason?: string;
 }) {
+  const button = (
+    <Button onClick={onNext} disabled={nextDisabled} className="gap-2">
+      {nextLabel}
+      <FontAwesomeIcon icon={faArrowRight} className="h-3.5 w-3.5" />
+    </Button>
+  );
+  const tooltipText = nextDisabled && disabledReason ? disabledReason : nextHint;
   return (
     <div className="flex items-center justify-between gap-3 pt-1">
       <Button variant="ghost" onClick={onBack} className="gap-2">
         <FontAwesomeIcon icon={faArrowLeft} className="h-3 w-3" />
         {backLabel}
       </Button>
-      <Button onClick={onNext} disabled={nextDisabled} className="gap-2">
-        {nextLabel}
-        <FontAwesomeIcon icon={faArrowRight} className="h-3.5 w-3.5" />
-      </Button>
+      <div className="flex flex-col items-end gap-1">
+        {tooltipText ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-block">{button}</span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[280px] text-xs">
+              {tooltipText}
+            </TooltipContent>
+          </Tooltip>
+        ) : button}
+        {nextHint && !nextDisabled && (
+          <span className="text-[10.5px] text-muted-foreground hidden sm:inline">{nextHint}</span>
+        )}
+      </div>
     </div>
   );
 }
