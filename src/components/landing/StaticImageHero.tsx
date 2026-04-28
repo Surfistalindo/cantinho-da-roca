@@ -88,7 +88,6 @@ const StaticImageHero: React.FC = () => {
         aria-hidden="true"
       />
 
-      {/* Overlay de legibilidade reforçado na base */}
       {/* Conteúdo */}
       <div
         className="relative z-10 flex min-h-screen flex-col items-center justify-center sm:justify-end pb-12 sm:pb-24 px-6 sm:px-10 pt-24 sm:pt-28 md:pt-32"
