@@ -35,12 +35,10 @@ export default function CrmLayout() {
     <SidebarProvider>
       <TutorialProvider>
         <div className="min-h-screen flex w-full bg-surface-sunken font-crm text-foreground overflow-x-hidden">
-          {/* Sidebar fica fixa em viewport; documento todo é o scroller.
-              No mobile, .crm-sidebar-shell anula o sticky/h-screen para
-              não interferir com o scroll do documento (Sheet do shadcn assume). */}
-          <div className="crm-sidebar-shell crm-sticky-layer sticky top-0 h-screen shrink-0 z-20">
-            <MondaySidebar />
-          </div>
+          {/* Sidebar usa position:fixed internamente (shadcn) — fica colada
+              no viewport do topo até a base durante todo o scroll do documento.
+              No mobile vira Sheet automaticamente. */}
+          <MondaySidebar />
           <div className="flex-1 flex flex-col min-w-0 bg-surface-1 crm-paper-bg">
             <AdminNavbar onOpenPalette={() => setPaletteOpen(true)} onShowHelp={() => setHelpOpen(true)} />
             <main className="flex-1 min-w-0">
