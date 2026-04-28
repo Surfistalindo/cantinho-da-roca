@@ -506,6 +506,7 @@ export default function LeadsPage() {
                 onRecencyChange={updateRecency}
                 priorityFilter={priorityFilter}
                 onPriorityChange={updatePriority}
+                availableOrigins={availableOrigins}
               />
             </div>
             <SavedFiltersMenu
