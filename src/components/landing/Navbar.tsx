@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBarsStaggered, faXmark } from '@fortawesome/free-solid-svg-icons';
-import logo from '@/assets/logo-cantinho.png';
+import { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBarsStaggered, faXmark } from "@fortawesome/free-solid-svg-icons";
+import logo from "@/assets/logo-cantinho.png";
 
 const links = [
-  { label: 'Início', href: '#inicio' },
-  { label: 'Benefícios', href: '#beneficios' },
-  { label: 'Produtos', href: '#produtos' },
-  { label: 'Depoimentos', href: '#depoimentos' },
-  { label: 'Cadastre-se', href: '#contato', highlight: true },
+  { label: "Início", href: "#inicio" },
+  { label: "Benefícios", href: "#beneficios" },
+  { label: "Produtos", href: "#produtos" },
+  { label: "Depoimentos", href: "#depoimentos" },
+  { label: "Cadastre-se", href: "#contato", highlight: true },
 ];
 
 interface NavbarProps {
@@ -24,8 +24,8 @@ export default function Navbar({ scrollY }: NavbarProps) {
 
   const handleClick = (href: string) => {
     setOpen(false);
-    const id = href.replace('#', '');
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    const id = href.replace("#", "");
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -34,25 +34,24 @@ export default function Navbar({ scrollY }: NavbarProps) {
       style={{
         opacity: navbarOpacity,
         transform: `translateY(${navbarTranslateY}%)`,
-        transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease',
-        pointerEvents: showNavbar ? 'auto' : 'none',
-        paddingTop: 'env(safe-area-inset-top)',
+        transition: "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease",
+        pointerEvents: showNavbar ? "auto" : "none",
       }}
     >
       <div
         className="absolute inset-0 bg-[#f7f5f0]/85 backdrop-blur-xl shadow-lg shadow-black/[0.03]"
-        style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}
+        style={{ borderBottom: "1px solid rgba(0,0,0,0.06)" }}
       />
-      <div className="section-container relative flex items-center justify-between h-16 sm:h-20 overflow-visible">
-        <div className="flex items-center justify-start h-full shrink-0">
+      <div className="section-container relative flex items-center justify-between h-16 sm:h-[72px]">
+        <div className="flex items-center h-full">
           <img
             src={logo}
             alt="Cantinho da Roça"
-            className="h-24 sm:h-32 md:h-40 w-auto block object-contain origin-left"
+            className="h-14 sm:h-20"
             style={{
               opacity: showNavbar ? 1 : 0,
-              transform: showNavbar ? 'scale(1)' : 'scale(0.8)',
-              transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+              transform: showNavbar ? "scale(1)" : "scale(0.8)",
+              transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
           />
         </div>
@@ -65,12 +64,12 @@ export default function Navbar({ scrollY }: NavbarProps) {
                 onClick={() => handleClick(l.href)}
                 className={
                   (l as any).highlight
-                    ? 'text-sm font-semibold tracking-wide bg-clay text-white px-4 py-2 rounded-full hover:bg-clay/90 transition-colors'
-                    : 'text-sm font-medium tracking-wide text-foreground/60 hover:text-primary transition-colors relative group'
+                    ? "text-sm font-semibold tracking-wide bg-primary text-primary-foreground px-4 py-2 rounded-full hover:bg-primary/90 transition-colors"
+                    : "text-sm font-medium tracking-wide text-foreground/60 hover:text-primary transition-colors relative group"
                 }
                 style={{
                   opacity: showNavbar ? 1 : 0,
-                  transform: showNavbar ? 'translateY(0)' : 'translateY(-8px)',
+                  transform: showNavbar ? "translateY(0)" : "translateY(-8px)",
                   transition: `all 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${i * 0.05}s`,
                 }}
               >
@@ -84,11 +83,7 @@ export default function Navbar({ scrollY }: NavbarProps) {
         </ul>
 
         {/* Mobile toggle */}
-        <button
-          className="md:hidden text-foreground/70 relative"
-          onClick={() => setOpen(!open)}
-          aria-label="Menu"
-        >
+        <button className="md:hidden text-foreground/70 relative" onClick={() => setOpen(!open)} aria-label="Menu">
           <FontAwesomeIcon icon={open ? faXmark : faBarsStaggered} className="h-6 w-6" />
         </button>
       </div>
@@ -97,9 +92,9 @@ export default function Navbar({ scrollY }: NavbarProps) {
       <div
         className="md:hidden overflow-hidden"
         style={{
-          maxHeight: open ? '400px' : '0',
+          maxHeight: open ? "400px" : "0",
           opacity: open ? 1 : 0,
-          transition: 'max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease',
+          transition: "max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease",
         }}
       >
         <div className="bg-[#f7f5f0]/95 backdrop-blur-xl border-t border-border/30">
@@ -111,7 +106,7 @@ export default function Navbar({ scrollY }: NavbarProps) {
                   className="w-full text-left px-6 py-3 text-foreground/80 hover:text-primary hover:bg-primary/5 transition-colors font-medium"
                   style={{
                     opacity: open ? 1 : 0,
-                    transform: open ? 'translateX(0)' : 'translateX(-20px)',
+                    transform: open ? "translateX(0)" : "translateX(-20px)",
                     transition: `all 0.3s ease ${i * 0.06}s`,
                   }}
                 >
