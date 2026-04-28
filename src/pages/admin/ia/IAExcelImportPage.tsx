@@ -169,6 +169,7 @@ export default function IAExcelImportPage() {
               onDeleteTemplate={im.removeMappingTemplate}
               detectedTemplate={state.detectedTemplate}
               onDismissDetected={im.dismissDetectedTemplate}
+              samplesByHeader={state.samplesByHeader}
             />
           </div>
           {!hasNameMapping && (
@@ -181,8 +182,10 @@ export default function IAExcelImportPage() {
             backLabel="Trocar arquivo"
             onBack={im.back}
             nextLabel="Definir estratégia"
+            nextHint="Próximo: escolher o que fazer quando o telefone do lead já existir no CRM."
             onNext={im.goToStrategy}
             nextDisabled={!hasNameMapping}
+            disabledReason="Mapeie ao menos uma coluna como Nome para continuar."
           />
         </div>
       )}
