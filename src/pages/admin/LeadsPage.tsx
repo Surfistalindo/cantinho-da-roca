@@ -391,52 +391,73 @@ export default function LeadsPage() {
               {/* Desktop — agrupado por status estilo Monday */}
               <div className="hidden md:block space-y-2">
                 {(() => {
-                  const renderHeader = () => (
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent border-border">
-                        <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground min-w-[240px]">Lead</TableHead>
-                        <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Origem</TableHead>
-                        <TableHead className="hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[200px]">Interesse</TableHead>
-                        <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px]">Status</TableHead>
-                        <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[120px]">Prioridade</TableHead>
-                        <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Recência</TableHead>
-                        <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[100px]">
-                          <button
-                            onClick={toggleSort}
-                            className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors uppercase"
-                            title={sortBy === 'score' ? 'Ordenado por prioridade' : 'Ordenado por data'}
-                          >
-                            {sortBy === 'score' ? 'Prioridade' : 'Entrada'}
-                            <FontAwesomeIcon
-                              icon={sortDir === 'desc' ? faArrowDownShortWide : faArrowUpShortWide}
-                              className="h-3 w-3"
+                  const renderHeader = (groupIds: string[]) => {
+                    const allChecked = groupIds.length > 0 && groupIds.every((id) => selected.has(id));
+                    const someChecked = !allChecked && groupIds.some((id) => selected.has(id));
+                    return (
+                      <TableHeader>
+                        <TableRow className="hover:bg-transparent border-border">
+                          <TableHead className="w-[36px] pl-3 pr-0">
+                            <Checkbox
+                              checked={allChecked || (someChecked && 'indeterminate')}
+                              onCheckedChange={() => toggleGroup(groupIds, allChecked)}
+                              aria-label="Selecionar todos"
                             />
-                          </button>
-                        </TableHead>
-                        <TableHead className="w-[120px] text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                  );
+                          </TableHead>
+                          <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground min-w-[240px]">Lead</TableHead>
+                          <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Origem</TableHead>
+                          <TableHead className="hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[200px]">Interesse</TableHead>
+                          <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[160px]">Status</TableHead>
+                          <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[120px]">Prioridade</TableHead>
+                          <TableHead className="hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]">Recência</TableHead>
+                          <TableHead className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[100px]">
+                            <button
+                              onClick={toggleSort}
+                              className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors uppercase"
+                              title={sortBy === 'score' ? 'Ordenado por prioridade' : 'Ordenado por data'}
+                            >
+                              {sortBy === 'score' ? 'Prioridade' : 'Entrada'}
+                              <FontAwesomeIcon
+                                icon={sortDir === 'desc' ? faArrowDownShortWide : faArrowUpShortWide}
+                                className="h-3 w-3"
+                              />
+                            </button>
+                          </TableHead>
+                          <TableHead className="w-[120px] text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                    );
+                  };
 
                   const renderRows = (items: typeof filtered) =>
                     items.map((lead) => {
                       const isNewest = lead.id === newestId;
                       const score = getLeadScore(lead, { interactionCount: interactionCounts[lead.id] ?? 0 });
+                      const isChecked = selected.has(lead.id);
                       return (
                         <TableRow
                           key={lead.id}
                           tabIndex={0}
                           className={cn(
-                            'group cursor-pointer border-border/60 outline-none',
+                            'group cursor-pointer border-border/60 outline-none transition-colors',
+                            rowPad,
                             isNewest && '!bg-primary/5 hover:!bg-primary/10',
+                            isChecked && '!bg-primary/[0.06] hover:!bg-primary/10',
                             score.urgent && 'border-l-2 border-l-destructive',
                           )}
                           onClick={() => openDetail(lead)}
                           onKeyDown={(e) => { if (e.key === 'Enter') openDetail(lead); }}
                         >
+                          <TableCell className="pl-3 pr-0" onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              checked={isChecked}
+                              onCheckedChange={() => toggleOne(lead.id)}
+                              aria-label={`Selecionar ${lead.name}`}
+                            />
+                          </TableCell>
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-3">
-                              <InitialsAvatar name={lead.name} size="md" />
+                              <InitialsAvatar name={lead.name} size={density === 'compact' ? 'sm' : 'md'} />
                               <div className="min-w-0">
                                 <div className="flex items-center gap-1.5">
                                   {isNewest && (
@@ -444,7 +465,9 @@ export default function LeadsPage() {
                                   )}
                                   <span className="text-sm font-semibold truncate">{lead.name}</span>
                                 </div>
-                                <span className="text-[11px] text-muted-foreground font-mono">{lead.phone ?? '—'}</span>
+                                {density === 'comfortable' && (
+                                  <span className="text-[11px] text-muted-foreground font-mono">{lead.phone ?? '—'}</span>
+                                )}
                               </div>
                             </div>
                           </TableCell>
@@ -474,7 +497,7 @@ export default function LeadsPage() {
                             {format(new Date(lead.created_at), 'dd/MM/yy', { locale: ptBR })}
                           </TableCell>
                           <TableCell onClick={(e) => e.stopPropagation()}>
-                            <div className="flex justify-end gap-0.5">
+                            <div className="flex justify-end gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openDetail(lead)}>
