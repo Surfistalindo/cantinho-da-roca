@@ -201,16 +201,16 @@ const HeroSection: React.FC<HeroSectionProps> = ({ scrollY }) => {
           >
             Mais disposição, menos inchaço e bem-estar no dia a dia.
             <br className="hidden sm:block" />
-            {' '}Cadastre-se e receba dicas, novidades e ofertas
+            {' '}Fale com a gente pelo WhatsApp
             <br className="hidden sm:block" />
-            {' '}direto no seu WhatsApp.
+            {' '}pra fazer seu pedido.
           </p>
         </div>
 
         {/* CTA */}
         <div className="flex flex-col sm:flex-row justify-center gap-3 pt-6">
           <Button size="lg" className="uppercase w-full sm:w-auto" onClick={scrollToContato}>
-            Quero receber novidades
+            Quero comprar
           </Button>
           <Button variant="outline" size="lg" className="uppercase w-full sm:w-auto" onClick={scrollToProducts}>
             Ver produtos

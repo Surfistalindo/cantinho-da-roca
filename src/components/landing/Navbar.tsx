@@ -8,7 +8,7 @@ const links = [
   { label: "Benefícios", href: "#beneficios" },
   { label: "Produtos", href: "#produtos" },
   { label: "Depoimentos", href: "#depoimentos" },
-  { label: "Cadastre-se", href: "#contato", highlight: true },
+  { label: "Quero comprar", href: "#contato", highlight: true },
 ];
 
 interface NavbarProps {
