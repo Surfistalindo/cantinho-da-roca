@@ -760,7 +760,7 @@ export default function LeadsPage() {
                     const renderRows = (items: typeof filtered) =>
                       items.map((lead) => {
                         const isNewest = lead.id === newestId;
-                        const score = getLeadScore(lead, { interactionCount: interactionCounts[lead.id] ?? 0 });
+                        const score = scoreByLead[lead.id] ?? getLeadScore(lead, { interactionCount: interactionCounts[lead.id] ?? 0 });
                         const isChecked = selected.has(lead.id);
                         return (
                           <DraggableRow key={lead.id} id={lead.id}>
