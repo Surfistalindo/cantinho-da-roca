@@ -26,9 +26,9 @@ const ICONS = {
 };
 
 const SIZES: Record<Size, { wrap: string; icon: string; text: string; dot: string }> = {
-  sm: { wrap: 'h-5 px-1.5 gap-1 text-[10px]', icon: 'h-2.5 w-2.5', text: 'text-[10px]', dot: 'h-2 w-2' },
-  md: { wrap: 'h-6 px-2 gap-1.5 text-[11px]', icon: 'h-3 w-3', text: 'text-[11px]', dot: 'h-2.5 w-2.5' },
-  lg: { wrap: 'h-8 px-2.5 gap-2 text-xs', icon: 'h-3.5 w-3.5', text: 'text-xs', dot: 'h-3 w-3' },
+  sm: { wrap: 'min-h-[20px] py-0.5 px-2 gap-1 text-[10px] leading-none', icon: 'h-2.5 w-2.5', text: 'text-[10px]', dot: 'h-2 w-2' },
+  md: { wrap: 'min-h-[24px] py-0.5 px-2 gap-1.5 text-[11px] leading-none', icon: 'h-3 w-3', text: 'text-[11px]', dot: 'h-2.5 w-2.5' },
+  lg: { wrap: 'min-h-[32px] py-1 px-2.5 gap-2 text-xs leading-none', icon: 'h-3.5 w-3.5', text: 'text-xs', dot: 'h-3 w-3' },
 };
 
 export default function LeadScoreBadge({
@@ -96,7 +96,7 @@ export default function LeadScoreBadge({
           <FontAwesomeIcon icon={icon} className={sz.icon} />
           <span>{info.label}</span>
           {!hideScore && info.level !== 'closed' && (
-            <span className="opacity-70 font-mono">· {info.score}</span>
+            <span className="opacity-75 font-mono" title="Pontuação de prioridade (0 a 100)">{info.score}/100</span>
           )}
         </span>
       </TooltipTrigger>
