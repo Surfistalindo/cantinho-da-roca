@@ -251,11 +251,11 @@ export default function LeadsPage() {
         if (info.level !== recencyFilter) return false;
       }
       if (priorityFilter !== 'all') {
-        const info = getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 });
-        if (info.level !== priorityFilter) return false;
+        const info = scoreByLead[l.id];
+        if (info && info.level !== priorityFilter) return false;
       }
       if (activeKpi) {
-        const score = getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 });
+        const score = scoreByLead[l.id];
         const rec = getContactRecency(l.last_contact_at, l.status, l.created_at);
         if (activeKpi === 'today' && new Date(l.created_at).toDateString() !== new Date().toDateString()) return false;
         if (activeKpi === 'waiting' && l.status !== 'new') return false;
@@ -280,7 +280,7 @@ export default function LeadsPage() {
     if (sortBy === 'score') {
       const enriched = list.map((l) => ({
         ...l,
-        _scoreInfo: getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 }),
+        _scoreInfo: scoreByLead[l.id],
       }));
       enriched.sort(compareByScore);
       return enriched;
