@@ -195,6 +195,7 @@ export default function LeadsPage() {
 
   const hasActiveFilters =
     search.trim() !== '' || statusFilter !== 'all' || originFilter !== 'all' ||
+    interestFilter !== 'all' || assigneeFilter !== 'all' ||
     recencyFilter !== 'all' || priorityFilter !== 'all' || activeKpi !== null ||
     !!dateFrom || !!dateTo;
 
@@ -202,6 +203,7 @@ export default function LeadsPage() {
     logger.debug('[leads] filters cleared');
     url.set({
       search: '', status: 'all', origin: 'all',
+      interest: 'all', assignee: 'all',
       recency: 'all', priority: 'all', from: null, to: null,
     });
     setActiveKpi(null);
