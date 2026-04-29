@@ -54,7 +54,7 @@ export default function LeadCard({ lead, onClick, interactionCount }: Props) {
         'before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:rounded-full',
         sideTone,
         score.urgent && 'ring-1 ring-destructive/40',
-        isDragging && 'opacity-50 ring-2 ring-primary/40 shadow-pop rotate-[0.5deg]',
+        isDragging && 'opacity-50 ring-2 ring-primary/40 shadow-pop',
       )}
     >
       {score.level !== 'closed' && (
