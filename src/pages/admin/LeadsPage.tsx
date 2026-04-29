@@ -119,10 +119,30 @@ export default function LeadsPage() {
   const search = url.search;
   const statusFilter = url.status;
   const originFilter = url.origin;
+  const interestFilter = url.interest;
+  const assigneeFilter = url.assignee;
   const recencyFilter = url.recency;
   const priorityFilter = url.priority;
   const dateFrom = url.from;
   const dateTo = url.to;
+
+  // Mapa de profiles (id → nome) para busca por responsável e filtro
+  const [profilesMap, setProfilesMap] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from('profiles')
+      .select('user_id,name,email')
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        const m: Record<string, string> = {};
+        for (const p of data as Array<{ user_id: string; name: string | null; email: string | null }>) {
+          m[p.user_id] = p.name || p.email?.split('@')[0] || 'Usuário';
+        }
+        setProfilesMap(m);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => { localStorage.setItem('crm:leads:rowHeight', String(rowHeight)); }, [rowHeight]);
   useEffect(() => {
