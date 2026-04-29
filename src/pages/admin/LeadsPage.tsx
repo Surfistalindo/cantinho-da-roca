@@ -257,6 +257,45 @@ export default function LeadsPage() {
     return Array.from(map.values()).sort((a, b) => a.localeCompare(b, 'pt-BR'));
   }, [leads]);
 
+  // Interesses reais presentes nos leads (com contagem)
+  const availableInterests = useMemo(() => {
+    const map = new Map<string, { value: string; count: number }>();
+    for (const l of leads) {
+      if (!l.product_interest) continue;
+      const trimmed = l.product_interest.trim();
+      if (!trimmed) continue;
+      const k = trimmed.toLowerCase();
+      const cur = map.get(k);
+      if (cur) cur.count++;
+      else map.set(k, { value: trimmed, count: 1 });
+    }
+    return Array.from(map.values()).sort((a, b) => a.value.localeCompare(b.value, 'pt-BR'));
+  }, [leads]);
+
+  // Responsáveis reais presentes nos leads (intersecção com profilesMap)
+  const availableAssignees = useMemo(() => {
+    const seen = new Set<string>();
+    for (const l of leads) {
+      if (l.assigned_to) seen.add(l.assigned_to);
+    }
+    return Array.from(seen)
+      .map((id) => ({ id, name: profilesMap[id] ?? 'Usuário' }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  }, [leads, profilesMap]);
+
+  // Mapa status → rótulo amigável (pt-BR), para que a busca case com "novo", "negociação" etc.
+  const statusLabelById = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const s of [
+      { value: 'new', label: 'Novo lead' },
+      { value: 'contacting', label: 'Em contato' },
+      { value: 'negotiating', label: 'Negociação' },
+      { value: 'won', label: 'Cliente ganho' },
+      { value: 'lost', label: 'Perdido' },
+    ]) m[s.value] = s.label;
+    return m;
+  }, []);
+
   // Lookup id → { name, status } usado pelo DnD da tabela.
   const leadIndex = useMemo(() => {
     const map: Record<string, { name: string; status: string }> = {};
@@ -268,6 +307,12 @@ export default function LeadsPage() {
     const list = leads.filter((l) => {
       if (statusFilter !== 'all' && l.status !== statusFilter) return false;
       if (originFilter !== 'all' && (l.origin ?? '').trim().toLowerCase() !== originFilter.trim().toLowerCase()) return false;
+      if (interestFilter !== 'all' && (l.product_interest ?? '').trim().toLowerCase() !== interestFilter.trim().toLowerCase()) return false;
+      if (assigneeFilter !== 'all') {
+        if (assigneeFilter === 'none') {
+          if (l.assigned_to) return false;
+        } else if (l.assigned_to !== assigneeFilter) return false;
+      }
       if (recencyFilter !== 'all') {
         const info = getContactRecency(l.last_contact_at, l.status, l.created_at);
         if (info.level !== recencyFilter) return false;
@@ -292,10 +337,27 @@ export default function LeadsPage() {
       }
       if (search) {
         const q = search.toLowerCase().trim();
+        if (!q) return true;
         const onlyDigits = q.replace(/\D/g, '');
         const phoneDigits = (l.phone ?? '').replace(/\D/g, '');
-        const phoneHit = onlyDigits.length >= 3 ? phoneDigits.includes(onlyDigits) : false;
-        if (!l.name.toLowerCase().includes(q) && !phoneHit && !(l.phone ?? '').toLowerCase().includes(q)) return false;
+        const phoneHit = onlyDigits.length >= 3 && phoneDigits.includes(onlyDigits);
+        const assigneeName = l.assigned_to ? (profilesMap[l.assigned_to] ?? '').toLowerCase() : '';
+        const statusLabel = (statusLabelById[l.status] ?? l.status).toLowerCase();
+        // Concatena tudo num blob e busca substring — leve e cobre todos os campos.
+        const haystack = [
+          l.name,
+          l.phone ?? '',
+          l.product_interest ?? '',
+          l.origin ?? '',
+          l.notes ?? '',
+          l.status,
+          statusLabel,
+          assigneeName,
+          // Campos de IA, se existirem (cast para Lead estendido)
+          (l as unknown as { ai_summary?: string | null }).ai_summary ?? '',
+          (l as unknown as { ai_score_reason?: string | null }).ai_score_reason ?? '',
+        ].join(' \n ').toLowerCase();
+        if (!haystack.includes(q) && !phoneHit) return false;
       }
       return true;
     });
@@ -313,7 +375,7 @@ export default function LeadsPage() {
       return sortDir === 'desc' ? db - da : da - db;
     });
     return list;
-  }, [leads, statusFilter, originFilter, search, recencyFilter, priorityFilter, sortBy, sortDir, scoreByLead, activeKpi, dateFrom, dateTo]);
+  }, [leads, statusFilter, originFilter, interestFilter, assigneeFilter, search, recencyFilter, priorityFilter, sortBy, sortDir, scoreByLead, activeKpi, dateFrom, dateTo, profilesMap, statusLabelById]);
 
   const grouped = useMemo(() => {
     const map: Record<string, typeof filtered> = {};
