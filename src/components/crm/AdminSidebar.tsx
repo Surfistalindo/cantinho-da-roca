@@ -214,7 +214,7 @@ export default function AdminSidebar() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={handleSignOut}
+                      onClick={(e) => { e.stopPropagation(); handleSignOut(); }}
                       className="h-7 w-7 rounded-md flex items-center justify-center text-sidebar-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                       aria-label="Sair"
                     >
