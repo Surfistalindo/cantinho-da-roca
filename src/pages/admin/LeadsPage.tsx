@@ -712,26 +712,26 @@ export default function LeadsPage() {
                             <TableHead
                               scope="col"
                               className={cn(
-                                'text-[11px] uppercase tracking-wider font-semibold text-muted-foreground',
+                                'text-center text-[11px] uppercase tracking-wider font-semibold text-muted-foreground',
                                 density === 'compact' ? 'min-w-[160px]' : 'min-w-[240px]',
                               )}
                             >
                               Lead
                             </TableHead>
-                            <TableHead scope="col" className={cn('hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]', density === 'compact' && 'lg:hidden')}>Origem</TableHead>
-                            <TableHead scope="col" className={cn('hidden xl:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[200px]', density === 'compact' && 'xl:hidden')}>Interesse</TableHead>
-                            <TableHead scope="col" className={cn('text-[11px] uppercase tracking-wider font-semibold text-muted-foreground', density === 'compact' ? 'w-[120px]' : 'w-[160px]')}>Status</TableHead>
-                            <TableHead scope="col" className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[120px]">Prioridade</TableHead>
-                            <TableHead scope="col" className={cn('hidden lg:table-cell text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]', density === 'compact' && 'lg:hidden')}>Recência</TableHead>
+                            <TableHead scope="col" className={cn('hidden lg:table-cell text-center text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]', density === 'compact' && 'lg:hidden')}>Origem</TableHead>
+                            <TableHead scope="col" className={cn('hidden xl:table-cell text-center text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[200px]', density === 'compact' && 'xl:hidden')}>Interesse</TableHead>
+                            <TableHead scope="col" className={cn('text-center text-[11px] uppercase tracking-wider font-semibold text-muted-foreground', density === 'compact' ? 'w-[120px]' : 'w-[160px]')}>Status</TableHead>
+                            <TableHead scope="col" className="text-center text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[120px]">Prioridade</TableHead>
+                            <TableHead scope="col" className={cn('hidden lg:table-cell text-center text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[140px]', density === 'compact' && 'lg:hidden')}>Recência</TableHead>
                             <TableHead
                               scope="col"
                               aria-sort={sortBy === 'score' ? 'none' : (sortDir === 'desc' ? 'descending' : 'ascending')}
-                              className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[100px]"
+                              className="text-center text-[11px] uppercase tracking-wider font-semibold text-muted-foreground w-[100px]"
                             >
                               <button
                                 type="button"
                                 onClick={toggleSort}
-                                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring rounded-sm"
+                                className="inline-flex items-center justify-center gap-1.5 mx-auto hover:text-foreground transition-colors uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring rounded-sm"
                                 title={sortBy === 'score' ? 'Ordenado por prioridade' : 'Ordenado por data'}
                                 aria-label={`Alternar ordenação. Atual: ${sortBy === 'score' ? 'prioridade' : sortDir === 'desc' ? 'mais recentes' : 'mais antigos'}`}
                               >
@@ -746,7 +746,7 @@ export default function LeadsPage() {
                             <TableHead
                               scope="col"
                               className={cn(
-                                'text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground',
+                                'text-center text-[11px] uppercase tracking-wider font-semibold text-muted-foreground',
                                 density === 'compact' ? 'w-[80px]' : 'w-[140px]',
                               )}
                             >
