@@ -51,10 +51,11 @@ export default function ClientFilters({
           className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground"
         />
         <Input
-          placeholder="Buscar por nome, telefone ou produto..."
+          placeholder="Buscar em tudo: nome, telefone, produto, observações…"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           className="pl-8 h-8 text-[12px] bg-muted/60 border-transparent focus-visible:bg-card focus-visible:border-input"
+          title="Pesquisa em tempo real em todos os campos do cliente"
         />
       </div>
 

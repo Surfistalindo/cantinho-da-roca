@@ -6,6 +6,10 @@ export interface LeadsUrlState {
   search: string;
   status: string;
   origin: string;
+  /** Interesse (product_interest) — 'all' | valor exato */
+  interest: string;
+  /** Responsável — 'all' | 'none' | uuid */
+  assignee: string;
   priority: PriorityFilter;
   recency: RecencyFilter;
   from: Date | null;
@@ -35,6 +39,8 @@ export function useLeadsUrlState() {
       search: searchParams.get('q') ?? '',
       status: searchParams.get('status') ?? 'all',
       origin: searchParams.get('origin') ?? 'all',
+      interest: searchParams.get('interest') ?? 'all',
+      assignee: searchParams.get('assignee') ?? 'all',
       priority: isPriority(priority) ? priority : 'all',
       recency: isRecency(recency) ? recency : 'all',
       from: parseDate(searchParams.get('from')),
@@ -59,6 +65,8 @@ export function useLeadsUrlState() {
         setOrDel('q', next.search.trim());
         setOrDel('status', next.status);
         setOrDel('origin', next.origin);
+        setOrDel('interest', next.interest);
+        setOrDel('assignee', next.assignee);
         setOrDel('priority', next.priority);
         setOrDel('recency', next.recency);
         setOrDel('from', fmtDate(next.from));

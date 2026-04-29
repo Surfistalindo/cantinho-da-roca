@@ -7,7 +7,7 @@ import { APP_CONFIG } from '@/config/app';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faMagnifyingGlass, faXmark, faFire, faCircleHalfStroke, faSnowflake,
-  faPhoneSlash, faCalendarDays,
+  faPhoneSlash, faCalendarDays, faTag, faUser,
 } from '@fortawesome/free-solid-svg-icons';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -16,6 +16,9 @@ import type { DateRange } from 'react-day-picker';
 
 export type RecencyFilter = 'all' | 'recent' | 'attention' | 'overdue';
 export type PriorityFilter = 'all' | 'hot' | 'warm' | 'cold';
+
+export interface InterestOption { value: string; count: number }
+export interface AssigneeOption { id: string; name: string }
 
 interface Props {
   search: string;
@@ -30,6 +33,14 @@ interface Props {
   onPriorityChange?: (v: PriorityFilter) => void;
   /** Lista de origens reais presentes nos dados (sobrepõe APP_CONFIG.leadOrigins) */
   availableOrigins?: string[];
+  /** Lista de interesses únicos extraídos dos leads */
+  interestFilter?: string;
+  onInterestChange?: (v: string) => void;
+  availableInterests?: InterestOption[];
+  /** Filtro de responsável */
+  assigneeFilter?: string;
+  onAssigneeChange?: (v: string) => void;
+  availableAssignees?: AssigneeOption[];
   /** Intervalo de datas (created_at) */
   dateFrom?: Date | null;
   dateTo?: Date | null;
@@ -43,12 +54,16 @@ export default function LeadFilters({
   recencyFilter, onRecencyChange,
   priorityFilter, onPriorityChange,
   availableOrigins,
+  interestFilter, onInterestChange, availableInterests,
+  assigneeFilter, onAssigneeChange, availableAssignees,
   dateFrom, dateTo, onDateRangeChange,
 }: Props) {
   const hasFilters =
     search.length > 0 ||
     statusFilter !== 'all' ||
     originFilter !== 'all' ||
+    (interestFilter && interestFilter !== 'all') ||
+    (assigneeFilter && assigneeFilter !== 'all') ||
     (recencyFilter && recencyFilter !== 'all') ||
     (priorityFilter && priorityFilter !== 'all') ||
     !!dateFrom || !!dateTo;
@@ -57,6 +72,8 @@ export default function LeadFilters({
     onSearchChange('');
     onStatusChange('all');
     onOriginChange('all');
+    onInterestChange?.('all');
+    onAssigneeChange?.('all');
     onRecencyChange?.('all');
     onPriorityChange?.('all');
     onDateRangeChange?.(null, null);
@@ -108,8 +125,8 @@ export default function LeadFilters({
           Sem resposta
         </Button>
       )}
-      <div className="relative flex-1 min-w-[200px]">
-        <label htmlFor="leads-search" className="sr-only">Buscar por nome ou telefone</label>
+      <div className="relative flex-1 min-w-[240px]">
+        <label htmlFor="leads-search" className="sr-only">Buscar em todos os campos</label>
         <FontAwesomeIcon
           icon={faMagnifyingGlass}
           className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground"
@@ -117,10 +134,11 @@ export default function LeadFilters({
         />
         <Input
           id="leads-search"
-          placeholder="Buscar por nome ou telefone..."
+          placeholder="Buscar em tudo: nome, telefone, interesse, origem, status, observações…"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           className="pl-8 h-8 text-[12px] bg-muted/60 border-transparent focus-visible:bg-card focus-visible:border-input"
+          title="Pesquisa em tempo real em nome, telefone, interesse, origem, status, observações, resumo de IA e responsável"
         />
       </div>
       <Select value={statusFilter} onValueChange={onStatusChange}>
@@ -145,6 +163,44 @@ export default function LeadFilters({
           ))}
         </SelectContent>
       </Select>
+      {onInterestChange && availableInterests && availableInterests.length > 0 && (
+        <Select value={interestFilter ?? 'all'} onValueChange={onInterestChange}>
+          <SelectTrigger className="w-[180px] h-8 text-[12px] bg-muted/60 border-transparent" aria-label="Filtrar por interesse">
+            <span className="inline-flex items-center gap-1.5 truncate">
+              <FontAwesomeIcon icon={faTag} className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+              <SelectValue placeholder="Interesse" />
+            </span>
+          </SelectTrigger>
+          <SelectContent className="max-h-[320px]">
+            <SelectItem value="all">Todo interesse</SelectItem>
+            {availableInterests.map((it) => (
+              <SelectItem key={it.value} value={it.value}>
+                <span className="inline-flex items-center justify-between gap-2 w-full">
+                  <span className="truncate">{it.value}</span>
+                  <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">{it.count}</span>
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+      {onAssigneeChange && availableAssignees && (
+        <Select value={assigneeFilter ?? 'all'} onValueChange={onAssigneeChange}>
+          <SelectTrigger className="w-[170px] h-8 text-[12px] bg-muted/60 border-transparent" aria-label="Filtrar por responsável">
+            <span className="inline-flex items-center gap-1.5 truncate">
+              <FontAwesomeIcon icon={faUser} className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+              <SelectValue placeholder="Responsável" />
+            </span>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos responsáveis</SelectItem>
+            <SelectItem value="none">Sem responsável</SelectItem>
+            {availableAssignees.map((a) => (
+              <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
       {onPriorityChange && (
         <Select value={priorityFilter ?? 'all'} onValueChange={(v) => onPriorityChange(v as PriorityFilter)}>
           <SelectTrigger className="w-[150px] h-8 text-[12px] bg-muted/60 border-transparent" aria-label="Filtrar por prioridade">

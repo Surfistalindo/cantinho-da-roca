@@ -1,150 +1,84 @@
-## Objetivo
+## O que está acontecendo hoje
 
-A tela `/admin/whatsapp` hoje já tem muita coisa boa (inbox 3 colunas, automações, status, templates), mas o usuário precisa **adivinhar** o que cada coisa faz. O plano é deixar tudo **autoexplicativo** — com onboarding, dicas inline, legenda dos ícones, painel de ajuda — e adicionar funcionalidades pequenas que tornam a tela realmente útil no dia a dia.
+Na página **Leads**, a lupa só procura em **nome** e **telefone** — por isso, quando você digitou um interesse (ex.: "SECA BARRIGA" ou "Banana coberta"), nada apareceu. O mesmo acontece em **Clientes**: a lupa lá busca em nome/telefone/produto, mas nada de origem, status ou observações.
 
-Sem mexer em backend / edge functions / banco. Tudo é UI + 2 melhorias de composer.
+Na **paleta global** do topo (Ctrl+K, "Buscar leads, clientes, comandos…"), só aparecem 8 leads recentes fixos — a busca digitada não consulta a base.
 
----
-
-## 1. Banner de boas-vindas (primeira visita)
-
-Acima da `ConnectionStatusBar`, mostrar um card colapsável "Bem-vindo ao WhatsApp Studio" só quando o usuário **nunca dispensou** (flag em `localStorage`).
-
-Conteúdo:
-- O que é a tela ("inbox unificada do CRM com WhatsApp")
-- 4 mini-cards com ícone: **Conversar**, **Templates rápidos**, **Régua automática**, **Status em tempo real**
-- Botão "Entendi, não mostrar mais" e "Abrir tour guiado" (dispara o tour existente)
-
-Arquivo novo: `src/components/whatsapp/WelcomeBanner.tsx`.
-
-## 2. Tour guiado dedicado (substitui o atual mínimo)
-
-`src/components/tutorial/tours/whatsapp.ts` hoje só tem 1 step genérico. Reescrever com **8 passos com `data-tour`**:
-
-1. `wa-status-bar` — "Aqui você vê se o WhatsApp está conectado e quantas mensagens foram enviadas hoje"
-2. `wa-conv-search` — busca por nome/telefone
-3. `wa-conv-filters` — filtros (Todas, Não lidas, Em automação…)
-4. `wa-conv-item` — cada conversa, com explicação dos badges (🤖 = automação rodando, número = não lidas)
-5. `wa-thread` — histórico agrupado por dia
-6. `wa-composer-templates` — botão de raio insere mensagem pronta
-7. `wa-composer-image` — anexar imagem por URL
-8. `wa-context-panel` — automação/timeline/stats à direita
-
-Adicionar atributos `data-tour="..."` nos componentes correspondentes.
-
-## 3. Legenda de ícones (popover "?")
-
-Na `ConversationList`, ao lado do contador `12/40`, um botão "?" pequeno abre popover **"Como ler esta lista"**:
-- 🤖 honey → automação ativa
-- Badge laranja com número → mensagens não respondidas
-- "Você: ..." → última mensagem foi enviada por você
-- 🖼 Imagem → mídia
-- Cinza/itálico → sem mensagens ainda
-
-## 4. Empty states ricos
-
-### Quando não há conversa selecionada (já existe, melhorar):
-Hoje só diz "Selecione uma conversa". Trocar por:
-- Heading "Comece uma conversa"
-- 3 atalhos clicáveis: **"Ver leads sem resposta"** (filtra `no_reply`), **"Abrir automação"**, **"Configurar templates"**
-- Lista de **3 atalhos de teclado** já disponíveis (`Enter` envia, `Shift+Enter` nova linha, `↑/↓` navega — esse último vamos adicionar, ver §7)
-
-### Quando inbox está vazia (zero conversas no total):
-Atualmente cai num "Nenhuma conversa encontrada". Detectar `totalCount === 0` e mostrar:
-- Ilustração + texto "Nenhum lead com WhatsApp ainda"
-- CTA "Importar contatos" → `/admin/ia/whatsapp` e "Cadastrar lead manualmente" → abre `NewLeadDialog`
-
-## 5. Composer mais explicativo + funcionalidades novas
-
-`MessageComposer.tsx`:
-
-**a) Tooltips em todos os botões** (anexar imagem, templates, enviar) — usar `Tooltip` do shadcn em vez de `title=""`.
-
-**b) Contador de caracteres** abaixo do textarea (`{n} caracteres`), virando warning acima de 1000 (limite WhatsApp ~4096, mas mensagens longas costumam dar problema).
-
-**c) Suporte a variáveis nos templates**: ao inserir um template com `{{nome}}`, substituir automaticamente pelo `lead.name`. Mostrar chip "Variáveis substituídas: nome" por 3s.
-
-**d) Botão "Ver preview"** quando o texto contém `*negrito*`, `_itálico_`, `~tachado~` ou `\`mono\`` — abre popover com a renderização estilo WhatsApp.
-
-**e) Persistir rascunho por lead em `localStorage`** (`wa-draft-{leadId}`) — restaura ao reabrir a conversa. Mostrar um badge "Rascunho salvo" discreto.
-
-**f) Atalho de toolbar de formatação**: 4 botões pequenos (B, I, S, mono) que envolvem a seleção com os marcadores do WhatsApp.
-
-## 6. Cabeçalho da conversa mais útil (`ConversationThread`)
-
-Adicionar à direita do nome:
-- **Botão "Copiar número"** (clipboard + toast)
-- **Botão "Abrir no WhatsApp Web"** (`https://wa.me/{phone}`) — fallback caso a API falhe
-- **Menu "⋯"** com:
-  - Marcar conversa como lida (zera o badge — flag local)
-  - Pausar automação deste lead (toggle `cadence_state` via update simples)
-  - Ir para o painel do lead (`/admin/leads?lead={id}`)
-
-## 7. Atalhos de teclado globais na página
-
-Adicionar listener em `WhatsAppPage`:
-- `↑ / ↓` quando foco fora do composer → navegar entre conversas
-- `Esc` no mobile → volta da thread pra lista
-- `/` → foca a busca
-- `?` → abre/fecha o painel de ajuda lateral (ver §8)
-
-## 8. Painel "Ajuda & Glossário" (Sheet à direita)
-
-Botão flutuante "?" no canto inferior direito da página (igual ao FAB tutorial, mas escopo só desta tela). Abre um Sheet com 4 abas:
-
-- **Como usar** — passo a passo de 4 itens com prints/ícones
-- **Glossário** — Conexão, Régua, Cadência, Opt-out, Template, Z-API, Status `sent/failed`
-- **Atalhos** — todos os listados acima
-- **Limites & boas práticas** — limite de envio Z-API, evitar números pessoais, horário comercial, evitar SPAM
-
-Componente novo: `src/components/whatsapp/HelpPanel.tsx`.
-
-## 9. Tooltips e microcopy na barra de status
-
-`ConnectionStatusBar`:
-- Cada métrica do dia (`enviadas`, `respondidas`, `falhas`) ganha tooltip explicando o que conta (ex.: "mensagens com status `sent` retornado pela Z-API hoje").
-- Botão "Configurar" desabilitado para não-admin com tooltip "Apenas administradores".
-- Botão "Automações" com tooltip "Editar a régua de mensagens automáticas".
-
-## 10. Dica embutida no painel de contexto
-
-Em `LeadContextPanel`, no card de Automação, se `cadence_state === 'idle'`, mostrar microcopy:
-> "A régua começa quando o lead entrar em **Em contato** ou você enviar a primeira mensagem com template."
-
-Se `cadence_exhausted`, mostrar:
-> "Régua concluída sem resposta. Lead volta para a fila manual."
+Vou transformar a lupa em **busca universal em tempo real** em todas as listas, e a paleta do topo em uma **busca global** que cruza leads, clientes, páginas e boards.
 
 ---
 
-## Detalhes técnicos
+## O que vai mudar
 
-**Arquivos novos:**
-- `src/components/whatsapp/WelcomeBanner.tsx`
-- `src/components/whatsapp/HelpPanel.tsx`
-- `src/components/whatsapp/InboxLegend.tsx` (popover da legenda)
-- `src/components/whatsapp/FormatToolbar.tsx` (B/I/S/mono)
-- `src/components/whatsapp/ThreadHeaderMenu.tsx` (menu ⋯)
+### 1) Página de Leads — lupa pesquisa TUDO
 
-**Arquivos editados:**
-- `src/pages/admin/WhatsAppPage.tsx` — banner, atalhos teclado, FAB ajuda
-- `src/components/whatsapp/ConnectionStatusBar.tsx` — tooltips + `data-tour`
-- `src/components/whatsapp/ConversationList.tsx` — botão legenda + `data-tour` + empty state rico
-- `src/components/whatsapp/ConversationThread.tsx` — header com copiar/wa.me/menu + empty state rico
-- `src/components/whatsapp/MessageComposer.tsx` — tooltips, contador, variáveis, preview, rascunho, format toolbar
-- `src/components/whatsapp/LeadContextPanel.tsx` — microcopy contextual
-- `src/components/tutorial/tours/whatsapp.ts` — tour de 8 passos
-- `src/lib/whatsappTemplates.ts` (se existir helper de variável; senão criar pequena função util)
+A caixa "Buscar por nome ou telefone…" passa a ser **"Buscar em tudo (nome, telefone, interesse, origem, status, observações, responsável)…"** e filtra em tempo real (debounce 200ms já existente) por:
 
-**Sem alterações:** banco, RLS, edge functions (`wa-send`, `wa-config-save`, `wa-cadence-tick`), tabela `whatsapp_*`.
+- Nome do lead
+- Telefone (com ou sem máscara — já normaliza dígitos)
+- **Interesse / produto** (`product_interest`)
+- **Origem** (`origin`)
+- **Status** (compara contra o rótulo amigável: "Novo", "Em contato", etc.)
+- **Observações** (`notes`)
+- **Resumo de IA** e **motivo de score** (`ai_summary`, `ai_score_reason`)
+- **Nome do responsável** (resolve `assigned_to` → `profiles.name`)
 
-**Persistência local apenas:**
-- `wa-welcome-dismissed` (boolean) — banner de boas-vindas
-- `wa-draft-{leadId}` (string) — rascunhos
-- `wa-read-{leadId}` (timestamp) — marcar como lido manual
+Tudo **client-side** sobre os leads já carregados (a página já carrega tudo em memória), então o resultado aparece enquanto você digita, sem ida ao servidor.
 
-## Fora do escopo
+Quando você digitar, por exemplo, `banana coberta`, vão aparecer **todos** os leads cujo interesse contém isso, agrupados pelos status atuais.
 
-- Importação de mídia direto do disco (continua URL apenas — exige bucket dedicado)
-- Webhooks de leitura/entrega Z-API (já tratados em outra função)
-- Áudio/vídeo
-- Campanha em massa (será página separada futura)
+**Indicador de "onde casou"**: ao lado de cada resultado vou destacar em qual campo deu match (badge pequeno: `interesse`, `origem`, `obs`, `responsável`), pra ficar claro por que aquele lead apareceu.
+
+### 2) Filtros da página de Leads — revisão e novos
+
+Mantidos: Status, Origem, Prioridade, Recência, Período, "Sem resposta".
+
+**Novos:**
+- **Filtro "Interesse"**: dropdown com todos os interesses únicos extraídos dos leads carregados (ordem alfabética, com contagem). Selecionar um filtra exatamente por esse interesse — útil quando você quer "ver todas as pessoas interessadas em Banana coberta".
+- **Filtro "Responsável"**: dropdown com os vendedores (puxa de `profiles`), inclui opção "Sem responsável".
+- **Filtro "Com WhatsApp" / "Sem WhatsApp"**: toggle baseado em `phone IS NOT NULL` e `whatsapp_opt_out`.
+
+**Correções de filtros existentes:**
+- Selecionar uma **origem** com diferença de capitalização agora compara case-insensitive de forma consistente (já é, mas vou garantir trim em ambos os lados).
+- Botão **Limpar** passa também a resetar Interesse e Responsável.
+- Sincronização com URL (`?q`, `?status`, `?origin`, `?interest`, `?assignee`, `?priority`, `?recency`, `?from`, `?to`) — adiciono `interest` e `assignee` ao `useLeadsUrlState`.
+
+### 3) Página de Clientes — mesma busca universal
+
+A lupa em Clientes passa a buscar também em: **observações**, **produto comprado**, **estágio do ciclo de vida**, com placeholder atualizado ("Buscar em tudo…").
+
+### 4) Paleta global (Ctrl+K, no topo) — busca real
+
+Hoje só lista 8 leads recentes fixos. Vou transformar em **busca dinâmica**:
+
+- Ao digitar, dispara uma query Supabase debounced (250ms) com `or(name.ilike.%q%, phone.ilike.%q%, product_interest.ilike.%q%, origin.ilike.%q%, notes.ilike.%q%)` em **leads** e em **clientes** (limit 8 cada).
+- Mostra resultados em duas seções: "Leads" e "Clientes", clique navega direto para `/admin/leads?focus=ID` ou abre o sheet do cliente.
+- Se a query bater com nome de página/board, mostra também (já funciona).
+- Se a query for um interesse comum, mostra um item especial **"Ver todos os leads com interesse: 'banana'"** que leva pra `/admin/leads?q=banana`.
+
+### 5) Toolbar visual
+
+- Reordeno os filtros para: **Status · Origem · Interesse · Responsável · Prioridade · Recência · Período · Limpar** (mais usados primeiro).
+- Em telas estreitas, agrupo Prioridade/Recência/Período num botão "Mais filtros" (popover) pra não quebrar a linha.
+
+---
+
+## Arquivos afetados
+
+- `src/components/admin/LeadFilters.tsx` — placeholder, filtros novos (Interesse, Responsável), reordenação, agrupamento responsivo.
+- `src/pages/admin/LeadsPage.tsx` — predicado de busca expandido + filtros novos aplicados; resolve `assigned_to → profile.name` num map.
+- `src/hooks/useLeadsUrlState.ts` — adiciona `interest` e `assignee` na URL.
+- `src/components/admin/ClientFilters.tsx` + `src/pages/admin/ClientsPage.tsx` — placeholder e predicado.
+- `src/components/crm/CommandPalette.tsx` — busca dinâmica em leads/clientes/atalho "ver todos com interesse X".
+- (Opcional) `src/components/admin/leads/LeadsTableDnd.tsx` — pequeno badge "match em: interesse" na linha quando `q` casa fora de nome/telefone.
+
+Sem mudanças de banco. Tudo é leitura/filtragem.
+
+---
+
+## Como você vai sentir a diferença
+
+1. Abre **Leads**, digita `banana` na lupa → aparecem na hora todas as leads com esse interesse, agrupadas por status, com um chip "interesse" do lado mostrando por que casaram.
+2. Abre o filtro **Interesse**, clica em "Banana coberta c/ chocolate" → mesma lista, sem precisar digitar.
+3. Aperta **Ctrl+K** em qualquer tela, digita `seca barriga` → vê leads e clientes que mencionam isso em qualquer campo, e um atalho "Ver todos os leads com interesse: seca barriga".
+4. Em **Clientes**, digita o nome de um produto/observação → filtra na hora.
