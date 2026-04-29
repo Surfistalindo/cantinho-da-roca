@@ -96,7 +96,7 @@ export default function LeadScoreBadge({
           <FontAwesomeIcon icon={icon} className={sz.icon} />
           <span>{info.label}</span>
           {!hideScore && info.level !== 'closed' && (
-            <span className="opacity-70 font-mono">· {info.score}</span>
+            <span className="opacity-75 font-mono" title="Pontuação de prioridade (0 a 100)">{info.score}/100</span>
           )}
         </span>
       </TooltipTrigger>
