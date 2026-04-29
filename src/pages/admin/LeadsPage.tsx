@@ -722,6 +722,12 @@ export default function LeadsPage() {
                 priorityFilter={priorityFilter}
                 onPriorityChange={updatePriority}
                 availableOrigins={availableOrigins}
+                interestFilter={interestFilter}
+                onInterestChange={(v) => url.set({ interest: v })}
+                availableInterests={availableInterests}
+                assigneeFilter={assigneeFilter}
+                onAssigneeChange={(v) => url.set({ assignee: v })}
+                availableAssignees={availableAssignees}
                 dateFrom={dateFrom}
                 dateTo={dateTo}
                 onDateRangeChange={(f, t) => url.set({ from: f, to: t })}
