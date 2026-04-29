@@ -117,12 +117,19 @@ export default function ClientsPage() {
   const filtered = useMemo(() => {
     let list = customers;
     if (search) {
-      const q = search.toLowerCase();
-      list = list.filter((c) =>
-        c.name.toLowerCase().includes(q) ||
-        (c.phone ?? '').includes(q) ||
-        (c.product_bought ?? '').toLowerCase().includes(q)
-      );
+      const q = search.toLowerCase().trim();
+      const onlyDigits = q.replace(/\D/g, '');
+      list = list.filter((c) => {
+        const phoneDigits = (c.phone ?? '').replace(/\D/g, '');
+        const phoneHit = onlyDigits.length >= 3 && phoneDigits.includes(onlyDigits);
+        const haystack = [
+          c.name,
+          c.phone ?? '',
+          c.product_bought ?? '',
+          (c as unknown as { notes?: string | null }).notes ?? '',
+        ].join(' \n ').toLowerCase();
+        return phoneHit || haystack.includes(q);
+      });
     }
 
     if (stageFilter !== 'all') {
