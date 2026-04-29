@@ -27,7 +27,8 @@ export function useInteractionCounts(leadIds: string[]): Record<string, number> 
     const { data } = await supabase
       .from('interactions')
       .select('lead_id')
-      .in('lead_id', ids);
+      .in('lead_id', ids)
+      .limit(5000);
 
     const next: Record<string, number> = {};
     for (const row of (data ?? []) as { lead_id: string | null }[]) {
@@ -38,7 +39,7 @@ export function useInteractionCounts(leadIds: string[]): Record<string, number> 
   }, [idsKey]);
 
   useEffect(() => { fetchCounts(); }, [fetchCounts]);
-  useRealtimeTable('interactions', fetchCounts);
+  useRealtimeTable('interactions', fetchCounts, { debounceMs: 400 });
 
   return counts;
 }

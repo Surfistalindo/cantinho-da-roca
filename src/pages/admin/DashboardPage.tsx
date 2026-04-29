@@ -157,9 +157,9 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
-  useRealtimeTable('leads', fetchData);
-  useRealtimeTable('customers', fetchData);
-  useRealtimeTable('interactions', fetchData);
+  useRealtimeTable('leads', fetchData, { debounceMs: 600 });
+  useRealtimeTable('customers', fetchData, { debounceMs: 600 });
+  useRealtimeTable('interactions', fetchData, { debounceMs: 600 });
 
   const availableOrigins = useMemo(() => {
     const set = new Set<string>();

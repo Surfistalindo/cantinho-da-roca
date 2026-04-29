@@ -9,7 +9,7 @@ import {
   useDraggable,
   useDroppable,
   DragOverlay,
-  pointerWithin,
+  closestCenter,
 } from '@dnd-kit/core';
 import { GripVertical } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,8 +26,9 @@ import { cn } from '@/lib/utils';
 interface DndCtx {
   activeId: string | null;
   activeName: string | null;
+  activeStatus: string | null;
 }
-const Ctx = createContext<DndCtx>({ activeId: null, activeName: null });
+const Ctx = createContext<DndCtx>({ activeId: null, activeName: null, activeStatus: null });
 
 interface ProviderProps {
   children: ReactNode;
@@ -44,11 +45,20 @@ export function LeadsDndProvider({ children, onChanged, leadIndex }: ProviderPro
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
 
-  const handleDragStart = (e: DragStartEvent) => setActiveId(e.active.id as string);
+  const handleDragStart = (e: DragStartEvent) => {
+    setActiveId(e.active.id as string);
+    // Marca o body para CSS desabilitar handlers caros (ex: row-resize cursor)
+    if (typeof document !== 'undefined') document.body.classList.add('crm-dragging');
+  };
+
+  const cleanup = () => {
+    setActiveId(null);
+    if (typeof document !== 'undefined') document.body.classList.remove('crm-dragging');
+  };
 
   const handleDragEnd = useCallback(async (e: DragEndEvent) => {
-    setActiveId(null);
     const { active, over } = e;
+    cleanup();
     if (!over) return;
 
     const leadId = active.id as string;
@@ -86,18 +96,21 @@ export function LeadsDndProvider({ children, onChanged, leadIndex }: ProviderPro
   const active = activeId ? leadIndex[activeId] : null;
 
   return (
-    <Ctx.Provider value={{ activeId, activeName: active?.name ?? null }}>
+    <Ctx.Provider value={{ activeId, activeName: active?.name ?? null, activeStatus: active?.status ?? null }}>
       <DndContext
         sensors={sensors}
-        collisionDetection={pointerWithin}
+        collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
-        onDragCancel={() => setActiveId(null)}
+        onDragCancel={cleanup}
       >
         {children}
         <DragOverlay dropAnimation={null}>
           {active ? (
-            <div className="rounded-md border border-primary/40 bg-card px-3 py-1.5 shadow-floating text-sm font-medium ring-2 ring-primary/30 max-w-[260px] truncate">
+            <div
+              className="rounded-md border border-primary/40 bg-card px-3 py-1.5 shadow-floating text-sm font-medium ring-2 ring-primary/30 max-w-[260px] truncate"
+              style={{ willChange: 'transform' }}
+            >
               {active.name}
             </div>
           ) : null}
@@ -107,7 +120,12 @@ export function LeadsDndProvider({ children, onChanged, leadIndex }: ProviderPro
   );
 }
 
-/** Wrapper para o cabeçalho de cada grupo: vira drop target. */
+/**
+ * Wrapper compacto para o cabeçalho de cada grupo: vira drop target.
+ * Renderiza apenas em volta do título — NÃO envolve a lista paginada,
+ * caso contrário a área de drop fica enorme e o ponteiro nunca alcança
+ * outro grupo (especialmente quando o grupo de origem é grande).
+ */
 export function DroppableGroupHeader({
   status,
   children,
@@ -115,18 +133,34 @@ export function DroppableGroupHeader({
   status: string;
   children: ReactNode;
 }) {
-  const { isOver } = useDroppable({ id: `group:${status}` });
-  const { activeId } = useContext(Ctx);
-  const showHint = activeId !== null;
+  const { isOver, setNodeRef } = useDroppable({ id: `group:${status}` });
+  const { activeId, activeStatus } = useContext(Ctx);
+  const isDragging = activeId !== null;
+  const isOrigin = activeStatus === status;
+  const showHint = isDragging && !isOrigin;
+  const label = APP_CONFIG.leadStatuses.find((s) => s.value === status)?.label ?? status;
   return (
     <div
+      ref={setNodeRef}
       className={cn(
         'relative rounded-md transition-all',
-        showHint && 'ring-1 ring-dashed ring-border',
-        isOver && '!ring-2 !ring-primary bg-primary/[0.06]',
+        showHint && 'ring-1 ring-dashed ring-primary/40',
+        isOver && '!ring-2 !ring-primary bg-primary/[0.08]',
       )}
     >
       {children}
+      {showHint && (
+        <span
+          className={cn(
+            'pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full',
+            isOver
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted text-muted-foreground',
+          )}
+        >
+          {isOver ? `Soltar em ${label}` : `→ ${label}`}
+        </span>
+      )}
     </div>
   );
 }
@@ -146,13 +180,10 @@ export function DraggableRow({
     style: CSSProperties;
   }) => ReactNode;
 }) {
-  const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({ id });
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id });
   const style: CSSProperties = {
     opacity: isDragging ? 0.4 : 1,
-    // Não aplico transform na <tr> (quebra layout de tabela) — uso DragOverlay.
   };
-  // Pequeno handle (grip) para o usuário saber que dá pra arrastar.
-  // O resto da linha NÃO escuta listeners — assim clique abre o sheet normalmente.
   const grip = (
     <button
       type="button"
@@ -166,7 +197,5 @@ export function DraggableRow({
       <GripVertical className="h-3.5 w-3.5" />
     </button>
   );
-  // Encaminhamos setNodeRef para a <tr>; transform é ignorado mas precisamos
-  // do ref para o dnd-kit medir colisão.
   return <>{children({ setNodeRef, listeners: undefined, attributes: {}, isDragging, grip, style })}</>;
 }

@@ -607,6 +607,16 @@
   .font-crm .crm-row-resize tbody tr:hover::after {
     background: hsl(var(--primary) / 0.18);
   }
+  /* Durante drag-and-drop de leads, desabilita o handle de resize para
+     não interceptar o ponteiro nem mostrar cursor errado. */
+  body.crm-dragging .crm-row-resize tbody tr::after {
+    pointer-events: none;
+    background: transparent !important;
+    cursor: default !important;
+  }
+  body.crm-dragging * {
+    cursor: grabbing !important;
+  }
 
   /* ─── Scrollbar horizontal SEMPRE visível (não esconde quando ocioso) ───
      Browsers tendem a auto-hide scrollbars overlay; isso atrapalha quando

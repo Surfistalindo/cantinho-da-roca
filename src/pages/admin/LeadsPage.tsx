@@ -142,6 +142,14 @@ export default function LeadsPage() {
 
   const leadIds = useMemo(() => leads.map((l) => l.id), [leads]);
   const interactionCounts = useInteractionCounts(leadIds);
+  // Cache de score por lead — evita recomputar getLeadScore em filtered/grouped/KPIs/sort.
+  const scoreByLead = useMemo(() => {
+    const map: Record<string, ReturnType<typeof getLeadScore>> = {};
+    for (const l of leads) {
+      map[l.id] = getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 });
+    }
+    return map;
+  }, [leads, interactionCounts]);
 
   // sort vem da URL (não migrado para o hook por simplicidade)
   useEffect(() => {
@@ -207,7 +215,7 @@ export default function LeadsPage() {
   }, []);
 
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
-  useRealtimeTable('leads', fetchLeads);
+  useRealtimeTable('leads', fetchLeads, { debounceMs: 500 });
 
   // Aplica KPI selecionado como filtro virtual
   const applyKpi = (key: KpiKey) => {
@@ -243,11 +251,11 @@ export default function LeadsPage() {
         if (info.level !== recencyFilter) return false;
       }
       if (priorityFilter !== 'all') {
-        const info = getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 });
-        if (info.level !== priorityFilter) return false;
+        const info = scoreByLead[l.id];
+        if (info && info.level !== priorityFilter) return false;
       }
       if (activeKpi) {
-        const score = getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 });
+        const score = scoreByLead[l.id];
         const rec = getContactRecency(l.last_contact_at, l.status, l.created_at);
         if (activeKpi === 'today' && new Date(l.created_at).toDateString() !== new Date().toDateString()) return false;
         if (activeKpi === 'waiting' && l.status !== 'new') return false;
@@ -272,7 +280,7 @@ export default function LeadsPage() {
     if (sortBy === 'score') {
       const enriched = list.map((l) => ({
         ...l,
-        _scoreInfo: getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 }),
+        _scoreInfo: scoreByLead[l.id],
       }));
       enriched.sort(compareByScore);
       return enriched;
@@ -283,7 +291,7 @@ export default function LeadsPage() {
       return sortDir === 'desc' ? db - da : da - db;
     });
     return list;
-  }, [leads, statusFilter, originFilter, search, recencyFilter, priorityFilter, sortBy, sortDir, interactionCounts, activeKpi, dateFrom, dateTo]);
+  }, [leads, statusFilter, originFilter, search, recencyFilter, priorityFilter, sortBy, sortDir, scoreByLead, activeKpi, dateFrom, dateTo]);
 
   const grouped = useMemo(() => {
     const map: Record<string, typeof filtered> = {};
@@ -752,7 +760,7 @@ export default function LeadsPage() {
                     const renderRows = (items: typeof filtered) =>
                       items.map((lead) => {
                         const isNewest = lead.id === newestId;
-                        const score = getLeadScore(lead, { interactionCount: interactionCounts[lead.id] ?? 0 });
+                        const score = scoreByLead[lead.id] ?? getLeadScore(lead, { interactionCount: interactionCounts[lead.id] ?? 0 });
                         const isChecked = selected.has(lead.id);
                         return (
                           <DraggableRow key={lead.id} id={lead.id}>
@@ -895,6 +903,8 @@ export default function LeadsPage() {
                             }}
                             onPointerDown={(e) => {
                               // Drag-resize: pointerdown nos últimos 5px da borda inferior de qualquer <tr>
+                              // Não interceptar se um drag-and-drop de lead já está em curso.
+                              if (document.body.classList.contains('crm-dragging')) return;
                               const tr = (e.target as HTMLElement)?.closest('tr');
                               if (!tr || tr.parentElement?.tagName !== 'TBODY') return;
                               const rect = tr.getBoundingClientRect();
@@ -916,19 +926,6 @@ export default function LeadsPage() {
                               window.addEventListener('pointerup', up);
                               document.body.style.cursor = 'ns-resize';
                               document.body.style.userSelect = 'none';
-                            }}
-                            onPointerMove={(e) => {
-                              // Cursor ns-resize quando perto da borda inferior de uma <tr>
-                              const tr = (e.target as HTMLElement)?.closest('tr');
-                              if (!tr || tr.parentElement?.tagName !== 'TBODY') {
-                                e.currentTarget.style.cursor = '';
-                                return;
-                              }
-                              const rect = tr.getBoundingClientRect();
-                              e.currentTarget.style.cursor =
-                                e.clientY >= rect.bottom - 5 && e.clientY <= rect.bottom + 2
-                                  ? 'ns-resize'
-                                  : '';
                             }}
                             tabIndex={0}
                             role="region"
