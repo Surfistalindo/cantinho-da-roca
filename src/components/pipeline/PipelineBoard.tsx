@@ -65,7 +65,7 @@ export default function PipelineBoard({ filters, onLeadsChange, onOriginsChange 
   }, []);
 
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
-  useRealtimeTable('leads', fetchLeads);
+  useRealtimeTable('leads', fetchLeads, { debounceMs: 500 });
 
   const interactionCounts = useInteractionCounts(leads.map((l) => l.id));
 
