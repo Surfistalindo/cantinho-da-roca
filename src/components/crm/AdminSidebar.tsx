@@ -16,6 +16,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/hooks/useProfile';
 import { getContactRecency } from '@/lib/contactRecency';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { MSym } from './MSym';
@@ -37,6 +38,7 @@ const primaryItems: NavItem[] = [
   { title: 'Clientes', url: '/admin/clients', icon: 'group', key: 'clients' },
   { title: 'WhatsApp', url: '/admin/whatsapp', icon: 'chat', key: 'whatsapp' },
   { title: 'IA', url: '/admin/ia', icon: 'auto_awesome', key: 'ia' },
+  { title: 'Configurações', url: '/admin/settings', icon: 'settings', key: 'settings' },
 ];
 
 const iaSubItems: { title: string; url: string; icon: string }[] = [
@@ -57,6 +59,7 @@ export default function AdminSidebar() {
   const collapsed = state === 'collapsed';
   const [overdueCount, setOverdueCount] = useState(0);
   const { user, signOut } = useAuth();
+  const { profile } = useProfile();
   const navigate = useNavigate();
   const location = useLocation();
   const isOnIA = location.pathname.startsWith('/admin/ia');
@@ -76,7 +79,8 @@ export default function AdminSidebar() {
   useEffect(() => { fetchOverdue(); }, [fetchOverdue]);
   useRealtimeTable('leads', fetchOverdue);
 
-  const initials = (user?.email ?? '?').split('@')[0].slice(0, 2).toUpperCase();
+  const displayName = profile?.name || user?.email?.split('@')[0] || '?';
+  const initials = displayName.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? '').join('') || '?';
 
   const handleSignOut = async () => {
     await signOut();
@@ -195,20 +199,22 @@ export default function AdminSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border p-2">
         <TooltipProvider delayDuration={300}>
-          <div className={cn('flex items-center gap-2.5 rounded-md', !collapsed && 'p-1.5 hover:bg-sidebar-accent/60 transition-colors')}>
-            <div className="h-8 w-8 shrink-0 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-[11px] font-bold flex items-center justify-center">
-              {initials}
+          <div className={cn('flex items-center gap-2.5 rounded-md', !collapsed && 'p-1.5 hover:bg-sidebar-accent/60 transition-colors cursor-pointer')} onClick={() => !collapsed && navigate('/admin/settings/profile')}>
+            <div className="h-8 w-8 shrink-0 rounded-full overflow-hidden bg-gradient-to-br from-primary to-primary/70 text-primary-foreground text-[11px] font-bold flex items-center justify-center">
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" />
+              ) : initials}
             </div>
             {!collapsed && (
               <>
                 <div className="flex-1 min-w-0 leading-tight">
-                  <p className="text-[12px] font-semibold text-sidebar-accent-foreground truncate">{user?.email?.split('@')[0]}</p>
+                  <p className="text-[12px] font-semibold text-sidebar-accent-foreground truncate">{displayName}</p>
                   <p className="text-[10px] text-muted-foreground truncate">{user?.email}</p>
                 </div>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={handleSignOut}
+                      onClick={(e) => { e.stopPropagation(); handleSignOut(); }}
                       className="h-7 w-7 rounded-md flex items-center justify-center text-sidebar-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                       aria-label="Sair"
                     >
