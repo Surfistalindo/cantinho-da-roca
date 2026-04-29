@@ -207,7 +207,7 @@ export default function LeadsPage() {
   }, []);
 
   useEffect(() => { fetchLeads(); }, [fetchLeads]);
-  useRealtimeTable('leads', fetchLeads);
+  useRealtimeTable('leads', fetchLeads, { debounceMs: 500 });
 
   // Aplica KPI selecionado como filtro virtual
   const applyKpi = (key: KpiKey) => {
@@ -895,6 +895,8 @@ export default function LeadsPage() {
                             }}
                             onPointerDown={(e) => {
                               // Drag-resize: pointerdown nos últimos 5px da borda inferior de qualquer <tr>
+                              // Não interceptar se um drag-and-drop de lead já está em curso.
+                              if (document.body.classList.contains('crm-dragging')) return;
                               const tr = (e.target as HTMLElement)?.closest('tr');
                               if (!tr || tr.parentElement?.tagName !== 'TBODY') return;
                               const rect = tr.getBoundingClientRect();
@@ -916,19 +918,6 @@ export default function LeadsPage() {
                               window.addEventListener('pointerup', up);
                               document.body.style.cursor = 'ns-resize';
                               document.body.style.userSelect = 'none';
-                            }}
-                            onPointerMove={(e) => {
-                              // Cursor ns-resize quando perto da borda inferior de uma <tr>
-                              const tr = (e.target as HTMLElement)?.closest('tr');
-                              if (!tr || tr.parentElement?.tagName !== 'TBODY') {
-                                e.currentTarget.style.cursor = '';
-                                return;
-                              }
-                              const rect = tr.getBoundingClientRect();
-                              e.currentTarget.style.cursor =
-                                e.clientY >= rect.bottom - 5 && e.clientY <= rect.bottom + 2
-                                  ? 'ns-resize'
-                                  : '';
                             }}
                             tabIndex={0}
                             role="region"
