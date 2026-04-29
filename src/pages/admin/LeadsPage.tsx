@@ -80,6 +80,7 @@ export default function LeadsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const url = useLeadsUrlState();
   const tableGroupScrollRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const tableHeaderScrollRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<Error | null>(null);
@@ -691,7 +692,7 @@ export default function LeadsPage() {
                       const allChecked = groupIds.length > 0 && groupIds.every((id) => selected.has(id));
                       const someChecked = !allChecked && groupIds.some((id) => selected.has(id));
                       return (
-                        <TableHeader className="sticky top-0 z-20 bg-card shadow-[0_1px_0_0_hsl(var(--border))]">
+                        <TableHeader className="bg-card shadow-[0_1px_0_0_hsl(var(--border))]">
                           <TableRow className="hover:bg-transparent border-border [&>th]:bg-card">
                             <TableHead scope="col" className="w-[20px] pl-2 pr-0" aria-hidden="true" />
                             <TableHead scope="col" className="w-[36px] pl-2 pr-0">
@@ -875,82 +876,96 @@ export default function LeadsPage() {
                               <span>+ rolar para arrastar lateralmente</span>
                             </div>
                           )}
-                          <div
-                            ref={(node) => { tableGroupScrollRefs.current[groupKey] = node; }}
-                            className={cn(
-                              'crm-row-resize crm-smooth-scroll crm-dense-table crm-x-scroll-always min-w-0 max-w-full overflow-x-auto overflow-y-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset rounded-sm',
-                              density === 'compact' && 'crm-compact-table',
-                            )}
-                            style={{
-                              ['--row-h' as any]: `${rowHeight}px`,
-                              maxHeight: 'calc(100vh - 320px)',
-                              minHeight: '180px',
-                            }}
-                            onWheel={(e) => {
-                              // Shift + scroll → rola horizontal (atalho clássico)
-                              if (e.shiftKey && e.deltaY !== 0) {
-                                e.currentTarget.scrollLeft += e.deltaY;
+                          <div className="rounded-sm border border-border/40 overflow-hidden">
+                            {/* Cabeçalho — container SEM scroll horizontal próprio (parece travado).
+                                Sincronizado com o body via scrollLeft. */}
+                            <div
+                              ref={(node) => { tableHeaderScrollRefs.current[groupKey] = node; }}
+                              className="overflow-hidden bg-card border-b border-border"
+                              aria-hidden="true"
+                            >
+                              <Table>
+                                {renderHeader(info.pageItems.map((i) => i.id))}
+                              </Table>
+                            </div>
+                            {/* Corpo — scroll horizontal + vertical. Ao rolar horizontal, sincroniza o header. */}
+                            <div
+                              ref={(node) => { tableGroupScrollRefs.current[groupKey] = node; }}
+                              className={cn(
+                                'crm-row-resize crm-smooth-scroll crm-dense-table crm-x-scroll-always min-w-0 max-w-full overflow-x-auto overflow-y-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset',
+                                density === 'compact' && 'crm-compact-table',
+                              )}
+                              style={{
+                                ['--row-h' as any]: `${rowHeight}px`,
+                                maxHeight: 'calc(100vh - 360px)',
+                                minHeight: '180px',
+                              }}
+                              onScroll={(e) => {
+                                const header = tableHeaderScrollRefs.current[groupKey];
+                                if (header) header.scrollLeft = e.currentTarget.scrollLeft;
+                              }}
+                              onWheel={(e) => {
+                                if (e.shiftKey && e.deltaY !== 0) {
+                                  e.currentTarget.scrollLeft += e.deltaY;
+                                  e.preventDefault();
+                                }
+                              }}
+                              onPointerDown={(e) => {
+                                const tr = (e.target as HTMLElement)?.closest('tr');
+                                if (!tr || tr.parentElement?.tagName !== 'TBODY') return;
+                                const rect = tr.getBoundingClientRect();
+                                if (e.clientY < rect.bottom - 5 || e.clientY > rect.bottom + 2) return;
                                 e.preventDefault();
-                              }
-                            }}
-                            onPointerDown={(e) => {
-                              // Drag-resize: pointerdown nos últimos 5px da borda inferior de qualquer <tr>
-                              const tr = (e.target as HTMLElement)?.closest('tr');
-                              if (!tr || tr.parentElement?.tagName !== 'TBODY') return;
-                              const rect = tr.getBoundingClientRect();
-                              if (e.clientY < rect.bottom - 5 || e.clientY > rect.bottom + 2) return;
-                              e.preventDefault();
-                              e.stopPropagation();
-                              const startY = e.clientY;
-                              const startH = rowHeight;
-                              const move = (ev: PointerEvent) => {
-                                setRowHeightClamped(startH + (ev.clientY - startY));
-                              };
-                              const up = () => {
-                                window.removeEventListener('pointermove', move);
-                                window.removeEventListener('pointerup', up);
-                                document.body.style.cursor = '';
-                                document.body.style.userSelect = '';
-                              };
-                              window.addEventListener('pointermove', move);
-                              window.addEventListener('pointerup', up);
-                              document.body.style.cursor = 'ns-resize';
-                              document.body.style.userSelect = 'none';
-                            }}
-                            onPointerMove={(e) => {
-                              // Cursor ns-resize quando perto da borda inferior de uma <tr>
-                              const tr = (e.target as HTMLElement)?.closest('tr');
-                              if (!tr || tr.parentElement?.tagName !== 'TBODY') {
-                                e.currentTarget.style.cursor = '';
-                                return;
-                              }
-                              const rect = tr.getBoundingClientRect();
-                              e.currentTarget.style.cursor =
-                                e.clientY >= rect.bottom - 5 && e.clientY <= rect.bottom + 2
-                                  ? 'ns-resize'
-                                  : '';
-                            }}
-                            tabIndex={0}
-                            role="region"
-                            aria-label={`Tabela de leads — grupo ${groupKey}`}
-                            data-refreshing={isRefreshing ? 'true' : 'false'}
-                            onKeyDown={(e) => {
-                              const tag = (e.target as HTMLElement)?.tagName;
-                              if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-                              const el = e.currentTarget;
-                              const step = Math.max(40, el.clientHeight * 0.8);
-                              if (e.key === 'PageDown') { e.preventDefault(); el.scrollBy({ top: step, behavior: 'smooth' }); }
-                              else if (e.key === 'PageUp') { e.preventDefault(); el.scrollBy({ top: -step, behavior: 'smooth' }); }
-                              else if (e.key === 'Home') { e.preventDefault(); el.scrollTo({ top: 0, behavior: 'smooth' }); }
-                              else if (e.key === 'End') { e.preventDefault(); el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); }
-                              else if (e.key === 'ArrowDown') { e.preventDefault(); el.scrollBy({ top: 48 }); }
-                              else if (e.key === 'ArrowUp') { e.preventDefault(); el.scrollBy({ top: -48 }); }
-                            }}
-                          >
-                            <Table>
-                              {renderHeader(info.pageItems.map((i) => i.id))}
-                              <TableBody>{renderRows(info.pageItems)}</TableBody>
-                            </Table>
+                                e.stopPropagation();
+                                const startY = e.clientY;
+                                const startH = rowHeight;
+                                const move = (ev: PointerEvent) => {
+                                  setRowHeightClamped(startH + (ev.clientY - startY));
+                                };
+                                const up = () => {
+                                  window.removeEventListener('pointermove', move);
+                                  window.removeEventListener('pointerup', up);
+                                  document.body.style.cursor = '';
+                                  document.body.style.userSelect = '';
+                                };
+                                window.addEventListener('pointermove', move);
+                                window.addEventListener('pointerup', up);
+                                document.body.style.cursor = 'ns-resize';
+                                document.body.style.userSelect = 'none';
+                              }}
+                              onPointerMove={(e) => {
+                                const tr = (e.target as HTMLElement)?.closest('tr');
+                                if (!tr || tr.parentElement?.tagName !== 'TBODY') {
+                                  e.currentTarget.style.cursor = '';
+                                  return;
+                                }
+                                const rect = tr.getBoundingClientRect();
+                                e.currentTarget.style.cursor =
+                                  e.clientY >= rect.bottom - 5 && e.clientY <= rect.bottom + 2
+                                    ? 'ns-resize'
+                                    : '';
+                              }}
+                              tabIndex={0}
+                              role="region"
+                              aria-label={`Tabela de leads — grupo ${groupKey}`}
+                              data-refreshing={isRefreshing ? 'true' : 'false'}
+                              onKeyDown={(e) => {
+                                const tag = (e.target as HTMLElement)?.tagName;
+                                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+                                const el = e.currentTarget;
+                                const step = Math.max(40, el.clientHeight * 0.8);
+                                if (e.key === 'PageDown') { e.preventDefault(); el.scrollBy({ top: step, behavior: 'smooth' }); }
+                                else if (e.key === 'PageUp') { e.preventDefault(); el.scrollBy({ top: -step, behavior: 'smooth' }); }
+                                else if (e.key === 'Home') { e.preventDefault(); el.scrollTo({ top: 0, behavior: 'smooth' }); }
+                                else if (e.key === 'End') { e.preventDefault(); el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); }
+                                else if (e.key === 'ArrowDown') { e.preventDefault(); el.scrollBy({ top: 48 }); }
+                                else if (e.key === 'ArrowUp') { e.preventDefault(); el.scrollBy({ top: -48 }); }
+                              }}
+                            >
+                              <Table>
+                                <TableBody>{renderRows(info.pageItems)}</TableBody>
+                              </Table>
+                            </div>
                           </div>
                           <LeadsPagination
                             page={info.page}
