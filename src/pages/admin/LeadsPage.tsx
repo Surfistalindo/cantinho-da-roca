@@ -706,7 +706,6 @@ export default function LeadsPage() {
                               className={cn(
                                 'text-[11px] uppercase tracking-wider font-semibold text-muted-foreground',
                                 density === 'compact' ? 'min-w-[160px]' : 'min-w-[240px]',
-                                density === 'comfortable' && 'crm-pin-left',
                               )}
                             >
                               Lead
@@ -741,7 +740,6 @@ export default function LeadsPage() {
                               className={cn(
                                 'text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground',
                                 density === 'compact' ? 'w-[80px]' : 'w-[140px]',
-                                density === 'comfortable' && 'crm-pin-right',
                               )}
                             >
                               Ações
@@ -788,7 +786,7 @@ export default function LeadsPage() {
                                 aria-label={`Selecionar ${lead.name}`}
                               />
                             </TableCell>
-                            <TableCell className={cn('font-medium', density === 'comfortable' && 'crm-pin-left')}>
+                            <TableCell className="font-medium">
                               <div className="flex items-center gap-3">
                                 <InitialsAvatar name={lead.name} size={density === 'compact' ? 'sm' : 'md'} />
                                 <div className="min-w-0">
@@ -831,7 +829,6 @@ export default function LeadsPage() {
                             </TableCell>
                             <TableCell
                               onClick={(e) => e.stopPropagation()}
-                              className={cn(density === 'comfortable' && 'crm-pin-right')}
                             >
                               <div className="crm-row-actions flex justify-end gap-0.5">
                                 {density !== 'compact' && (
