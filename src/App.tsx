@@ -34,6 +34,9 @@ const TelemetryPage = lazy(() => import("./pages/admin/TelemetryPage"));
 const TaskBoardPage = lazy(() => import("./pages/admin/TaskBoardPage"));
 const MyWorkPage = lazy(() => import("./pages/admin/MyWorkPage"));
 const WhatsAppPage = lazy(() => import("./pages/admin/WhatsAppPage"));
+const SettingsLayout = lazy(() => import("./pages/admin/settings/SettingsLayout"));
+const SettingsProfilePage = lazy(() => import("./pages/admin/settings/ProfilePage"));
+const SettingsUsersPage = lazy(() => import("./pages/admin/settings/UsersPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -94,6 +97,11 @@ const App = () => (
               <Route path="my-work" element={<Suspense fallback={<RouteFallback />}><MyWorkPage /></Suspense>} />
               <Route path="whatsapp" element={<Suspense fallback={<RouteFallback />}><WhatsAppPage /></Suspense>} />
               <Route path="boards/:boardId" element={<Suspense fallback={<RouteFallback />}><TaskBoardPage /></Suspense>} />
+              <Route path="settings" element={<Suspense fallback={<RouteFallback />}><SettingsLayout /></Suspense>}>
+                <Route index element={<Navigate to="profile" replace />} />
+                <Route path="profile" element={<Suspense fallback={<RouteFallback />}><SettingsProfilePage /></Suspense>} />
+                <Route path="users" element={<Suspense fallback={<RouteFallback />}><SettingsUsersPage /></Suspense>} />
+              </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
