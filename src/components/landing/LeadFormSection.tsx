@@ -32,7 +32,7 @@ const RATE_LIMIT_MS = 30_000;
 
 const buildWhatsappUrl = (firstName: string) =>
   `https://wa.me/${APP_CONFIG.whatsappNumber}?text=${encodeURIComponent(
-    `Olá! Acabei de me cadastrar pelo site, sou ${firstName} 🌿`
+    `Olá! Quero comprar e deixei meu contato no site, sou ${firstName} 🌿`
   )}`;
 
 export default function LeadFormSection() {
@@ -74,7 +74,7 @@ export default function LeadFormSection() {
 
     const now = Date.now();
     if (now - lastSubmitRef.current < RATE_LIMIT_MS) {
-      toast.error('Aguarde um momento', { description: 'Você já enviou um cadastro recentemente.' });
+      toast.error('Aguarde um momento', { description: 'Você já enviou um contato recentemente.' });
       return;
     }
 
@@ -92,7 +92,7 @@ export default function LeadFormSection() {
       const waUrl = buildWhatsappUrl(firstName);
 
       if (existing && existing.length > 0) {
-        toast.info('Você já está cadastrado! 😊', { description: 'Abrindo o WhatsApp pra continuar a conversa.' });
+        toast.info('Já temos seu contato! 😊', { description: 'Abrindo o WhatsApp pra continuar o atendimento.' });
         window.open(waUrl, '_blank', 'noopener,noreferrer');
         setLoading(false);
         return;
@@ -109,7 +109,7 @@ export default function LeadFormSection() {
       if (error) {
         // 23505 = unique_violation (telefone já cadastrado no banco)
         if ((error as { code?: string }).code === '23505') {
-          toast.info('Você já está cadastrado! 😊', { description: 'Abrindo o WhatsApp pra continuar a conversa.' });
+          toast.info('Já temos seu contato! 😊', { description: 'Abrindo o WhatsApp pra continuar o atendimento.' });
           window.open(waUrl, '_blank', 'noopener,noreferrer');
           setLoading(false);
           return;
@@ -119,8 +119,8 @@ export default function LeadFormSection() {
 
       lastSubmitRef.current = now;
 
-      toast.success('Cadastro realizado! 🎉', {
-        description: 'Abrindo o WhatsApp pra te dar boas-vindas.',
+      toast.success('Recebemos seu contato! 🎉', {
+        description: 'Abrindo o WhatsApp pra te atender.',
         duration: 6000,
       });
       window.open(waUrl, '_blank', 'noopener,noreferrer');
@@ -132,7 +132,7 @@ export default function LeadFormSection() {
       setMessage('');
       setShowOptional(false);
     } catch {
-      toast.error('Erro ao cadastrar', { description: 'Tente novamente mais tarde.' });
+      toast.error('Erro ao enviar contato', { description: 'Tente novamente mais tarde.' });
     } finally {
       setLoading(false);
     }
@@ -159,13 +159,13 @@ export default function LeadFormSection() {
           }}
         >
           <p className="font-hand text-clay text-2xl text-center mb-1">
-            fica em contato
+            vamos conversar
           </p>
           <h2 className="font-display-warm text-3xl sm:text-5xl text-center mb-3 text-foreground">
-            Receba ofertas e novidades no WhatsApp
+            Quer comprar? Fale com a gente
           </h2>
           <p className="font-body-warm text-muted-foreground text-center mb-10 text-lg">
-            Deixe seu nome e WhatsApp pra receber dicas, lançamentos e promoções dos nossos produtos naturais. <img src={logo} alt="" className="inline h-5 w-5 align-text-bottom" />
+            Deixe seu nome e WhatsApp que entramos em contato pra te atender e fechar seu pedido. <img src={logo} alt="" className="inline h-5 w-5 align-text-bottom" />
           </p>
 
           {/* Form card with floating animation + glow border */}
@@ -229,10 +229,10 @@ export default function LeadFormSection() {
                 )}
 
                 <Button type="submit" className="w-full" size="lg" disabled={loading}>
-                  {loading ? 'Enviando...' : 'Quero receber novidades 🌿'}
+                  {loading ? 'Enviando...' : 'Quero comprar 🌿'}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center pt-1">
-                  Não enviamos spam. Você pode sair quando quiser.
+                  Respondemos rapidinho pelo WhatsApp.
                 </p>
               </form>
             </div>
