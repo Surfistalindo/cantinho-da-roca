@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -18,7 +18,9 @@ import NewLeadDialog from '@/components/admin/NewLeadDialog';
 import LoadingState from '@/components/admin/LoadingState';
 import { useRealtimeTable } from '@/hooks/useRealtimeTable';
 import { useInteractionCounts } from '@/hooks/useInteractionCounts';
+import { getLeadScore } from '@/lib/leadScore';
 import { toast } from 'sonner';
+import type { PipelineFilters } from './PipelineToolbar';
 
 interface Lead {
   id: string;
@@ -31,9 +33,16 @@ interface Lead {
   last_contact_at: string | null;
   next_contact_at: string | null;
   notes: string | null;
+  assigned_to: string | null;
 }
 
-export default function PipelineBoard() {
+interface Props {
+  filters?: PipelineFilters;
+  onLeadsChange?: (leads: Lead[], interactionCounts: Record<string, number>) => void;
+  onOriginsChange?: (origins: string[]) => void;
+}
+
+export default function PipelineBoard({ filters, onLeadsChange, onOriginsChange }: Props) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -59,6 +68,44 @@ export default function PipelineBoard() {
   useRealtimeTable('leads', fetchLeads);
 
   const interactionCounts = useInteractionCounts(leads.map((l) => l.id));
+
+  // Notify parent of full lead list (for KPIs / origins)
+  useEffect(() => {
+    onLeadsChange?.(leads, interactionCounts);
+  }, [leads, interactionCounts, onLeadsChange]);
+
+  useEffect(() => {
+    if (!onOriginsChange) return;
+    const set = new Set<string>();
+    leads.forEach((l) => { if (l.origin && l.origin.trim()) set.add(l.origin.trim()); });
+    onOriginsChange(Array.from(set).sort((a, b) => a.localeCompare(b, 'pt-BR')));
+  }, [leads, onOriginsChange]);
+
+  // Apply filters
+  const filteredLeads = useMemo(() => {
+    if (!filters) return leads;
+    const q = filters.q.trim().toLowerCase();
+    return leads.filter((l) => {
+      if (q) {
+        const hay = `${l.name ?? ''} ${l.phone ?? ''}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (filters.origin !== 'all') {
+        if ((l.origin ?? '').trim() !== filters.origin) return false;
+      }
+      if (filters.assignee?.id) {
+        if (l.assigned_to !== filters.assignee.id) return false;
+      }
+      if (filters.priority !== 'all') {
+        const s = getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 });
+        if (filters.priority === 'urgent' && !s.urgent) return false;
+        if (filters.priority === 'hot' && s.level !== 'hot') return false;
+        if (filters.priority === 'warm' && s.level !== 'warm') return false;
+        if (filters.priority === 'cold' && s.level !== 'cold') return false;
+      }
+      return true;
+    });
+  }, [leads, filters, interactionCounts]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -123,12 +170,15 @@ export default function PipelineBoard() {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5 min-w-0 max-w-full">
+        <div
+          data-tour="pipeline-board"
+          className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5 min-w-0 max-w-full"
+        >
           {APP_CONFIG.leadStatuses.map((s) => (
             <PipelineColumn
               key={s.value}
               status={s.value}
-              leads={leads.filter((l) => l.status === s.value)}
+              leads={filteredLeads.filter((l) => l.status === s.value)}
               onLeadClick={openDetail}
               onAddLead={openNewLead}
               interactionCounts={interactionCounts}
