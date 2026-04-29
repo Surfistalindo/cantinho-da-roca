@@ -23,7 +23,7 @@ const linkSections = [
     links: [
       { label: 'Sobre nós', href: '#beneficios' },
       { label: 'Depoimentos', href: '#depoimentos' },
-      { label: 'Cadastre-se', href: '#contato' },
+      { label: 'Fale conosco', href: '#contato' },
     ],
   },
   {
@@ -78,7 +78,7 @@ export default function Footer() {
               onClick={() => handleAnchor('#contato')}
               className="group flex items-center gap-3 bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-3 rounded-lg transition-colors text-sm font-semibold"
             >
-              Cadastre-se e receba novidades
+              Quero comprar pelo WhatsApp
               <FontAwesomeIcon icon={faArrowRightLong} className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
