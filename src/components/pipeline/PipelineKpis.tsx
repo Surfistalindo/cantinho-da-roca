@@ -7,6 +7,7 @@ import { getLeadScore } from '@/lib/leadScore';
 interface Lead {
   id: string;
   status: string;
+  origin: string | null;
   created_at: string;
   last_contact_at: string | null;
   next_contact_at?: string | null;
