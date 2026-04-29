@@ -1,84 +1,125 @@
-## Problema
+## O que vamos construir
 
-Na tabela de Leads (/admin/leads), arrastar um lead de **Negociação** para **Em contato** (ou entre quaisquer grupos) não funciona consistentemente. Além disso, o site apresenta lags ao arrastar e em interações gerais.
+Página **/admin/settings/users** (e seção "Configurações" no menu) onde admins podem:
 
-### Causas identificadas
-
-**1. Drop zone incorreta no DnD da tabela** — `LeadsTableDnd.tsx`
-   - O `DroppableGroupHeader` envolve o `<GroupSection>` inteiro (cabeçalho + lista paginada). Quando o grupo "Negociação" está aberto e grande, o "header drop zone" cobre uma área enorme — mas como cada grupo tem sua própria área scrollable interna com `<Table>`, e estamos usando `pointerWithin` como collision detection, o ponteiro fica "dentro" da árvore do próprio grupo de origem (Negociação) na maior parte do tempo, nunca chegando ao header de outro grupo (Em contato), que está em outra `DroppableGroupHeader` acima/abaixo.
-   - Resultado: o usuário precisa soltar exatamente em cima do título "Em contato", o que é frágil. Com grupos grandes/scrollados, fica praticamente impossível.
-
-**2. Lags durante o drag**
-   - `onPointerMove` no scroller da tabela (linhas 920-932 de `LeadsPage.tsx`) executa `getBoundingClientRect()` + `closest('tr')` em **cada movimento do mouse**, mesmo durante o drag — extremamente caro com 100+ linhas.
-   - `forwardWheelToLeadTable` faz `getBoundingClientRect` em todos os scrollers a cada wheel event.
-   - `LeadCard` no Pipeline aplica `before:absolute`, `ring`, `rotate-[0.5deg]` no estado isDragging — `transform: rotate` força repaint contínuo.
-
-**3. Lags gerais**
-   - `useInteractionCounts` puxa **todas as interações** dos 2000 leads carregados de uma vez (sem paginação) e re-fetcha em qualquer change da tabela `interactions` via realtime — re-render em cascata.
-   - `fetchLeads` busca `.limit(2000)` toda vez que qualquer lead muda (realtime), sem debounce.
-   - `LeadsKpiStrip` e `filtered`/`grouped`/`enriched` recalculam `getLeadScore` para 2000 leads várias vezes por render.
+- Listar todos os usuários do sistema com nome, email, papel (admin/vendedor), foto e data de criação.
+- **Criar novo login** direto pelo painel (email + senha + nome + papel) — sem precisar do fluxo público de signup.
+- **Editar perfil** de qualquer usuário: nome, foto (avatar), telefone, cargo/bio.
+- **Trocar a senha** de um usuário (forçar nova senha) ou enviar link de reset por email.
+- **Mudar o papel** (promover/rebaixar admin ↔ vendedor).
+- **Desativar/excluir** usuários.
+- Cada usuário também tem uma página **/admin/settings/profile** pra editar seus próprios dados (nome, foto, senha).
 
 ---
 
-## Plano de correção
+## Mudanças no banco (migration)
 
-### A. Corrigir DnD entre grupos na tabela
+**1. Estender `profiles`** com:
+- `avatar_url` (text)
+- `phone` (text)
+- `bio` (text)
+- `job_title` (text)
+- `is_active` (boolean, default true)
+- `updated_at` (timestamp, com trigger)
 
-Em **`src/components/admin/leads/LeadsTableDnd.tsx`**:
+**2. Criar bucket de storage `avatars`** (público, leitura aberta) com policies:
+- Qualquer um pode ver avatares (SELECT público)
+- Usuário autenticado pode upload do próprio avatar (`{userId}/...`)
+- Admin pode upload de qualquer avatar
+- Owner ou admin pode update/delete
 
-1. Trocar `collisionDetection` de `pointerWithin` → `closestCenter` (do `@dnd-kit/core`). Isso encontra o droppable mais próximo do centro do item arrastado, mesmo que o ponteiro esteja sobre outro elemento.
-2. Mudar a estrutura de drop:
-   - Em vez de usar **um único droppable por grupo** (que cobre a seção inteira), criar um **droppable só no cabeçalho colorido** do `GroupSection` (faixa de ~40px no topo).
-   - Implementação: renderizar `<DroppableGroupHeader>` apenas em volta da barra de título, não do conteúdo.
-3. Adicionar visual claro durante o drag: quando `activeId !== null`, **todos** os cabeçalhos de grupo (exceto o de origem) ganham um banner sutil "Soltar aqui para mover para X" e ficam "magneticamente" ativos.
-4. Ajustar `pointerWithin` para `rectIntersection` como fallback se necessário.
+**3. RLS adicionais em `profiles`**:
+- Já existe SELECT pra admin/vendedor — manter.
+- Adicionar UPDATE pra admin (poder editar perfil de qualquer um). Update do próprio já existe.
 
-### B. Remover lags do drag
+**4. RLS em `user_roles`**: já tem "Only admins can grant/update/revoke" — ok.
 
-Em **`src/pages/admin/LeadsPage.tsx`**:
-
-1. Remover o handler `onPointerMove` do scroller (linhas 920-932). Substituir por **CSS-only**: pseudo-elemento `::after` na borda inferior da `<tr>` com `cursor: ns-resize` via classe utilitária (sem JS por evento de mouse).
-2. Adicionar guard no `onPointerDown` de resize: se um drag-and-drop já estiver ativo (verificar via classe no body ou pelo target ser o grip), não interceptar.
-3. Throttle do `forwardWheelToLeadTable`: cachear o scroller resolvido por uns 200ms (limpando no resize/scroll do window).
-
-Em **`src/components/pipeline/LeadCard.tsx`** e **`src/components/admin/leads/LeadsTableDnd.tsx`**:
-
-4. Remover `rotate-[0.5deg]` no estado isDragging (causa repaint contínuo).
-5. Adicionar `will-change: transform` no overlay (`DragOverlay`).
-
-### C. Reduzir lags gerais do site
-
-Em **`src/hooks/useInteractionCounts.ts`**:
-
-1. Debounce do refetch via realtime: 400ms. Eventos de interactions chegando em rajada não devem refetch a cada um.
-2. Em vez de `select('lead_id')` retornando todas as linhas (potencialmente milhares), usar uma RPC ou — solução simples sem migration — limitar e contar via SQL: como não temos RPC pronta, manter a query mas adicionar `.limit(5000)` defensivo.
-
-Em **`src/pages/admin/LeadsPage.tsx`**:
-
-3. Debounce do `fetchLeads` via realtime: 500ms. Atualmente cada update remoto refetcha 2000 leads.
-4. Memoizar `interactionCounts[l.id]` lookups: pre-calcular `scoreByLead = useMemo(...)` uma vez por leads/interactionCounts e reusar em `filtered`, `grouped`, `LeadsKpiStrip` em vez de chamar `getLeadScore` 3x por lead por render.
-
-Em **`src/hooks/useRealtimeTable.ts`**:
-
-5. Adicionar suporte opcional a debounce: `useRealtimeTable(table, onChange, { debounceMs: 400 })`. Default = 0 (mantém compatibilidade). Aplicar nos hooks acima.
+**5. Trigger `handle_new_user`**: já cria profile automaticamente — ok.
 
 ---
 
-## Sumário das mudanças
+## Edge functions (admin operations exigem service role)
 
-| Arquivo | Mudança |
-|---|---|
-| `src/components/admin/leads/LeadsTableDnd.tsx` | `closestCenter`, droppable só no header, hint visual em todos os headers ao arrastar, sem rotate |
-| `src/pages/admin/LeadsPage.tsx` | Remover onPointerMove de resize (CSS-only cursor), debounce no refetch realtime, memo `scoreByLead`, mover `<DroppableGroupHeader>` para envolver só o título |
-| `src/components/admin/leads/GroupSection` (uso) | Receber slot do header como prop, ou expor um wrapper `headerSlot` para o droppable |
-| `src/components/pipeline/LeadCard.tsx` | Sem `rotate-[0.5deg]` no isDragging |
-| `src/hooks/useRealtimeTable.ts` | Suporte a debounce opcional |
-| `src/hooks/useInteractionCounts.ts` | Debounce 400ms via realtime, `.limit(5000)` defensivo |
-| `src/index.css` | Classe `crm-row-resize-handle` com cursor via `:hover` na borda inferior do `<tr>`, sem JS |
+Criar **`supabase/functions/admin-users/index.ts`** com endpoints (action via body):
 
-## Resultado esperado
+- `create-user`: cria usuário em `auth.users` + define papel + cria profile com nome.
+- `update-password`: força nova senha pra um user_id.
+- `send-password-reset`: dispara email de reset (usa `resetPasswordForEmail`).
+- `delete-user`: remove de `auth.users` (cascade limpa profiles/roles).
+- `list-users`: lista usuários combinados (auth.users + profiles + roles) — necessário pq admin precisa ver `last_sign_in_at` etc., que não tá em profiles.
 
-- Arrastar lead de qualquer grupo para qualquer outro grupo funciona soltando em cima do **cabeçalho colorido** do grupo destino (visual fica destacado).
-- Drag fluido sem stutters mesmo com 500+ leads.
-- Filtros, scroll e clique no Leads ficam mais responsivos.
-- Sem mudanças de schema do banco.
+Toda action valida via JWT do chamador que ele tem role `admin` (chamando `has_role` no DB) antes de executar com service role. Sem isso qualquer vendedor poderia escalar.
+
+CORS habilitado, validação Zod nos inputs.
+
+---
+
+## Frontend
+
+**Novas páginas:**
+
+- `src/pages/admin/settings/UsersPage.tsx` — lista + ações (criar, editar, reset senha, mudar papel, excluir).
+- `src/pages/admin/settings/ProfilePage.tsx` — perfil do próprio usuário (nome, foto, telefone, mudar senha).
+- `src/pages/admin/settings/SettingsLayout.tsx` — layout com sub-nav (Perfil / Usuários / [futuro]).
+
+**Novos componentes:**
+
+- `UserFormDialog.tsx` — dialog reutilizável pra criar/editar usuário (form + role selector + avatar upload).
+- `AvatarUploader.tsx` — drag&drop de imagem, preview, upload no bucket `avatars` (path `{userId}/avatar-{timestamp}.{ext}`), atualiza `profiles.avatar_url`.
+- `PasswordResetDialog.tsx` — escolher entre "definir nova senha agora" ou "enviar email de reset".
+- `RoleBadge.tsx` — badge visual para admin/vendedor.
+- `UserAvatar.tsx` (atualizar o existente em `crm/ui/`) — usar `avatar_url` quando disponível, fallback nas iniciais.
+
+**Atualizar:**
+
+- `AdminSidebar.tsx` — adicionar item "Configurações" (icon `settings`) com sub-itens "Perfil" e "Usuários" (este último só visível pra admin via `useUserRole().isAdmin`).
+- `App.tsx` — adicionar rotas `/admin/settings/profile`, `/admin/settings/users` (lazy).
+- Avatar no header da sidebar usar `avatar_url` real do profile.
+- `ProtectedRoute.tsx` — adicionar variante `requireAdmin` (ou um `AdminRoute` wrapper) usando `useUserRole`. Aplicar em `/admin/settings/users`.
+
+**Hook novo:** `useProfile()` — busca o profile completo do usuário logado (cacheado, com realtime na tabela profiles do próprio user_id).
+
+---
+
+## Fluxos chave
+
+**Criar novo login (admin):**
+1. Admin abre dialog "Novo usuário", preenche email/senha/nome/papel.
+2. Front chama edge function `admin-users` action `create-user`.
+3. Edge function valida que chamador é admin → cria user com `auth.admin.createUser({ email, password, email_confirm: true })` → trigger cria profile → insere role.
+4. Lista é atualizada.
+
+**Trocar senha de outro usuário:**
+1. Admin escolhe "Definir nova senha" ou "Enviar email de reset".
+2. Edge function executa `auth.admin.updateUserById(id, { password })` ou `auth.resetPasswordForEmail(email, { redirectTo: <origin>/reset-password })`.
+3. A página `/reset-password` já existe.
+
+**Trocar a própria senha:**
+- Front chama `supabase.auth.updateUser({ password })` direto (não precisa edge function — usuário pode mudar a própria senha).
+
+**Upload de foto:**
+- Cliente faz upload direto pra bucket `avatars` via `supabase.storage` (RLS controla quem pode escrever onde).
+- Após upload, atualiza `profiles.avatar_url` com a public URL.
+
+---
+
+## Resumo de arquivos
+
+| Tipo | Caminho | Mudança |
+|---|---|---|
+| Migration | (nova) | profiles + cols, bucket avatars, policies, RLS update |
+| Edge fn | `supabase/functions/admin-users/index.ts` | CRUD admin de users |
+| Página | `src/pages/admin/settings/SettingsLayout.tsx` | Layout sub-nav |
+| Página | `src/pages/admin/settings/UsersPage.tsx` | Lista + ações admin |
+| Página | `src/pages/admin/settings/ProfilePage.tsx` | Perfil próprio |
+| Componente | `src/components/admin/users/UserFormDialog.tsx` | Form criar/editar |
+| Componente | `src/components/admin/users/AvatarUploader.tsx` | Upload de foto |
+| Componente | `src/components/admin/users/PasswordResetDialog.tsx` | Reset/troca de senha |
+| Componente | `src/components/admin/users/RoleBadge.tsx` | Badge papel |
+| Hook | `src/hooks/useProfile.ts` | Profile do logado |
+| Update | `src/components/ProtectedRoute.tsx` | Variante `requireAdmin` |
+| Update | `src/components/crm/AdminSidebar.tsx` | Item "Configurações" |
+| Update | `src/App.tsx` | Rotas novas |
+| Update | `src/components/crm/ui/UserAvatar.tsx` | Suportar avatar_url |
+
+Não há mudanças de schema fora de `profiles` + storage. RLS continua segura: apenas admin executa ações de gestão; vendedor só edita o próprio perfil.
