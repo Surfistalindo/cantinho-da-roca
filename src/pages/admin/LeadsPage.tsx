@@ -392,7 +392,7 @@ export default function LeadsPage() {
   const paged = useLeadsPaged();
   // Reseta páginas quando filtros/busca/ordenação mudam
   useResetPagesOn(paged.resetAll, [
-    statusFilter, originFilter, search, recencyFilter, priorityFilter,
+    statusFilter, originFilter, interestFilter, assigneeFilter, search, recencyFilter, priorityFilter,
     sortBy, sortDir, activeKpi, dateFrom, dateTo,
   ]);
 
