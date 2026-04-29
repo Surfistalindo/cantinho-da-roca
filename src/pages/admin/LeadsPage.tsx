@@ -142,6 +142,14 @@ export default function LeadsPage() {
 
   const leadIds = useMemo(() => leads.map((l) => l.id), [leads]);
   const interactionCounts = useInteractionCounts(leadIds);
+  // Cache de score por lead — evita recomputar getLeadScore em filtered/grouped/KPIs/sort.
+  const scoreByLead = useMemo(() => {
+    const map: Record<string, ReturnType<typeof getLeadScore>> = {};
+    for (const l of leads) {
+      map[l.id] = getLeadScore(l, { interactionCount: interactionCounts[l.id] ?? 0 });
+    }
+    return map;
+  }, [leads, interactionCounts]);
 
   // sort vem da URL (não migrado para o hook por simplicidade)
   useEffect(() => {
