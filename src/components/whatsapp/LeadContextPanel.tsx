@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPhone, faTag, faClockRotateLeft } from '@fortawesome/free-solid-svg-icons';
+import { faPhone, faTag, faClockRotateLeft, faCircleInfo } from '@fortawesome/free-solid-svg-icons';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import InitialsAvatar from '@/components/admin/InitialsAvatar';
@@ -17,8 +17,15 @@ interface Props {
 export default function LeadContextPanel({ lead, messages, templates }: Props) {
   const recent = messages.slice(-5).reverse();
 
+  const cadenceHint =
+    lead.cadence_state === 'idle' && !lead.cadence_exhausted
+      ? 'A régua começa quando o lead vai para o status "Em contato".'
+      : lead.cadence_exhausted
+      ? 'Régua concluída sem resposta. O lead voltou para a fila manual.'
+      : null;
+
   return (
-    <div className="h-full bg-card border-l border-border flex flex-col">
+    <div className="h-full bg-card border-l border-border flex flex-col" data-tour="wa-context-panel">
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-5">
           {/* Identidade */}
@@ -55,6 +62,12 @@ export default function LeadContextPanel({ lead, messages, templates }: Props) {
               Automação
             </p>
             <AutomationStatusCard lead={lead} templates={templates} />
+            {cadenceHint && (
+              <p className="text-[10.5px] text-muted-foreground mt-2 flex items-start gap-1.5">
+                <FontAwesomeIcon icon={faCircleInfo} className="h-2.5 w-2.5 mt-0.5 shrink-0" />
+                {cadenceHint}
+              </p>
+            )}
           </div>
 
           {/* Linha do tempo */}
