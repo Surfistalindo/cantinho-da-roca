@@ -80,6 +80,7 @@ export default function LeadsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const url = useLeadsUrlState();
   const tableGroupScrollRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const tableHeaderScrollRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<Error | null>(null);
